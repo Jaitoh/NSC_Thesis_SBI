@@ -1,0 +1,163 @@
+\section{Introduction}
+% existing a physical model for visual perception & human decision making
+% the physical model has many parameters to fit
+% existing some simualtion-based inference tech to help fit the parameters
+% the outcome can be used for checking what could be the influence of visual perception and internal human decision making state
+% can help check the proposed model interpretability
+
+A stochastic differential physical model for human decision making based on visual stimulus has been developed, which consists of multiple parameters that need to be fitted to the observed human behavior. 
+Fronterior simulation-based inference technology can be utilized to help infer model parameters based on observed human behavior.
+The parameter-fitting results can be used to investigate the impact of the input stimulus sequence on visual perception and the effect of evidence accumulation and leaking processes on human decision making. 
+% The model's interpretability is also evaluated through this process.
+
+\section{Project description}
+\subsection{Period}
+20.Feb.2022 - 20.Aug.2022
+
+\subsection{Background}
+Visual perception and human decision making are complex processes that have been extensively studied in psychology and neuroscience. However, it remains challenging to fully understand the underlying mechanisms and to make accurate predictions about behavior. 
+
+% has designed experiements collecting different human choices based on visual stimuli of different stimuli length
+% has developed a stochastic differential physical model trying to interpret human's choice
+% the model itself has many parameters and configurations
+% some regression methods has been applied to fit the model
+% simulation-based inference (sbi) method has become popular for physical model fitting
+% would like to check whether the regression fitted results in consistent with simulation based inference's results
+% check what else can be bring from the sbi
+To this end, experiments have been designed to collect human choices based on visual stimuli of varying lengths. To interpret these choices, a stochastic differential physical model has been developed with many parameters and configurations. 
+To fit this model, traditional regression methods have been applied. 
+However, in recent years, simulation-based inference (SBI) has become a popular approach for fitting physical models. 
+
+In this project, we aim to assess the consistency of the results obtained from traditional regression methods with those obtained from SBI. 
+Furthermore, we aim to investigate what other insights can be gained from the application of SBI to this physical model for human decision making. 
+By combining the strengths of both traditional regression methods and SBI, we hope to gain a more comprehensive understanding of the processes underlying human decision making in the context of visual perception.
+
+\subsection{Goal}
+% check the state of art of simulation-based inference 
+% adapting the sbi methods to decision neuroscience collected data
+% compare different sbi methods
+% find a suitable parameter combination for each participant
+% inteprete the parameter fitting results
+% compare different participants' behavior
+
+\begin{itemize}
+  \item Assess the state of the art of \textbf{simulation-based inference} (SBI) methods
+  \item Apply SBI methods to \textbf{decision neuroscience data} collected through experiments on human visual perception and decision making
+  \item Compare different SBI methods
+  \item Find a suitable parameter combination for each participant
+  \item Interpret the results of the parameter fitting process
+  \item Compare the behavior of different participants to gain a deeper understanding of the processes underlying human decision making in the context of visual perception
+\end{itemize}
+
+\subsection{Methods}
+
+%figAbbre
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{.79\textwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{./figure/Inference methods comparison.png}
+  \end{subfigure}
+  \begin{subfigure}{.2\textwidth}
+	\centering
+	\includegraphics[width=\columnwidth]{./figure/bayesian equation.png}
+  \end{subfigure}
+  \caption{Fronterior of simulation-based inference and comparison between different methods}
+  \label{fig: inference methods}
+\end{figure}
+
+% in this project, we will focus on the simulation based inference methods, The fundamental challenge for simulation-based inference problems is that the likelihood function p(x |\theta) implicitly defined by the simulator is typically not tractable
+
+In this project, our focus will be on \textbf{simulation-based inference methods}. One of the main challenges in this area is the fact that the likelihood function, defined by the simulator as $p(x|\theta)$, is often not tractable.
+
+% traditional inference methods including 
+% 1. approximate Bayesian computation (ABC) 
+% 2. histograms or kernel density estimation
+% But Both of the traditional approaches suffer from shortcomings in three crucial aspects
+% Sample efficiency: The number of simulated samples needed to provide a good estimate of the likelihood or posterior can be prohibitively expensive. 
+% Quality of inference: The reduction of the data to low dimensional summary statistics invariably discards some of the information in the data about θ, which results in a loss in statistical power. Large values of the parameter in ABC or the bandwidth parameter for kernel density estimation lead to poor approximations of the true likelihood. Both reduce the overall quality of inference.
+% Amortization: new observed data would require the repeating of inference 
+\textbf{Traditional methods} for addressing this challenge include 
+\begin{itemize}
+  \item approximate Bayesian computation (ABC) 
+  \item histograms or kernel density estimation
+\end{itemize}
+
+However, both of these approaches have shortcomings in 
+\begin{itemize}
+  \item \textbf{sample efficiency}: The number of simulated samples required for a good estimate of the likelihood or posterior can be high, leading to prohibitively expensive computations.
+  \item \textbf{quality of inference}: reducing the data to low dimensional summary statistics can result in a loss of information about $\theta$, reducing the statistical power of the inference. The approximations of the true likelihood also tend to be poor, leading to a reduced quality of inference overall. 
+  \item \textbf{amortization}: New observed data would require repeating the entire inference process.
+\end{itemize}
+
+% The development of machine learning, active learning methods The deep integration of automatic differentiation and probabilistic programming lead to new inference methods
+The advancements in machine learning, active learning and the integration of automatic differentiation and probabilistic programming have led to the development of \textbf{novel methods for inference}.
+
+\paragraph*{Machine learning}
+% 1 machine learning
+Neural network and GANs allows the learning of 
+\begin{itemize}
+  \item posterior $p(\theta|x)$, named as neural posterior approximation network
+  \item likelihood $p(x|\theta)$, named as neural likelihood approximation network
+  \item likelihood ratio $p(x |\theta)/p(x)$, named as neural likelihood ratio approximation network
+\end{itemize}
+
+
+% Active learning 
+% A simple, but very impactful idea is to run the simulator at parameter points θ that are expected to increase our knowledge the most which is more simulation efficient.
+\paragraph*{Active learning}
+Active learning is a simple, yet impactful concept that involves running the simulator at parameter points $\theta$ that are expected to provide the most knowledge gain, leading to a more efficient use of simulations.
+
+% Integration and augmentation
+% Integration and augmentation in simulation-based inference involves incorporating machine learning and active learning to improve quality of inference and sample efficiency compared to classical methods, and changing the perspective of treating the simulator as a black box by opening it to access more information and integrating it more tightly with the inference engine. 
+% This can be achieved through probabilistic programming and augmenting the training data with additional information extracted from the simulator.
+\paragraph*{Integration and augmentation}
+In simulation-based inference, integration and augmentation play a crucial role. The integration of machine learning and active learning techniques aims to enhance the quality of inference and increase sample efficiency compared to classical methods. The approach of treating the simulator as a black box can be changed by incorporating probabilistic programming and augmenting the training data with additional information obtained from the simulator.
+
+% In the area of decision neuroscience:
+% the data and observation has both continuous and discrete format
+% different neural network structure is needed for this type of data
+% beside the likelihood approximation networks (LAN), a new Mixed Neural Likelihood Estimation (MNLE) trains neural density estimators with a structure designed on model simulations to emulate the simulator.
+% This project would start from building this MNLE which is supposed to be more efficient than LANs.
+
+The field of \textbf{decision neuroscience} presents a unique challenge, as the data and observations come in both continuous and discrete formats. This requires a different neural network structure, leading to the development of the Mixed Neural Likelihood Estimation (MNLE) method. MNLE trains neural density estimators with a structure based on model simulations, making it more efficient than traditional neural likelihood approximation networks (NLAN).
+
+The goal of this project is to replicate the MNLE as a solution for the challenge of having both continuous and discrete data in decision neuroscience, and to also explore other potential solutions.
+
+\subsection{Outcome}
+
+The outcome of the "Simulation-based Inference for Decision Neuroscience" project will likely be an in-depth understanding of the processes underlying human decision making in the context of visual perception. 
+
+By applying simulation-based inference methods, the project aims to assess the consistency of results obtained from traditional regression methods, and compare different SBI methods. Additionally, the project will likely result in the identification of a suitable parameter combination for each participant, as well as the interpretation of the results of the parameter fitting process. The comparison of the behavior of different participants will provide a deeper understanding of human decision making. 
+
+The project may also lead to advancements in simulation-based inference and its application to decision neuroscience. Finally, the outcome will likely be a written report and presentation that summarize and communicate the findings of the project.
+
+\subsection{Risk plan}
+
+This project could facing the following risks:
+\begin{itemize}
+  \item Model Limitations: The physical model used in the project may have limitations in accurately describing the underlying processes of human decision making. This can affect the validity of the results obtained from the simulations.
+  \item Technical Challenges: The implementation of simulation-based inference methods can pose technical challenges, such as computational limitations and difficulties in fitting the physical model to the data.
+  \item Lack of Expertise: A lack of expertise in the field of decision neuroscience and simulation-based inference methods can pose a risk to the success of the project.
+  \item Time Management: Adequate time management is crucial for the success of the project. Delays in one aspect of the project can have a cascading effect on the overall timeline, leading to missed deadlines and reduced quality of the results.
+\end{itemize}
+
+
+To mitigate these risks, the following actions can be taken:
+
+\begin{itemize}
+  \item Conduct a thorough literature review to ensure that sufficient data and resources are available for the project.
+  \item Plan and allocate sufficient time for technical development and troubleshooting.
+  \item Seek expert advice and guidance from mentors and colleagues to overcome technical challenges.
+  \item Monitor the progress of the project regularly and make adjustments as needed to ensure that the timeline is on track.
+\end{itemize}
+
+
+\section{Work Plan}
+% work plan
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\columnwidth]{../tables/work plan.png}
+  % \caption{}
+  \label{fig: work plan}
+\end{figure}

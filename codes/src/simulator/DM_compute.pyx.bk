@@ -1,0 +1,273 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+cimport cython
+import numpy as np
+cimport numpy as np
+from scipy.stats import norm
+import re
+
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
+
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cdef np.ndarray[DTYPE_t, ndim=2] _decode_BGLSON_from_array_cy(
+    np.ndarray[DTYPE_t, ndim=1] params, 
+    str                              modelName
+):
+
+    cdef np.ndarray[DTYPE_t, ndim=2] nan_mat = np.full((6, 8), np.nan)
+    cdef np.ndarray[DTYPE_t, ndim=1] params_temp = params[4:]
+
+    # parse the model name
+    cdef str ns = re.search(r'B(.)G(.)L(.)S(.)O(.)N(.)', modelName).groups()
+    cdef int _sum = sum([int(x)+1 for x in ns if x != '-'])
+
+    assert _sum + 4 == len(params), 'input parameters dimension do not match the model name'
+
+    cdef int i
+    cdef str n
+    for i, n in enumerate(ns):
+        if n != '-':
+            nan_mat[i, :int(n)+1] = params_temp[:int(n)+1]
+            params_temp = params_temp[int(n)+1:]
+
+    return nan_mat
+
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cpdef _compute_stoch_trace_cy(
+    np.ndarray[DTYPE_t, ndim=1]    seqC, 
+    np.ndarray[DTYPE_t, ndim=1]    B, 
+    np.ndarray[DTYPE_t, ndim=1]    Lambda, 
+    DTYPE_t                        dt, 
+    DTYPE_t                        sigma2a, 
+    DTYPE_t                        sigma2i, 
+    DTYPE_t                        sigma2s, 
+    DTYPE_t                        temporalDiscretization, 
+    bint                           debug=False
+):
+
+    cdef int N = len(seqC)
+    cdef np.ndarray[DTYPE_t, ndim=1] rn  = np.empty(N, dtype=np.float64)
+    cdef np.ndarray[DTYPE_t, ndim=1] rn1 = np.empty(1, dtype=np.float64)
+    cdef np.ndarray[DTYPE_t, ndim=1] dW  = np.empty(N, dtype=np.float64)
+    cdef np.ndarray[DTYPE_t, ndim=1] eta = np.empty(N, dtype=np.float64)
+    cdef np.ndarray[DTYPE_t, ndim=1] a   = np.empty(N+1, dtype=np.float64)
+    cdef np.ndarray[DTYPE_t, ndim=1] da  = np.empty(N, dtype=np.float64)
+
+    if debug:
+        rn[:] = norm.ppf(np.random.rand(N))
+    else:
+        rn[:] = np.random.randn(N)
+    dW[:] = np.sqrt(dt)*rn
+    
+    if debug:
+        rn[:] = norm.ppf(np.random.rand(N))
+    else:
+        rn[:] = np.random.randn(N)
+    eta[:] = 1 + np.sqrt(sigma2s) * rn * np.sqrt(temporalDiscretization)
+    
+    if debug:
+        rn1[:] = norm.ppf(np.random.rand())
+    else:
+        rn1[:] = np.random.randn()
+    a[0] = np.sqrt(sigma2i) * rn
+
+    cdef int k
+    for k in range(1, len(seqC)+1):
+        if np.abs(a[k-1]) >= B[k-1]: # hit sticky boundary 
+            a[k-1:] = B[k-1]*np.sign(a[k-1])
+            break
+        else:
+            da[k-1] = np.sqrt(sigma2a) * dW[k-1] + seqC[k-1]*eta[k-1]*dt + Lambda[k-1]*a[k-1]*dt
+            a[k]    = a[k-1] + da[k-1]
+        
+    if np.abs(a[k]) >= B[k-1]: # sticky boundary at the end
+        a[k] = B[k-1] * np.sign(a[k])
+    
+    return a[:k+1]
+
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cpdef _compute_mean_trace_cy(np.ndarray[DTYPE_t, ndim=1] seqC,
+                           np.ndarray[DTYPE_t, ndim=1] B,
+                           np.ndarray[DTYPE_t, ndim=1] Lambda,
+                           DTYPE_t dt
+):
+
+    cdef int N = len(seqC)
+    cdef np.ndarray[DTYPE_t, ndim=1] a  = np.zeros((N+1))
+    cdef np.ndarray[DTYPE_t, ndim=1] da = np.zeros((N))
+    a[0] = 0
+    
+    cdef int k
+    for k in range(1, N+1):
+        if np.abs(a[k-1]) >= B[k-1]: # hit sticky boundary 
+            a[k-1:] = B[k-1]*np.sign(a[k-1])
+            break
+        else:
+            da[k-1] = seqC[k-1]*dt + Lambda[k-1]*a[k-1]*dt
+            a[k]    = a[k-1] + da[k-1]
+    
+    if np.abs(a[k]) >= B[k-1]: # sticky boundary at the end
+        a[k] = B[k-1] * np.sign(a[k])
+    
+    return a
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cpdef _affine_transformation_cy(np.ndarray[DTYPE_t, ndim=1] arrayIn):
+    """affine transformation of the input array into range [-1,1]"""
+    cdef DTYPE_t minVal = np.min(arrayIn)
+    cdef DTYPE_t maxVal = np.max(arrayIn)
+    return 2.0 * (arrayIn - minVal) / (maxVal - minVal) - 1.0
+
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cpdef np.ndarray[DTYPE_t, ndim=2] _get_orthogonal_polynomials_curves_cy(
+    np.ndarray[DTYPE_t, ndim=1] arrayIn, 
+    int order
+    ):
+
+    # Define the types of the variables
+    cdef int len_arrayIn = arrayIn.shape[0]
+    cdef np.ndarray[DTYPE_t, ndim=2] matrixOut = np.zeros((8, len_arrayIn), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] arrayInAffine = np.zeros(len_arrayIn, dtype=DTYPE)
+    
+    # the input order should be less than 7
+    if order > 7:
+        raise Exception("order should be less than 7")
+    
+    arrayInAffine[:] = _affine_transformation_cy(arrayIn)
+    
+    if order >= 0:
+        matrixOut[0,:] = np.ones(len_arrayIn, dtype=DTYPE)
+    if order >= 1:
+        matrixOut[1,:] = arrayInAffine
+    if order >= 2:
+        matrixOut[2,:] = 1/2*(3*arrayInAffine**2 - 1)
+    if order >= 3:
+        matrixOut[3,:] = 1/2*(5*arrayInAffine**3 - 3*arrayInAffine)
+    if order >= 4:
+        matrixOut[4,:] = 1/8*(35*arrayInAffine**4 - 30*arrayInAffine**2 + 3)
+    if order >= 5:
+        matrixOut[5,:] = 1/8*(63*arrayInAffine**5 - 70*arrayInAffine**3 + 15*arrayInAffine)
+    if order >= 6:
+        matrixOut[6,:] = 1/16*(231*arrayInAffine**6 - 315*arrayInAffine**4 + 105*arrayInAffine**2 - 5)
+    if order >= 7:
+        matrixOut[7,:] = 1/16*(429*arrayInAffine**7 - 693*arrayInAffine**5 + 315*arrayInAffine**3 - 35*arrayInAffine)
+    
+    return np.asarray(matrixOut)
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cpdef np.ndarray[DTYPE_t, ndim=1] _sensory_adaptation_for_seqC_cy(
+    np.ndarray[DTYPE_t, ndim=1] seqC,
+    np.ndarray[DTYPE_t, ndim=1] Ssame,
+    np.ndarray[DTYPE_t, ndim=1] Soppo,
+    np.ndarray[DTYPE_t, ndim=1] Selse,
+    DTYPE_t                     dt,
+    int                         maxClength
+):
+
+    cdef int N = len(seqC)
+    cdef np.ndarray[DTYPE_t, ndim=1] SelseTemp
+    cdef np.ndarray[DTYPE_t, ndim=1] tempBins
+    cdef int                         order
+    cdef np.ndarray[DTYPE_t, ndim=2] orthogonalPolynomials
+    cdef np.ndarray[DTYPE_t, ndim=1] adaptedC = np.zeros_like(seqC, dtype=DTYPE)
+    cdef int ii
+    cdef int countSame = 0
+    cdef int countOppo = 0
+    cdef int countElse = 0
+    
+    # sensory adaptation for Snew
+    if np.isnan(Selse).all(): # check if Selse is full of nan
+        SelseTemp = np.ones((N), dtype=DTYPE)
+    else:
+        tempBins = np.arange(0, dt*(maxClength-1), dt, dtype=DTYPE)
+
+        Selse = Selse[~np.isnan(Selse)] # remove nan
+        order = len(Selse) - 1
+
+        orthogonalPolynomials = _get_orthogonal_polynomials_curves_cy(tempBins, order)
+        SelseTemp = np.dot(Selse, orthogonalPolynomials[:order+1, :]) # e.g. (1, 8) @ (8, 14) = (1, 14)
+
+    # sensory adaptation for Ssame and Soppo
+    tempBins = np.arange(0, dt*(maxClength-2), dt, dtype=DTYPE)
+    Ssame = Ssame[~np.isnan(Ssame)] # remove nan
+    Soppo = Soppo[~np.isnan(Soppo)] # remove nan
+    order = np.max([len(Ssame), len(Soppo)]) - 1 # order of the polynomial
+    orthogonalPolynomials = _get_orthogonal_polynomials_curves_cy(tempBins, order)
+
+    cdef np.ndarray[DTYPE_t, ndim=2] SsameTemp = np.dot(Ssame, orthogonalPolynomials[:len(Ssame), :])
+    cdef np.ndarray[DTYPE_t, ndim=2] SoppoTemp = np.dot(Soppo, orthogonalPolynomials[:len(Soppo), :])
+    
+    # operate sensory adaptation
+    for ii in range(1,N):
+
+        if (seqC[ii-1] == seqC[ii]) and (abs(seqC[ii]) > 0): # ++ or --, not 0
+            countSame += 1
+            countOppo, countElse= 0, 0
+            adaptedC[ii] = SsameTemp[countSame-1] * seqC[ii]
+    
+        elif (seqC[ii-1] == -seqC[ii]) and (np.abs(seqC[ii]) > 0): # +- or -+, not 0
+            countOppo += 1
+            countSame, countElse = 0, 0
+            adaptedC[ii] = SoppoTemp[countOppo-1] * seqC[ii]
+        
+        else:
+            if seqC[ii-1] == 0:
+                countElse += 1
+                adaptedC[ii] = SelseTemp[countElse-1] * seqC[ii]
+            else:
+                countElse = 0 
+                adaptedC[ii] = seqC[ii]
+            countSame, countOppo = 0, 0
+    
+    return adaptedC
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.cdivision(True)
+cpdef np.ndarray[DTYPE_t, ndim=1] _compute_variance_cy(
+    np.ndarray[DTYPE_t, ndim=1] seqC, 
+    np.ndarray[DTYPE_t, ndim=1] Lambda,
+    double                      dt, 
+    double                      sigma2a,
+    double                      sigma2i,
+    double                      sigma2s,
+    double                      temporalDiscretization
+):
+    cdef int T = len(seqC)
+    cdef np.ndarray[DTYPE_t, ndim=1] var_a = np.zeros_like(seqC, dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] var_i = np.zeros(T+1, dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] var_s = np.zeros_like(seqC, dtype=DTYPE)
+    # cdef np.ndarray[DTYPE_t, ndim=1] sigma2dt = np.zeros_like(seqC, dtype=DTYPE)
+    cdef int k
+
+    var_a[0] = sigma2a * dt
+    for k in range(1, T):
+        var_a[k] = var_a[k-1]*(1+Lambda[k-1]*dt)**2 + sigma2a*dt
+    
+    var_i[0] = sigma2i
+    for k in range(1, T+1):
+        var_i[k] = var_i[k-1]*(1 + Lambda[k-1]*dt)**2
+    var_i = var_i[1:]
+
+    var_s[0] = seqC[0]**2 * dt * sigma2s
+    for k in range(1, T):
+        var_s[k] = var_s[k-1]*(1+Lambda[k-1]*dt)**2 + seqC[k]**2 * dt**2 * temporalDiscretization * sigma2s 
+    
+    return var_a + var_i + var_s
+    
