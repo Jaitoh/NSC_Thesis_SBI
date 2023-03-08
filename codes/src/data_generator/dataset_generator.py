@@ -3,6 +3,7 @@ generate/prepare training dataset for sbi inference: x, theta
 """
 import time
 import sys
+
 sys.path.append('./src')
 
 import os
@@ -21,6 +22,7 @@ import itertools
 import h5py
 from pathlib import Path
 from tqdm import tqdm
+
 
 # from tqdm import tqdm
 
@@ -152,7 +154,6 @@ def simulate_and_store(
 
         test=False,
 ):
-
     """
     pre-generate training dataset for sbi inference - seqC, params, probR
 
@@ -200,13 +201,13 @@ def simulate_and_store(
 
     info_group = f.create_group('/info_group')
     info_group.create_dataset("seqC_MS_list", data=seqC_MS_list)
-    info_group.create_dataset("seqC_dur_max", data=seqC_dur_max)
-    info_group.create_dataset("seqC_sample_size", data=seqC_sample_size)
+    info_group.create_dataset("seqC_dur_max", data=[seqC_dur_max])
+    info_group.create_dataset("seqC_sample_size", data=[seqC_sample_size])
     info_group.create_dataset("dur_list", data=dur_list)
-    info_group.create_dataset("num_prior_sample", data=num_prior_sample)
+    info_group.create_dataset("num_prior_sample", data=[num_prior_sample])
     info_group.create_dataset("prior_min", data=prior_min)
     info_group.create_dataset("prior_max", data=prior_max)
-    info_group.create_dataset("model_name", data=model_name)
+    info_group.create_dataset("model_name", data=[model_name])
     # info_group.create_dataset("nan2num", data = nan2num)
     # info_group.create_dataset("num_LR_sample", data = num_LR_sample)
 
@@ -252,6 +253,8 @@ def prepare_training_data_from_sampled_Rchoices(
         dur_list: list,
         nan2num=-1,
         num_probR_sample=30,
+        part_of_seqC=0.5,
+        part_of_prior=0.5,
 ):
     """ preparing the dataset (x, theta) pair for training
     from (seqC, theta, probR) -> (x, theta)
@@ -262,6 +265,8 @@ def prepare_training_data_from_sampled_Rchoices(
         dur_list:   (list) the list of durations to be used
         nan2num:   (float) the value to replace nan in seqC
         num_probR_sample: (int) the number of samples to be drawn from probR
+        part_of_seqC: (float) 0-1 the percentage of sequence samples e.g. 50 seqC samples, take the first 10, the given value would be 0.2
+        part_of_prior: (float) 0-1 the percentage of prior samples
 
     Returns:
         x: (np.array) the input data for training
@@ -269,36 +274,49 @@ def prepare_training_data_from_sampled_Rchoices(
     """
 
     f = h5py.File(dataset_dir, 'r')
+    prior_sample_size = f['info_group']['num_prior_sample'][0]
+    seqC_sample_size = f['info_group']['seqC_sample_size'][0]
+
     seqC_group = f['seqC_group']
     theta_group = f['theta_group']
     probR_group = f['probR_group']
     single_seqC_shape = seqC_group[f'seqC_dur{3}'].shape
     single_theta_shape = theta_group[f'theta_dur{3}'].shape
-    single_probR_shape = probR_group[f'probR_dur{3}'].shape
+    # single_probR_shape = probR_group[f'probR_dur{3}'].shape
 
-    seqC_shape = [single_seqC_shape[0] * len(dur_list) * num_probR_sample, single_seqC_shape[1]]
-    theta_shape = [single_theta_shape[0] * len(dur_list) * num_probR_sample, single_theta_shape[1]]
-    RChoice_shape = [single_theta_shape[0] * len(dur_list) * num_probR_sample, 1]
+    seqC_part_idx_start = np.arange(0, int(seqC_sample_size * part_of_seqC * prior_sample_size), prior_sample_size)
+    theta_part_idx = int(prior_sample_size * part_of_prior)
+    print(f'original seqC sample size {seqC_sample_size}, taken part of size {int(seqC_sample_size*part_of_seqC)}')
+    print(f'original prior sample size {prior_sample_size}, taken part of size {theta_part_idx}')
+
+    idx_chosen = [list(range(start_idx, start_idx + theta_part_idx)) for start_idx in seqC_part_idx_start]
+    idx_chosen = np.array(idx_chosen).flatten()
+
+    datasize = len(idx_chosen) * len(dur_list) * num_probR_sample
+    seqC_shape = [datasize, single_seqC_shape[1]]
+    theta_shape = [datasize, single_theta_shape[1]]
+    RChoice_shape = [datasize, 1]
 
     seqC, theta, RChoice = np.empty(seqC_shape), np.empty(theta_shape), np.empty(RChoice_shape)
 
     print('loading data...')
     start_time = time.time()
-    for i, dur in tqdm(enumerate(dur_list)):
-        seqC_part = np.repeat(seqC_group[f'seqC_dur{dur}'][:], num_probR_sample, axis=0)
-        theta_part = np.repeat(theta_group[f'theta_dur{dur}'][:], num_probR_sample, axis=0)
-        probR = probR_group[f'probR_dur{dur}'][:]
+    for i, dur in tqdm(enumerate(dur_list), total=len(dur_list)):
+        seqC_part = np.repeat(seqC_group[f'seqC_dur{dur}'][idx_chosen], num_probR_sample, axis=0)
+        theta_part = np.repeat(theta_group[f'theta_dur{dur}'][idx_chosen], num_probR_sample, axis=0)
+
+        probR = probR_group[f'probR_dur{dur}'][idx_chosen]
         RChoice_part = np.array([
             np.random.choice([0, 1], size=num_probR_sample, p=[1 - prob[0], prob[0]])
             for prob in probR
         ]).reshape(-1, 1)
 
-        seqC[i * single_seqC_shape[0] * num_probR_sample
-             : (i + 1) * single_seqC_shape[0] * num_probR_sample, :] = seqC_part
-        theta[i * single_theta_shape[0] * num_probR_sample
-              : (i + 1) * single_theta_shape[0] * num_probR_sample, :] = theta_part
-        RChoice[i * single_theta_shape[0] * num_probR_sample
-                : (i + 1) * single_theta_shape[0] * num_probR_sample, :] = RChoice_part
+        seqC[i * len(idx_chosen) * num_probR_sample
+             : (i + 1) * len(idx_chosen) * num_probR_sample, :] = seqC_part
+        theta[i * len(idx_chosen) * num_probR_sample
+              : (i + 1) * len(idx_chosen) * num_probR_sample, :] = theta_part
+        RChoice[i * len(idx_chosen) * num_probR_sample
+                : (i + 1) * len(idx_chosen) * num_probR_sample, :] = RChoice_part
     print(f'data loaded, time used: {time.time() - start_time:.2f}s')
 
     # adjust seqC -> nan2num + normalize
@@ -316,21 +334,24 @@ if __name__ == '__main__':
     # remember to generate the cython code first
     # generate the sequence C, theta, probR dataset
 
-    simulate_and_store(
-        save_data_dir='../data/training_datasets/training_dataset_test.hdf5',
+    do_simulate = False
 
-        seqC_MS_list=[0.2, 0.4, 0.8],
-        seqC_dur_max=14,  # 2, 4, 6, 8, 10, 12, 14 -> 7
-        seqC_sample_size=700,
+    if do_simulate:
+        simulate_and_store(
+            save_data_dir='../data/training_datasets/training_dataset_test.hdf5',
 
-        prior_min=[-3.7, -36, 0, -34, 5],
-        prior_max=[2.5, 71, 0, 18, 7],
-        num_prior_sample=500,
+            seqC_MS_list=[0.2, 0.4, 0.8],
+            seqC_dur_max=14,  # 2, 4, 6, 8, 10, 12, 14 -> 7
+            seqC_sample_size=700,
 
-        model_name='B-G-L0S-O-N-',
+            prior_min=[-3.7, -36, 0, -34, 5],
+            prior_max=[2.5, 71, 0, 18, 7],
+            num_prior_sample=500,
 
-        test=True,
-    )
+            model_name='B-G-L0S-O-N-',
+
+            test=True,
+        )
 
     # transfer the dataset to (x, theta) pair for training
     dataset_dir_test = Path('../data/training_datasets/training_dataset_test.hdf5')
