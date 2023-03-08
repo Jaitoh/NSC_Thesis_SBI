@@ -21,9 +21,7 @@ figures/*
 *.tif
 *.bmp
 
-*.mat
 *.npy
-*.h5
 *.hdf5
 *.csv
 
@@ -31,5 +29,11 @@ figures/*
 *.ipynb_checkpoints
 *.DS_Store
 *.pyc
-*__pycache__
+
+*.idea*
+*.0
+*.pkl
+*.out
+
+*/ref/*
 

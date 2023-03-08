@@ -1,0 +1,1 @@
+tensorboard --logdir ./src/train/logs/log_test --port 6006
