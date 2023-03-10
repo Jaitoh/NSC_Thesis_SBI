@@ -137,14 +137,18 @@ print_cuda_info(device)
 
 # save density estimator to a pickle file
 density_estimator_dir = log_dir / 'density_estimator_test.pkl' if test else log_dir / 'density_estimator.pkl'
-with open(density_estimator_dir, 'wb') as f:
-    pickle.dump(density_estimator, f)
-print('density_estimator saved to', density_estimator_dir)
-
+inference_dir = log_dir / 'inference_test.pkl' if test else log_dir / 'inference.pkl'
 posterior_dir = log_dir / 'posterior_test.pkl' if test else log_dir / 'posterior.pkl'
 
 posterior = inference.build_posterior(density_estimator)
 
+# save objects to files
+with open(density_estimator_dir, 'wb') as f:
+    pickle.dump(density_estimator, f)
+print('density_estimator saved to', density_estimator_dir)
 with open(posterior_dir, 'wb') as f:
     pickle.dump(posterior, f)
 print('posterior saved to', posterior_dir)
+with open(inference_dir, 'wb') as f:
+    pickle.dump(inference, f)
+print('posterior saved to', inference_dir)
