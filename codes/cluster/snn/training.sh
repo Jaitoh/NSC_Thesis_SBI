@@ -1,0 +1,1 @@
+python3 ./src/train/test_train_L0.py > ./src/train/logs/log_sample_Rchoices.txt

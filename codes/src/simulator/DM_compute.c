@@ -2291,7 +2291,7 @@ static PyObject *__pyx_codeobj__32;
 static PyObject *__pyx_codeobj__39;
 /* Late includes */
 
-/* "DM_compute.pyx":20
+/* "DM_compute.pyx":23
  * #     int omp_get_thread_num()
  * 
  * def compute_mean_trace_parallel(seqC, B, Lambda, dt):             # <<<<<<<<<<<<<<
@@ -2340,23 +2340,23 @@ static PyObject *__pyx_pw_10DM_compute_1compute_mean_trace_parallel(PyObject *__
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_B)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, 1); __PYX_ERR(0, 20, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, 1); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Lambda)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, 2); __PYX_ERR(0, 20, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, 2); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dt)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, 3); __PYX_ERR(0, 20, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, 3); __PYX_ERR(0, 23, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_mean_trace_parallel") < 0)) __PYX_ERR(0, 20, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_mean_trace_parallel") < 0)) __PYX_ERR(0, 23, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -2373,7 +2373,7 @@ static PyObject *__pyx_pw_10DM_compute_1compute_mean_trace_parallel(PyObject *__
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 20, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_mean_trace_parallel", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 23, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("DM_compute.compute_mean_trace_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2404,7 +2404,7 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("compute_mean_trace_parallel", 0);
 
-  /* "DM_compute.pyx":22
+  /* "DM_compute.pyx":25
  * def compute_mean_trace_parallel(seqC, B, Lambda, dt):
  *     # check data type
  *     assert seqC.dtype   == np.float64             # <<<<<<<<<<<<<<
@@ -2413,26 +2413,26 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 22, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 22, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 22, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 25, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 22, __pyx_L1_error)
+      __PYX_ERR(0, 25, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":23
+  /* "DM_compute.pyx":26
  *     # check data type
  *     assert seqC.dtype   == np.float64
  *     assert B.dtype      == np.float64             # <<<<<<<<<<<<<<
@@ -2441,26 +2441,26 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 26, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 23, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 26, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 23, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 26, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 23, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 26, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 23, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 26, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 23, __pyx_L1_error)
+      __PYX_ERR(0, 26, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":24
+  /* "DM_compute.pyx":27
  *     assert seqC.dtype   == np.float64
  *     assert B.dtype      == np.float64
  *     assert Lambda.dtype == np.float64             # <<<<<<<<<<<<<<
@@ -2469,26 +2469,26 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 24, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 27, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 24, __pyx_L1_error)
+      __PYX_ERR(0, 27, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":28
+  /* "DM_compute.pyx":31
  * 
  *     # check ndim
  *     assert seqC.ndim    == 1             # <<<<<<<<<<<<<<
@@ -2497,21 +2497,21 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 31, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 28, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 31, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 28, __pyx_L1_error)
+      __PYX_ERR(0, 31, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":29
+  /* "DM_compute.pyx":32
  *     # check ndim
  *     assert seqC.ndim    == 1
  *     assert B.ndim       == 1             # <<<<<<<<<<<<<<
@@ -2520,21 +2520,21 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 32, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 32, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 29, __pyx_L1_error)
+      __PYX_ERR(0, 32, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":30
+  /* "DM_compute.pyx":33
  *     assert seqC.ndim    == 1
  *     assert B.ndim       == 1
  *     assert Lambda.ndim  == 1             # <<<<<<<<<<<<<<
@@ -2543,21 +2543,21 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 33, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 30, __pyx_L1_error)
+      __PYX_ERR(0, 33, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":35
+  /* "DM_compute.pyx":38
  * 
  *     # check whether array is contiguous
  *     assert seqC.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
@@ -2566,21 +2566,21 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 35, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 38, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 35, __pyx_L1_error)
+      __PYX_ERR(0, 38, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":36
+  /* "DM_compute.pyx":39
  *     # check whether array is contiguous
  *     assert seqC.flags['C_CONTIGUOUS']
  *     assert B.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
@@ -2589,21 +2589,21 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_flags); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_flags); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 39, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_1, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_1, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 39, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 36, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 39, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 36, __pyx_L1_error)
+      __PYX_ERR(0, 39, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":37
+  /* "DM_compute.pyx":40
  *     assert seqC.flags['C_CONTIGUOUS']
  *     assert B.flags['C_CONTIGUOUS']
  *     assert Lambda.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
@@ -2612,64 +2612,64 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 40, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 40, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 37, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 40, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 37, __pyx_L1_error)
+      __PYX_ERR(0, 40, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":40
+  /* "DM_compute.pyx":43
  * 
  *     # allocate output and state variables
  *     N = seqC.shape[0]             # <<<<<<<<<<<<<<
  *     a = np.zeros((N+1), dtype=np.float64)
  *     da = np.zeros((N), dtype=np.float64)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 40, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 43, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 40, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 43, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_N = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":41
+  /* "DM_compute.pyx":44
  *     # allocate output and state variables
  *     N = seqC.shape[0]
  *     a = np.zeros((N+1), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     da = np.zeros((N), dtype=np.float64)
  *     a[0] = 0.0
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_AddObjC(__pyx_v_N, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_AddObjC(__pyx_v_N, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2);
   __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 41, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -2677,33 +2677,33 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   __pyx_v_a = __pyx_t_6;
   __pyx_t_6 = 0;
 
-  /* "DM_compute.pyx":42
+  /* "DM_compute.pyx":45
  *     N = seqC.shape[0]
  *     a = np.zeros((N+1), dtype=np.float64)
  *     da = np.zeros((N), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     a[0] = 0.0
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_INCREF(__pyx_v_N);
   __Pyx_GIVEREF(__pyx_v_N);
   PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_N);
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 42, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -2711,23 +2711,23 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   __pyx_v_da = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "DM_compute.pyx":43
+  /* "DM_compute.pyx":46
  *     a = np.zeros((N+1), dtype=np.float64)
  *     da = np.zeros((N), dtype=np.float64)
  *     a[0] = 0.0             # <<<<<<<<<<<<<<
  * 
  *     _compute_mean_trace_parallel(seqC, B, Lambda, dt, a, da)
  */
-  if (unlikely(__Pyx_SetItemInt(__pyx_v_a, 0, __pyx_float_0_0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 43, __pyx_L1_error)
+  if (unlikely(__Pyx_SetItemInt(__pyx_v_a, 0, __pyx_float_0_0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 46, __pyx_L1_error)
 
-  /* "DM_compute.pyx":45
+  /* "DM_compute.pyx":48
  *     a[0] = 0.0
  * 
  *     _compute_mean_trace_parallel(seqC, B, Lambda, dt, a, da)             # <<<<<<<<<<<<<<
  *     return a
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_compute_mean_trace_parallel); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_compute_mean_trace_parallel); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 48, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_6 = NULL;
   __pyx_t_7 = 0;
@@ -2744,7 +2744,7 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[7] = {__pyx_t_6, __pyx_v_seqC, __pyx_v_B, __pyx_v_Lambda, __pyx_v_dt, __pyx_v_a, __pyx_v_da};
-    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 6+__pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 6+__pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 48, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_5);
   } else
@@ -2752,13 +2752,13 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[7] = {__pyx_t_6, __pyx_v_seqC, __pyx_v_B, __pyx_v_Lambda, __pyx_v_dt, __pyx_v_a, __pyx_v_da};
-    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 6+__pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 6+__pyx_t_7); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 48, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_5);
   } else
   #endif
   {
-    __pyx_t_2 = PyTuple_New(6+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
+    __pyx_t_2 = PyTuple_New(6+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 48, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     if (__pyx_t_6) {
       __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -2781,14 +2781,14 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
     __Pyx_INCREF(__pyx_v_da);
     __Pyx_GIVEREF(__pyx_v_da);
     PyTuple_SET_ITEM(__pyx_t_2, 5+__pyx_t_7, __pyx_v_da);
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 45, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 48, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "DM_compute.pyx":46
+  /* "DM_compute.pyx":49
  * 
  *     _compute_mean_trace_parallel(seqC, B, Lambda, dt, a, da)
  *     return a             # <<<<<<<<<<<<<<
@@ -2800,7 +2800,7 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   __pyx_r = __pyx_v_a;
   goto __pyx_L0;
 
-  /* "DM_compute.pyx":20
+  /* "DM_compute.pyx":23
  * #     int omp_get_thread_num()
  * 
  * def compute_mean_trace_parallel(seqC, B, Lambda, dt):             # <<<<<<<<<<<<<<
@@ -2826,7 +2826,7 @@ static PyObject *__pyx_pf_10DM_compute_compute_mean_trace_parallel(CYTHON_UNUSED
   return __pyx_r;
 }
 
-/* "DM_compute.pyx":51
+/* "DM_compute.pyx":54
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_da_a_mean(             # <<<<<<<<<<<<<<
@@ -2841,7 +2841,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_mean(__Pyx_memviewsli
   Py_ssize_t __pyx_t_2;
   Py_ssize_t __pyx_t_3;
 
-  /* "DM_compute.pyx":60
+  /* "DM_compute.pyx":63
  * ) nogil:
  * 
  *     cdef double C_dt = seqC[k]*dt             # <<<<<<<<<<<<<<
@@ -2851,7 +2851,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_mean(__Pyx_memviewsli
   __pyx_t_1 = __pyx_v_k;
   __pyx_v_C_dt = ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_seqC.data) + __pyx_t_1)) ))) * __pyx_v_dt);
 
-  /* "DM_compute.pyx":61
+  /* "DM_compute.pyx":64
  * 
  *     cdef double C_dt = seqC[k]*dt
  *     cdef double Lambda_a_dt = Lambda[k]*a[k]*dt             # <<<<<<<<<<<<<<
@@ -2862,7 +2862,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_mean(__Pyx_memviewsli
   __pyx_t_2 = __pyx_v_k;
   __pyx_v_Lambda_a_dt = (((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_Lambda.data) + __pyx_t_1)) ))) * (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_2)) )))) * __pyx_v_dt);
 
-  /* "DM_compute.pyx":63
+  /* "DM_compute.pyx":66
  *     cdef double Lambda_a_dt = Lambda[k]*a[k]*dt
  * 
  *     da[k]  = C_dt + Lambda_a_dt             # <<<<<<<<<<<<<<
@@ -2872,7 +2872,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_mean(__Pyx_memviewsli
   __pyx_t_2 = __pyx_v_k;
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_da.data) + __pyx_t_2)) )) = (__pyx_v_C_dt + __pyx_v_Lambda_a_dt);
 
-  /* "DM_compute.pyx":64
+  /* "DM_compute.pyx":67
  * 
  *     da[k]  = C_dt + Lambda_a_dt
  *     a[k+1] = a[k] + da[k]             # <<<<<<<<<<<<<<
@@ -2884,7 +2884,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_mean(__Pyx_memviewsli
   __pyx_t_3 = (__pyx_v_k + 1);
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_3)) )) = ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_2)) ))) + (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_da.data) + __pyx_t_1)) ))));
 
-  /* "DM_compute.pyx":51
+  /* "DM_compute.pyx":54
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_da_a_mean(             # <<<<<<<<<<<<<<
@@ -2895,7 +2895,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_mean(__Pyx_memviewsli
   /* function exit code */
 }
 
-/* "DM_compute.pyx":69
+/* "DM_compute.pyx":72
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_mean_trace_parallel(             # <<<<<<<<<<<<<<
@@ -2950,35 +2950,35 @@ static PyObject *__pyx_pw_10DM_compute_3_compute_mean_trace_parallel(PyObject *_
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_B)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 1); __PYX_ERR(0, 69, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 1); __PYX_ERR(0, 72, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Lambda)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 2); __PYX_ERR(0, 69, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 2); __PYX_ERR(0, 72, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dt)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 3); __PYX_ERR(0, 69, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 3); __PYX_ERR(0, 72, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 4); __PYX_ERR(0, 69, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 4); __PYX_ERR(0, 72, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_da)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 5); __PYX_ERR(0, 69, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, 5); __PYX_ERR(0, 72, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_compute_mean_trace_parallel") < 0)) __PYX_ERR(0, 69, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_compute_mean_trace_parallel") < 0)) __PYX_ERR(0, 72, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 6) {
       goto __pyx_L5_argtuple_error;
@@ -2990,16 +2990,16 @@ static PyObject *__pyx_pw_10DM_compute_3_compute_mean_trace_parallel(PyObject *_
       values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
       values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
     }
-    __pyx_v_seqC = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_seqC.memview)) __PYX_ERR(0, 70, __pyx_L3_error)
-    __pyx_v_B = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_B.memview)) __PYX_ERR(0, 71, __pyx_L3_error)
-    __pyx_v_Lambda = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_Lambda.memview)) __PYX_ERR(0, 72, __pyx_L3_error)
-    __pyx_v_dt = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_dt == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
-    __pyx_v_a = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_a.memview)) __PYX_ERR(0, 74, __pyx_L3_error)
-    __pyx_v_da = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_da.memview)) __PYX_ERR(0, 75, __pyx_L3_error)
+    __pyx_v_seqC = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_seqC.memview)) __PYX_ERR(0, 73, __pyx_L3_error)
+    __pyx_v_B = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_B.memview)) __PYX_ERR(0, 74, __pyx_L3_error)
+    __pyx_v_Lambda = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_Lambda.memview)) __PYX_ERR(0, 75, __pyx_L3_error)
+    __pyx_v_dt = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_dt == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 76, __pyx_L3_error)
+    __pyx_v_a = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_a.memview)) __PYX_ERR(0, 77, __pyx_L3_error)
+    __pyx_v_da = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_da.memview)) __PYX_ERR(0, 78, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 69, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_compute_mean_trace_parallel", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 72, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("DM_compute._compute_mean_trace_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3032,7 +3032,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_compute_mean_trace_parallel", 0);
 
-  /* "DM_compute.pyx":78
+  /* "DM_compute.pyx":81
  * ):
  * 
  *     cdef Py_ssize_t N = seqC.shape[0]             # <<<<<<<<<<<<<<
@@ -3041,7 +3041,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
  */
   __pyx_v_N = (__pyx_v_seqC.shape[0]);
 
-  /* "DM_compute.pyx":85
+  /* "DM_compute.pyx":88
  *     # with nogil, openmp.omp_set_num_threads(16):
  *     # openmp.omp_set_num_threads(16)
  *     for k in prange(1, N+1, nogil=True):             # <<<<<<<<<<<<<<
@@ -3095,7 +3095,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
                             __pyx_v_abs_a = ((double)__PYX_NAN());
                             __pyx_v_sign_a = ((double)__PYX_NAN());
 
-                            /* "DM_compute.pyx":86
+                            /* "DM_compute.pyx":89
  *     # openmp.omp_set_num_threads(16)
  *     for k in prange(1, N+1, nogil=True):
  *         abs_a = fabs(a[k-1])             # <<<<<<<<<<<<<<
@@ -3105,7 +3105,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
                             __pyx_t_4 = (__pyx_v_k - 1);
                             __pyx_v_abs_a = fabs((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-                            /* "DM_compute.pyx":87
+                            /* "DM_compute.pyx":90
  *     for k in prange(1, N+1, nogil=True):
  *         abs_a = fabs(a[k-1])
  *         sign_a = copysign(1.0, a[k-1])             # <<<<<<<<<<<<<<
@@ -3115,7 +3115,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
                             __pyx_t_4 = (__pyx_v_k - 1);
                             __pyx_v_sign_a = copysign(1.0, (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-                            /* "DM_compute.pyx":89
+                            /* "DM_compute.pyx":92
  *         sign_a = copysign(1.0, a[k-1])
  * 
  *         if abs_a >= B[k-1]: # hit sticky boundary             # <<<<<<<<<<<<<<
@@ -3126,7 +3126,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
                             __pyx_t_5 = ((__pyx_v_abs_a >= (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_B.data) + __pyx_t_4)) )))) != 0);
                             if (__pyx_t_5) {
 
-                              /* "DM_compute.pyx":90
+                              /* "DM_compute.pyx":93
  * 
  *         if abs_a >= B[k-1]: # hit sticky boundary
  *             a[k-1:] = B[k-1] * sign_a # set the rest of the trace to the sticky boundary value             # <<<<<<<<<<<<<<
@@ -3152,7 +3152,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
     0,
     1) < 0))
 {
-    __PYX_ERR(0, 90, __pyx_L8_error)
+    __PYX_ERR(0, 93, __pyx_L8_error)
 }
 
 {
@@ -3171,7 +3171,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
                               __pyx_t_6.memview = NULL;
                               __pyx_t_6.data = NULL;
 
-                              /* "DM_compute.pyx":91
+                              /* "DM_compute.pyx":94
  *         if abs_a >= B[k-1]: # hit sticky boundary
  *             a[k-1:] = B[k-1] * sign_a # set the rest of the trace to the sticky boundary value
  *             break             # <<<<<<<<<<<<<<
@@ -3180,7 +3180,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
  */
                               goto __pyx_L7_break;
 
-                              /* "DM_compute.pyx":89
+                              /* "DM_compute.pyx":92
  *         sign_a = copysign(1.0, a[k-1])
  * 
  *         if abs_a >= B[k-1]: # hit sticky boundary             # <<<<<<<<<<<<<<
@@ -3189,7 +3189,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
  */
                             }
 
-                            /* "DM_compute.pyx":94
+                            /* "DM_compute.pyx":97
  *         else:
  *             # with boundscheck(True), wraparound(True):
  *             update_da_a_mean(seqC, Lambda, dt, a, da, k-1)             # <<<<<<<<<<<<<<
@@ -3288,7 +3288,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
         #endif
       }
 
-      /* "DM_compute.pyx":85
+      /* "DM_compute.pyx":88
  *     # with nogil, openmp.omp_set_num_threads(16):
  *     # openmp.omp_set_num_threads(16)
  *     for k in prange(1, N+1, nogil=True):             # <<<<<<<<<<<<<<
@@ -3314,7 +3314,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
       }
   }
 
-  /* "DM_compute.pyx":96
+  /* "DM_compute.pyx":99
  *             update_da_a_mean(seqC, Lambda, dt, a, da, k-1)
  * 
  *     abs_a = fabs(a[k])             # <<<<<<<<<<<<<<
@@ -3324,7 +3324,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
   __pyx_t_4 = __pyx_v_k;
   __pyx_v_abs_a = fabs((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-  /* "DM_compute.pyx":97
+  /* "DM_compute.pyx":100
  * 
  *     abs_a = fabs(a[k])
  *     sign_a = copysign(1.0, a[k])             # <<<<<<<<<<<<<<
@@ -3334,7 +3334,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
   __pyx_t_4 = __pyx_v_k;
   __pyx_v_sign_a = copysign(1.0, (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-  /* "DM_compute.pyx":99
+  /* "DM_compute.pyx":102
  *     sign_a = copysign(1.0, a[k])
  * 
  *     if abs_a >= B[k-1]: # sticky boundary at the end             # <<<<<<<<<<<<<<
@@ -3345,7 +3345,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
   __pyx_t_5 = ((__pyx_v_abs_a >= (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_B.data) + __pyx_t_4)) )))) != 0);
   if (__pyx_t_5) {
 
-    /* "DM_compute.pyx":100
+    /* "DM_compute.pyx":103
  * 
  *     if abs_a >= B[k-1]: # sticky boundary at the end
  *         a[k] = B[k-1] * sign_a             # <<<<<<<<<<<<<<
@@ -3356,7 +3356,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
     __pyx_t_8 = __pyx_v_k;
     *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_8)) )) = ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_B.data) + __pyx_t_4)) ))) * __pyx_v_sign_a);
 
-    /* "DM_compute.pyx":99
+    /* "DM_compute.pyx":102
  *     sign_a = copysign(1.0, a[k])
  * 
  *     if abs_a >= B[k-1]: # sticky boundary at the end             # <<<<<<<<<<<<<<
@@ -3365,7 +3365,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
  */
   }
 
-  /* "DM_compute.pyx":69
+  /* "DM_compute.pyx":72
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_mean_trace_parallel(             # <<<<<<<<<<<<<<
@@ -3391,7 +3391,7 @@ static PyObject *__pyx_pf_10DM_compute_2_compute_mean_trace_parallel(CYTHON_UNUS
   return __pyx_r;
 }
 
-/* "DM_compute.pyx":103
+/* "DM_compute.pyx":106
  * 
  * 
  * def compute_stoch_trace_parallel( dW, eta, a, da, seqC, B, Lambda, dt, sigma2a, sigma2i, sigma2s, temporalDiscretization, debug=False):             # <<<<<<<<<<<<<<
@@ -3469,67 +3469,67 @@ static PyObject *__pyx_pw_10DM_compute_5compute_stoch_trace_parallel(PyObject *_
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_eta)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 1); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 1); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 2); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 2); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_da)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 3); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 3); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_seqC)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 4); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 4); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_B)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 5); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 5); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Lambda)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 6); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 6); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dt)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 7); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 7); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 8); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 8); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2i)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 9); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 9); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 10:
         if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 10); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 10); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 11:
         if (likely((values[11] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_temporalDiscretization)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 11); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, 11); __PYX_ERR(0, 106, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 12:
@@ -3539,7 +3539,7 @@ static PyObject *__pyx_pw_10DM_compute_5compute_stoch_trace_parallel(PyObject *_
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_stoch_trace_parallel") < 0)) __PYX_ERR(0, 103, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_stoch_trace_parallel") < 0)) __PYX_ERR(0, 106, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3577,7 +3577,7 @@ static PyObject *__pyx_pw_10DM_compute_5compute_stoch_trace_parallel(PyObject *_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 103, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_stoch_trace_parallel", 0, 12, 13, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 106, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("DM_compute.compute_stoch_trace_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3605,7 +3605,7 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("compute_stoch_trace_parallel", 0);
 
-  /* "DM_compute.pyx":107
+  /* "DM_compute.pyx":110
  *     """
  *     # check dtype
  *     assert seqC.dtype   == np.float64             # <<<<<<<<<<<<<<
@@ -3614,91 +3614,7 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 107, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 107, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 107, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":108
- *     # check dtype
- *     assert seqC.dtype   == np.float64
- *     assert B.dtype      == np.float64             # <<<<<<<<<<<<<<
- *     assert Lambda.dtype == np.float64
- *     assert dW.dtype     == np.float64
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 108, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":109
- *     assert seqC.dtype   == np.float64
- *     assert B.dtype      == np.float64
- *     assert Lambda.dtype == np.float64             # <<<<<<<<<<<<<<
- *     assert dW.dtype     == np.float64
- *     assert eta.dtype    == np.float64
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 109, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":110
- *     assert B.dtype      == np.float64
- *     assert Lambda.dtype == np.float64
- *     assert dW.dtype     == np.float64             # <<<<<<<<<<<<<<
- *     assert eta.dtype    == np.float64
- *     assert a.dtype      == np.float64
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_dW, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
@@ -3718,15 +3634,15 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":111
+ *     # check dtype
+ *     assert seqC.dtype   == np.float64
+ *     assert B.dtype      == np.float64             # <<<<<<<<<<<<<<
  *     assert Lambda.dtype == np.float64
  *     assert dW.dtype     == np.float64
- *     assert eta.dtype    == np.float64             # <<<<<<<<<<<<<<
- *     assert a.dtype      == np.float64
- *     assert da.dtype     == np.float64
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_eta, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 111, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
@@ -3746,15 +3662,15 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":112
+ *     assert seqC.dtype   == np.float64
+ *     assert B.dtype      == np.float64
+ *     assert Lambda.dtype == np.float64             # <<<<<<<<<<<<<<
  *     assert dW.dtype     == np.float64
  *     assert eta.dtype    == np.float64
- *     assert a.dtype      == np.float64             # <<<<<<<<<<<<<<
- *     assert da.dtype     == np.float64
- * 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 112, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 112, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
@@ -3774,15 +3690,15 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":113
+ *     assert B.dtype      == np.float64
+ *     assert Lambda.dtype == np.float64
+ *     assert dW.dtype     == np.float64             # <<<<<<<<<<<<<<
  *     assert eta.dtype    == np.float64
  *     assert a.dtype      == np.float64
- *     assert da.dtype     == np.float64             # <<<<<<<<<<<<<<
- * 
- *     # check ndim
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_da, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_dW, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
@@ -3801,7 +3717,91 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   }
   #endif
 
+  /* "DM_compute.pyx":114
+ *     assert Lambda.dtype == np.float64
+ *     assert dW.dtype     == np.float64
+ *     assert eta.dtype    == np.float64             # <<<<<<<<<<<<<<
+ *     assert a.dtype      == np.float64
+ *     assert da.dtype     == np.float64
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_eta, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 114, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":115
+ *     assert dW.dtype     == np.float64
+ *     assert eta.dtype    == np.float64
+ *     assert a.dtype      == np.float64             # <<<<<<<<<<<<<<
+ *     assert da.dtype     == np.float64
+ * 
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_dtype); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 115, __pyx_L1_error)
+    }
+  }
+  #endif
+
   /* "DM_compute.pyx":116
+ *     assert eta.dtype    == np.float64
+ *     assert a.dtype      == np.float64
+ *     assert da.dtype     == np.float64             # <<<<<<<<<<<<<<
+ * 
+ *     # check ndim
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_da, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 116, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":119
  * 
  *     # check ndim
  *     assert seqC.ndim    == 1             # <<<<<<<<<<<<<<
@@ -3810,82 +3810,13 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 119, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 119, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 119, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 116, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":117
- *     # check ndim
- *     assert seqC.ndim    == 1
- *     assert B.ndim       == 1             # <<<<<<<<<<<<<<
- *     assert Lambda.ndim  == 1
- *     assert dW.ndim      == 1
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 117, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":118
- *     assert seqC.ndim    == 1
- *     assert B.ndim       == 1
- *     assert Lambda.ndim  == 1             # <<<<<<<<<<<<<<
- *     assert dW.ndim      == 1
- *     assert eta.ndim     == 1
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 118, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 118, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 118, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":119
- *     assert B.ndim       == 1
- *     assert Lambda.ndim  == 1
- *     assert dW.ndim      == 1             # <<<<<<<<<<<<<<
- *     assert eta.ndim     == 1
- *     assert a.ndim       == 1
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_dW, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 119, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 119, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 119, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 119, __pyx_L1_error)
@@ -3894,21 +3825,21 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":120
+ *     # check ndim
+ *     assert seqC.ndim    == 1
+ *     assert B.ndim       == 1             # <<<<<<<<<<<<<<
  *     assert Lambda.ndim  == 1
  *     assert dW.ndim      == 1
- *     assert eta.ndim     == 1             # <<<<<<<<<<<<<<
- *     assert a.ndim       == 1
- *     assert da.ndim      == 1
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_eta, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 120, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 120, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 120, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 120, __pyx_L1_error)
@@ -3917,21 +3848,21 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":121
+ *     assert seqC.ndim    == 1
+ *     assert B.ndim       == 1
+ *     assert Lambda.ndim  == 1             # <<<<<<<<<<<<<<
  *     assert dW.ndim      == 1
  *     assert eta.ndim     == 1
- *     assert a.ndim       == 1             # <<<<<<<<<<<<<<
- *     assert da.ndim      == 1
- * 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 121, __pyx_L1_error)
@@ -3940,6 +3871,75 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":122
+ *     assert B.ndim       == 1
+ *     assert Lambda.ndim  == 1
+ *     assert dW.ndim      == 1             # <<<<<<<<<<<<<<
+ *     assert eta.ndim     == 1
+ *     assert a.ndim       == 1
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_dW, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 122, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":123
+ *     assert Lambda.ndim  == 1
+ *     assert dW.ndim      == 1
+ *     assert eta.ndim     == 1             # <<<<<<<<<<<<<<
+ *     assert a.ndim       == 1
+ *     assert da.ndim      == 1
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_eta, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 123, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 123, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":124
+ *     assert dW.ndim      == 1
+ *     assert eta.ndim     == 1
+ *     assert a.ndim       == 1             # <<<<<<<<<<<<<<
+ *     assert da.ndim      == 1
+ * 
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 124, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 124, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":125
  *     assert eta.ndim     == 1
  *     assert a.ndim       == 1
  *     assert da.ndim      == 1             # <<<<<<<<<<<<<<
@@ -3948,21 +3948,21 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_da, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_da, __pyx_n_s_ndim); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 125, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 125, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 122, __pyx_L1_error)
+      __PYX_ERR(0, 125, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":127
+  /* "DM_compute.pyx":130
  * 
  *     # check whether array is contiguous
  *     assert seqC.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
@@ -3971,82 +3971,13 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 127, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 130, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 127, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":128
- *     # check whether array is contiguous
- *     assert seqC.flags['C_CONTIGUOUS']
- *     assert B.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
- *     assert Lambda.flags['C_CONTIGUOUS']
- *     assert dW.flags['C_CONTIGUOUS']
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 128, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 128, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 128, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 128, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":129
- *     assert seqC.flags['C_CONTIGUOUS']
- *     assert B.flags['C_CONTIGUOUS']
- *     assert Lambda.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
- *     assert dW.flags['C_CONTIGUOUS']
- *     assert eta.flags['C_CONTIGUOUS']
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 129, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 129, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 129, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":130
- *     assert B.flags['C_CONTIGUOUS']
- *     assert Lambda.flags['C_CONTIGUOUS']
- *     assert dW.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
- *     assert eta.flags['C_CONTIGUOUS']
- *     assert a.flags['C_CONTIGUOUS']
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_dW, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 130, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 130, __pyx_L1_error)
@@ -4055,21 +3986,21 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":131
+ *     # check whether array is contiguous
+ *     assert seqC.flags['C_CONTIGUOUS']
+ *     assert B.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
  *     assert Lambda.flags['C_CONTIGUOUS']
  *     assert dW.flags['C_CONTIGUOUS']
- *     assert eta.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
- *     assert a.flags['C_CONTIGUOUS']
- *     assert da.flags['C_CONTIGUOUS']
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_eta, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_B, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 131, __pyx_L1_error)
@@ -4078,21 +4009,21 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":132
+ *     assert seqC.flags['C_CONTIGUOUS']
+ *     assert B.flags['C_CONTIGUOUS']
+ *     assert Lambda.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
  *     assert dW.flags['C_CONTIGUOUS']
  *     assert eta.flags['C_CONTIGUOUS']
- *     assert a.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
- *     assert da.flags['C_CONTIGUOUS']
- * 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 132, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 132, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 132, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 132, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 132, __pyx_L1_error)
@@ -4101,6 +4032,75 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #endif
 
   /* "DM_compute.pyx":133
+ *     assert B.flags['C_CONTIGUOUS']
+ *     assert Lambda.flags['C_CONTIGUOUS']
+ *     assert dW.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
+ *     assert eta.flags['C_CONTIGUOUS']
+ *     assert a.flags['C_CONTIGUOUS']
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_dW, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 133, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":134
+ *     assert Lambda.flags['C_CONTIGUOUS']
+ *     assert dW.flags['C_CONTIGUOUS']
+ *     assert eta.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
+ *     assert a.flags['C_CONTIGUOUS']
+ *     assert da.flags['C_CONTIGUOUS']
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_eta, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 134, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":135
+ *     assert dW.flags['C_CONTIGUOUS']
+ *     assert eta.flags['C_CONTIGUOUS']
+ *     assert a.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
+ *     assert da.flags['C_CONTIGUOUS']
+ * 
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_a, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 135, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 135, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 135, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 135, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":136
  *     assert eta.flags['C_CONTIGUOUS']
  *     assert a.flags['C_CONTIGUOUS']
  *     assert da.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
@@ -4109,43 +4109,43 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_da, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_da, __pyx_n_s_flags); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 136, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_3, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 136, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 136, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 133, __pyx_L1_error)
+      __PYX_ERR(0, 136, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":138
+  /* "DM_compute.pyx":141
  *     # cdef np.ndarray[np.float64, ndim=1] rn1, rn2, rn3
  *     # cdef Py_ssize_t N = seqC.shape[0]
  *     N = seqC.shape[0]             # <<<<<<<<<<<<<<
  * 
  *     # computation in C
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_N = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "DM_compute.pyx":141
+  /* "DM_compute.pyx":144
  * 
  *     # computation in C
  *     _compute_stoch_trace_parallel(seqC, B, Lambda, dt, sigma2a, sigma2i, sigma2s, temporalDiscretization, a, da, dW, eta)             # <<<<<<<<<<<<<<
  * 
  *     return a
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_stoch_trace_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_stoch_trace_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_1 = NULL;
   __pyx_t_5 = 0;
@@ -4162,7 +4162,7 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[13] = {__pyx_t_1, __pyx_v_seqC, __pyx_v_B, __pyx_v_Lambda, __pyx_v_dt, __pyx_v_sigma2a, __pyx_v_sigma2i, __pyx_v_sigma2s, __pyx_v_temporalDiscretization, __pyx_v_a, __pyx_v_da, __pyx_v_dW, __pyx_v_eta};
-    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 12+__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 12+__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_GOTREF(__pyx_t_3);
   } else
@@ -4170,13 +4170,13 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[13] = {__pyx_t_1, __pyx_v_seqC, __pyx_v_B, __pyx_v_Lambda, __pyx_v_dt, __pyx_v_sigma2a, __pyx_v_sigma2i, __pyx_v_sigma2s, __pyx_v_temporalDiscretization, __pyx_v_a, __pyx_v_da, __pyx_v_dW, __pyx_v_eta};
-    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 12+__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 12+__pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_GOTREF(__pyx_t_3);
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(12+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 141, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(12+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 144, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_1) {
       __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_1); __pyx_t_1 = NULL;
@@ -4217,14 +4217,14 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
     __Pyx_INCREF(__pyx_v_eta);
     __Pyx_GIVEREF(__pyx_v_eta);
     PyTuple_SET_ITEM(__pyx_t_6, 11+__pyx_t_5, __pyx_v_eta);
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "DM_compute.pyx":143
+  /* "DM_compute.pyx":146
  *     _compute_stoch_trace_parallel(seqC, B, Lambda, dt, sigma2a, sigma2i, sigma2s, temporalDiscretization, a, da, dW, eta)
  * 
  *     return a             # <<<<<<<<<<<<<<
@@ -4236,7 +4236,7 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   __pyx_r = __pyx_v_a;
   goto __pyx_L0;
 
-  /* "DM_compute.pyx":103
+  /* "DM_compute.pyx":106
  * 
  * 
  * def compute_stoch_trace_parallel( dW, eta, a, da, seqC, B, Lambda, dt, sigma2a, sigma2i, sigma2s, temporalDiscretization, debug=False):             # <<<<<<<<<<<<<<
@@ -4259,7 +4259,7 @@ static PyObject *__pyx_pf_10DM_compute_4compute_stoch_trace_parallel(CYTHON_UNUS
   return __pyx_r;
 }
 
-/* "DM_compute.pyx":148
+/* "DM_compute.pyx":151
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_da_a_stoch(             # <<<<<<<<<<<<<<
@@ -4275,7 +4275,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   Py_ssize_t __pyx_t_2;
   Py_ssize_t __pyx_t_3;
 
-  /* "DM_compute.pyx":160
+  /* "DM_compute.pyx":163
  * ) nogil:
  * 
  *     cdef double part1 = sqrt(sigma2a) * dW[k]             # <<<<<<<<<<<<<<
@@ -4285,7 +4285,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   __pyx_t_1 = __pyx_v_k;
   __pyx_v_part1 = (sqrt(__pyx_v_sigma2a) * (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_dW.data) + __pyx_t_1)) ))));
 
-  /* "DM_compute.pyx":161
+  /* "DM_compute.pyx":164
  * 
  *     cdef double part1 = sqrt(sigma2a) * dW[k]
  *     cdef double part2 = seqC[k] * eta[k] * dt             # <<<<<<<<<<<<<<
@@ -4296,7 +4296,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   __pyx_t_2 = __pyx_v_k;
   __pyx_v_part2 = (((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_seqC.data) + __pyx_t_1)) ))) * (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_eta.data) + __pyx_t_2)) )))) * __pyx_v_dt);
 
-  /* "DM_compute.pyx":162
+  /* "DM_compute.pyx":165
  *     cdef double part1 = sqrt(sigma2a) * dW[k]
  *     cdef double part2 = seqC[k] * eta[k] * dt
  *     cdef double part3 = Lambda[k] * a[k] * dt             # <<<<<<<<<<<<<<
@@ -4307,7 +4307,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   __pyx_t_1 = __pyx_v_k;
   __pyx_v_part3 = (((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_Lambda.data) + __pyx_t_2)) ))) * (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_1)) )))) * __pyx_v_dt);
 
-  /* "DM_compute.pyx":164
+  /* "DM_compute.pyx":167
  *     cdef double part3 = Lambda[k] * a[k] * dt
  * 
  *     da[k]  = part1 + part2 + part3             # <<<<<<<<<<<<<<
@@ -4317,7 +4317,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   __pyx_t_1 = __pyx_v_k;
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_da.data) + __pyx_t_1)) )) = ((__pyx_v_part1 + __pyx_v_part2) + __pyx_v_part3);
 
-  /* "DM_compute.pyx":165
+  /* "DM_compute.pyx":168
  * 
  *     da[k]  = part1 + part2 + part3
  *     a[k+1] = a[k] + da[k]             # <<<<<<<<<<<<<<
@@ -4329,7 +4329,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   __pyx_t_3 = (__pyx_v_k + 1);
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_3)) )) = ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_1)) ))) + (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_da.data) + __pyx_t_2)) ))));
 
-  /* "DM_compute.pyx":148
+  /* "DM_compute.pyx":151
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_da_a_stoch(             # <<<<<<<<<<<<<<
@@ -4340,7 +4340,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_da_a_stoch(__Pyx_memviewsl
   /* function exit code */
 }
 
-/* "DM_compute.pyx":170
+/* "DM_compute.pyx":173
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_stoch_trace_parallel(             # <<<<<<<<<<<<<<
@@ -4413,71 +4413,71 @@ static PyObject *__pyx_pw_10DM_compute_7_compute_stoch_trace_parallel(PyObject *
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_B)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 1); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 1); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Lambda)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 2); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 2); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dt)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 3); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 3); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 4); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 4); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2i)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 5); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 5); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 6); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 6); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_temporalDiscretization)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 7); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 7); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 8); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 8); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_da)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 9); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 9); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 10:
         if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dW)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 10); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 10); __PYX_ERR(0, 173, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 11:
         if (likely((values[11] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_eta)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 11); __PYX_ERR(0, 170, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, 11); __PYX_ERR(0, 173, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_compute_stoch_trace_parallel") < 0)) __PYX_ERR(0, 170, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_compute_stoch_trace_parallel") < 0)) __PYX_ERR(0, 173, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 12) {
       goto __pyx_L5_argtuple_error;
@@ -4495,22 +4495,22 @@ static PyObject *__pyx_pw_10DM_compute_7_compute_stoch_trace_parallel(PyObject *
       values[10] = PyTuple_GET_ITEM(__pyx_args, 10);
       values[11] = PyTuple_GET_ITEM(__pyx_args, 11);
     }
-    __pyx_v_seqC = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_seqC.memview)) __PYX_ERR(0, 171, __pyx_L3_error)
-    __pyx_v_B = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_B.memview)) __PYX_ERR(0, 172, __pyx_L3_error)
-    __pyx_v_Lambda = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_Lambda.memview)) __PYX_ERR(0, 173, __pyx_L3_error)
-    __pyx_v_dt = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_dt == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 174, __pyx_L3_error)
-    __pyx_v_sigma2a = __pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_sigma2a == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L3_error)
-    __pyx_v_sigma2i = __pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_sigma2i == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 176, __pyx_L3_error)
-    __pyx_v_sigma2s = __pyx_PyFloat_AsDouble(values[6]); if (unlikely((__pyx_v_sigma2s == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
-    __pyx_v_temporalDiscretization = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_temporalDiscretization == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 178, __pyx_L3_error)
-    __pyx_v_a = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[8], PyBUF_WRITABLE); if (unlikely(!__pyx_v_a.memview)) __PYX_ERR(0, 179, __pyx_L3_error)
-    __pyx_v_da = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[9], PyBUF_WRITABLE); if (unlikely(!__pyx_v_da.memview)) __PYX_ERR(0, 180, __pyx_L3_error)
-    __pyx_v_dW = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[10], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dW.memview)) __PYX_ERR(0, 181, __pyx_L3_error)
-    __pyx_v_eta = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[11], PyBUF_WRITABLE); if (unlikely(!__pyx_v_eta.memview)) __PYX_ERR(0, 182, __pyx_L3_error)
+    __pyx_v_seqC = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_seqC.memview)) __PYX_ERR(0, 174, __pyx_L3_error)
+    __pyx_v_B = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_B.memview)) __PYX_ERR(0, 175, __pyx_L3_error)
+    __pyx_v_Lambda = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_Lambda.memview)) __PYX_ERR(0, 176, __pyx_L3_error)
+    __pyx_v_dt = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_dt == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
+    __pyx_v_sigma2a = __pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_sigma2a == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 178, __pyx_L3_error)
+    __pyx_v_sigma2i = __pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_sigma2i == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
+    __pyx_v_sigma2s = __pyx_PyFloat_AsDouble(values[6]); if (unlikely((__pyx_v_sigma2s == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 180, __pyx_L3_error)
+    __pyx_v_temporalDiscretization = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_temporalDiscretization == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 181, __pyx_L3_error)
+    __pyx_v_a = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[8], PyBUF_WRITABLE); if (unlikely(!__pyx_v_a.memview)) __PYX_ERR(0, 182, __pyx_L3_error)
+    __pyx_v_da = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[9], PyBUF_WRITABLE); if (unlikely(!__pyx_v_da.memview)) __PYX_ERR(0, 183, __pyx_L3_error)
+    __pyx_v_dW = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[10], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dW.memview)) __PYX_ERR(0, 184, __pyx_L3_error)
+    __pyx_v_eta = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[11], PyBUF_WRITABLE); if (unlikely(!__pyx_v_eta.memview)) __PYX_ERR(0, 185, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 170, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_compute_stoch_trace_parallel", 1, 12, 12, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 173, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("DM_compute._compute_stoch_trace_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4543,7 +4543,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_compute_stoch_trace_parallel", 0);
 
-  /* "DM_compute.pyx":184
+  /* "DM_compute.pyx":187
  *     double[::1]   eta
  * ):
  *     cdef Py_ssize_t N = seqC.shape[0]             # <<<<<<<<<<<<<<
@@ -4552,7 +4552,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
  */
   __pyx_v_N = (__pyx_v_seqC.shape[0]);
 
-  /* "DM_compute.pyx":189
+  /* "DM_compute.pyx":192
  *     cdef double abs_a, sign_a
  * 
  *     for k in prange(1, N+1, nogil=True):             # <<<<<<<<<<<<<<
@@ -4606,7 +4606,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
                             __pyx_v_abs_a = ((double)__PYX_NAN());
                             __pyx_v_sign_a = ((double)__PYX_NAN());
 
-                            /* "DM_compute.pyx":190
+                            /* "DM_compute.pyx":193
  * 
  *     for k in prange(1, N+1, nogil=True):
  *         abs_a = fabs(a[k-1])             # <<<<<<<<<<<<<<
@@ -4616,7 +4616,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
                             __pyx_t_4 = (__pyx_v_k - 1);
                             __pyx_v_abs_a = fabs((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-                            /* "DM_compute.pyx":191
+                            /* "DM_compute.pyx":194
  *     for k in prange(1, N+1, nogil=True):
  *         abs_a = fabs(a[k-1])
  *         sign_a = copysign(1.0, a[k-1])             # <<<<<<<<<<<<<<
@@ -4626,7 +4626,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
                             __pyx_t_4 = (__pyx_v_k - 1);
                             __pyx_v_sign_a = copysign(1.0, (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-                            /* "DM_compute.pyx":193
+                            /* "DM_compute.pyx":196
  *         sign_a = copysign(1.0, a[k-1])
  * 
  *         if abs_a >= B[k-1]: # hit sticky boundary             # <<<<<<<<<<<<<<
@@ -4637,7 +4637,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
                             __pyx_t_5 = ((__pyx_v_abs_a >= (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_B.data) + __pyx_t_4)) )))) != 0);
                             if (__pyx_t_5) {
 
-                              /* "DM_compute.pyx":194
+                              /* "DM_compute.pyx":197
  * 
  *         if abs_a >= B[k-1]: # hit sticky boundary
  *             a[k-1:] = B[k-1] * sign_a # set the rest of the trace to the sticky boundary value             # <<<<<<<<<<<<<<
@@ -4663,7 +4663,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
     0,
     1) < 0))
 {
-    __PYX_ERR(0, 194, __pyx_L8_error)
+    __PYX_ERR(0, 197, __pyx_L8_error)
 }
 
 {
@@ -4682,7 +4682,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
                               __pyx_t_6.memview = NULL;
                               __pyx_t_6.data = NULL;
 
-                              /* "DM_compute.pyx":195
+                              /* "DM_compute.pyx":198
  *         if abs_a >= B[k-1]: # hit sticky boundary
  *             a[k-1:] = B[k-1] * sign_a # set the rest of the trace to the sticky boundary value
  *             break             # <<<<<<<<<<<<<<
@@ -4691,7 +4691,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
  */
                               goto __pyx_L7_break;
 
-                              /* "DM_compute.pyx":193
+                              /* "DM_compute.pyx":196
  *         sign_a = copysign(1.0, a[k-1])
  * 
  *         if abs_a >= B[k-1]: # hit sticky boundary             # <<<<<<<<<<<<<<
@@ -4700,7 +4700,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
  */
                             }
 
-                            /* "DM_compute.pyx":198
+                            /* "DM_compute.pyx":201
  *         else:
  *             # with boundscheck(True), wraparound(True):
  *             update_da_a_stoch(seqC, Lambda, dt, a, da, k-1, dW, eta, sigma2a)             # <<<<<<<<<<<<<<
@@ -4799,7 +4799,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
         #endif
       }
 
-      /* "DM_compute.pyx":189
+      /* "DM_compute.pyx":192
  *     cdef double abs_a, sign_a
  * 
  *     for k in prange(1, N+1, nogil=True):             # <<<<<<<<<<<<<<
@@ -4825,7 +4825,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
       }
   }
 
-  /* "DM_compute.pyx":200
+  /* "DM_compute.pyx":203
  *             update_da_a_stoch(seqC, Lambda, dt, a, da, k-1, dW, eta, sigma2a)
  * 
  *     abs_a = fabs(a[k])             # <<<<<<<<<<<<<<
@@ -4835,7 +4835,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
   __pyx_t_4 = __pyx_v_k;
   __pyx_v_abs_a = fabs((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-  /* "DM_compute.pyx":201
+  /* "DM_compute.pyx":204
  * 
  *     abs_a = fabs(a[k])
  *     sign_a = copysign(1.0, a[k])             # <<<<<<<<<<<<<<
@@ -4845,7 +4845,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
   __pyx_t_4 = __pyx_v_k;
   __pyx_v_sign_a = copysign(1.0, (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_4)) ))));
 
-  /* "DM_compute.pyx":203
+  /* "DM_compute.pyx":206
  *     sign_a = copysign(1.0, a[k])
  * 
  *     if abs_a >= B[k-1]: # sticky boundary at the end             # <<<<<<<<<<<<<<
@@ -4856,7 +4856,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
   __pyx_t_5 = ((__pyx_v_abs_a >= (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_B.data) + __pyx_t_4)) )))) != 0);
   if (__pyx_t_5) {
 
-    /* "DM_compute.pyx":204
+    /* "DM_compute.pyx":207
  * 
  *     if abs_a >= B[k-1]: # sticky boundary at the end
  *         a[k] = B[k-1] * sign_a             # <<<<<<<<<<<<<<
@@ -4867,7 +4867,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
     __pyx_t_8 = __pyx_v_k;
     *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_a.data) + __pyx_t_8)) )) = ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_B.data) + __pyx_t_4)) ))) * __pyx_v_sign_a);
 
-    /* "DM_compute.pyx":203
+    /* "DM_compute.pyx":206
  *     sign_a = copysign(1.0, a[k])
  * 
  *     if abs_a >= B[k-1]: # sticky boundary at the end             # <<<<<<<<<<<<<<
@@ -4876,7 +4876,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
  */
   }
 
-  /* "DM_compute.pyx":170
+  /* "DM_compute.pyx":173
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_stoch_trace_parallel(             # <<<<<<<<<<<<<<
@@ -4904,7 +4904,7 @@ static PyObject *__pyx_pf_10DM_compute_6_compute_stoch_trace_parallel(CYTHON_UNU
   return __pyx_r;
 }
 
-/* "DM_compute.pyx":206
+/* "DM_compute.pyx":209
  *         a[k] = B[k-1] * sign_a
  * 
  * def compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization):             # <<<<<<<<<<<<<<
@@ -4963,41 +4963,41 @@ static PyObject *__pyx_pw_10DM_compute_9compute_variance_parallel(PyObject *__py
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dt)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 1); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 1); __PYX_ERR(0, 209, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Lambda)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 2); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 2); __PYX_ERR(0, 209, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 3); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 3); __PYX_ERR(0, 209, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2i)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 4); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 4); __PYX_ERR(0, 209, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 5); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 5); __PYX_ERR(0, 209, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_temporalDiscretization)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 6); __PYX_ERR(0, 206, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, 6); __PYX_ERR(0, 209, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_variance_parallel") < 0)) __PYX_ERR(0, 206, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_variance_parallel") < 0)) __PYX_ERR(0, 209, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 7) {
       goto __pyx_L5_argtuple_error;
@@ -5020,7 +5020,7 @@ static PyObject *__pyx_pw_10DM_compute_9compute_variance_parallel(PyObject *__py
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 206, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_variance_parallel", 1, 7, 7, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 209, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("DM_compute.compute_variance_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5053,7 +5053,7 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("compute_variance_parallel", 0);
 
-  /* "DM_compute.pyx":210
+  /* "DM_compute.pyx":213
  *     """
  *     # check data type
  *     assert seqC.dtype == np.float64             # <<<<<<<<<<<<<<
@@ -5062,26 +5062,26 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 210, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 210, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 210, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 210, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_t_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 210, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 213, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 210, __pyx_L1_error)
+      __PYX_ERR(0, 213, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":211
+  /* "DM_compute.pyx":214
  *     # check data type
  *     assert seqC.dtype == np.float64
  *     assert Lambda.dtype == np.float64             # <<<<<<<<<<<<<<
@@ -5090,26 +5090,26 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 211, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_dtype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 214, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 211, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 214, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 211, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 214, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 211, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 214, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 211, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 214, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 211, __pyx_L1_error)
+      __PYX_ERR(0, 214, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":214
+  /* "DM_compute.pyx":217
  * 
  *     # check ndim
  *     assert seqC.ndim == 1             # <<<<<<<<<<<<<<
@@ -5118,21 +5118,21 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 214, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_ndim); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 214, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 214, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 214, __pyx_L1_error)
+      __PYX_ERR(0, 217, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":215
+  /* "DM_compute.pyx":218
  *     # check ndim
  *     assert seqC.ndim == 1
  *     assert Lambda.ndim == 1             # <<<<<<<<<<<<<<
@@ -5141,38 +5141,13 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 215, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_ndim); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 215, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 218, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 215, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 218, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_4)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 215, __pyx_L1_error)
-    }
-  }
-  #endif
-
-  /* "DM_compute.pyx":218
- * 
- *     # check shape
- *     assert seqC.shape == Lambda.shape             # <<<<<<<<<<<<<<
- * 
- *     # check whether array is contiguous
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 218, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 218, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 218, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 218, __pyx_L1_error)
@@ -5182,20 +5157,22 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
 
   /* "DM_compute.pyx":221
  * 
- *     # check whether array is contiguous
- *     assert seqC.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
- *     assert Lambda.flags['C_CONTIGUOUS']
+ *     # check shape
+ *     assert seqC.shape == Lambda.shape             # <<<<<<<<<<<<<<
  * 
+ *     # check whether array is contiguous
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 221, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 221, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 221, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(__pyx_t_3, __pyx_t_1, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 221, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 221, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
       __PYX_ERR(0, 221, __pyx_L1_error)
@@ -5203,7 +5180,30 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   }
   #endif
 
-  /* "DM_compute.pyx":222
+  /* "DM_compute.pyx":224
+ * 
+ *     # check whether array is contiguous
+ *     assert seqC.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
+ *     assert Lambda.flags['C_CONTIGUOUS']
+ * 
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_flags); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 224, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_t_2, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 224, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 224, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (unlikely(!__pyx_t_4)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      __PYX_ERR(0, 224, __pyx_L1_error)
+    }
+  }
+  #endif
+
+  /* "DM_compute.pyx":225
  *     # check whether array is contiguous
  *     assert seqC.flags['C_CONTIGUOUS']
  *     assert Lambda.flags['C_CONTIGUOUS']             # <<<<<<<<<<<<<<
@@ -5212,62 +5212,62 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_flags); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 222, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_Lambda, __pyx_n_s_flags); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 225, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_1, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 222, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Dict_GetItem(__pyx_t_1, __pyx_n_s_C_CONTIGUOUS); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 222, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 225, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (unlikely(!__pyx_t_4)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 222, __pyx_L1_error)
+      __PYX_ERR(0, 225, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "DM_compute.pyx":225
+  /* "DM_compute.pyx":228
  * 
  *     # allocate output and state variables
  *     N = seqC.shape[0]             # <<<<<<<<<<<<<<
  *     var_a  = np.zeros((N), dtype=np.float64)
  *     var_a[0] =  sigma2a * dt
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seqC, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 228, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 228, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_N = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "DM_compute.pyx":226
+  /* "DM_compute.pyx":229
  *     # allocate output and state variables
  *     N = seqC.shape[0]
  *     var_a  = np.zeros((N), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     var_a[0] =  sigma2a * dt
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_N);
   __Pyx_GIVEREF(__pyx_v_N);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_N);
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 226, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 229, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5275,47 +5275,47 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   __pyx_v_var_a = __pyx_t_6;
   __pyx_t_6 = 0;
 
-  /* "DM_compute.pyx":227
+  /* "DM_compute.pyx":230
  *     N = seqC.shape[0]
  *     var_a  = np.zeros((N), dtype=np.float64)
  *     var_a[0] =  sigma2a * dt             # <<<<<<<<<<<<<<
  * 
  *     var_i = np.zeros((N+1), dtype=np.float64)
  */
-  __pyx_t_6 = PyNumber_Multiply(__pyx_v_sigma2a, __pyx_v_dt); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 227, __pyx_L1_error)
+  __pyx_t_6 = PyNumber_Multiply(__pyx_v_sigma2a, __pyx_v_dt); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 230, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  if (unlikely(__Pyx_SetItemInt(__pyx_v_var_a, 0, __pyx_t_6, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 227, __pyx_L1_error)
+  if (unlikely(__Pyx_SetItemInt(__pyx_v_var_a, 0, __pyx_t_6, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 230, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-  /* "DM_compute.pyx":229
+  /* "DM_compute.pyx":232
  *     var_a[0] =  sigma2a * dt
  * 
  *     var_i = np.zeros((N+1), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     var_i[0] = sigma2i
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyInt_AddObjC(__pyx_v_N, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_AddObjC(__pyx_v_N, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_6);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_6);
   __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 229, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5323,42 +5323,42 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   __pyx_v_var_i = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "DM_compute.pyx":230
+  /* "DM_compute.pyx":233
  * 
  *     var_i = np.zeros((N+1), dtype=np.float64)
  *     var_i[0] = sigma2i             # <<<<<<<<<<<<<<
  * 
  *     var_s = np.zeros((N), dtype=np.float64)
  */
-  if (unlikely(__Pyx_SetItemInt(__pyx_v_var_i, 0, __pyx_v_sigma2i, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 230, __pyx_L1_error)
+  if (unlikely(__Pyx_SetItemInt(__pyx_v_var_i, 0, __pyx_v_sigma2i, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 233, __pyx_L1_error)
 
-  /* "DM_compute.pyx":232
+  /* "DM_compute.pyx":235
  *     var_i[0] = sigma2i
  * 
  *     var_s = np.zeros((N), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     var_s[0] = seqC[0]**2 * sigma2s * dt
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_INCREF(__pyx_v_N);
   __Pyx_GIVEREF(__pyx_v_N);
   PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_v_N);
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_2) < 0) __PYX_ERR(0, 232, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_2) < 0) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_5, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_5, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -5366,35 +5366,35 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   __pyx_v_var_s = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":233
+  /* "DM_compute.pyx":236
  * 
  *     var_s = np.zeros((N), dtype=np.float64)
  *     var_s[0] = seqC[0]**2 * sigma2s * dt             # <<<<<<<<<<<<<<
  * 
  *     _compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization, var_a, var_i, var_s)
  */
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_seqC, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_seqC, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 236, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyNumber_Power(__pyx_t_2, __pyx_int_2, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Power(__pyx_t_2, __pyx_int_2, Py_None); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 236, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_v_sigma2s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Multiply(__pyx_t_1, __pyx_v_sigma2s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 236, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyNumber_Multiply(__pyx_t_2, __pyx_v_dt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Multiply(__pyx_t_2, __pyx_v_dt); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 236, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(__Pyx_SetItemInt(__pyx_v_var_s, 0, __pyx_t_1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 233, __pyx_L1_error)
+  if (unlikely(__Pyx_SetItemInt(__pyx_v_var_s, 0, __pyx_t_1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 236, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "DM_compute.pyx":235
+  /* "DM_compute.pyx":238
  *     var_s[0] = seqC[0]**2 * sigma2s * dt
  * 
  *     _compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization, var_a, var_i, var_s)             # <<<<<<<<<<<<<<
  * 
  *     var_i2 = var_i[1:]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_variance_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_variance_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 238, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_5 = NULL;
   __pyx_t_7 = 0;
@@ -5411,7 +5411,7 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[11] = {__pyx_t_5, __pyx_v_seqC, __pyx_v_dt, __pyx_v_Lambda, __pyx_v_sigma2a, __pyx_v_sigma2i, __pyx_v_sigma2s, __pyx_v_temporalDiscretization, __pyx_v_var_a, __pyx_v_var_i, __pyx_v_var_s};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 10+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 10+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
@@ -5419,13 +5419,13 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[11] = {__pyx_t_5, __pyx_v_seqC, __pyx_v_dt, __pyx_v_Lambda, __pyx_v_sigma2a, __pyx_v_sigma2i, __pyx_v_sigma2s, __pyx_v_temporalDiscretization, __pyx_v_var_a, __pyx_v_var_i, __pyx_v_var_s};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 10+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 10+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(10+__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(10+__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_5) {
       __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -5460,26 +5460,26 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
     __Pyx_INCREF(__pyx_v_var_s);
     __Pyx_GIVEREF(__pyx_v_var_s);
     PyTuple_SET_ITEM(__pyx_t_6, 9+__pyx_t_7, __pyx_v_var_s);
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "DM_compute.pyx":237
+  /* "DM_compute.pyx":240
  *     _compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization, var_a, var_i, var_s)
  * 
  *     var_i2 = var_i[1:]             # <<<<<<<<<<<<<<
  * 
  *     return var_a + var_i2 + var_s
  */
-  __pyx_t_1 = __Pyx_PyObject_GetSlice(__pyx_v_var_i, 1, 0, NULL, NULL, &__pyx_slice_, 1, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 237, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetSlice(__pyx_v_var_i, 1, 0, NULL, NULL, &__pyx_slice_, 1, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 240, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_var_i2 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "DM_compute.pyx":239
+  /* "DM_compute.pyx":242
  *     var_i2 = var_i[1:]
  * 
  *     return var_a + var_i2 + var_s             # <<<<<<<<<<<<<<
@@ -5487,16 +5487,16 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyNumber_Add(__pyx_v_var_a, __pyx_v_var_i2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 239, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Add(__pyx_v_var_a, __pyx_v_var_i2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyNumber_Add(__pyx_t_1, __pyx_v_var_s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 239, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Add(__pyx_t_1, __pyx_v_var_s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "DM_compute.pyx":206
+  /* "DM_compute.pyx":209
  *         a[k] = B[k-1] * sign_a
  * 
  * def compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization):             # <<<<<<<<<<<<<<
@@ -5524,7 +5524,7 @@ static PyObject *__pyx_pf_10DM_compute_8compute_variance_parallel(CYTHON_UNUSED 
   return __pyx_r;
 }
 
-/* "DM_compute.pyx":245
+/* "DM_compute.pyx":248
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_var_a(             # <<<<<<<<<<<<<<
@@ -5539,7 +5539,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
   double __pyx_v_part4;
   Py_ssize_t __pyx_t_1;
 
-  /* "DM_compute.pyx":252
+  /* "DM_compute.pyx":255
  *     Py_ssize_t    k,
  * )nogil:
  *     cdef double part1 = var_a[k-1]             # <<<<<<<<<<<<<<
@@ -5549,7 +5549,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
   __pyx_t_1 = (__pyx_v_k - 1);
   __pyx_v_part1 = (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_var_a.data) + __pyx_t_1)) )));
 
-  /* "DM_compute.pyx":253
+  /* "DM_compute.pyx":256
  * )nogil:
  *     cdef double part1 = var_a[k-1]
  *     cdef double part2 = Lambda[k-1] * dt             # <<<<<<<<<<<<<<
@@ -5559,7 +5559,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
   __pyx_t_1 = (__pyx_v_k - 1);
   __pyx_v_part2 = ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_Lambda.data) + __pyx_t_1)) ))) * __pyx_v_dt);
 
-  /* "DM_compute.pyx":254
+  /* "DM_compute.pyx":257
  *     cdef double part1 = var_a[k-1]
  *     cdef double part2 = Lambda[k-1] * dt
  *     cdef double part3 = sigma2a * dt             # <<<<<<<<<<<<<<
@@ -5568,7 +5568,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
  */
   __pyx_v_part3 = (__pyx_v_sigma2a * __pyx_v_dt);
 
-  /* "DM_compute.pyx":255
+  /* "DM_compute.pyx":258
  *     cdef double part2 = Lambda[k-1] * dt
  *     cdef double part3 = sigma2a * dt
  *     cdef double part4 = part1*(1+part2)**2             # <<<<<<<<<<<<<<
@@ -5577,7 +5577,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
  */
   __pyx_v_part4 = (__pyx_v_part1 * pow((1.0 + __pyx_v_part2), 2.0));
 
-  /* "DM_compute.pyx":257
+  /* "DM_compute.pyx":260
  *     cdef double part4 = part1*(1+part2)**2
  * 
  *     var_a[k] = part4 + part3             # <<<<<<<<<<<<<<
@@ -5587,7 +5587,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
   __pyx_t_1 = __pyx_v_k;
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_var_a.data) + __pyx_t_1)) )) = (__pyx_v_part4 + __pyx_v_part3);
 
-  /* "DM_compute.pyx":245
+  /* "DM_compute.pyx":248
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_var_a(             # <<<<<<<<<<<<<<
@@ -5598,7 +5598,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_a(__Pyx_memviewslice _
   /* function exit code */
 }
 
-/* "DM_compute.pyx":262
+/* "DM_compute.pyx":265
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_var_i(             # <<<<<<<<<<<<<<
@@ -5612,7 +5612,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_i(__Pyx_memviewslice _
   double __pyx_v_part3;
   Py_ssize_t __pyx_t_1;
 
-  /* "DM_compute.pyx":268
+  /* "DM_compute.pyx":271
  *     Py_ssize_t    k,
  * )nogil:
  *     cdef double part1 = var_i[k-1]             # <<<<<<<<<<<<<<
@@ -5622,7 +5622,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_i(__Pyx_memviewslice _
   __pyx_t_1 = (__pyx_v_k - 1);
   __pyx_v_part1 = (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_var_i.data) + __pyx_t_1)) )));
 
-  /* "DM_compute.pyx":269
+  /* "DM_compute.pyx":272
  * )nogil:
  *     cdef double part1 = var_i[k-1]
  *     cdef double part2 = Lambda[k-1] * dt + 1             # <<<<<<<<<<<<<<
@@ -5632,7 +5632,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_i(__Pyx_memviewslice _
   __pyx_t_1 = (__pyx_v_k - 1);
   __pyx_v_part2 = (((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_Lambda.data) + __pyx_t_1)) ))) * __pyx_v_dt) + 1.0);
 
-  /* "DM_compute.pyx":270
+  /* "DM_compute.pyx":273
  *     cdef double part1 = var_i[k-1]
  *     cdef double part2 = Lambda[k-1] * dt + 1
  *     cdef double part3 = part2**2             # <<<<<<<<<<<<<<
@@ -5641,7 +5641,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_i(__Pyx_memviewslice _
  */
   __pyx_v_part3 = pow(__pyx_v_part2, 2.0);
 
-  /* "DM_compute.pyx":272
+  /* "DM_compute.pyx":275
  *     cdef double part3 = part2**2
  * 
  *     var_i[k] = part1*part3             # <<<<<<<<<<<<<<
@@ -5651,7 +5651,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_i(__Pyx_memviewslice _
   __pyx_t_1 = __pyx_v_k;
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_var_i.data) + __pyx_t_1)) )) = (__pyx_v_part1 * __pyx_v_part3);
 
-  /* "DM_compute.pyx":262
+  /* "DM_compute.pyx":265
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_var_i(             # <<<<<<<<<<<<<<
@@ -5662,7 +5662,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_i(__Pyx_memviewslice _
   /* function exit code */
 }
 
-/* "DM_compute.pyx":277
+/* "DM_compute.pyx":280
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_var_s(             # <<<<<<<<<<<<<<
@@ -5676,7 +5676,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_s(__Pyx_memviewslice _
   double __pyx_v_part3;
   Py_ssize_t __pyx_t_1;
 
-  /* "DM_compute.pyx":286
+  /* "DM_compute.pyx":289
  *     Py_ssize_t    k,
  * )nogil:
  *     cdef double part1 = var_s[k-1]             # <<<<<<<<<<<<<<
@@ -5686,7 +5686,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_s(__Pyx_memviewslice _
   __pyx_t_1 = (__pyx_v_k - 1);
   __pyx_v_part1 = (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_var_s.data) + __pyx_t_1)) )));
 
-  /* "DM_compute.pyx":287
+  /* "DM_compute.pyx":290
  * )nogil:
  *     cdef double part1 = var_s[k-1]
  *     cdef double part2 = seqC[k]**2 * dt**2 * temporalDiscretization * sigma2s             # <<<<<<<<<<<<<<
@@ -5696,7 +5696,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_s(__Pyx_memviewslice _
   __pyx_t_1 = __pyx_v_k;
   __pyx_v_part2 = (((pow((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_seqC.data) + __pyx_t_1)) ))), 2.0) * pow(__pyx_v_dt, 2.0)) * __pyx_v_temporalDiscretization) * __pyx_v_sigma2s);
 
-  /* "DM_compute.pyx":288
+  /* "DM_compute.pyx":291
  *     cdef double part1 = var_s[k-1]
  *     cdef double part2 = seqC[k]**2 * dt**2 * temporalDiscretization * sigma2s
  *     cdef double part3 = (1+Lambda[k-1]*dt)**2             # <<<<<<<<<<<<<<
@@ -5706,7 +5706,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_s(__Pyx_memviewslice _
   __pyx_t_1 = (__pyx_v_k - 1);
   __pyx_v_part3 = pow((1.0 + ((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_Lambda.data) + __pyx_t_1)) ))) * __pyx_v_dt)), 2.0);
 
-  /* "DM_compute.pyx":290
+  /* "DM_compute.pyx":293
  *     cdef double part3 = (1+Lambda[k-1]*dt)**2
  * 
  *     var_s[k] = part1*part3 + part2             # <<<<<<<<<<<<<<
@@ -5716,7 +5716,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_s(__Pyx_memviewslice _
   __pyx_t_1 = __pyx_v_k;
   *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_var_s.data) + __pyx_t_1)) )) = ((__pyx_v_part1 * __pyx_v_part3) + __pyx_v_part2);
 
-  /* "DM_compute.pyx":277
+  /* "DM_compute.pyx":280
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * cdef inline void update_var_s(             # <<<<<<<<<<<<<<
@@ -5727,7 +5727,7 @@ static CYTHON_INLINE void __pyx_f_10DM_compute_update_var_s(__Pyx_memviewslice _
   /* function exit code */
 }
 
-/* "DM_compute.pyx":296
+/* "DM_compute.pyx":299
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_variance_parallel(             # <<<<<<<<<<<<<<
@@ -5794,59 +5794,59 @@ static PyObject *__pyx_pw_10DM_compute_11_compute_variance_parallel(PyObject *__
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dt)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 1); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 1); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Lambda)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 2); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 2); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 3); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 3); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2i)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 4); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 4); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sigma2s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 5); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 5); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_temporalDiscretization)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 6); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 6); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_var_a)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 7); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 7); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_var_i)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 8); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 8); __PYX_ERR(0, 299, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_var_s)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 9); __PYX_ERR(0, 296, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, 9); __PYX_ERR(0, 299, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_compute_variance_parallel") < 0)) __PYX_ERR(0, 296, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_compute_variance_parallel") < 0)) __PYX_ERR(0, 299, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 10) {
       goto __pyx_L5_argtuple_error;
@@ -5862,20 +5862,20 @@ static PyObject *__pyx_pw_10DM_compute_11_compute_variance_parallel(PyObject *__
       values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
       values[9] = PyTuple_GET_ITEM(__pyx_args, 9);
     }
-    __pyx_v_seqC = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_seqC.memview)) __PYX_ERR(0, 297, __pyx_L3_error)
-    __pyx_v_dt = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_dt == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 298, __pyx_L3_error)
-    __pyx_v_Lambda = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_Lambda.memview)) __PYX_ERR(0, 299, __pyx_L3_error)
-    __pyx_v_sigma2a = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_sigma2a == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 300, __pyx_L3_error)
-    __pyx_v_sigma2i = __pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_sigma2i == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 301, __pyx_L3_error)
-    __pyx_v_sigma2s = __pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_sigma2s == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 302, __pyx_L3_error)
-    __pyx_v_temporalDiscretization = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_temporalDiscretization == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 303, __pyx_L3_error)
-    __pyx_v_var_a = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[7], PyBUF_WRITABLE); if (unlikely(!__pyx_v_var_a.memview)) __PYX_ERR(0, 304, __pyx_L3_error)
-    __pyx_v_var_i = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[8], PyBUF_WRITABLE); if (unlikely(!__pyx_v_var_i.memview)) __PYX_ERR(0, 305, __pyx_L3_error)
-    __pyx_v_var_s = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[9], PyBUF_WRITABLE); if (unlikely(!__pyx_v_var_s.memview)) __PYX_ERR(0, 306, __pyx_L3_error)
+    __pyx_v_seqC = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_seqC.memview)) __PYX_ERR(0, 300, __pyx_L3_error)
+    __pyx_v_dt = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_dt == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 301, __pyx_L3_error)
+    __pyx_v_Lambda = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_Lambda.memview)) __PYX_ERR(0, 302, __pyx_L3_error)
+    __pyx_v_sigma2a = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_sigma2a == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 303, __pyx_L3_error)
+    __pyx_v_sigma2i = __pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_sigma2i == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 304, __pyx_L3_error)
+    __pyx_v_sigma2s = __pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_sigma2s == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 305, __pyx_L3_error)
+    __pyx_v_temporalDiscretization = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_temporalDiscretization == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 306, __pyx_L3_error)
+    __pyx_v_var_a = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[7], PyBUF_WRITABLE); if (unlikely(!__pyx_v_var_a.memview)) __PYX_ERR(0, 307, __pyx_L3_error)
+    __pyx_v_var_i = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[8], PyBUF_WRITABLE); if (unlikely(!__pyx_v_var_i.memview)) __PYX_ERR(0, 308, __pyx_L3_error)
+    __pyx_v_var_s = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[9], PyBUF_WRITABLE); if (unlikely(!__pyx_v_var_s.memview)) __PYX_ERR(0, 309, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 296, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_compute_variance_parallel", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 299, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("DM_compute._compute_variance_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5898,7 +5898,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
   Py_ssize_t __pyx_t_3;
   __Pyx_RefNannySetupContext("_compute_variance_parallel", 0);
 
-  /* "DM_compute.pyx":308
+  /* "DM_compute.pyx":311
  *     double[::1]   var_s,
  * ):
  *     cdef Py_ssize_t N = seqC.shape[0]             # <<<<<<<<<<<<<<
@@ -5907,7 +5907,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
  */
   __pyx_v_N = (__pyx_v_seqC.shape[0]);
 
-  /* "DM_compute.pyx":311
+  /* "DM_compute.pyx":314
  *     cdef Py_ssize_t k
  * 
  *     for k in prange(1, N, nogil=True):             # <<<<<<<<<<<<<<
@@ -5944,7 +5944,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
                         {
                             __pyx_v_k = (Py_ssize_t)(1 + 1 * __pyx_t_2);
 
-                            /* "DM_compute.pyx":312
+                            /* "DM_compute.pyx":315
  * 
  *     for k in prange(1, N, nogil=True):
  *         update_var_a(Lambda, sigma2a, dt, var_a, k)             # <<<<<<<<<<<<<<
@@ -5965,7 +5965,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
         #endif
       }
 
-      /* "DM_compute.pyx":311
+      /* "DM_compute.pyx":314
  *     cdef Py_ssize_t k
  * 
  *     for k in prange(1, N, nogil=True):             # <<<<<<<<<<<<<<
@@ -5984,7 +5984,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
       }
   }
 
-  /* "DM_compute.pyx":314
+  /* "DM_compute.pyx":317
  *         update_var_a(Lambda, sigma2a, dt, var_a, k)
  * 
  *     for k in prange(1, N+1, nogil=True):             # <<<<<<<<<<<<<<
@@ -6021,7 +6021,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
                         {
                             __pyx_v_k = (Py_ssize_t)(1 + 1 * __pyx_t_2);
 
-                            /* "DM_compute.pyx":315
+                            /* "DM_compute.pyx":318
  * 
  *     for k in prange(1, N+1, nogil=True):
  *         update_var_i(Lambda, dt, var_i, k)             # <<<<<<<<<<<<<<
@@ -6042,7 +6042,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
         #endif
       }
 
-      /* "DM_compute.pyx":314
+      /* "DM_compute.pyx":317
  *         update_var_a(Lambda, sigma2a, dt, var_a, k)
  * 
  *     for k in prange(1, N+1, nogil=True):             # <<<<<<<<<<<<<<
@@ -6061,7 +6061,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
       }
   }
 
-  /* "DM_compute.pyx":318
+  /* "DM_compute.pyx":321
  *     # var_i = var_i[1:]
  * 
  *     for k in prange(1, N, nogil=True):             # <<<<<<<<<<<<<<
@@ -6098,7 +6098,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
                         {
                             __pyx_v_k = (Py_ssize_t)(1 + 1 * __pyx_t_2);
 
-                            /* "DM_compute.pyx":319
+                            /* "DM_compute.pyx":322
  * 
  *     for k in prange(1, N, nogil=True):
  *         update_var_s(seqC, dt, Lambda,  sigma2s, temporalDiscretization, var_s, k)             # <<<<<<<<<<<<<<
@@ -6118,7 +6118,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
         #endif
       }
 
-      /* "DM_compute.pyx":318
+      /* "DM_compute.pyx":321
  *     # var_i = var_i[1:]
  * 
  *     for k in prange(1, N, nogil=True):             # <<<<<<<<<<<<<<
@@ -6137,7 +6137,7 @@ static PyObject *__pyx_pf_10DM_compute_10_compute_variance_parallel(CYTHON_UNUSE
       }
   }
 
-  /* "DM_compute.pyx":296
+  /* "DM_compute.pyx":299
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_variance_parallel(             # <<<<<<<<<<<<<<
@@ -20114,14 +20114,14 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "DM_compute.pyx":237
+  /* "DM_compute.pyx":240
  *     _compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization, var_a, var_i, var_s)
  * 
  *     var_i2 = var_i[1:]             # <<<<<<<<<<<<<<
  * 
  *     return var_a + var_i2 + var_s
  */
-  __pyx_slice_ = PySlice_New(__pyx_int_1, Py_None, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 237, __pyx_L1_error)
+  __pyx_slice_ = PySlice_New(__pyx_int_1, Py_None, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 240, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_slice_);
   __Pyx_GIVEREF(__pyx_slice_);
 
@@ -20320,77 +20320,77 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__20);
   __Pyx_GIVEREF(__pyx_tuple__20);
 
-  /* "DM_compute.pyx":20
+  /* "DM_compute.pyx":23
  * #     int omp_get_thread_num()
  * 
  * def compute_mean_trace_parallel(seqC, B, Lambda, dt):             # <<<<<<<<<<<<<<
  *     # check data type
  *     assert seqC.dtype   == np.float64
  */
-  __pyx_tuple__21 = PyTuple_Pack(7, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_N, __pyx_n_s_a, __pyx_n_s_da); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(0, 20, __pyx_L1_error)
+  __pyx_tuple__21 = PyTuple_Pack(7, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_N, __pyx_n_s_a, __pyx_n_s_da); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__21);
   __Pyx_GIVEREF(__pyx_tuple__21);
-  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(4, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_mean_trace_parallel_2, 20, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) __PYX_ERR(0, 20, __pyx_L1_error)
+  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(4, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_mean_trace_parallel_2, 23, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) __PYX_ERR(0, 23, __pyx_L1_error)
 
-  /* "DM_compute.pyx":69
+  /* "DM_compute.pyx":72
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_mean_trace_parallel(             # <<<<<<<<<<<<<<
  *     double[::1]   seqC,
  *     double[::1]   B,
  */
-  __pyx_tuple__23 = PyTuple_Pack(10, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_a, __pyx_n_s_da, __pyx_n_s_N, __pyx_n_s_k, __pyx_n_s_abs_a, __pyx_n_s_sign_a); if (unlikely(!__pyx_tuple__23)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_tuple__23 = PyTuple_Pack(10, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_a, __pyx_n_s_da, __pyx_n_s_N, __pyx_n_s_k, __pyx_n_s_abs_a, __pyx_n_s_sign_a); if (unlikely(!__pyx_tuple__23)) __PYX_ERR(0, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__23);
   __Pyx_GIVEREF(__pyx_tuple__23);
-  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(6, 0, 10, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__23, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_mean_trace_parallel, 69, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(6, 0, 10, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__23, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_mean_trace_parallel, 72, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(0, 72, __pyx_L1_error)
 
-  /* "DM_compute.pyx":103
+  /* "DM_compute.pyx":106
  * 
  * 
  * def compute_stoch_trace_parallel( dW, eta, a, da, seqC, B, Lambda, dt, sigma2a, sigma2i, sigma2s, temporalDiscretization, debug=False):             # <<<<<<<<<<<<<<
  *     """
  *     """
  */
-  __pyx_tuple__25 = PyTuple_Pack(14, __pyx_n_s_dW, __pyx_n_s_eta, __pyx_n_s_a, __pyx_n_s_da, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_debug, __pyx_n_s_N); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_tuple__25 = PyTuple_Pack(14, __pyx_n_s_dW, __pyx_n_s_eta, __pyx_n_s_a, __pyx_n_s_da, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_debug, __pyx_n_s_N); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__25);
   __Pyx_GIVEREF(__pyx_tuple__25);
-  __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(13, 0, 14, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_stoch_trace_parallel_2, 103, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(13, 0, 14, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_stoch_trace_parallel_2, 106, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 106, __pyx_L1_error)
 
-  /* "DM_compute.pyx":170
+  /* "DM_compute.pyx":173
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_stoch_trace_parallel(             # <<<<<<<<<<<<<<
  *     double[::1]   seqC,
  *     double[::1]   B,
  */
-  __pyx_tuple__27 = PyTuple_Pack(16, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_a, __pyx_n_s_da, __pyx_n_s_dW, __pyx_n_s_eta, __pyx_n_s_N, __pyx_n_s_k, __pyx_n_s_abs_a, __pyx_n_s_sign_a); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 170, __pyx_L1_error)
+  __pyx_tuple__27 = PyTuple_Pack(16, __pyx_n_s_seqC, __pyx_n_s_B, __pyx_n_s_Lambda, __pyx_n_s_dt, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_a, __pyx_n_s_da, __pyx_n_s_dW, __pyx_n_s_eta, __pyx_n_s_N, __pyx_n_s_k, __pyx_n_s_abs_a, __pyx_n_s_sign_a); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__27);
   __Pyx_GIVEREF(__pyx_tuple__27);
-  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(12, 0, 16, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_stoch_trace_parallel, 170, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 170, __pyx_L1_error)
+  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(12, 0, 16, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_stoch_trace_parallel, 173, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 173, __pyx_L1_error)
 
-  /* "DM_compute.pyx":206
+  /* "DM_compute.pyx":209
  *         a[k] = B[k-1] * sign_a
  * 
  * def compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization):             # <<<<<<<<<<<<<<
  *     """
  *     """
  */
-  __pyx_tuple__29 = PyTuple_Pack(12, __pyx_n_s_seqC, __pyx_n_s_dt, __pyx_n_s_Lambda, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_N, __pyx_n_s_var_a, __pyx_n_s_var_i, __pyx_n_s_var_s, __pyx_n_s_var_i2); if (unlikely(!__pyx_tuple__29)) __PYX_ERR(0, 206, __pyx_L1_error)
+  __pyx_tuple__29 = PyTuple_Pack(12, __pyx_n_s_seqC, __pyx_n_s_dt, __pyx_n_s_Lambda, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_N, __pyx_n_s_var_a, __pyx_n_s_var_i, __pyx_n_s_var_s, __pyx_n_s_var_i2); if (unlikely(!__pyx_tuple__29)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__29);
   __Pyx_GIVEREF(__pyx_tuple__29);
-  __pyx_codeobj__30 = (PyObject*)__Pyx_PyCode_New(7, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__29, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_variance_parallel_2, 206, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__30)) __PYX_ERR(0, 206, __pyx_L1_error)
+  __pyx_codeobj__30 = (PyObject*)__Pyx_PyCode_New(7, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__29, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_variance_parallel_2, 209, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__30)) __PYX_ERR(0, 209, __pyx_L1_error)
 
-  /* "DM_compute.pyx":296
+  /* "DM_compute.pyx":299
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_variance_parallel(             # <<<<<<<<<<<<<<
  *     double[::1]   seqC,
  *     double        dt,
  */
-  __pyx_tuple__31 = PyTuple_Pack(12, __pyx_n_s_seqC, __pyx_n_s_dt, __pyx_n_s_Lambda, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_var_a, __pyx_n_s_var_i, __pyx_n_s_var_s, __pyx_n_s_N, __pyx_n_s_k); if (unlikely(!__pyx_tuple__31)) __PYX_ERR(0, 296, __pyx_L1_error)
+  __pyx_tuple__31 = PyTuple_Pack(12, __pyx_n_s_seqC, __pyx_n_s_dt, __pyx_n_s_Lambda, __pyx_n_s_sigma2a, __pyx_n_s_sigma2i, __pyx_n_s_sigma2s, __pyx_n_s_temporalDiscretization, __pyx_n_s_var_a, __pyx_n_s_var_i, __pyx_n_s_var_s, __pyx_n_s_N, __pyx_n_s_k); if (unlikely(!__pyx_tuple__31)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__31);
   __Pyx_GIVEREF(__pyx_tuple__31);
-  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(10, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_variance_parallel, 296, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 296, __pyx_L1_error)
+  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(10, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_DM_compute_pyx, __pyx_n_s_compute_variance_parallel, 299, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 299, __pyx_L1_error)
 
   /* "View.MemoryView":287
  *         return self.name
@@ -20813,115 +20813,115 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "DM_compute.pyx":14
+  /* "DM_compute.pyx":17
  * from cython.parallel import prange
  * from libc.math cimport copysign, fabs, sqrt
  * import numpy as np             # <<<<<<<<<<<<<<
  * from scipy.stats import norm
  * 
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 17, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "DM_compute.pyx":15
+  /* "DM_compute.pyx":18
  * from libc.math cimport copysign, fabs, sqrt
  * import numpy as np
  * from scipy.stats import norm             # <<<<<<<<<<<<<<
  * 
  * # cdef extern from "omp.h":
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_n_s_norm);
   __Pyx_GIVEREF(__pyx_n_s_norm);
   PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_norm);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_scipy_stats, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_scipy_stats, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_norm); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_norm); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_norm, __pyx_t_1) < 0) __PYX_ERR(0, 15, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_norm, __pyx_t_1) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":20
+  /* "DM_compute.pyx":23
  * #     int omp_get_thread_num()
  * 
  * def compute_mean_trace_parallel(seqC, B, Lambda, dt):             # <<<<<<<<<<<<<<
  *     # check data type
  *     assert seqC.dtype   == np.float64
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_1compute_mean_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 20, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_1compute_mean_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_mean_trace_parallel_2, __pyx_t_2) < 0) __PYX_ERR(0, 20, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_mean_trace_parallel_2, __pyx_t_2) < 0) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":69
+  /* "DM_compute.pyx":72
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_mean_trace_parallel(             # <<<<<<<<<<<<<<
  *     double[::1]   seqC,
  *     double[::1]   B,
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_3_compute_mean_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_3_compute_mean_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_mean_trace_parallel, __pyx_t_2) < 0) __PYX_ERR(0, 69, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_mean_trace_parallel, __pyx_t_2) < 0) __PYX_ERR(0, 72, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":103
+  /* "DM_compute.pyx":106
  * 
  * 
  * def compute_stoch_trace_parallel( dW, eta, a, da, seqC, B, Lambda, dt, sigma2a, sigma2i, sigma2s, temporalDiscretization, debug=False):             # <<<<<<<<<<<<<<
  *     """
  *     """
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_5compute_stoch_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_5compute_stoch_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_stoch_trace_parallel_2, __pyx_t_2) < 0) __PYX_ERR(0, 103, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_stoch_trace_parallel_2, __pyx_t_2) < 0) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":170
+  /* "DM_compute.pyx":173
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_stoch_trace_parallel(             # <<<<<<<<<<<<<<
  *     double[::1]   seqC,
  *     double[::1]   B,
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_7_compute_stoch_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 170, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_7_compute_stoch_trace_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_stoch_trace_parallel, __pyx_t_2) < 0) __PYX_ERR(0, 170, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_stoch_trace_parallel, __pyx_t_2) < 0) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":206
+  /* "DM_compute.pyx":209
  *         a[k] = B[k-1] * sign_a
  * 
  * def compute_variance_parallel(seqC, dt, Lambda, sigma2a, sigma2i, sigma2s, temporalDiscretization):             # <<<<<<<<<<<<<<
  *     """
  *     """
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_9compute_variance_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 206, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_9compute_variance_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_variance_parallel_2, __pyx_t_2) < 0) __PYX_ERR(0, 206, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_variance_parallel_2, __pyx_t_2) < 0) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "DM_compute.pyx":296
+  /* "DM_compute.pyx":299
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def _compute_variance_parallel(             # <<<<<<<<<<<<<<
  *     double[::1]   seqC,
  *     double        dt,
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_11_compute_variance_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 296, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_10DM_compute_11_compute_variance_parallel, NULL, __pyx_n_s_DM_compute); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_variance_parallel, __pyx_t_2) < 0) __PYX_ERR(0, 296, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_variance_parallel, __pyx_t_2) < 0) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "DM_compute.pyx":1
- * # Add this at the top of your Cython code             # <<<<<<<<<<<<<<
- * cdef extern from *:
- *     """
+ * # %%cython             # <<<<<<<<<<<<<<
+ * # ext_kwargs={'extra_link_args': ['-Wno-error=unused-command-line-argument']}
+ * 
  */
   __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
