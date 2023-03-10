@@ -1,10 +1,13 @@
+# %%cython
+# ext_kwargs={'extra_link_args': ['-Wno-error=unused-command-line-argument']}
+
 # Add this at the top of your Cython code
 cdef extern from *:
     """
     #define abort() ((void) 0)
     """
 
-# %%cython
+
 # cython stoch/mean trace computation
 # compute variance
 cimport cython
