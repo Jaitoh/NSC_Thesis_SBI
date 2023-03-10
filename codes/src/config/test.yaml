@@ -1,4 +1,33 @@
-input_seqC:
-model:
-dataset:
+seqCGenerator:
+  dur_min : 3
+  dur_max : 15
+  MS_list : [0.2, 0.4, 0.8]
+  sample  : 700
+  single_dur: 0  # 0: duration 3-15 with step2, otherwise duration of single_dur
+
+prior: # theta / params
+  prior_min: [-3.7, 0, 0, 0, 5]
+  prior_max: [2.5, 71, 0, 18, 7]
+  num_prior_sample: 500
+
+simulator:
+  run_sim : True
+  save_dir: '../data/training_datasets/training_dataset.hdf5'
+  model_name: 'B-G-L0S-O-N-'
+#  test: False
+
+training_dataset:
+  dur_list: [15]
+  nan2num: -1
+  num_proR_sample: 10
+  part_of_seqC: 0.15
+  part_of_prior: 0.2
+
 infer:
+  prior_min_train: [-3.7, 0, 0, 5]
+  prior_max_train: [2.5, 71, 18, 7]
+  method: 'snpe'
+  log_dir: './src/train/logs/log'
+  save_x_theta_dir: '../data/training_datasets/'
+  save_density_estimator_dir: './src/train/logs/log/density_estimator.pkl'
+  save_posterior_dir: './src/train/logs/log/posterior.pkl'
