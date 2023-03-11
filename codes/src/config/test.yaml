@@ -27,7 +27,7 @@ infer:
   prior_min_train: [-3.7, 0, 0, 5]
   prior_max_train: [2.5, 71, 18, 7]
   method: 'snpe'
-  log_dir: './src/train/logs/log'
+  log_dir: './src/train/logs_snn/log'
   save_x_theta_dir: '../data/training_datasets/'
-  save_density_estimator_dir: './src/train/logs/log/density_estimator.pkl'
-  save_posterior_dir: './src/train/logs/log/posterior.pkl'
+  save_density_estimator_dir: './src/train/logs_snn/log/density_estimator.pkl'
+  save_posterior_dir: './src/train/logs_snn/log/posterior.pkl'

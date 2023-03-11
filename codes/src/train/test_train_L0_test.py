@@ -41,7 +41,7 @@ def check_method(method):
     return method_fun
 
 
-test = False
+test = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'device: {device}')
 # device='cpu'
@@ -87,7 +87,7 @@ x, theta = x.to(device), theta.to(device)
 method = 'snpe'
 method_fun = check_method(method)
 
-log_dir = Path('./src/train/logs_snn/log_test') if test else Path('./src/train/logs_snn/log_sample_Rchoices5')
+log_dir = Path('./src/train/logs/log_test') if test else Path('./src/train/logs/log_sample_Rchoices5')
 log_dir.mkdir(parents=True, exist_ok=True)  # create folder if the folder does not exist
 # remove all files in the folder
 for file in log_dir.glob('*'):
@@ -152,4 +152,4 @@ with open(posterior_dir, 'wb') as f:
 print('posterior saved to', posterior_dir)
 with open(inference_dir, 'wb') as f:
     pickle.dump(inference, f)
-print('inference saved to', inference_dir)
+print('posterior saved to', inference_dir)

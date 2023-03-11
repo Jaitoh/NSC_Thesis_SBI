@@ -237,11 +237,11 @@ def simulate_and_store(
         print(f'seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}')
 
         # save the dataset in a hdf5 file
-        seqC_group.create_dataset(f'seqC_dur{dur + 1}', data=seqCs)
-        theta_group.create_dataset(f'theta_dur{dur + 1}', data=theta)
-        probR_group.create_dataset(f'probR_dur{dur + 1}', data=probR)
+        seqC_group.create_dataset(f'seqC_dur{dur}', data=seqCs)
+        theta_group.create_dataset(f'theta_dur{dur}', data=theta)
+        probR_group.create_dataset(f'probR_dur{dur}', data=probR)
 
-        print(f'data dur {dur + 1} written to the file {save_data_dir}\n')
+        print(f'data dur {dur} written to the file {save_data_dir}\n')
 
     f.close()
     print(f'data written to the file {save_data_dir}')
@@ -350,10 +350,11 @@ if __name__ == '__main__':
 
     test = True
     do_simulate = True
-
+    save_data_dir = '../data/training_datasets/training_dataset_test.hdf5' if test else '../data/training_datasets/training_dataset.hdf5'
+    
     if do_simulate:
         simulate_and_store(
-            save_data_dir='../data/training_datasets/training_dataset_test.hdf5',
+            save_data_dir=save_data_dir,
 
             seqC_MS_list=[0.2, 0.4, 0.8],
             seqC_dur_max=15,  # 2, 4, 6, 8, 10, 12, 14 -> 7
