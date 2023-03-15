@@ -4,7 +4,7 @@ generate input sequence for model
 import numpy as np
 
 
-class seqCGenerator:
+class seqC_generator:
     def __init__(self, nan_padding=None):
 
         self.dur_min = 3
@@ -79,6 +79,6 @@ class seqCGenerator:
 
 if __name__ == '__main__':
     # test code
-    # seqC = seqCGenerator(nan_padding=None).generate()
-    seqC = seqCGenerator(nan_padding=None).generate(single_dur=15)
+    # seqC = seqC_generator(nan_padding=None).generate()
+    seqC = seqC_generator(nan_padding=None).generate(single_dur=15)
     print(seqC.shape)
