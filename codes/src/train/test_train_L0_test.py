@@ -87,7 +87,7 @@ x, theta = x.to(device), theta.to(device)
 method = 'snpe'
 method_fun = check_method(method)
 
-log_dir = Path('./src/train/logs/log_test') if test else Path('./src/train/logs/log_sample_Rchoices5')
+log_dir = Path('./src/train/logs_15_p0/log_test') if test else Path('./src/train/logs_15_p0/log_sample_Rchoices5')
 log_dir.mkdir(parents=True, exist_ok=True)  # create folder if the folder does not exist
 # remove all files in the folder
 for file in log_dir.glob('*'):

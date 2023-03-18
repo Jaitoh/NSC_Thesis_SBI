@@ -1,0 +1,5 @@
+infer:
+  method: 'snpe'
+  prior_min_train: [-3.7, 0, 0, 5]
+  prior_max_train: [2.5, 71, 18, 7]
+  prior_labels: ['bias', 'sigma2a', 'sigma2s', 'L0']

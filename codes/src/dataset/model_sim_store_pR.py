@@ -12,21 +12,70 @@ import numpy as np
 import torch
 
 from simulator.DM_model import DM_model
-from dataset.seqC_pattern_summary import seqC_pattern_summary
 from dataset.seqC_generator import seqC_generator
+from config.load_config import load_config
 
 from sbi import utils as utils
 from joblib import Parallel, delayed
+from pathlib import Path
 import itertools
 
 import h5py
-from pathlib import Path
-from tqdm import tqdm
+import matplotlib.pyplot as plt
+
+cmaps = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple']
+
+
+def __plot_a_and_save(a, probR,
+                      figure_name,
+                      ):
+    fig = plt.figure()
+    # fig.suptitle('Model: ' + paramsFitted['allModelsList'][idx])
+    plt.plot(a[::100], '.-', label=f'a1 probR={probR:.3f}', lw=2, color=cmaps[0])
+
+    plt.xlabel('Time (sample)')
+    plt.ylabel('a')
+
+    lgd = plt.legend(loc = 'lower right', fontsize=24)
+    # set the legend font to bold
+    for text in lgd.get_texts():
+        text.set_fontweight('bold')
+    lgd.get_frame().set_facecolor('none')
+    plt.grid(alpha=0.5)
+    # change title font to bold
+    plt.title(plt.title(figure_name).get_text(), fontsize=5)
+    #
+    # # save the figure
+    # fig.savefig(save_path, dpi=300)
+    # close the figure
+    # plt.close()
+
+    return fig
+
+def _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
+
+    # check seqC and params dimension should be 1
+    if len(seqC.shape) != 1 or len(params.shape) != 1:
+        raise ValueError('seqC and params dimension should be 1')
+
+    model = DM_model(params=params, modelName=model_name)
+    a, probR = model.simulate(np.array(seqC))
+
+    # plot the figure
+    fig = __plot_a_and_save(a, probR, figure_name)
+
+    return (seqC, params, probR, fig)
 
 
 def _one_DM_simulation(args):
-    # seqC, params, modelName, num_LR_sample, nan2num = args
+    """ do one simulation of DM model with one seqC and one param input, returns probR
+    """
+
     seqC, params, modelName = args
+
+    # check seqC and params dimension should be 1
+    if len(seqC.shape) != 1 or len(params.shape) != 1:
+        raise ValueError('seqC and params dimension should be 1')
 
     model = DM_model(params=params, modelName=modelName)
     _, probR = model.simulate(np.array(seqC))
@@ -39,10 +88,6 @@ def _DM_sim_for_seqCs_parallel(
         prior,
         num_prior_sample,
         modelName='B-G-L0S-O-N-',
-        # use_seqC_summary=False,
-        # summary_length=5,
-        # nan2num=-2,
-        # num_LR_sample=100,
         num_workers=-1,
 ):
     """sample params from prior and simulate probR with DM model with multiple seqCs inputs
@@ -66,8 +111,8 @@ def _DM_sim_for_seqCs_parallel(
 
     print(f'number of simulations', len(seqCs) * num_prior_sample)
 
-    tic = time.time()
     # limit the number of workers to the number of available cores
+    tic = time.time()
     available_workers = os.cpu_count()
     if num_workers > available_workers:
         num_workers = available_workers
@@ -92,7 +137,7 @@ def _DM_sim_for_seqCs_parallel(
     return seqC, theta, probR
 
 
-def simulate_and_store(
+def DM_simulate_and_store(
         save_data_dir='../data/training_datasets/training_dataset.hdf5',
 
         seqC_MS_list=None,
@@ -104,13 +149,12 @@ def simulate_and_store(
         num_prior_sample=500,
 
         model_name='B-G-L0S-O-N-',
-        # nan2num         = -2,
-        # num_LR_sample   = 10,
 
-        test=False,
+        # test=False,
 ):
     """
-    simulate probR for seqCs & store -> seqC, params, probR
+    simulate probR for seqCs and params, and store the dataset to the save_data_dir
+    store -> seqC, params, probR
 
     Args:
         save_data_dir:      directory to save the dataset
@@ -142,11 +186,11 @@ def simulate_and_store(
         low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max)
     )
     # num_prior_sample = int(10 ** (len(prior_min) - 1))  # 10000 in this case
-    num_prior_sample = 10 if test else num_prior_sample
+    # num_prior_sample = 10 if test else num_prior_sample
     print(f'prior sample size', num_prior_sample)
 
     # generate seqC input sequence
-    seqC_sample_size = 10 if test else seqC_sample_size
+    # seqC_sample_size = 10 if test else seqC_sample_size
     dur_list = np.arange(3, seqC_dur_max + 1, 2)
 
     f = h5py.File(save_data_dir, 'w')
@@ -163,8 +207,6 @@ def simulate_and_store(
     info_group.create_dataset("prior_min", data=prior_min)
     info_group.create_dataset("prior_max", data=prior_max)
     info_group.create_dataset("model_name", data=model_name)
-    # info_group.create_dataset("nan2num", data = nan2num)
-    # info_group.create_dataset("num_LR_sample", data = num_LR_sample)
 
     for dur in dur_list:
         print(f'\nprocessing duration {dur}...')
@@ -174,7 +216,6 @@ def simulate_and_store(
                                   dur_max=seqC_dur_max,
                                   sample_size=seqC_sample_size,
                                   single_dur=dur,
-                                  # add_zero=True,
                                   )
         print(f'generated seqC shape', seqCs.shape)
 
@@ -183,10 +224,6 @@ def simulate_and_store(
             prior=prior,
             num_prior_sample=num_prior_sample,
             modelName=model_name,
-            # use_seqC_summary=False,
-            # summary_length=8,
-            # nan2num=nan2num,
-            # num_LR_sample=num_LR_sample,
             num_workers=16,
         )
 
@@ -205,27 +242,34 @@ def simulate_and_store(
 
 if __name__ == '__main__':
     # remember to generate the cython code first
-    # generate the sequence C, theta, probR dataset
+    # generate the sequence C, theta, and simulate probR
 
-    test = True
-    do_simulate = True
-    save_data_dir = '../data/training_datasets/training_dataset_test.hdf5' \
-        if test else '../data/training_datasets/training_dataset.hdf5'
-    
-    if do_simulate:
-        simulate_and_store(
-            save_data_dir=save_data_dir,
+    test = False
 
-            seqC_MS_list=[0.2, 0.4, 0.8],
-            seqC_dur_max=15,  # 2, 4, 6, 8, 10, 12, 14 -> 7
-            seqC_sample_size=700,
-
-            # prior_min=[-3.7, -36, 0, -34, 5],
-            prior_min=[-3.7, 0, 0, 0,  5],
-            prior_max=[2.5, 71, 0, 18, 7],
-            num_prior_sample=500,
-
-            model_name='B-G-L0S-O-N-',
-
-            test=test,
+    if test:
+        config = load_config(
+            config_simulator_path=Path('./src/config') / 'test_simulator.yaml',
+            config_dataset_path=Path('./src/config') / 'test_dataset.yaml',
+            config_train_path=Path('./src/config') / 'test_train.yaml',
         )
+    else:
+        config = load_config(
+            config_simulator_path=Path('./src/config') / 'simulator_Ca_Pa_Ma.yaml',
+        )
+
+    save_data_dir = Path(config['data_dir'])
+    save_data_path = save_data_dir / config['simulator']['save_name']
+
+    DM_simulate_and_store(
+        save_data_dir=save_data_path,
+
+        seqC_MS_list=config['seqC']['MS_list'],
+        seqC_dur_max=config['seqC']['dur_max'],  # 2, 4, 6, 8, 10, 12, 14 -> 7
+        seqC_sample_size=config['seqC']['sample'],
+
+        prior_min=config['prior']['prior_min'],
+        prior_max=config['prior']['prior_max'],
+        num_prior_sample=config['prior']['num_prior_sample'],
+
+        model_name=config['simulator']['model_name'],
+    )

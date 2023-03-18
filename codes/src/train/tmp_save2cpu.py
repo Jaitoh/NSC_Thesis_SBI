@@ -16,7 +16,7 @@ def check_method(method):
         raise NameError("Method not available. `method` must be one of 'SNPE', 'SNLE', 'SNRE'.")
     return method_fun
 
-log_dir = Path('./src/train/logs/log_sample_Rchoices2')
+log_dir = Path('./src/train/logs_15_p0/log_sample_Rchoices2')
 density_estimator_dir = log_dir / 'density_estimator.pkl'
 inference_dir = log_dir / 'inference.pkl'
 posterior_dir = log_dir / 'posterior.pkl'
