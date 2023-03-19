@@ -1,0 +1,13 @@
+# ========== R parameter settings for the probR ==========
+# Ra
+Rchoice_method: 'probR_sampling'
+#  num_probR_sample: 10
+num_probR_sample: 20
+#  num_probR_sample: 1
+
+# Rb
+#  Rchoice_method: 'probR_threshold'
+#  R_threshold: 0.5
+
+# Rc
+#  Rchoice_method: 'probR'

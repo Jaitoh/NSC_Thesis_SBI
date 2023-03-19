@@ -1,0 +1,17 @@
+train_data:
+  save_name: 'train_data_Sa0_Ra_suba0.h5'
+  # S: seqC summary
+  # R: choice
+  # s: subset of data (dataset size)
+
+  # ========== parameter settings for the theta ==========
+  remove_sigma2i: True
+
+  # ========== S parameter settings for the seqC ==========
+  S: !include ./src/config/dataset/dataset_Sa0.yaml
+
+  # ========== R parameter settings for the probR ==========
+  R: !include src/config/dataset/dataset_Ra0.yaml
+
+  # ========== parameter settings for taking the subset ==========
+  sub: !include src/config/dataset/dataset_suba0.yaml

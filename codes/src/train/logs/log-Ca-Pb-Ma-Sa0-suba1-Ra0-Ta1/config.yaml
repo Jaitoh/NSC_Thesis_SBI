@@ -1,0 +1,73 @@
+data_dir: ../data/datasets/
+infer:
+  clip_max_norm: 5.0
+  discard_prior_samples: false
+  force_first_round_loss: false
+  learning_rate: 5e-4
+  max_num_epochs: 2147483647
+  method: snpe
+  num_atoms: 10
+  prior_labels:
+  - bias
+  - sigma2a
+  - sigma2s
+  - L0
+  prior_max_train:
+  - 2.5
+  - 30
+  - 18
+  - 1
+  prior_min_train:
+  - -2.5
+  - 0
+  - 0
+  - -1
+  resume_training: false
+  retrain_from_scratch: false
+  show_train_summary: true
+  stop_after_epochs: 20
+  training_batch_size: 50
+  use_combined_loss: false
+  validation_fraction: 0.1
+prior:
+  num_prior_sample: 500
+  prior_max:
+  - 2.5
+  - 30
+  - 0
+  - 18
+  - 1
+  prior_min:
+  - -2.5
+  - 0
+  - 0
+  - 0
+  - -1
+seqC:
+  MS_list:
+  - 0.2
+  - 0.4
+  - 0.8
+  dur_max: 15
+  dur_min: 3
+  sample: 700
+  single_dur: 0
+simulator:
+  model_name: B-G-L0S-O-N-
+  model_type: DM
+  save_name: sim_data_Ca_Pa_Ma.h5
+train_data:
+  Rchoice_method: probR_sampling
+  nan2num: -1
+  num_probR_sample: 10
+  remove_sigma2i: true
+  save_name: train_data_Sa0_suba1_Ra0.h5
+  seqC_process: norm
+  subset_seqC: 0.3
+  subset_theta: 0.2
+  train_data_MS_list:
+  - 0.2
+  - 0.4
+  - 0.8
+  train_data_dur_list:
+  - 15

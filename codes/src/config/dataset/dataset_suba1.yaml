@@ -1,0 +1,11 @@
+# ========== parameter settings for taking the subset ==========
+# suba0
+#subset_seqC: 0.15
+#subset_theta: 0.2
+
+# suba1
+subset_seqC: 0.3
+subset_theta: 0.2
+
+# ========== parameter settings for the theta ==========
+remove_sigma2i: True

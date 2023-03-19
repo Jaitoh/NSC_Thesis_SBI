@@ -1,0 +1,15 @@
+# ========== S parameter settings for the seqC ==========
+train_data_dur_list: [15]
+train_data_MS_list: [0.2, 0.4, 0.8]  # todo plot acc against MS
+
+# Sa
+#  seqC_process: 'norm'
+#  nan2num: -1
+
+# Sb
+seqC_process: 'summary'
+summary_type: 0
+#  summary_type: 1  # 0: detailed information, 1: brief information
+
+# Sc
+# seqC_process: 'network'

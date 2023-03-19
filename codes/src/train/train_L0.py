@@ -3,6 +3,7 @@
 """
 import itertools
 import pickle
+import yaml
 # import dill
 
 # import h5py
@@ -125,6 +126,11 @@ class Solver:
         self.sim_data_name = self.config['simulator']['save_name']
         self.train_data_name = self.config['train_data']['save_name']
         self._check_path()
+        # save the config file using yaml
+        yaml_path = Path(self.log_dir) / 'config.yaml'
+        with open(yaml_path, 'w') as f:
+            yaml.dump(config, f)
+        print(f'config file saved to: {yaml_path}')
 
         if self.args.run_simulator: # run simulator to generate data
             self._get_sim_data()
@@ -143,7 +149,8 @@ class Solver:
         elif self.log_dir.exists() and not self.args.eval:
             if self.args.overwrite:
                 shutil.rmtree(self.log_dir)
-                print(f'Run dir {str(self.log_dir)} removed.')
+                print(f'Run dir {str(self.log_dir)} emptied.')
+                os.makedirs(str(self.log_dir))
             else:
                 assert False, f'Run dir {str(self.log_dir)} already exists.'
 
@@ -173,6 +180,7 @@ class Solver:
 
 
     def get_dataset(self):
+
         # adapted the datset and choose pattern of interest for further training
         dataset = training_dataset(self.config)
         x, theta = dataset.generate_save_dataset(self.data_dir)
@@ -289,7 +297,7 @@ class Solver:
 
         return seqC
 
-    def _check_posterior_seen_one(self, x, theta, truth_idx=300):
+    def _check_posterior_seen_one(self, x, theta, truth_idx=300, sample_num=1000):
 
         true_params = theta[truth_idx, :]
         print(f'->\nevaluate with input x[{truth_idx},:]: {x[truth_idx, :]}')
@@ -307,7 +315,7 @@ class Solver:
         fig.savefig(save_path, dpi=300)
         print('data simulation result saved to: ', save_path)
 
-        samples = self.posterior.sample((10000,), x=x[truth_idx, :])
+        samples = self.posterior.sample((sample_num,), x=x[truth_idx, :])
 
         fig, axes = analysis.pairplot(
             samples,
@@ -323,7 +331,7 @@ class Solver:
         fig.savefig(save_path)
         print(f'posterior_with_seen_data saved to: {save_path}')
 
-    def check_posterior_seen(self, x, theta, truth_idx):
+    def check_posterior_seen(self, x, theta, truth_idx, sample_num=1000):
         """
         check the posterior with
             - trained data x -> theta distribution
@@ -335,9 +343,9 @@ class Solver:
 
         if isinstance(truth_idx, list):
             for idx in truth_idx:
-                self._check_posterior_seen_one(x, theta, idx)
+                self._check_posterior_seen_one(x, theta, idx, sample_num)
         else:
-            self._check_posterior_seen_one(x, theta, truth_idx)
+            self._check_posterior_seen_one(x, theta, truth_idx, sample_num)
 
     def _from_1seqC_to_1x(self, MS, dur):
 
@@ -360,7 +368,7 @@ class Solver:
 
         return x_new, fig
 
-    def check_posterior_unseen(self, x):
+    def check_posterior_unseen(self, x, sample_num=1000):
 
         # probR sampling method
         for i, (dur, MS) in enumerate(
@@ -376,7 +384,7 @@ class Solver:
             fig.savefig(save_path, dpi=300)
             print('simulation result saved to: ', save_path)
 
-            samples = self.posterior.sample((10000,), x=x_new)
+            samples = self.posterior.sample((sample_num,), x=x_new)
             fig, axes = analysis.pairplot(
                 samples,
                 limits=self._get_limits(),
@@ -419,13 +427,13 @@ def main():
     #     dill.dump(solver, f)
     # print(f'solver saved to: {Path(args.log_dir) / "solver.pkl"}')
 
-    print('---\ncheck posterior with seen data (randomly choose 3 data points to check posterior):')
-    # randomly choose 3 data points to check posterior
-    random_idxes = np.random.randint(0, x.shape[0], size=3)
-    solver.check_posterior_seen(x, theta, truth_idx=list(random_idxes))
+    print('---\ncheck posterior with seen data (randomly choose 10 data points to check posterior):')
+    # randomly choose 10 data points to check posterior
+    random_idxes = np.random.randint(0, x.shape[0], size=10)
+    solver.check_posterior_seen(x, theta, truth_idx=list(random_idxes), sample_num=5000)
 
     print('---\ncheck posterior with unseen data:')
-    solver.check_posterior_unseen(x)
+    solver.check_posterior_unseen(x, sample_num=5000)
 
 
 if __name__ == '__main__':

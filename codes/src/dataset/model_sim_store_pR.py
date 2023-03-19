@@ -53,8 +53,8 @@ def plot_a(a, probR,
     lgd.get_frame().set_facecolor('none')
     plt.grid(alpha=0.5)
     # change title font to bold
-    plt.title(plt.title(figure_name).get_text(), fontsize=5)
-    plt.show()
+    plt.title(plt.title(figure_name).get_text(), fontsize=8)
+    # plt.show()
 
     return fig
 

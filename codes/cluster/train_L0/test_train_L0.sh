@@ -19,7 +19,7 @@ module load anaconda3
 source activate sbi
 
 # generate dataset
-python3 ./src/train/test_train_L0.py
+python3 -u ./src/train/test_train_L0.py
 echo 'finished simulation'
 
 # sbatch ./cluster/dataset_gen.sh

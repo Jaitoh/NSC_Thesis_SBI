@@ -266,8 +266,8 @@ if __name__ == '__main__':
     else:
         config = load_config(
             config_simulator_path=Path('./src/config') / 'simulator_Ca_Pa_Ma.yaml',
-            config_dataset_path=Path('./src/config') / 'dataset_Sa_Ra.yaml',
-            config_train_path=Path('./src/config') / 'train.yaml',
+            config_dataset_path=Path('./src/config') / 'dataset_Sa0_Ra_suba0.yaml',
+            config_train_path=Path('./src/config') / 'train_Ta0.yaml',
         )
     print(config.keys())
 

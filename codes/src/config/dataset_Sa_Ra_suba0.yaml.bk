@@ -1,0 +1,46 @@
+train_data:
+  save_name: 'train_data_Sa_Ra_sa.h5' # S: seqC summary
+                                      # R: choice
+                                      # s: subset of data (dataset size)
+
+# ========== S parameter settings for the seqC ==========
+  train_data_dur_list: [15]
+  train_data_MS_list: [0.2, 0.4, 0.8]  # todo plot acc against MS
+
+# Sa
+  seqC_process: 'norm'
+  nan2num: -1
+
+# Sb
+#  seqC_process: 'summary'
+#  summary_type: 1  # 0: detailed information, 1: brief information
+#  summary_type: 0
+
+# Sc
+# seqC_process: 'network'
+
+# ========== R parameter settings for the probR ==========
+# Ra
+#  Rchoice_method: 'probR_sampling'
+#  num_probR_sample: 10
+#  num_probR_sample: 20
+#  num_probR_sample: 1
+
+# Rb
+  Rchoice_method: 'probR_threshold'
+  R_threshold: 0.5
+
+# Rc
+#  Rchoice_method: 'probR'
+
+# ========== parameter settings for the theta ==========
+  remove_sigma2i: True
+
+# ========== parameter settings for taking the subset ==========
+# suba0
+  subset_seqC: 0.15
+  subset_theta: 0.2
+
+# suba1
+#  subset_seqC: 0.3
+#  subset_theta: 0.2
