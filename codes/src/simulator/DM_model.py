@@ -231,9 +231,30 @@ class DM_model:
                 assert probRchoice >= 0 and probRchoice <= 1, 'probRchoice should be between 0 and 1'
                 assert (probRchoice != np.nan), f'probRchoice is nan with bias={self.bias}, a[-1]={a[-1]}, sigma2dt[-1]={sigma2dt[-1]}'
         # === simulation ends ===
-    
+
+        # self.a = a
+        # self.probRchoice = probRchoice
+
         return a, probRchoice
-    
+
+    def plot_a_mean_trace(self, ax, a, color='tab:blue'):
+
+        # ax = plt.subplot()
+        # fig.suptitle('Model: ' + paramsFitted['allModelsList'][idx])
+        ax.plot(a[::100], '.-', lw=2, color=color)
+
+        ax.set_xlabel('Time (sample)')
+        ax.set_ylabel('a')
+        ax.grid(alpha=0.3)
+
+        # set the legend font to bold
+        # lgd = plt.legend(loc = 'lower right', fontsize=24)
+        # for text in lgd.get_texts():
+        #     text.set_fontweight('bold')
+        # lgd.get_frame().set_facecolor('none')
+
+        return ax
+
     def _compute_variance(self, seqC, dt, Lambda):
         
         T = len(seqC)

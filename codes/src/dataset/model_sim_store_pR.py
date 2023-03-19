@@ -3,6 +3,7 @@ generate/prepare training dataset for sbi inference: x, theta
 """
 import time
 import sys
+import copy
 
 sys.path.append('./src')
 
@@ -26,9 +27,18 @@ import matplotlib.pyplot as plt
 cmaps = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple']
 
 
-def __plot_a_and_save(a, probR,
-                      figure_name,
-                      ):
+def get_boxUni_prior(
+    prior_min: np.ndarray, prior_max: np.ndarray
+):
+    prior = utils.torchutils.BoxUniform(
+        low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max)
+    )
+    return prior
+
+
+def plot_a(a, probR,
+           figure_name,
+           ):
     fig = plt.figure()
     # fig.suptitle('Model: ' + paramsFitted['allModelsList'][idx])
     plt.plot(a[::100], '.-', label=f'a1 probR={probR:.3f}', lw=2, color=cmaps[0])
@@ -44,11 +54,7 @@ def __plot_a_and_save(a, probR,
     plt.grid(alpha=0.5)
     # change title font to bold
     plt.title(plt.title(figure_name).get_text(), fontsize=5)
-    #
-    # # save the figure
-    # fig.savefig(save_path, dpi=300)
-    # close the figure
-    # plt.close()
+    plt.show()
 
     return fig
 
@@ -58,11 +64,13 @@ def _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
     if len(seqC.shape) != 1 or len(params.shape) != 1:
         raise ValueError('seqC and params dimension should be 1')
 
-    model = DM_model(params=params, modelName=model_name)
-    a, probR = model.simulate(np.array(seqC))
+    params_ = copy.deepcopy(params)
+    seqC_ = copy.deepcopy(seqC)
 
-    # plot the figure
-    fig = __plot_a_and_save(a, probR, figure_name)
+    model = DM_model(params=params_, modelName=model_name)
+    a, probR = model.simulate(np.array(seqC_))
+
+    fig = plot_a(a, probR, figure_name)
 
     return (seqC, params, probR, fig)
 
