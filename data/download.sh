@@ -8,7 +8,8 @@
 # training_dataset.hdf5
 ./gdrive files download 1MiVw4EZvHS9bzRjnS801QZ46VKnHDa43 --destination ./NSC_Thesis/data/training_datasets
 
-
+# sim_data_Ca_Pb_Ma.h5
+./gdrive files download 1Dln5ebWNmkdPTifHPDfPtvRdhxnyFJtw --destination ./NSC_Thesis/data/datasets
 
 # gdown --id 19vIy5VeeRTXJuMgkNDY9MY3C_h7AZVZC
 # gdown --id 1Ksu9w8tui4Up_OD8JssNIXEXaSkDZygs
