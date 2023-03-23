@@ -1,5 +1,5 @@
-*.h5
 *.mat
+*.h5
 *__pycache__*
 *sbi-logs*
 *.txt
@@ -48,4 +48,8 @@ figures/*
 */simulator/*.c
 */simulator/*.so
 codes/src/simulator/DM_compute.cpython-37m-darwin.so
+codes/src/simulator/DM_compute.html
+codes/src/simulator/DM_compute.c
+
 codes/src/train/logs/*
+
