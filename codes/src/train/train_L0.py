@@ -260,8 +260,10 @@ class Solver:
         print('finished training in {:.2f} min'.format((time.time() - start_time) / 60))
         print_cuda_info(self.device)
 
-        self.dens_est = dens_est.to('cpu')
+        # self.dens_est = dens_est.to('cpu')
+        self.dens_est = dens_est
         self.posterior = self.inference.build_posterior(self.dens_est)
+        
 
     def save_model(self):
         print('---\nsaving model...')
@@ -307,22 +309,23 @@ class Solver:
         model_name = self.config['simulator']['model_name']
         figure_name = f'seqC: {seqC}\nparams: {true_params}\nmodel: {model_name}'
         # insert 0 in the 2nd position of the tensor
-        params = torch.cat((true_params[:2], torch.zeros(1), true_params[2:]))
-        simulator_output = _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name)
+        device = true_params.device
+        params = torch.cat((true_params[:2], torch.zeros(1).to(device), true_params[2:]))
+        simulator_output = _one_DM_simulation_and_output_figure(seqC.cpu().numpy(), params.cpu().numpy(), model_name, figure_name)
         (seqC, params, probR, fig) = simulator_output
 
         save_path = self.log_dir / f'seen_data_idx_{truth_idx}.png'
         fig.savefig(save_path, dpi=300)
         print('data simulation result saved to: ', save_path)
-
+        
         samples = self.posterior.sample((sample_num,), x=x[truth_idx, :])
 
         fig, axes = analysis.pairplot(
-            samples,
+            samples.cpu().numpy(),
             limits=self._get_limits(),
             # ticks=[[], []],
             figsize=(10, 10),
-            points=true_params,
+            points=true_params.cpu().numpy(),
             points_offdiag={'markersize': 5, 'markeredgewidth': 1},
             points_colors='r',
             labels=self.config['infer']['prior_labels'],
@@ -355,7 +358,7 @@ class Solver:
                 single_dur=dur,
             )[0,:]
 
-        params = self.prior_simulator.sample((1,)).numpy()[0]
+        params = self.prior_simulator.sample((1,)).cpu().numpy()[0]
         model_name = self.config['simulator']['model_name']
         # simulator_output = _one_DM_simulation((seqC, params, model_name))
         figure_name = f'seqC:{seqC}\nmodel{model_name}\nparams:{params}'
@@ -377,16 +380,16 @@ class Solver:
             # num_unseen_sample = 1
 
             x_new, fig = self._from_1seqC_to_1x(MS, dur)
-            while np.any(np.all(x.numpy() == x_new, axis=1)):
+            while np.any(np.all(x.cpu().numpy() == x_new, axis=1)):
                 x_new, fig = self._from_1seqC_to_1x(MS, dur)
 
             save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}.png'
             fig.savefig(save_path, dpi=300)
             print('simulation result saved to: ', save_path)
 
-            samples = self.posterior.sample((sample_num,), x=x_new)
+            samples = self.posterior.sample((sample_num,), x=torch.from_numpy(x_new).float().to(self.device))
             fig, axes = analysis.pairplot(
-                samples,
+                samples.cpu().numpy(),
                 limits=self._get_limits(),
                 # ticks=[[], []],
                 figsize=(10, 10),
@@ -409,6 +412,8 @@ def main():
         config_train_path=args.config_train_path,
     )
 
+    setup_seed(args.seed)
+    
     print(f'---\nget args:')
     for arg, value in vars(args).items():
         print(f'{arg}: {value}')
@@ -432,7 +437,7 @@ def main():
     random_idxes = np.random.randint(0, x.shape[0], size=10)
     solver.check_posterior_seen(x, theta, truth_idx=list(random_idxes), sample_num=5000)
 
-    print('---\ncheck posterior with unseen data:')
+    print('---\n\n>>>check posterior with unseen data:')
     solver.check_posterior_unseen(x, sample_num=5000)
 
 

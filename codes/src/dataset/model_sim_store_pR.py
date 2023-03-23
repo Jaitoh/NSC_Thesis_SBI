@@ -54,7 +54,7 @@ def plot_a(a, probR,
     plt.grid(alpha=0.5)
     # change title font to bold
     plt.title(plt.title(figure_name).get_text(), fontsize=8)
-    # plt.show()
+    plt.close()
 
     return fig
 
