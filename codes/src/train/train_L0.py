@@ -42,7 +42,10 @@ def get_args():
     parser = argparse.ArgumentParser(description='pipeline for sbi')
     # parser.add_argument('--run_test', action='store_true', help="")
     parser.add_argument('--seed', type=int, default=0, help="")
-    parser.add_argument('--run_simulator', action='store_true', help="")
+    parser.add_argument('--run_simulator', type=int, default=0, help="""run simulation to generate dataset and store to local file
+                                                                        0: no simulation, load file directly and do the training
+                                                                        1: run simulation and do the training afterwards
+                                                                        2: only run the simulation and do not train""")
     parser.add_argument('--config_simulator_path', type=str, default="./src/config/test_simulator.yaml",
                         help="Path to config_simulator file")
     parser.add_argument('--config_dataset_path', type=str, default="./src/config/test_dataset.yaml",
@@ -132,9 +135,6 @@ class Solver:
             yaml.dump(config, f)
         print(f'config file saved to: {yaml_path}')
 
-        if self.args.run_simulator: # run simulator to generate data
-            self._get_sim_data()
-
     def _check_path(self):
         """
         check the path of log_dir and data_dir
@@ -158,7 +158,7 @@ class Solver:
         if not Path(self.data_dir).exists():
             assert False, f'Data dir {str(self.data_dir)} does not exist.'
 
-    def _get_sim_data(self):
+    def get_sim_data(self):
         # obtain the whole dataset prepared by simulator
 
         config = self.config
@@ -422,9 +422,21 @@ def main():
     print(config.keys())
 
     solver = Solver(args, config)
-    x, theta = solver.get_dataset()
-    solver.sbi_train(x=x, theta=theta)
-    solver.save_model()
+    
+    if args.run_simulator == 0: # do not run the simulation, do training
+        x, theta = solver.get_dataset()
+        solver.sbi_train(x=x, theta=theta)
+        solver.save_model()
+        
+    elif args.run_simulator == 2: # only run the simulation, do not train
+        solver.get_sim_data()
+        
+    else: # run the simulation, do the training
+        solver.get_sim_data()
+    
+        x, theta = solver.get_dataset()
+        solver.sbi_train(x=x, theta=theta)
+        solver.save_model()
 
     # save the solver
     # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:

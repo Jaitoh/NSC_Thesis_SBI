@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=16 
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=train_L0-e3
-#SBATCH --output=./cluster/train_L0/train_L0-e3.out
+#SBATCH --output=./cluster/uzh/train_L0_v1/train_logs/train_L0-e3.out
 
 # module load amd
 # module load intel
@@ -18,15 +18,15 @@ source activate sbi
 module load t4
 
 # generate dataset
+# --run_simulator \
 python3 -u ./src/train/train_L0.py \
 --seed 0 \
---run_simulator \
 --config_simulator_path './src/config/simulator_Ca_Pb_Ma.yaml' \
 --config_dataset_path './src/config/dataset_Sb0_suba1_Ra0.yaml' \
 --config_train_path './src/config/train_Ta1_4.yaml' \
 --log_dir './src/train/logs/logs_L0_v1/log-train_L0-e3' \
 --gpu \
--y > ./cluster/uzh/train_L0_v1/train_L0-e3.log
+-y > ./cluster/uzh/train_L0_v1/train_logs/train_L0-e3.log
 
 echo 'finished simulation'
 
