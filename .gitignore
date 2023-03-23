@@ -3,6 +3,8 @@
 *__pycache__*
 *sbi-logs*
 *.txt
+*.log
+*.logs
 
 presentations/*
 models/*
@@ -46,3 +48,4 @@ figures/*
 */simulator/*.c
 */simulator/*.so
 codes/src/simulator/DM_compute.cpython-37m-darwin.so
+codes/src/train/logs/*

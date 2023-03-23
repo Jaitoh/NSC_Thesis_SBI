@@ -3,7 +3,7 @@ data_dir: '../data/datasets/'
 simulator:
   model_type: 'DM'
   model_name: 'B-G-L0S-O-N-'
-  save_name: 'sim_data_Ca_Pa_Ma.h5'
+  save_name: 'sim_data_Ca_Pb_Ma.h5'
   # C: seqC settings
   # P: prior settings
   # M: model settings
