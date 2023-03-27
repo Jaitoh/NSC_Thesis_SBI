@@ -18,3 +18,4 @@ rsync -az --progress wenjie@10.65.53.20:~/NSC/codes/src/train/logs ./src/train/l
 # from uzh cluster
 rsync -az --progress wehe@cluster.s3it.uzh.ch:~/data/NSC/codes/cluster/uzh/train_L0_v1 ./cluster/uzh/train_L0_uzh
 rsync -azn --progress wehe@cluster.s3it.uzh.ch:~/data/NSC/codes/src/train/logs/ ./src/train/logs_uzh
+rsync -azn --progress wehe@cluster.s3it.uzh.ch:~/data/NSC/data/datasets ./data/datasets_uzh
