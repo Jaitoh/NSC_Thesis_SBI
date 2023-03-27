@@ -3,17 +3,21 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 #SBATCH --time=0-24:00:00 ## days-hours:minutes:seconds 
-#SBATCH --mem 16G       ## 3000M ram (hardware ratio is < 4GB/core)  16G
-#SBATCH --ntasks=1        ## Not strictly necessary because default is 1 
-#SBATCH --cpus-per-task=16 ## 32 cores per task
-#SBATCH --job-name=dataset_gen ## job name 
+#SBATCH --mem 4G       
+#SBATCH --ntasks=1       
+#SBATCH --cpus-per-task=16 
+#SBATCH --job-name=train_L0_c2 ## job name 
 #SBATCH --output=./cluster/train_L0/train_L0_c2.out ## standard out file 
+
+#SBATCH --gres=gpu:T4:1
 
 # module load amd
 # module load intel
 
 module load anaconda3
 source activate sbi
+module load t4
+module load cuda
 
 # generate dataset
 # --run_simulator \
@@ -21,9 +25,9 @@ python3 -u ./src/train/train_L0.py \
 --config_simulator_path './src/config/simulator_Ca_Pb_Ma.yaml' \
 --config_dataset_path './src/config/dataset_Sb0_suba0_Rb0.yaml' \
 --config_train_path './src/config/train_Ta1.yaml' \
---log_dir './src/train/logs/log-simulator_Ca_Pb_Ma-dataset_Sb0_suba0_Rb0-train_Ta1' \
+--log_dir './src/train/logs/log-train_L0-c2' \
+--gpu \
 -y > ./cluster/train_L0/train_L0_c2.log
-# --gpu \
 
 echo 'finished simulation'
 

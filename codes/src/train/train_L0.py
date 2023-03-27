@@ -218,7 +218,7 @@ class Solver:
         self.inference = method_fun(prior=prior_train,
                                     density_estimator='maf',
                                     device=self.device,
-                                    logging_level='WARNING',
+                                    logging_level='INFO',
                                     summary_writer=writer,
                                     show_progress_bars=True,
                                     )

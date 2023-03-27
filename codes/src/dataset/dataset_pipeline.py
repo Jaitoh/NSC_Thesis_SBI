@@ -15,6 +15,24 @@ from dataset.seqC_pR_process import seqC_pattern_summary, probR_sampling_for_cho
     seqC_nan2num_norm
 from config.load_config import load_config
 
+def process_x_seqC_part(seqC, config):
+
+    # input seqC is a 2D array with shape (num_seqC, seqC_len)
+
+    if len(seqC.shape) == 1:
+        seqC = seqC.reshape(1, -1)
+
+    seqC_process_method = config['train_data']['seqC_process']
+    if seqC_process_method == 'norm':
+        nan2num = config['train_data']['nan2num']
+        seqC = seqC_nan2num_norm(seqC, nan2num=nan2num)
+    elif seqC_process_method == 'summary':
+        summary_type = config['train_data']['summary_type']
+        seqC = seqC_pattern_summary(seqC, summary_type=summary_type)
+    else:
+        raise ValueError(f'Invalid seqC_process: {seqC_process_method}')
+
+    return seqC
 
 class training_dataset:
     """
