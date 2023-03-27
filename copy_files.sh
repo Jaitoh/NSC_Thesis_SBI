@@ -12,9 +12,9 @@ rsync -azn --progress wehe@130.60.191.245:~/tmp/NSC/data/training_datasets/theta
 rsync -az --progress wehe@130.60.191.245:~/tmp/NSC/data/training_datasets/x_15_3.pt ../data/training_datasets/
 
 # sensors server
-rsync -azn --progress wenjie@10.65.53.20:~/NSC_Thesis/codes/src/train/logs ./src/train/logs_sensors
-rsync -az --progress wenjie@10.65.53.20:~/NSC_Thesis/codes/src/train/logs ./src/train/logs_sensors
+rsync -azn --progress wenjie@10.65.53.20:~/NSC/codes/src/train/logs ./src/train/logs_sensors
+rsync -az --progress wenjie@10.65.53.20:~/NSC/codes/src/train/logs ./src/train/logs_sensors
 
 # from uzh cluster
-rsync -azn --progress wehe@cluster.s3it.uzh.ch:~/data/NSC_Thesis/codes/cluster/train_L0 ./cluster/train_L0_uzh
-rsync -azn --progress wehe@cluster.s3it.uzh.ch:~/data/NSC_Thesis/codes/src/train/logs/ ./src/train/logs_uzh
+rsync -az --progress wehe@cluster.s3it.uzh.ch:~/data/NSC/codes/cluster/uzh/train_L0_v1 ./cluster/uzh/train_L0_uzh
+rsync -azn --progress wehe@cluster.s3it.uzh.ch:~/data/NSC/codes/src/train/logs/ ./src/train/logs_uzh

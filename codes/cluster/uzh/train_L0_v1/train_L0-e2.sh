@@ -3,7 +3,7 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 #SBATCH --time=0-24:00:00 ## days-hours:minutes:seconds 
-#SBATCH --mem 4G        ## 3000M ram (hardware ratio is < 4GB/core)  16G
+#SBATCH --mem 8G        ## 3000M ram (hardware ratio is < 4GB/core)  16G
 #SBATCH --ntasks=1       
 #SBATCH --cpus-per-task=16 
 #SBATCH --gres=gpu:1
@@ -11,7 +11,7 @@
 #SBATCH --output=./cluster/uzh/train_L0_v1/train_logs/train_L0-e2.out
 
 # module load amd
-# module load intel
+module load intel
 
 module load anaconda3
 source activate sbi
