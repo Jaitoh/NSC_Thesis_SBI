@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1       
 #SBATCH --cpus-per-task=16 
 #SBATCH --job-name=train_L0_d3 ## job name 
-#SBATCH --output=./cluster/train_L0/train_L0_d3.out ## standard out file 
+#SBATCH --output=./cluster/uzh/train_L0_v1/train_logs/train_L0_d3.out ## standard out file 
 
 #SBATCH --gres=gpu:T4:1
 
@@ -27,7 +27,7 @@ python3 -u ./src/train/train_L0.py \
 --config_train_path './src/config/train_Ta1.yaml' \
 --log_dir './src/train/logs/log-train_L0-d3' \
 --gpu \
--y > ./cluster/train_L0/train_L0_d3.log
+-y > ./cluster/uzh/train_L0_v1/train_logs/train_L0_d3.log
 
 echo 'finished simulation'
 
