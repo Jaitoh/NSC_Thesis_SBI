@@ -14,8 +14,8 @@ from utils.set_seed import setup_seed, seed_worker
 setup_seed(0)
 from dataset.dataset_pipeline import process_x_seqC_part
 
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-device = 'cpu'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = 'cpu'
 # from contextlib import contextmanager
 # import os
 
@@ -129,19 +129,19 @@ class posterior_inference:
     def _plot_hist(self, samples_sub, axs, num_bins=50):
         
         ax = axs[0][0]
-        ax.hist(samples_sub[:,0].numpy(), bins=num_bins, color='tab:blue')
+        ax.hist(samples_sub[:,0].cpu().numpy(), bins=num_bins, color='tab:blue')
         ax.set_title('bias')
         ax.set_xlim(self.prior_min[0], self.prior_max[0])
         ax = axs[0][1]
-        ax.hist(samples_sub[:,1].numpy(), bins=num_bins, color='tab:blue')
+        ax.hist(samples_sub[:,1].cpu().numpy(), bins=num_bins, color='tab:blue')
         ax.set_title('sigma2a')
         ax.set_xlim(self.prior_min[1], self.prior_max[1])
         ax = axs[1][0]
-        ax.hist(samples_sub[:,2].numpy(), bins=num_bins, color='tab:blue')
+        ax.hist(samples_sub[:,2].cpu().numpy(), bins=num_bins, color='tab:blue')
         ax.set_title('sigma2s')
         ax.set_xlim(self.prior_min[2], self.prior_max[2])
         ax = axs[1][1]
-        ax.hist(samples_sub[:,3].numpy(), bins=num_bins, color='tab:blue')
+        ax.hist(samples_sub[:,3].cpu().numpy(), bins=num_bins, color='tab:blue')
         ax.set_title('L0')
         ax.set_xlim(self.prior_min[3], self.prior_max[3])
         
@@ -169,8 +169,9 @@ class posterior_inference:
 if __name__ == '__main__':
     
     experiment_list = ['b1', 'b3', 'b4', 'b5', 'b6', 'c1', 'c5', 'c6', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6']
-    # for experiement_id in experiment_list:
-    for experiement_id in ['c5']:
+    # experiment_list = ['c1', 'c5', 'c6', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6']
+    for experiement_id in experiment_list:
+    # for experiement_id in ['c5']:
         print(f'generating animation for experiment {experiement_id}...')
         subject_id=5
         trial_len=15 
