@@ -1,19 +1,22 @@
 data_dir: '../data/datasets/'
 
 simulator:
+  model_type: 'DM'
   model_name: 'B-G-L0S-O-N-'
-  save_name: 'test_sim_data.h5'
+  save_name: 'sim_data_Ca_Pa_Ma.h5'
+  # C: seqC settings
+  # P: prior settings
+  # M: model settings
 
 seqC:
   dur_min : 3
   dur_max : 15
+  dur_step: 2
   MS_list : [0.2, 0.4, 0.8]
-  sample  : 20
+  sample  : 700
   single_dur: 0  # 0: duration 3-15 with step2, otherwise duration of single_dur
 
 prior: # theta / params
-#  prior_min: [-3.7, 0, 0, 0, 5]
-#  prior_max: [2.5, 71, 0, 18, 7]
-  prior_min: [-3.7,   0, 0,  0, -1]
-  prior_max: [ 2.5,  30, 0, 18,  1]
-  num_prior_sample: 30
+  prior_min: [-3.7, 0, 0, 0, -5]
+  prior_max: [2.5, 71, 0, 18, 7]
+  num_prior_sample: 500

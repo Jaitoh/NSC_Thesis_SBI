@@ -24,10 +24,12 @@ class seqC_generator:
                  MS_list=None,
                  dur_max=15,
                  sample_size=700,
-                 single_dur=0,
-                 # add_zero=True,
                  ):
-
+        """
+        single_dur: if 0, generate samples of all dur_length output shape, -> output shape [7, len(MS_list), sample_size, 15]
+                    if not 0, generate one sample of length single_dur -> output shape [len(MS_list)*sample_size, single_dur]
+        """
+        
         if MS_list is None:
             MS_list = [0.2, 0.4, 0.8]
 
@@ -37,29 +39,18 @@ class seqC_generator:
 
         self.MS_list = MS_list  # motion strength list
         self.sample_size = sample_size  # number of samples to generate for each MS and dur
-
-        if single_dur == 0:  # generate samples of different dur_length
-
-            temp = np.zeros([1, self.dur_max-1])
-            for dur in range(self.dur_min, self.dur_max + 1, self.len_stp):
-                for MS in self.MS_list:
-                    temp = np.vstack([temp, self._generate_one(MS, dur)])
-            temp = temp[1:, :]
-
-        else:  # generate one sample of length single_dur
-
-            temp = np.empty([self.sample_size * len(MS_list), self.dur_max-1])
-            dur = single_dur
-            for i, MS in enumerate(self.MS_list):
-                temp[i * self.sample_size:(i + 1) * self.sample_size, :] = self._generate_one(MS, dur)
-
-        # if add_zero:
-        zeros = np.zeros([temp.shape[0], 1])
-        temp = np.hstack([zeros, temp])
-
+        
+        dur_list = range(self.dur_min, self.dur_max + 1, self.len_stp)
+        temp = np.zeros([len(dur_list), len(MS_list), sample_size, dur_max-1])
+        for i, dur in enumerate(dur_list):
+            for j, MS in enumerate(MS_list):
+                temp[i, j, :, :] = self._generate_one(MS, dur)
+        zeros = np.zeros([temp.shape[0], temp.shape[1], temp.shape[2], 1])
+        temp = np.concatenate([zeros, temp], axis=3)
+            
         return temp
 
-    def _generate_one(self, MS, dur):
+    def _generate_one(self, MS, dur) -> np.ndarray: # shape (sample_size, dur_max-1)
         # generate one sample of shape (sample_size, dur_max) with MS and dur
         arr = MS * np.random.choice([-1, 0, 1], size=(self.sample_size, dur-1), p=[self.pL, self.pP, self.pR])
 
@@ -73,12 +64,12 @@ class seqC_generator:
 
         return np.pad(arr, ((0, 0), (0, self.dur_max - dur)), 'constant', constant_values=self.nan_padding)
 
-    def set_dur_max(self, dur_max):
-        self.dur_max = dur_max
-
 
 if __name__ == '__main__':
     # test code
     # seqC = seqC_generator(nan_padding=None).generate()
     seqC = seqC_generator(nan_padding=None).generate(single_dur=15)
+    print(seqC.shape)
+
+    seqC = seqC_generator(nan_padding=None).generate(single_dur=0)
     print(seqC.shape)

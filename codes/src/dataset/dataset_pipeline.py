@@ -11,9 +11,151 @@ import sys
 
 sys.path.append('./src')
 
-from dataset.seqC_pR_process import seqC_pattern_summary, probR_sampling_for_choice, probR_threshold_for_choice, \
-    seqC_nan2num_norm
+# from dataset.seqC_pR_process import seqC_pattern_summary, probR_sampling_for_choice, probR_threshold_for_choice, \
+#     seqC_nan2num_norm
 from config.load_config import load_config
+
+
+def seqC_nan2num_norm(seqC, nan2num=-1):
+    """ fill the nan of the seqC with nan2num and normalize to (0, 1)
+    """
+    seqC = np.nan_to_num(seqC, nan=nan2num)
+    # normalize the seqC from (nan2num, 1) to (0, 1)
+    seqC = (seqC - nan2num) / (1 - nan2num)
+
+    return seqC
+
+
+def seqC_pattern_summary(seqC, summary_type=1, dur_max=15):
+
+    """ extract the input sequence pattern summary from the input seqC
+
+        can either input a array of shape (D,M,S,T,C, 15)
+        or a dictionary of pulse sequences contain all the information listed below for the further computation
+        
+        Args:
+            seqC (np.array): input sequence of shape (D,M,S,T, 15)  !should be 2 dimensional
+                e.g.  np.array([[0, 0.4, -0.4, 0, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                                [0, 0.4, -0.4, 0, 0.4, 0.4, -0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]])
+
+            summary_type:   (default: 1)
+                0: with separate left and right (same/oppo/new)
+                1: combine left and right (same/oppo/new)
+
+        Return:
+            summary_type 0:
+            x0 (np.array): input pattern summary of shape (D,M,S,T,C, 11)
+                column 1: MS
+                column 2: dur
+                column 3: nLeft
+                column 4: nRight
+                column 5: nPulse
+                column 6: hist_nLsame
+                column 7: hist_nLoppo
+                column 8: hist_nLelse
+                column 9: hist_nRsame
+                column 10: hist_nRoppo
+                column 11: hist_nRelse
+
+            summary_type 1:
+            x1 (np.array): input pattern summary of shape (D,M,S,T,C, 8)
+                column 1: MS
+                column 2: dur
+                column 3: nLeft
+                column 4: nRight
+                column 5: nPulse
+                column 6: hist_nSame
+                column 7: hist_nOppo
+                column 8: hist_nElse
+                
+    """
+    
+    # get the MS of each trial
+    MS      = np.apply_along_axis(lambda x: np.unique(np.abs(x[(~np.isnan(x))&(x!=0)])), axis=-1, arr=seqC)#[:,:,:,:,-1]
+    MS      = np.squeeze(MS)
+    _dur    = np.apply_along_axis(lambda x: np.sum(~np.isnan(x)), axis=-1, arr=seqC)
+    _nLeft  = np.apply_along_axis(lambda x: np.sum(x<0), axis=-1, arr=seqC)
+    _nRight = np.apply_along_axis(lambda x: np.sum(x>0), axis=-1, arr=seqC)
+    _nPulse = _dur - _nLeft - _nRight
+
+    # summary of effect stimulus
+    dur     = (_dur-1)/(dur_max-1)
+    nLeft   = _nLeft/(dur_max-1)
+    nRight  = _nRight/(dur_max-1)
+    nPause  = (_dur-1-_nLeft-_nRight)/(dur_max-1)
+
+    # extract internal pattern summary
+    hist_nSame  = np.apply_along_axis(lambda x: np.sum(x*np.append(0, x[0:-1])>0), axis=-1, arr=seqC)/(_dur-1)
+    hist_nLsame = np.apply_along_axis(lambda x: np.sum((x*np.append(0, x[0:-1])>0) & (x<0)), axis=-1, arr=seqC)/(_dur-1)
+    hist_nRsame = np.apply_along_axis(lambda x: np.sum((x*np.append(0, x[0:-1])>0) & (x>0)), axis=-1, arr=seqC)/(_dur-1)
+
+    hist_nOppo  = np.apply_along_axis(lambda x: np.sum(x*np.append(0, x[0:-1])<0), axis=-1, arr=seqC)/(_dur-1)
+    hist_nLoppo = np.apply_along_axis(lambda x: np.sum((x*np.append(0, x[0:-1])<0) & (x<0)), axis=-1, arr=seqC)/(_dur-1)
+    hist_nRoppo = np.apply_along_axis(lambda x: np.sum((x*np.append(0, x[0:-1])<0) & (x>0)), axis=-1, arr=seqC)/(_dur-1)
+
+    hist_nElse  = np.apply_along_axis(lambda x: np.sum( (x*np.append(0, x[0:-1])==0) & (x!=0) ), axis=-1, arr=seqC)/(_dur-1)
+    hist_nLelse = np.apply_along_axis(lambda x: np.sum( (x*np.append(0, x[0:-1])==0) & (x<0) ), axis=-1, arr=seqC)/(_dur-1)
+    hist_nRelse = np.apply_along_axis(lambda x: np.sum( (x*np.append(0, x[0:-1])==0) & (x>0) ), axis=-1, arr=seqC)/(_dur-1)
+
+    x0 = np.vstack((MS, dur, nLeft, nRight, nPause, hist_nLsame, hist_nLoppo, hist_nLelse, hist_nRsame, hist_nRoppo, hist_nRelse)).T
+    x1 = np.vstack((MS, dur, nLeft, nRight, nPause, hist_nSame, hist_nOppo, hist_nElse)).T
+
+    if summary_type == 0:
+        return x0
+    else:  # default output
+        return x1
+
+
+def probR_sampling_for_choice(probR, num_probR_sample=10):
+    """ sample the probability of right choice from the input probR
+
+        Args:
+            probR (np.array): input probability of right choice of shape (D,M,S,T, 1)
+            num_probR_sample (int): number of samples for each input probability of right choice
+
+        Return:
+            probR_sample (np.array): sampled probability of right choice of shape (D,M,S,T, num_probR_sample(C), 1)
+    """
+    if not isinstance(probR, np.ndarray):
+        probR = np.array(probR).reshape(-1, 1)
+    probR = np.squeeze(probR)
+    
+    choice = np.empty((*probR.shape, num_probR_sample))
+    for D in range(probR.shape[0]):
+        for M in range(probR.shape[1]):
+            for S in range(probR.shape[2]):
+                for T in range(probR.shape[3]):
+                    prob = probR[D, M, S, T]
+                    # choice[D, M, S, :] = np.random.choice([0, 1], size=num_probR_sample, p=[1 - prob, prob])
+                    cs = np.random.binomial(1, prob, size=num_probR_sample)
+                    choice[D, M, S, T, :] = cs
+    choice = choice[:, :, :, :, :, np.newaxis]
+    # TODO choice.shape = (D,M,S,T, num_probR_sample)
+    return choice
+
+
+def probR_threshold_for_choice(probR, threshold=0.5):
+    """ get right choice from the probR, when probR > threshold, choose right(1) else Left(0)
+
+        Args:
+            probR (np.array): input probability of right choice of shape (D,M,S,T, 1)
+            threshold (float): threshold for right choice
+
+        Return:
+            choice (np.array): sampled probability of right choice of shape (D,M,S,T,C, 1)
+    """
+
+    if not isinstance(probR, np.ndarray):
+        probR = np.array(probR).reshape(-1, 1)
+    probR = np.squeeze(probR)
+    
+    choice = np.empty(probR.shape)
+    choice = np.where(probR > threshold, 1, 0)
+
+    choice = choice[:, :, :, :, :, np.newaxis]
+    # TODO choice.shape = (D,M,S,T, num_probR_sample, 1)
+    return choice
+
 
 def process_x_seqC_part(seqC, config):
 
@@ -44,9 +186,6 @@ class training_dataset:
         self.config = config
         self._get_params()
 
-        self.index_chosen_in1dur = self._get_subset_idx()
-        print(f'---\nprepare training dataset\noriginal data size (single dur) {self.single_dur_data_len}, taken a subset size (single dur) of {len(self.index_chosen_in1dur)}')
-
     def _get_params(self):
         """
         get the parameters of the dataset
@@ -59,72 +198,61 @@ class training_dataset:
         self.MS_list = config['seqC']['MS_list']
         self.prior_min = config['prior']['prior_min']
 
-        self.single_dur_data_len = len(self.MS_list) * self.num_seqC_sample * self.num_prior_sample
-        self.single_dur_seqC_shape = [self.single_dur_data_len, config['seqC']['dur_max']]
-        self.single_dur_theta_shape = [self.single_dur_data_len, len(self.prior_min)]
-
         self.num_probR_sample = self._get_num_probR_sample()
 
-    def __get_MS_seqC_theta_pointers(self):
+    def get_subset_data(self, seqC, theta, probR):
+        """get the subset of the training dataset based on the config
 
-        MS_pointers_in1dur = list(range(0, self.single_dur_data_len, self.single_dur_data_len // len(self.MS_list)))
+        Args:
+            seqC  (np.ndarray): shape (D, M, S, T, 15)
+            theta (np.ndarray): shape (D, M, S, T, 5)
+            probR (np.ndarray): shape (D, M, S, T, 1)
 
-        single_MS_len = self.single_dur_data_len // len(self.MS_list)
-        seqC_pointers_in1MS = list(range(0, single_MS_len, self.num_prior_sample))
-
-        theta_pointers_in1seqC = list(range(0, self.num_prior_sample))
-
-        return MS_pointers_in1dur, seqC_pointers_in1MS, theta_pointers_in1seqC
-
-    def __get_subset_of_MS_seqC_pointers(self, MS_pointers_in1dur, seqC_pointers_in1MS, theta_pointers_in1seqC,
-                                         is_subset_seqC_list, is_subset_theta_list):
-
-        MS_pointers_subset = [MS_pointers_in1dur[self.MS_list.index(MS)] for MS in self.train_data_MS_list]
-
-        if is_subset_seqC_list:
-            seqC_pointers_subset = [seqC_pointers_in1MS[idx] for idx in self.subset_seqC]
-        else:
-            num_seqC_pointers_in1MS = len(seqC_pointers_in1MS)
-            seqC_pointers_subset = seqC_pointers_in1MS[0:int(num_seqC_pointers_in1MS * self.subset_seqC)]
-
-        if is_subset_theta_list:
-            theta_pointers_subset = [theta_pointers_in1seqC[idx] for idx in self.subset_theta]
-        else:
-            num_theta_pointers_in1seqC = len(theta_pointers_in1seqC)
-            theta_pointers_subset = theta_pointers_in1seqC[0:int(num_theta_pointers_in1seqC * self.subset_theta)]
-
-        return np.array(MS_pointers_subset), np.array(seqC_pointers_subset), np.array(theta_pointers_subset)
-
-    def _get_subset_idx(self):
+        Returns:
+            subset of seqC, theta, probR
         """
-        get the subset_idx of the training dataset based on the config
-        """
-
-        config = self.config
-        self.train_data_dur_list = config['train_data']['train_data_dur_list']
-        self.train_data_MS_list = config['train_data']['train_data_MS_list']
-        self.subset_seqC = config['train_data']['subset_seqC']
-        self.subset_theta = config['train_data']['subset_theta']
-
-        is_subset_seqC_list = True if isinstance(self.subset_seqC, list) else False
-        is_subset_theta_list = True if isinstance(self.subset_theta, list) else False
-
-        MS_pointers_in1dur, seqC_pointers_in1MS, theta_pointers_in1seqC = self.__get_MS_seqC_theta_pointers()
-        MS_pointers_subset_in1dur, seqC_pointers_subset_in1MS, theta_pointers_subset_in1seqC = self.__get_subset_of_MS_seqC_pointers(
-            MS_pointers_in1dur, seqC_pointers_in1MS, theta_pointers_in1seqC,
-            is_subset_seqC_list, is_subset_theta_list)
-
-        # add MS pointers to seqC pointers
-        seqC_pointers_subset_in1dur = np.array(
-            [seqC_pointers_subset_in1MS + MS_pointer for MS_pointer in MS_pointers_subset_in1dur]).reshape(-1)
-        # add seqC pointers to theta pointers
-        theta_pointers_subset_in1dur = np.array(
-            [theta_pointers_subset_in1seqC + seqC_pointer for seqC_pointer in seqC_pointers_subset_in1dur]).reshape(-1)
-
-        index_chosen_in1dur = theta_pointers_subset_in1dur
-
-        return index_chosen_in1dur
-
+        # 1. take part of dur, MS
+        train_data_dur_list = config['train_data']['train_data_dur_list']
+        train_data_MS_list = config['train_data']['train_data_MS_list']
+        
+        # [get corresponding idx] decode train_data_dur_list/MS_list to list_idx -> find corresponding idx number in the list
+        dur_min, dur_max, dur_step = config['seqC']['dur_min'], config['seqC']['dur_max'], config['seqC']['dur_step']
+        dur_list = list(np.arange(dur_min, dur_max+1, dur_step))
+        train_data_dur_list_idx = [dur_list.index(dur) for dur in train_data_dur_list] # e.g. [4,5]
+        train_data_MS_list_idx = [self.MS_list.index(MS) for MS in train_data_MS_list] # e.g. [0,2]
+        
+        seqC_sub  = seqC[train_data_dur_list_idx, :, :, :, :]
+        seqC_sub  = seqC_sub[:, train_data_MS_list_idx, :, :, :]
+        theta_sub = theta[train_data_dur_list_idx, :, :, :, :]
+        theta_sub = theta_sub[:, train_data_MS_list_idx, :, :, :]
+        probR_sub = probR[train_data_dur_list_idx, :, :, :, :]
+        probR_sub = probR_sub[:, train_data_MS_list_idx, :, :, :]
+        
+        # 2. take part of seqC, theta content
+        subset_seqC = config['train_data']['subset_seqC']
+        subset_theta = config['train_data']['subset_theta']
+        
+        S, T = seqC_sub.shape[2], seqC_sub.shape[3]
+        if isinstance(subset_seqC, list):
+            subset_S_list = subset_seqC
+        else:
+            subset_S_list = list(np.arange(int(subset_seqC*S)))
+        
+        if isinstance(subset_theta, list):
+            subset_T_list = subset_theta
+        else:
+            subset_T_list = list(np.arange(int(subset_theta*T)))
+        
+        seqC_sub  = seqC_sub [:, :, subset_S_list, :, :]
+        theta_sub = theta_sub[:, :, subset_S_list, :, :]
+        probR_sub = probR_sub[:, :, subset_S_list, :, :]
+        seqC_sub  = seqC_sub [:, :, :, subset_T_list, :]
+        theta_sub = theta_sub[:, :, :, subset_T_list, :]
+        probR_sub = probR_sub[:, :, :, subset_T_list, :]
+        
+        return seqC_sub, theta_sub, probR_sub
+    
+    
     def _get_num_probR_sample(self):
 
         Rchoice_method = self.config['train_data']['Rchoice_method']
@@ -135,11 +263,6 @@ class training_dataset:
 
         return num_probR_sample
 
-    def _get_subset_data(self, dur):
-        seqC_sub = self.seqC_group[f'seqC_dur{dur}'][self.index_chosen_in1dur]
-        theta_sub = self.theta_group[f'theta_dur{dur}'][self.index_chosen_in1dur]
-        probR_sub = self.probR_group[f'probR_dur{dur}'][self.index_chosen_in1dur]
-        return seqC_sub, theta_sub, probR_sub
 
     def _process_x_R_part(self, probR_sub):
 
@@ -158,9 +281,8 @@ class training_dataset:
 
         return R_part
 
-    def _process_x_seqC_part(self, seqC):
 
-        # input seqC is a 2D array with shape (num_seqC, seqC_len)
+    def _process_x_seqC_part(self, seqC):
 
         if len(seqC.shape) == 1:
             seqC = seqC.reshape(1, -1)
@@ -177,41 +299,55 @@ class training_dataset:
 
         return seqC
 
+
     def _process_theta(self, theta):
 
         if len(theta.shape) == 1:
             theta = theta.reshape(1, -1)
 
         if self.config['train_data']['remove_sigma2i']:
-            theta = np.delete(theta, 2, axis=1)  # bsssxxx remove sigma2i (the 3rd column)
+            theta = np.delete(theta, 2, axis=-1)  # bsssxxx remove sigma2i (the 3rd column)
 
         return theta
+
 
     def data_process_pipeline(self, seqC, theta, probR):
         '''
         pipeline for processing the seqC, theta, probR for training
 
         Args:
-            seqC: ndarray, shape (num_seqC, seqC_len)
-            theta: ndarray, shape (num_theta, theta_len)
-            probR:  ndarray, shape (num_probR, probR_len)
+            seqC : ndarray, shape (D,M,S,T, 15)
+            theta: ndarray, shape (D,M,S,T, 5)
+            probR: ndarray, shape (D,M,S,T, 1)
 
         Returns:
-
+            x_seqC: ndarray, shape (D,M,S,T,C, 15)
+            theta_: ndarray, shape (D,M,S,T,C, 5)
+            x_R   : ndarray, shape (D,M,S,T,C, 1)
         '''
 
         # process seqC
-        x_seqC = np.repeat(seqC, self.num_probR_sample, axis=0)
+        seqC   = seqC[:,:,:,:, np.newaxis, :]
+        x_seqC = np.repeat(seqC, self.num_probR_sample, axis=4)
         x_seqC = self._process_x_seqC_part(x_seqC)
+        # TODO x_seqC.shape = (D,M,S,T,C, 15)
+        
         # process theta
-        theta_ = np.repeat(theta, self.num_probR_sample, axis=0)
+        theta  = theta[:,:,:,:, np.newaxis, :] 
+        theta_ = np.repeat(theta, self.num_probR_sample, axis=4)
         theta_ = self._process_theta(theta_)
+        # TODO theta_.shape = (D,M,S,T,C, 4)
+        
         # process probR
-        x_R = self._process_x_R_part(probR)
+        x_ch = self._process_x_R_part(probR)
 
-        return x_seqC, theta_, x_R
+        x = np.concatenate([x_seqC, x_ch], axis=-1)
+        # TODO x.shape = (D,M,S,T,C, 16)
+        
+        return torch.tensor(x, dtype=torch.float32), torch.tensor(theta_, dtype=torch.float32)
 
-    def generate_save_dataset(self, data_dir):
+
+    def subset_process_sava_dataset(self, data_dir):
         """
         Generate dataset for training
         Args:
@@ -220,46 +356,18 @@ class training_dataset:
         Returns:
 
         """
-        # define the shape of the dataset
-        dataset_size = len(self.index_chosen_in1dur) * len(self.train_data_dur_list) * self.num_probR_sample
-        if self.config['train_data']['seqC_process'] == 'summary':
-            if self.config['train_data']['summary_type'] == 0:
-                x_seqC_shape = [dataset_size, 11]
-            if self.config['train_data']['summary_type'] == 1:
-                x_seqC_shape = [dataset_size, 8]
-        else:
-            x_seqC_shape = [dataset_size, self.config['seqC']['dur_max']]
-        theta_shape = [dataset_size, len(self.prior_min)-1] # -1 for remove sigma2i
-        x_R_shape = [dataset_size, 1]
-
-        x_seqC, theta, x_R = np.empty(x_seqC_shape), np.empty(theta_shape), np.empty(x_R_shape)
-
         # load sim_data h5 file
         f = h5py.File(Path(data_dir) / self.config['simulator']['save_name'], 'r')
-        self.seqC_group, self.theta_group, self.probR_group = f['seqC_group'], f['theta_group'], f['probR_group']
-
+        
         print('loading and processing subset data...')
         start_time = time.time()
-        for i, dur in tqdm(enumerate(self.train_data_dur_list), total=len(self.train_data_dur_list)):
-            seqC_sub, theta_sub, probR_sub = self._get_subset_data(dur)
-
-            x_seqC_part, theta_part, x_R_part = self.data_process_pipeline(seqC_sub, theta_sub, probR_sub)
-
-            part_len = len(self.index_chosen_in1dur) * self.num_probR_sample
-            x_seqC[i * part_len:(i + 1) * part_len, :] = x_seqC_part
-            theta[i * part_len:(i + 1) * part_len, :] = theta_part
-            x_R[i * part_len:(i + 1) * part_len, :] = x_R_part
-
+        seqC, theta, probR = f['data_group']['seqCs'][:], f['data_group']['theta'][:], f['data_group']['probR'][:]
         f.close()
+        
+        seqC_sub, theta_sub, probR_sub = self.get_subset_data(seqC, theta, probR)
+        x, theta = self.data_process_pipeline(seqC_sub, theta_sub, probR_sub)
         print(f'finished loading and processing of subset dataset, time used: {time.time() - start_time:.2f}s')
-
-        # process seqC
-        # x_seqC = self._process_x_seqC_part(x_seqC)
-        x = np.concatenate([x_seqC, x_R], axis=1)
-
-        # process theta
-        # theta_ = self._process_theta(theta)
-
+        
         # save dataset
         save_path = Path(data_dir) / self.config['train_data']['save_name']
         f = h5py.File(save_path, 'w')
@@ -268,27 +376,45 @@ class training_dataset:
         f.close()
         print(f'training dataset saved to {save_path}')
 
-        return torch.tensor(x, dtype=torch.float32), torch.tensor(theta, dtype=torch.float32)
+        return x, theta
 
 
 if __name__ == '__main__':
     # load and merge yaml files
+    debug = False
+    
+    if debug: 
+        f = h5py.File('../data/datasets/test_sim_data_seqC_prior_pR.h5', 'r')
+
+        seqC = f['data_group']['seqCs'][:]
+        theta = f['data_group']['theta'][:]
+        probR = f['data_group']['probR'][:]
+        
+        seqC_pattern_summary(seqC, summary_type=1)
+        seqC = seqC_nan2num_norm(seqC)
+        choice = probR_sampling_for_choice(probR, num_probR_sample=10)
+        choice = probR_threshold_for_choice(probR, threshold=0.5)
+    
     test = True
 
     if test:
         config = load_config(
-            config_simulator_path=Path('./src/config') / 'test_simulator.yaml',
-            config_dataset_path=Path('./src/config') / 'test_dataset.yaml',
-            config_train_path=Path('./src/config') / 'test_train.yaml',
+            config_simulator_path=Path('./src/config') / 'test' / 'test_simulator.yaml',
+            config_dataset_path=Path('./src/config') / 'test' / 'test_dataset.yaml',
+            config_train_path=Path('./src/config') / 'test' / 'test_train.yaml',
         )
     else:
         config = load_config(
-            config_simulator_path=Path('./src/config') / 'simulator_Ca_Pa_Ma.yaml',
-            config_dataset_path=Path('./src/config') / 'dataset_Sa0_Ra_suba0.yaml',
-            config_train_path=Path('./src/config') / 'train_Ta0.yaml',
+            config_simulator_path=Path('./src/config') / 'simulator' / 'simulator_Ca_Pa_Ma.yaml',
+            config_dataset_path=Path('./src/config') / 'dataset' / 'dataset_Sa0_Ra_suba0.yaml',
+            config_train_path=Path('./src/config') / 'train' / 'train_Ta0.yaml',
         )
     print(config.keys())
 
     sim_data_dir = config['data_dir']
     dataset = training_dataset(config)
-    x, theta = dataset.generate_save_dataset(sim_data_dir)
+    
+    f = h5py.File(Path(sim_data_dir) / config['simulator']['save_name'], 'r')
+    seqC, theta, probR = f['data_group']['seqCs'][:], f['data_group']['theta'][:], f['data_group']['probR'][:]
+    x, theta = dataset.data_process_pipeline(seqC, theta, probR)
+    x, theta = dataset.subset_process_sava_dataset(sim_data_dir)

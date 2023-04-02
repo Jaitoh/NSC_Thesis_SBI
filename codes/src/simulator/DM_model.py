@@ -22,12 +22,12 @@ class DM_model:
                     sigmas: (3)
                     BGLS:   (6, 8) - 7 is the highest order of orthogonal polynomials, 
                                     8 is the highest number of parameters
-                2. ararry case: **kwargs['modelName'] is required
+                2. ararry case: **kwargs['model_name'] is required
                     e.g. [0.5, 0.1, 0, 1, 3], 'bsssB-G-L0S-O-N-' or 'B-G-L0S-O-N-' (bias, sigma2a, sigma2i, sigma2s, L0)
             
             cython (bool): use cython to accelerate the computation
             
-            modelName (string): e.g. 'B1G-L0S-O-N-', 'B-G-L0S-O-N-'...
+            model_name (string): e.g. 'B1G-L0S-O-N-', 'B-G-L0S-O-N-'...
             
         """
         
@@ -74,16 +74,16 @@ class DM_model:
             self.Ssame = self.params['BGLS'][3,:]
             self.Soppo = self.params['BGLS'][4,:]
             self.Selse = self.params['BGLS'][5,:]
-            self.modelName = self.params['modelName']
+            self.model_name = self.params['model_name']
         
         else:
             
             self.params = np.array(params)
             
-            modelName = kwargs['modelName'].upper()
-            self.modelName = modelName
+            model_name = kwargs['model_name'].upper()
+            self.model_name = model_name
             
-            BGLSON = self.decode_BGLSON_from_array(self.params, self.modelName)
+            BGLSON = self.decode_BGLSON_from_array(self.params, self.model_name)
             self.BGLSON = BGLSON
             self.bias   = self.params[0]
             
@@ -101,14 +101,14 @@ class DM_model:
             self.Soppo = BGLSON[4,:]
             self.Selse = BGLSON[5,:]
     
-    def _decode_BGLSON_from_array(self, params, modelName):
+    def _decode_BGLSON_from_array(self, params, model_name):
 
         nan_mat = np.full((6, 8), np.nan)
 
         params_temp = params[4:]
 
         # parse the model name
-        ns = re.search(r'B(.)G(.)L(.)S(.)O(.)N(.)', modelName).groups()
+        ns = re.search(r'B(.)G(.)L(.)S(.)O(.)N(.)', model_name).groups()
         _sum = sum([int(x)+1 for x in ns if x != '-'])
 
         assert _sum + 4 == len(params), 'input parameters dimension do not match the model name'
@@ -120,8 +120,8 @@ class DM_model:
 
         return nan_mat
     
-    # def _decode_BGLSON_from_array_fast(self, params, modelName):
-    #     return cython_compute._decode_BGLSON_from_array_cy(params, modelName)
+    # def _decode_BGLSON_from_array_fast(self, params, model_name):
+    #     return cython_compute._decode_BGLSON_from_array_cy(params, model_name)
     def stoch_simulation_2D(self, seqC, debug=False):
         raise NotImplementedError('stoch_simulation_2D is not implemented yet')
         
@@ -506,17 +506,17 @@ class DM_model:
 
 if __name__ == "__main__":
     params = [0.00993, 0.00430, 0.00000, 1.33501, 3.57432]
-    modelName = 'B-G-L0S-O-N-'
+    model_name = 'B-G-L0S-O-N-'
     
     # input parameters in the format of array
     # from simulator.DM_model import DM_model
-    model = DM_model(params, modelName=modelName)
+    model = DM_model(params, model_name=model_name)
     print('create model from array and model name')
     print(f"Params: {params}")
     print(f"Bias: {model.bias}")
     print(f"Sigmas: {model.sigmas}")
     print(f"BGLSON: \n{model.BGLSON}")
-    print(f"Model name: {model.modelName}")
+    print(f"Model name: {model.model_name}")
     print()
     
     seqC = np.array([0, 0.4, -0.4, np.nan, np.nan,\
@@ -538,14 +538,14 @@ if __name__ == "__main__":
     params = dict(bias = paramsFitted['bias'][idx],
                 sigmas = paramsFitted['sigmas'][idx,:],
                 BGLS = paramsFitted['BGLS'][idx, :, :], 
-                modelName = paramsFitted['allModelsList'][idx])
+                model_name = paramsFitted['allModelsList'][idx])
                 
     model = DM_model(params)
     print('create model from dictionary')
     print(f"Bias: {model.bias}")
     print(f"Sigmas: {model.sigmas}")
     print(f"BGLSON: \n{model.BGLSON}")
-    print(f"Model name: {model.modelName}")
+    print(f"Model name: {model.model_name}")
     seqC = [0, -0.2, -0.2, 0.2, -0.2,  0.2,  0.2,    0, -0.2, 0.2, -0.2, 0,   -0.2, 0, -0.2]
     a, probR = model.simulate(seqC)
     print(a, probR)

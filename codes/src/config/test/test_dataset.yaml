@@ -3,7 +3,7 @@ train_data:
 
 # ========== parameter settings for the seqC ==========
   train_data_dur_list: [11, 13]
-  train_data_MS_list: [0.4, 0.8]  # todo plot acc against MS
+  train_data_MS_list: [0.2, 0.8]  # todo plot acc against MS
 
 #  subset_seqC: 0.15
 #  subset_theta: 0.2
@@ -11,26 +11,21 @@ train_data:
 #  subset_seqC: [1]
 #  subset_theta: 1
 
-  subset_seqC: [0, 1]
-  subset_theta: [0, 1, 2]
+  subset_seqC: [0, 1]    # choose the idx of the seqC
+  subset_theta: [0, 1, 2] # choose the idx of the theta
 
   seqC_process: 'norm'
   nan2num: -1
 
-#  seqC_process: 'summary'
+#  seqC_process: 'summary' # TODO
 #  summary_type: 1  # 0: detailed information, 1: brief information
 #  summary_type: 0
 
-
-# seqC_process: 'network'
-
-
 # ========== parameter settings for the probR ==========
-  Rchoice_method: 'probR' # todo test
+  # Rchoice_method: 'probR' # todo test
 
-#  Rchoice_method: 'probR_sampling'
-#  num_probR_sample: 10
-#  num_probR_sample: 1
+  Rchoice_method: 'probR_sampling'
+  num_probR_sample: 5 # todo test
 
 #  Rchoice_method: 'probR_threshold'
 #  R_threshold: 0.5

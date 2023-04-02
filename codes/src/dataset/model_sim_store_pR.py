@@ -23,6 +23,7 @@ import itertools
 
 import h5py
 import matplotlib.pyplot as plt
+from utils.set_seed import setup_seed
 
 cmaps = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple']
 
@@ -58,7 +59,7 @@ def plot_a(a, probR,
 
     return fig
 
-def _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
+def one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
 
     # check seqC and params dimension should be 1
     if len(seqC.shape) != 1 or len(params.shape) != 1:
@@ -67,7 +68,7 @@ def _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
     params_ = copy.deepcopy(params)
     seqC_ = copy.deepcopy(seqC)
 
-    model = DM_model(params=params_, modelName=model_name)
+    model = DM_model(params=params_, model_name=model_name)
     a, probR = model.simulate(np.array(seqC_))
 
     fig = plot_a(a, probR, figure_name)
@@ -75,49 +76,49 @@ def _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
     return (seqC, params, probR, fig)
 
 
-def _one_DM_simulation(args):
+def one_DM_simulation(seqC, params, model_name, i, j, k, l):
     """ do one simulation of DM model with one seqC and one param input, returns probR
     """
-
-    seqC, params, modelName = args
 
     # check seqC and params dimension should be 1
     if len(seqC.shape) != 1 or len(params.shape) != 1:
         raise ValueError('seqC and params dimension should be 1')
 
-    model = DM_model(params=params, modelName=modelName)
+    model = DM_model(params=params, model_name=model_name)
     _, probR = model.simulate(np.array(seqC))
 
-    return (seqC, params, probR)
+    return seqC, params, probR, i, j, k, l
 
 
-def _DM_sim_for_seqCs_parallel(
+def DM_sim_for_seqCs_parallel(
         seqCs,
         prior,
         num_prior_sample,
-        modelName='B-G-L0S-O-N-',
+        model_name='B-G-L0S-O-N-',
         num_workers=-1,
 ):
     """sample params from prior and simulate probR with DM model with multiple seqCs inputs
     
     Args:   
-        seqCs:              input sequences
+        seqCs:              input sequences of shape [dur_len, MS_len, sample_size, 15] e.g. [7, 3, 700, 15]
         prior:              prior distribution
         num_prior_sample:   number of prior samples
-        modelName:          model name
+        model_name:          model name
         num_workers:        number of workers for parallel processing (default: -1)
-
+    
+    Return:
+        seqC:               input sequences of shape [dur_len, MS_len, sample_size, num_prior_sample, 15] e.g. [7, 3, 700, 500, 15]
+        theta:              parameters of shape [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]
+        probR:              probability of reward of shape [dur_len, MS_len, sample_size, num_prior_sample, 1]
+    
     """
 
     params = prior.sample((num_prior_sample,)).numpy()
 
-    simulate_func = _one_DM_simulation
-    dataset_size = len(seqCs) * num_prior_sample
-    seqC = np.empty((dataset_size, seqCs.shape[1]))
-    theta = np.empty((dataset_size, params.shape[1]))
-    probR = np.empty((dataset_size, 1))
-
-    print(f'number of simulations', len(seqCs) * num_prior_sample)
+    seqC  = np.empty((*seqCs.shape[:-1], params.shape[0], seqCs.shape[-1])) # [dur_len, MS_len, sample_size, num_prior_sample, 15]
+    theta = np.empty((*seqCs.shape[:-1], *params.shape)) # [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]
+    probR = np.empty((*seqCs.shape[:-1], params.shape[0], 1)) # [dur_len, MS_len, sample_size, num_prior_sample, 1]
+    print(f'number of simulations', np.product(probR.shape))
 
     # limit the number of workers to the number of available cores
     tic = time.time()
@@ -126,27 +127,41 @@ def _DM_sim_for_seqCs_parallel(
         num_workers = available_workers
 
     # run the simulations in parallel
-    results = Parallel(n_jobs=num_workers, verbose=1)(
-        delayed(simulate_func)((seqC, param, modelName)) \
-        for seqC, param in itertools.product(seqCs, params))
+    # for i in range(seqCs.shape[0]):
+    #     for j in range(seqCs.shape[1]):
+    #         for k in range(seqCs.shape[2]):
+    #             for l in range(params.shape[0]):
+    #                 seqC = seqCs[i, j, k, :]
+    #                 param = params[l, :]
+    #                 seqC_, param_, probR_ = one_DM_simulation(seqC, param, model_name)
+    #                 theta[i, j, k, l, :] = param_
+    #                 probR[i, j, k, l, 0] = probR_
+    
+    results = Parallel(n_jobs=num_workers, verbose=1)(delayed(one_DM_simulation)(seqCs[i, j, k, :], params[l,:], model_name, i, j, k, l) \
+        for i in range(seqCs.shape[0]) \
+        for j in range(seqCs.shape[1]) \
+        for k in range(seqCs.shape[2]) \
+        for l in range(params.shape[0]))
+        
+    # results = Parallel(n_jobs=num_workers, verbose=1)(
+    #     delayed(one_DM_simulation)(seqC, param, model_name) \
+    #     for seqC, param in itertools.product(seqCs, params))
     toc = time.time()
     print(f'time elapsed for simulation: {toc - tic:.2f} seconds')
 
     # store the results
     print('stacking the results')
-    tic = time.time()
-    for i, (seqC_, theta_, probR_) in enumerate(results):
-        seqC[i, :] = seqC_
-        theta[i, :] = theta_
-        probR[i, 0] = probR_
-    toc = time.time()
-    print(f'time elapsed for storing: {toc - tic:.2f} seconds')
+    for seqC_, param_, probR_, i, j, k, l in results:
+        seqC [i, j, k, l, :] = seqC_
+        theta[i, j, k, l, :] = param_
+        probR[i, j, k, l, 0] = probR_
+    print('done stacking the results')
 
     return seqC, theta, probR
 
 
 def DM_simulate_and_store(
-        save_data_dir='../data/training_datasets/training_dataset.hdf5',
+        save_data_dir='../data/training_datasets/data_seqC_prior_pR.hdf5',
 
         seqC_MS_list=None,
         seqC_dur_max=15,  # 3, 5, 7, 9, 11, 13, 15 -> 7
@@ -178,7 +193,12 @@ def DM_simulate_and_store(
     Returns:
         -> save the dataset to the save_data_dir
     """
-
+    
+    
+    print('---\nsetting random seed to 0')
+    setup_seed(0)
+    
+    print(f'---\ngenerating raw DM-{model_name} model simulation results for further training the model')
     # set default values
     seqC_MS_list = [0.2, 0.4, 0.8] if seqC_MS_list is None else seqC_MS_list
     prior_min = [-3.7, 0, 0, 0, 5] if prior_min is None else prior_min
@@ -187,25 +207,20 @@ def DM_simulate_and_store(
     # test if the output folder exists
     with h5py.File(save_data_dir, 'w') as f:
         f.create_dataset('test', data='test')
-    print(f'folder {save_data_dir} exists')
+    print(f'folder/file {save_data_dir} exists, it can be used to store the dataset')
 
     # generate prior distribution
     prior = utils.torchutils.BoxUniform(
         low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max)
     )
-    # num_prior_sample = int(10 ** (len(prior_min) - 1))  # 10000 in this case
-    # num_prior_sample = 10 if test else num_prior_sample
     print(f'prior sample size', num_prior_sample)
 
     # generate seqC input sequence
-    # seqC_sample_size = 10 if test else seqC_sample_size
     dur_list = np.arange(3, seqC_dur_max + 1, 2)
 
     f = h5py.File(save_data_dir, 'w')
-    seqC_group = f.create_group('/seqC_group')
-    theta_group = f.create_group('/theta_group')
-    probR_group = f.create_group('/probR_group')
-
+    data_group = f.create_group('/data_group')
+    
     info_group = f.create_group('/info_group')
     info_group.create_dataset("seqC_MS_list", data=seqC_MS_list)
     info_group.create_dataset("seqC_dur_max", data=seqC_dur_max)
@@ -216,53 +231,45 @@ def DM_simulate_and_store(
     info_group.create_dataset("prior_max", data=prior_max)
     info_group.create_dataset("model_name", data=model_name)
 
-    for dur in dur_list:
-        print(f'\nprocessing duration {dur}...')
-
-        seqC_gen = seqC_generator()
-        seqCs = seqC_gen.generate(MS_list=seqC_MS_list,
-                                  dur_max=seqC_dur_max,
-                                  sample_size=seqC_sample_size,
-                                  single_dur=dur,
-                                  )
-        print(f'generated seqC shape', seqCs.shape)
-
-        seqCs, theta, probR = _DM_sim_for_seqCs_parallel(
+    print(f'---\ngenerating seqC with MS_list: {seqC_MS_list}, dur_max: {seqC_dur_max}, sample_size: {seqC_sample_size}')
+    seqC_gen = seqC_generator()
+    seqCs = seqC_gen.generate(  MS_list=seqC_MS_list,
+                                dur_max=seqC_dur_max,
+                                sample_size=seqC_sample_size,
+                            )
+    print(f'generated seqC shape', seqCs.shape)
+    
+    print(f'---\nsimulating pR with prior sample size: {num_prior_sample}, model_name: {model_name}')
+    seqCs, theta, probR = DM_sim_for_seqCs_parallel(
             seqCs=seqCs,
             prior=prior,
             num_prior_sample=num_prior_sample,
-            modelName=model_name,
+            model_name=model_name,
             num_workers=16,
         )
-
-        print(f'seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}')
-
-        # save the dataset in a hdf5 file
-        seqC_group.create_dataset(f'seqC_dur{dur}', data=seqCs)
-        theta_group.create_dataset(f'theta_dur{dur}', data=theta)
-        probR_group.create_dataset(f'probR_dur{dur}', data=probR)
-
-        print(f'data dur {dur} written to the file {save_data_dir}\n')
-
+    print(f'---\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}')
+    
+    data_group.create_dataset("seqCs", data=seqCs)
+    data_group.create_dataset("theta", data=theta)
+    data_group.create_dataset("probR", data=probR)
     f.close()
-    print(f'data written to the file {save_data_dir}')
-
+    print(f'Computed results written to the file {save_data_dir}\n')
 
 if __name__ == '__main__':
     # remember to generate the cython code first
     # generate the sequence C, theta, and simulate probR
 
-    test = False
+    test = True
 
     if test:
         config = load_config(
-            config_simulator_path=Path('./src/config') / 'test_simulator.yaml',
-            config_dataset_path=Path('./src/config') / 'test_dataset.yaml',
-            config_train_path=Path('./src/config') / 'test_train.yaml',
+            config_simulator_path=Path('./src/config') / 'test'/'test_simulator.yaml',
+            config_dataset_path=Path('./src/config') / 'test'/'test_dataset.yaml',
+            config_train_path=Path('./src/config') / 'test'/'test_train.yaml',
         )
     else:
         config = load_config(
-            config_simulator_path=Path('./src/config') / 'simulator_Ca_Pa_Ma.yaml',
+            config_simulator_path=Path('./src/config') /'simulator'/ 'simulator_Ca_Pa_Ma.yaml',
         )
 
     save_data_dir = Path(config['data_dir'])
