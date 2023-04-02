@@ -46,7 +46,7 @@ class seqC_generator:
             for j, MS in enumerate(MS_list):
                 temp[i, j, :, :] = self._generate_one(MS, dur)
         zeros = np.zeros([temp.shape[0], temp.shape[1], temp.shape[2], 1])
-        temp = np.concatenate([zeros, temp], axis=3)
+        temp = np.concatenate([zeros, temp], axis=-1)
             
         return temp
 

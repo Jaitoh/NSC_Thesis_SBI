@@ -71,8 +71,7 @@ def seqC_pattern_summary(seqC, summary_type=1, dur_max=15):
     """
     
     # get the MS of each trial
-    MS      = np.apply_along_axis(lambda x: np.unique(np.abs(x[(~np.isnan(x))&(x!=0)])), axis=-1, arr=seqC)#[:,:,:,:,-1]
-    MS      = np.squeeze(MS)
+    MS      = np.apply_along_axis(lambda x: np.unique(np.abs(x[(~np.isnan(x))&(x!=0)])), axis=-1, arr=seqC)[:,:,:,:,:,-1]
     _dur    = np.apply_along_axis(lambda x: np.sum(~np.isnan(x)), axis=-1, arr=seqC)
     _nLeft  = np.apply_along_axis(lambda x: np.sum(x<0), axis=-1, arr=seqC)
     _nRight = np.apply_along_axis(lambda x: np.sum(x>0), axis=-1, arr=seqC)
@@ -97,8 +96,25 @@ def seqC_pattern_summary(seqC, summary_type=1, dur_max=15):
     hist_nLelse = np.apply_along_axis(lambda x: np.sum( (x*np.append(0, x[0:-1])==0) & (x<0) ), axis=-1, arr=seqC)/(_dur-1)
     hist_nRelse = np.apply_along_axis(lambda x: np.sum( (x*np.append(0, x[0:-1])==0) & (x>0) ), axis=-1, arr=seqC)/(_dur-1)
 
-    x0 = np.vstack((MS, dur, nLeft, nRight, nPause, hist_nLsame, hist_nLoppo, hist_nLelse, hist_nRsame, hist_nRoppo, hist_nRelse)).T
-    x1 = np.vstack((MS, dur, nLeft, nRight, nPause, hist_nSame, hist_nOppo, hist_nElse)).T
+    # add one more dimension for concatenation
+    MS          = np.expand_dims(MS, axis=-1)
+    dur         = np.expand_dims(dur, axis=-1)
+    nLeft       = np.expand_dims(nLeft, axis=-1)
+    nRight      = np.expand_dims(nRight, axis=-1)
+    nPause      = np.expand_dims(nPause, axis=-1)
+    hist_nLsame = np.expand_dims(hist_nLsame, axis=-1)
+    hist_nLoppo = np.expand_dims(hist_nLoppo, axis=-1)
+    hist_nLelse = np.expand_dims(hist_nLelse, axis=-1)
+    hist_nRsame = np.expand_dims(hist_nRsame, axis=-1)
+    hist_nRoppo = np.expand_dims(hist_nRoppo, axis=-1)
+    hist_nRelse = np.expand_dims(hist_nRelse, axis=-1)
+    hist_nSame  = np.expand_dims(hist_nSame, axis=-1)
+    hist_nOppo  = np.expand_dims(hist_nOppo, axis=-1)
+    hist_nElse  = np.expand_dims(hist_nElse, axis=-1)
+
+    # concatenate the summary along the 5th dimension
+    x0 = np.concatenate((MS, dur, nLeft, nRight, nPause, hist_nLsame, hist_nLoppo, hist_nLelse, hist_nRsame, hist_nRoppo, hist_nRelse), axis=-1)
+    x1 = np.concatenate((MS, dur, nLeft, nRight, nPause, hist_nSame, hist_nOppo, hist_nElse), axis=-1)
 
     if summary_type == 0:
         return x0
@@ -147,13 +163,8 @@ def probR_threshold_for_choice(probR, threshold=0.5):
 
     if not isinstance(probR, np.ndarray):
         probR = np.array(probR).reshape(-1, 1)
-    probR = np.squeeze(probR)
-    
-    choice = np.empty(probR.shape)
     choice = np.where(probR > threshold, 1, 0)
-
     choice = choice[:, :, :, :, :, np.newaxis]
-    # TODO choice.shape = (D,M,S,T, num_probR_sample, 1)
     return choice
 
 
@@ -237,12 +248,14 @@ class training_dataset:
             subset_S_list = subset_seqC
         else:
             subset_S_list = list(np.arange(int(subset_seqC*S)))
-        
+            assert len(subset_S_list) != 0, 'subset_seqC lead to a empty list'
+
         if isinstance(subset_theta, list):
             subset_T_list = subset_theta
         else:
             subset_T_list = list(np.arange(int(subset_theta*T)))
-        
+            assert len(subset_T_list) != 0, 'subset_theta lead to a empty list'
+
         seqC_sub  = seqC_sub [:, :, subset_S_list, :, :]
         theta_sub = theta_sub[:, :, subset_S_list, :, :]
         probR_sub = probR_sub[:, :, subset_S_list, :, :]
@@ -265,13 +278,13 @@ class training_dataset:
 
 
     def _process_x_R_part(self, probR_sub):
-
+        """ output the R part of the input x of shape (D, M, S, T, C, 1)"""
         R_method = self.config['train_data']['Rchoice_method']
         if len(probR_sub.shape) <= 1:
             probR_sub = probR_sub.reshape(1, -1)
 
         if R_method == 'probR':
-            R_part = probR_sub
+            R_part = np.expand_dims(probR_sub, axis=-1)
         elif R_method == 'probR_sampling':
             R_part = probR_sampling_for_choice(probR_sub, self.num_probR_sample)
         elif R_method == 'probR_threshold':
