@@ -1,5 +1,6 @@
 """
-
+using cnn to parse input sequence of shape x(batch_size, D,M,S,T,C, L_x) theta(D,M,S,T,C, L_theta)
+and output the probability of each base
 """
 import itertools
 import pickle
@@ -21,6 +22,7 @@ from typing import Any, Callable
 import sbi.inference
 from sbi import analysis
 from sbi import utils as utils
+from sbi.utils.get_nn_models import posterior_nn
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -33,6 +35,8 @@ from config.load_config import load_config
 from src.dataset.model_sim_pR import DM_simulate_and_store, _one_DM_simulation, _one_DM_simulation_and_output_figure
 from dataset.dataset_pipeline import training_dataset
 from dataset.seqC_generator import seqC_generator
+from utils.set_seed import setup_seed
+from neural_nets.embedding_nets import LSTM_Embedding
 
 def get_args():
     """
@@ -63,22 +67,6 @@ def get_args():
 
     return args
 
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
-
-
-def seed_worker(worker_id):
-    worker_seed = torch.initial_seed() % 2 ** 32
-    np.random.seed(worker_seed)
-    random.seed(worker_seed)
 
 
 def print_cuda_info(device):
@@ -158,7 +146,7 @@ class Solver:
         if not Path(self.data_dir).exists():
             assert False, f'Data dir {str(self.data_dir)} does not exist.'
 
-    def get_sim_data(self):
+    def get_sim_data(self, run_num=0):
         # obtain the whole dataset prepared by simulator
 
         config = self.config
@@ -183,7 +171,8 @@ class Solver:
 
         # adapted the datset and choose pattern of interest for further training
         dataset = training_dataset(self.config)
-        x, theta = dataset.generate_save_dataset(self.data_dir)
+        # x, theta = dataset.data_process_pipeline(seqC, theta, probR)
+        x, theta = dataset.subset_process_sava_dataset(self.data_dir)
 
         return x.to(self.device), theta.to(self.device)
 
@@ -196,7 +185,34 @@ class Solver:
         assert self.prior_max_train == prior_max[:2] + prior_max[
                                                        2 + 1:], f"prior_max_train: {self.prior_max_train}, prior_max: {prior_max}"
 
+    def get_neural_posterior(x):
+        
+        dms, l_x = x.shape[1], x.shape[2]
+        
+        embedding_net = LSTM_Embedding(
+            dms = dms,
+            l   = l_x,
+            hidden_size=64,
+            output_size=20,
+        )
+        
+        neural_posterior = posterior_nn(
+            model = 'mdn',
+            embedding_net=embedding_net, 
+            hidden_features=64,
+            num_components=4,
+        )
+        
+        return neural_posterior
+        
     def sbi_train(self, x, theta):
+        '''
+        train the sbi model
+
+        Args:
+            x     (torch.tensor): shape (T*C, D*M*S, L_x)
+            theta (torch.tensor): shape (T*C, L_theta)
+        '''
         # train the sbi model
         method = self.config['infer']['method']
         method_fun = check_method(method)
@@ -214,9 +230,12 @@ class Solver:
         self.prior_simulator = utils.torchutils.BoxUniform(
             low=torch.as_tensor(self.config['prior']['prior_min']), high=torch.as_tensor(self.config['prior']['prior_max']), device=self.device
         )
-
+        
+        # get the neural posterior
+        neural_posterior = self.get_neural_posterior(x)
+        
         self.inference = method_fun(prior=prior_train,
-                                    density_estimator='maf',
+                                    density_estimator=neural_posterior,
                                     device=self.device,
                                     logging_level='INFO',
                                     summary_writer=writer,
@@ -229,55 +248,67 @@ class Solver:
         print('method: ', method)
         print('prior min ', self.prior_min_train)
         print('prior max ', self.prior_max_train)
+        print('device: ', self.device)
+        print('neural_posterior: ', print(neural_posterior))
         print('---\nstart training...')
 
-        start_time = time.time()
         print_cuda_info(self.device)
 
-        infer_config = self.config['infer']
-        # print(infer_config['learning_rate']-1)
-        dens_est = self.inference.append_simulations(theta=theta, x=x).train(
-            num_atoms=infer_config['num_atoms'],
-            training_batch_size=infer_config['training_batch_size'],
-            learning_rate=eval(infer_config['learning_rate']),
-            validation_fraction=infer_config['validation_fraction'],
-            stop_after_epochs=infer_config['stop_after_epochs'],
-            max_num_epochs=infer_config['max_num_epochs'],
-            clip_max_norm=infer_config['clip_max_norm'],
-            calibration_kernel=None,
-            resume_training=infer_config['resume_training'],
-            force_first_round_loss=infer_config['force_first_round_loss'],
-            discard_prior_samples=infer_config['discard_prior_samples'],
-            use_combined_loss=infer_config['use_combined_loss'],
-            retrain_from_scratch=infer_config['retrain_from_scratch'],
-            show_train_summary=infer_config['show_train_summary'],
-            # dataloader_kwargs = {'shuffle': True,
-            #                      'num_workers': 16,
-            #                      'worker_init_fn':  seed_worker,
-            #                      'generator':   self.g,
-            #                      'pin_memory':  True},
-        )  # density estimator
-        print('finished training in {:.2f} min'.format((time.time() - start_time) / 60))
-        print_cuda_info(self.device)
-
-        # self.dens_est = dens_est.to('cpu')
-        self.dens_est = dens_est
-        self.posterior = self.inference.build_posterior(self.dens_est)
+        training_config = self.config['train']['training']
         
+        start_time_total = time.time()
+        self.density_estimator = []
+        self.posterior = []
+        proposal = prior_train
+        
+        for run in training_config['num_runs']:
+            
+            start_time = time.time()
+            density_estimator = self.inference.append_simulations(
+                theta=theta, x=x, proposal=proposal
+            ).train(
+                num_atoms=training_config['num_atoms'],
+                training_batch_size=training_config['training_batch_size'],
+                learning_rate=eval(training_config['learning_rate']),
+                validation_fraction=training_config['validation_fraction'],
+                stop_after_epochs=training_config['stop_after_epochs'],
+                max_num_epochs=training_config['max_num_epochs'],
+                clip_max_norm=training_config['clip_max_norm'],
+                calibration_kernel=None,
+                resume_training=training_config['resume_training'],
+                force_first_round_loss=training_config['force_first_round_loss'],
+                discard_prior_samples=training_config['discard_prior_samples'],
+                use_combined_loss=training_config['use_combined_loss'],
+                retrain_from_scratch=training_config['retrain_from_scratch'],
+                show_train_summary=training_config['show_train_summary'],
+                # dataloader_kwargs = {'shuffle': True,
+                #                      'num_workers': 16,
+                #                      'worker_init_fn':  seed_worker,
+                #                      'generator':   self.g,
+                #                      'pin_memory':  True},
+            )  # density estimator
+            print(f'finished training of run{run} in {(time.time()-start_time)/60:.2f} min')
+        
+            self.density_estimator.append(density_estimator)
+            posterior = self.inference.build_posterior(density_estimator)
+            self.posterior.append(posterior)
+            proposal = posterior.set_default_x(x_o)
+
+        print(f"finished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
 
     def save_model(self):
         print('---\nsaving model...')
         inference_dir = self.log_dir / 'inference.pkl'
-        dens_est_dir = self.log_dir / 'dens_est.pkl'
+        density_estimator_dir = self.log_dir / 'density_estimator.pkl'
         posterior_dir = self.log_dir / 'posterior.pkl'
 
         with open(inference_dir, 'wb') as f:
             pickle.dump(self.inference, f)
         print('inference saved to: ', inference_dir)
 
-        with open(dens_est_dir, 'wb') as f:
-            pickle.dump(self.dens_est, f)
-        print('density_estimator saved to: ', dens_est_dir)
+        with open(density_estimator_dir, 'wb') as f:
+            pickle.dump(self.density_estimator, f)
+        print('density_estimator saved to: ', density_estimator_dir)
 
         with open(posterior_dir, 'wb') as f:
             pickle.dump(self.posterior, f)
