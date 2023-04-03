@@ -15,6 +15,73 @@ sys.path.append('./src')
 #     seqC_nan2num_norm
 from config.load_config import load_config
 
+def reshape_shuffle_x_theta(x, theta):
+    """do reshape for x and theta for network input
+
+    Args:
+        x     (np.array): shape (D,M,S,T,C, L_x)
+        theta (np.array): shape (D,M,S,T,C, L_theta)
+    
+    Return:
+        x     (torch.tensor): shape (T*C, D*M*S, L_x)
+        theta (torch.tensor): shape (T*C, L_theta)
+    """
+    D,M,S,T,C,L_x = x.shape
+    # 0,1,2,3,4,5
+    _,_,_,_,_,L_theta = theta.shape
+    x = torch.from_numpy(x)
+    theta = torch.from_numpy(theta)
+    
+    x_ = x.permute(0,3,4,5,1,2).reshape(D,T,C,L_x,M*S) # D,T,C,L_x,M*S
+    x_ = x_.permute(0,1,2,4,3)  # D,T,C,M*S,L_x
+                                # 0,1,2,3  ,4
+
+    theta_ = theta.permute(0,3,4,5,1,2).reshape(D,T,C,L_theta,M*S) # D,T,C,L_theta,M*S
+    theta_ = theta_.permute(0,1,2,4,3)  # D,T,C,M*S,L_theta
+                                        # 0,1,2,3  ,4
+
+    # randomize the order of the same duration D
+    x_processed = torch.empty_like(x_)
+    theta_processed = torch.empty_like(theta_)
+    for d in range(D):
+        for t in range(T):
+            # for c in range(C):
+            x_temp = x_[d,t,:,:,:]
+            theta_temp = theta_[d,t,:,:,:]
+            
+            idx = torch.randperm(M*S)
+            x_processed[d,t,:,:,:] = x_temp[:,idx,:] # M*S,L_x
+            theta_processed[d,t,:,:,:] = theta_temp[:,idx,:] # M*S,L_theta
+
+    # further reshape x_processed and theta_processed
+    x_ = x_processed
+    theta_ = theta_processed
+    
+    # to shape T,C,L_x,D,M*S
+    x_ = x_.permute(1,2,4,0,3).reshape(T,C,L_x,D*M*S)# T,C,L_x,D*M*S
+                                                     # 0,1,2  ,3
+    # to shape L_x, D*M*S, T, C
+    x_ = x_.permute(2, 3, 0, 1).reshape(L_x, D*M*S, T*C) # L_x, D*M*S, T*C
+                                                        # 0  ,1     ,2
+    x_ = x_.permute(2,1,0) # T*C, D*M*S, L_x
+    # to shape T, C, D*M*S, L_x
+    # x_ = x_.permute(0,1,3,2)
+
+    # to shape T,C,L_theta,D,M*S
+    theta_ = theta_.permute(1,2,4,0,3).reshape(T,C,L_theta,D*M*S) # T,C,L_theta,D*M*S
+                                                                  # 0,1,2      ,3
+    # to shape L_theta, D*M*S, T, C
+    theta_ = theta_.permute(2, 3, 0, 1).reshape(L_theta, D*M*S, T*C) # L_theta, D*M*S, T*C
+                                                                    # 0      ,1     ,2 
+    theta_ = theta_.permute(2,1,0) # T*C, D*M*S, L_theta
+    # to shape T, C, D*M*S, L_theta
+    # theta_ = theta_.permute(0,1,3,2)
+
+    # output shape: T*C, 0, L_theta
+    theta_ = theta_[:,0,:]
+    print('x.shape', x_.shape, 'theta.shape', theta_.shape)
+    
+    return x_, theta_
 
 def seqC_nan2num_norm(seqC, nan2num=-1):
     """ fill the nan of the seqC with nan2num and normalize to (0, 1)
@@ -71,7 +138,9 @@ def seqC_pattern_summary(seqC, summary_type=1, dur_max=15):
     """
     
     # get the MS of each trial
-    MS      = np.apply_along_axis(lambda x: np.unique(np.abs(x[(~np.isnan(x))&(x!=0)])), axis=-1, arr=seqC)[:,:,:,:,:,-1]
+    MS      = np.apply_along_axis(lambda x: np.unique(np.abs(x[(~np.isnan(x))&(x!=0)])), axis=-1, arr=seqC)
+    MS      = np.reshape(MS, (*seqC.shape[:-1], )) # MS = MS[:,:,:,:,:,-1]
+    
     _dur    = np.apply_along_axis(lambda x: np.sum(~np.isnan(x)), axis=-1, arr=seqC)
     _nLeft  = np.apply_along_axis(lambda x: np.sum(x<0), axis=-1, arr=seqC)
     _nRight = np.apply_along_axis(lambda x: np.sum(x>0), axis=-1, arr=seqC)
@@ -333,10 +402,14 @@ class training_dataset:
             theta: ndarray, shape (D,M,S,T, 5)
             probR: ndarray, shape (D,M,S,T, 1)
 
-        Returns:
+        1. do choice sampling for probR and process seqC, theta
             x_seqC: ndarray, shape (D,M,S,T,C, 15)
             theta_: ndarray, shape (D,M,S,T,C, 5)
-            x_R   : ndarray, shape (D,M,S,T,C, 1)
+        2. then reshape and shuffle for training
+        
+        Returns:
+            x     (torch.tensor): shape (T*C, D*M*S, L_x)
+            theta (torch.tensor): shape (T*C, L_theta)
         '''
 
         # process seqC
@@ -357,17 +430,20 @@ class training_dataset:
         x = np.concatenate([x_seqC, x_ch], axis=-1)
         # TODO x.shape = (D,M,S,T,C, 16)
         
-        return torch.tensor(x, dtype=torch.float32), torch.tensor(theta_, dtype=torch.float32)
+        x, theta = reshape_shuffle_x_theta(x, theta_)
+        
+        return x, theta
 
 
-    def subset_process_sava_dataset(self, data_dir):
+    def subset_process_sava_dataset(self, data_dir, save_train_data=False):
         """
         Generate dataset for training
         Args:
             data_dir: data_dir saved the sim_data h5 file
 
         Returns:
-
+            x     (torch.tensor): shape (T*C, D*M*S, L_x)
+            theta (torch.tensor): shape (T*C, L_theta)
         """
         # load sim_data h5 file
         f = h5py.File(Path(data_dir) / self.config['simulator']['save_name'], 'r')
@@ -381,13 +457,14 @@ class training_dataset:
         x, theta = self.data_process_pipeline(seqC_sub, theta_sub, probR_sub)
         print(f'finished loading and processing of subset dataset, time used: {time.time() - start_time:.2f}s')
         
-        # save dataset
-        save_path = Path(data_dir) / self.config['train_data']['save_name']
-        f = h5py.File(save_path, 'w')
-        f.create_dataset('x', data=x)
-        f.create_dataset('theta', data=theta)
-        f.close()
-        print(f'training dataset saved to {save_path}')
+        if save_train_data:
+            # save dataset
+            save_path = Path(data_dir) / self.config['train_data']['save_name']
+            f = h5py.File(save_path, 'w')
+            f.create_dataset('x', data=x)
+            f.create_dataset('theta', data=theta)
+            f.close()
+            print(f'training dataset saved to {save_path}')
 
         return x, theta
 
@@ -431,3 +508,8 @@ if __name__ == '__main__':
     seqC, theta, probR = f['data_group']['seqCs'][:], f['data_group']['theta'][:], f['data_group']['probR'][:]
     x, theta = dataset.data_process_pipeline(seqC, theta, probR)
     x, theta = dataset.subset_process_sava_dataset(sim_data_dir)
+    
+    print('x.shape =', x.shape, 'theta.shape =', theta.shape)
+    
+    #! x     (torch.tensor): shape (T, C, D*M*S, L_x)
+    #! theta (torch.tensor): shape (T, C, L_theta)
