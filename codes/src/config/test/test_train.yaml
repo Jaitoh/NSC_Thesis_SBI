@@ -2,20 +2,24 @@ train:
   inference:
     method: 'snpe'
 
-  prior:
+  # prior:
   #  prior_min_train: [-3.7, 0, 0, 5]
   #  prior_max_train: [2.5, 71, 18, 7]
-    prior_min_train: [-3.7,   0,  0, -1]
-    prior_max_train: [ 2.5,  30, 18,  1]
-    prior_labels: ['bias', 'sigma2a', 'sigma2s', 'L0']
+    # prior_min_train: [-3.7,   0,  0, -1]
+    # prior_max_train: [ 2.5,  30, 18,  1]
+    # prior_labels: ['bias', 'sigma2a', 'sigma2s', 'L0']
 
   density_estimator:
-    type: posterior_nn
-    model: mdn
-    model_parameters:
+    posterior_nn:
+      model: maf
+      # model_parameters:
       hidden_features: 64
-      num_components: 5
-      embedding_net: 'lstm'
+      # num_components: 5
+      num_transforms: 2
+    embedding_net: 
+      type: lstm
+      hidden_size: 64
+      output_size: 20
 
   training:
     num_runs: 10
@@ -32,3 +36,6 @@ train:
     use_combined_loss: False
     retrain_from_scratch: False
     show_train_summary: True
+  
+  posterior:
+    sampling_num: 10000

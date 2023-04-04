@@ -23,7 +23,7 @@ import itertools
 
 import h5py
 import matplotlib.pyplot as plt
-from utils.set_seed import setup_seed
+# from utils.set_seed import setup_seed
 
 cmaps = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple']
 
@@ -114,8 +114,8 @@ def DM_sim_for_seqCs_parallel(
     
     """
     
-    print(f'---\nsimulating pR with prior sample size: {num_prior_sample}, model_name: {model_name}')
-    params = prior.sample((num_prior_sample,)).numpy()
+    print(f'---\nsimulating pR with \nprior sample size: {num_prior_sample}\nmodel_name: {model_name}')
+    params = prior.sample((num_prior_sample,)).cpu().numpy()
 
     seqC  = np.empty((*seqCs.shape[:-1], params.shape[0], seqCs.shape[-1])) # [dur_len, MS_len, sample_size, num_prior_sample, 15]
     theta = np.empty((*seqCs.shape[:-1], *params.shape)) # [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]

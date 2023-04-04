@@ -67,10 +67,10 @@ if __name__ == '__main__':
     proposal = prior
     
     run = 0
-    theta, x = simulate_for_sbi(
+    x, theta = simulate_for_sbi(
         proposal,
         config,
         run,
-        save_sim_data=True,
-        save_train_data=True,
+        save_sim_data=config['simulator']['save_sim_data'],
+        save_train_data=config['dataset']['save_train_data'],
     )

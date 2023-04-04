@@ -26,6 +26,7 @@ def reshape_shuffle_x_theta(x, theta):
         x     (torch.tensor): shape (T*C, D*M*S, L_x)
         theta (torch.tensor): shape (T*C, L_theta)
     """
+    print(f'before reshape_shuffle_x_theta: \nx.shape={x.shape}, theta.shape={theta.shape}')
     D,M,S,T,C,L_x = x.shape
     # 0,1,2,3,4,5
     _,_,_,_,_,L_theta = theta.shape
@@ -79,7 +80,7 @@ def reshape_shuffle_x_theta(x, theta):
 
     # output shape: T*C, 0, L_theta
     theta_ = theta_[:,0,:]
-    print('x.shape', x_.shape, 'theta.shape', theta_.shape)
+    print('reshaped and shuffled: \nx.shape', x_.shape, 'theta.shape', theta_.shape)
     
     return x_, theta_
 
@@ -203,7 +204,7 @@ def probR_sampling_for_choice(probR, num_probR_sample=10):
     """
     if not isinstance(probR, np.ndarray):
         probR = np.array(probR).reshape(-1, 1)
-    probR = np.squeeze(probR)
+    probR = np.reshape(probR, (*probR.shape[:-1], ))
     
     choice = np.empty((*probR.shape, num_probR_sample))
     for D in range(probR.shape[0]):
@@ -297,11 +298,11 @@ class training_dataset:
         """
         config = self.config
 
-        self.num_seqC_sample = config['seqC']['sample']
-        self.num_prior_sample = config['prior']['num_prior_sample']
+        # self.num_seqC_sample = config['seqC']['sample']
+        # self.num_prior_sample = config['prior']['num_prior_sample']
 
-        self.MS_list = config['seqC']['MS_list']
-        self.prior_min = config['prior']['prior_min']
+        # self.MS_list = config['seqC']['MS_list']
+        # self.prior_min = config['prior']['prior_min']
 
         self.num_probR_sample = self._get_num_probR_sample()
 
@@ -393,7 +394,7 @@ class training_dataset:
         # process theta
         theta  = theta[:,:,:,:, np.newaxis, :] 
         theta_ = np.repeat(theta, self.num_probR_sample, axis=4)
-        theta_ = self._process_theta(theta_)
+        # theta_ = self._process_theta(theta_)
         # TODO theta_.shape = (D,M,S,T,C, 4)
         
         # process probR
@@ -402,8 +403,8 @@ class training_dataset:
         x = np.concatenate([x_seqC, x_ch], axis=-1)
         # TODO x.shape = (D,M,S,T,C, 16)
         
+        # print(f'x.shape = {x.shape}, theta.shape = {theta.shape}')
         x, theta = reshape_shuffle_x_theta(x, theta_)
-        print(f'x.shape = {x.shape}, theta.shape = {theta.shape}')
         
         if save_data_path != None:
             # save dataset
@@ -430,20 +431,20 @@ class training_dataset:
     #     """
     #     # 1. take part of dur, MS
     #     train_data_dur_list = config['dataset']['train_data_dur_list']
-    #     train_data_MS_list = config['dataset']['train_data_MS_list']
+        train_data_MS_list = config['dataset']['train_data_MS_list']
         
-    #     # [get corresponding idx] decode train_data_dur_list/MS_list to list_idx -> find corresponding idx number in the list
+        # [get corresponding idx] decode train_data_dur_list/MS_list to list_idx -> find corresponding idx number in the list
     #     dur_min, dur_max, dur_step = config['seqC']['dur_min'], config['seqC']['dur_max'], config['seqC']['dur_step']
     #     dur_list = list(np.arange(dur_min, dur_max+1, dur_step))
     #     train_data_dur_list_idx = [dur_list.index(dur) for dur in train_data_dur_list] # e.g. [4,5]
-    #     train_data_MS_list_idx = [self.MS_list.index(MS) for MS in train_data_MS_list] # e.g. [0,2]
+        train_data_MS_list_idx = [self.MS_list.index(MS) for MS in train_data_MS_list] # e.g. [0,2]
         
     #     seqC_sub  = seqC[train_data_dur_list_idx, :, :, :, :]
-    #     seqC_sub  = seqC_sub[:, train_data_MS_list_idx, :, :, :]
+        seqC_sub  = seqC_sub[:, train_data_MS_list_idx, :, :, :]
     #     theta_sub = theta[train_data_dur_list_idx, :, :, :, :]
-    #     theta_sub = theta_sub[:, train_data_MS_list_idx, :, :, :]
+        theta_sub = theta_sub[:, train_data_MS_list_idx, :, :, :]
     #     probR_sub = probR[train_data_dur_list_idx, :, :, :, :]
-    #     probR_sub = probR_sub[:, train_data_MS_list_idx, :, :, :]
+        probR_sub = probR_sub[:, train_data_MS_list_idx, :, :, :]
         
     #     # 2. take part of seqC, theta content
     #     subset_seqC = config['dataset']['subset_seqC']

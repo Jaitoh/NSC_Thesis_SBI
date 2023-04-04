@@ -8,14 +8,14 @@ from config.load_config import load_config
 from pathlib import Path
 
 def get_xo(
-	subject_id=2,
-	chosen_dur_list=[9],
-	chosen_MS_list=[0.2,0.4,0.8],
-	num_seqC_per_MS=700,
-	trial_data_path='../data/trials.mat',
-    seqC_process_method='norm',
-    nan2num=-1,
-    summary_type=0,
+	subject_id          = 2,
+	chosen_dur_list     = [9],
+	chosen_MS_list      = [0.2,0.4,0.8],
+	seqC_sample_per_MS  = 700,
+	trial_data_path     = '../data/trials.mat',
+    seqC_process_method = 'norm',
+    nan2num             = -1,
+    summary_type        = 0,
 ):
     """extract the x_o from the trials.mat file
 
@@ -23,7 +23,7 @@ def get_xo(
         subject_id (int, optional): subject id. Defaults to 2.
         chosen_dur_list (list, optional): chosen dur list. Defaults to [9].
         chosen_MS_list (list, optional): chosen MS lsit. Defaults to [0.2,0.4,0.8].
-        num_seqC_per_MS (int, optional): number of seqC samples per MS. Defaults to 700.
+        seqC_sample_per_MS (int, optional): number of seqC samples per MS. Defaults to 700.
         trial_data_path (str, optional): data path store the trials.mat. Defaults to '../../data/trials.mat'.
         --- args for process_x_seqC_part ---
         seqC_process_method (str, optional): seqC process method. Defaults to 'norm'.
@@ -56,8 +56,8 @@ def get_xo(
     # x_seqC_chosen = seqC_pattern_summary(seqC_chosen, summary_type=0)
     x_o_chosen = np.concatenate([x_seqC_chosen, ch_chosen], axis=-1) # DM*S, L_x+1
 
-    if x_seqC_chosen.shape[0] != num_seqC_per_MS*len(chosen_dur_list)*len(chosen_MS_list):
-        warnings.warn('x_seqC_chosen.shape[0] != num_seqC_per_MS*len(chosen_dur_list)*len(chosen_MS_list)')
+    if x_seqC_chosen.shape[0] != seqC_sample_per_MS*len(chosen_dur_list)*len(chosen_MS_list):
+        warnings.warn('x_seqC_chosen.shape[0] != seqC_sample_per_MS*len(chosen_dur_list)*len(chosen_MS_list)')
     
     x_o = x_o_chosen
     print('---\nx_o information')
@@ -65,7 +65,7 @@ def get_xo(
     print('subject_id: ', subject_id)
     print('chosen_dur_list: ', chosen_dur_list)
     print('chosen_MS_list: ', chosen_MS_list)
-    print('num_seqC_per_MS: ', num_seqC_per_MS)
+    print('seqC_sample_per_MS: ', seqC_sample_per_MS)
     
     return x_o
 
@@ -88,14 +88,14 @@ if __name__ == '__main__':
     print(config.keys())
     
     x_o = get_xo(
-        subject_id=config['x_o']['subject_id'],
-        chosen_dur_list=config['x_o']['chosen_dur_list'],
-        chosen_MS_list=config['x_o']['chosen_MS_list'],
-        num_seqC_per_MS=config['x_o']['num_seqC_per_MS'],
-        trial_data_path=config['x_o']['trial_data_path'],
+        subject_id          = config['x_o']['subject_id'],
+        chosen_dur_list     = config['x_o']['chosen_dur_list'],
+        chosen_MS_list      = config['x_o']['chosen_MS_list'],
+        seqC_sample_per_MS     = config['x_o']['seqC_sample_per_MS'],
+        trial_data_path     = config['x_o']['trial_data_path'],
         
-        seqC_process_method=config['dataset']['seqC_process'],
-        nan2num=config['dataset']['nan2num'],
-        summary_type=config['dataset']['summary_type'],
+        seqC_process_method = config['dataset']['seqC_process'],
+        nan2num             = config['dataset']['nan2num'],
+        summary_type        = config['dataset']['summary_type'],
     )
     

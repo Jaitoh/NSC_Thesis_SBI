@@ -59,22 +59,23 @@ class DM_model:
         
         if isinstance(params, dict): # input a dictionary
             # parse parameters
-            self.params = params
-            self.bias = self.params['bias']
-            self.sigmas  = self.params['sigmas']
-            self.sigmas[self.sigmas<0] = 0 # make sure that sigmas are positive
-            # self.sigmas = 
-            self.sigma2a = self.sigmas[0]
-            self.sigma2i = self.sigmas[1]
-            self.sigma2s = self.sigmas[2]
-            self.BGLSON = self.params['BGLS']
-            self.B = self.params['BGLS'][0,:]
-            self.G = self.params['BGLS'][1,:]
-            self.L = self.params['BGLS'][2,:]
-            self.Ssame = self.params['BGLS'][3,:]
-            self.Soppo = self.params['BGLS'][4,:]
-            self.Selse = self.params['BGLS'][5,:]
-            self.model_name = self.params['model_name']
+            raise NotImplementedError('dictionary case is not implemented yet')
+            # self.params = params
+            # self.bias = self.params['bias']
+            # self.sigmas  = self.params['sigmas']
+            # self.sigmas[self.sigmas<0] = 0 # make sure that sigmas are positive
+            # # self.sigmas = 
+            # self.sigma2a = self.sigmas[0]
+            # self.sigma2i = self.sigmas[1]
+            # self.sigma2s = self.sigmas[2]
+            # self.BGLSON = self.params['BGLS']
+            # self.B = self.params['BGLS'][0,:]
+            # self.G = self.params['BGLS'][1,:]
+            # self.L = self.params['BGLS'][2,:]
+            # self.Ssame = self.params['BGLS'][3,:]
+            # self.Soppo = self.params['BGLS'][4,:]
+            # self.Selse = self.params['BGLS'][5,:]
+            # self.model_name = self.params['model_name']
         
         else:
             
@@ -87,12 +88,13 @@ class DM_model:
             self.BGLSON = BGLSON
             self.bias   = self.params[0]
             
-            self.sigmas = self.params[1:4]
+            self.sigmas = self.params[1:3]
             
             self.sigmas[self.sigmas<0] = 0 # make sure that sigmas are positive
             self.sigma2a = self.sigmas[0]
-            self.sigma2i = self.sigmas[1]
-            self.sigma2s = self.sigmas[2]
+            self.sigma2i = 0
+            # self.sigma2i = self.sigmas[1]
+            self.sigma2s = self.sigmas[1]
             
             self.B = BGLSON[0,:]
             self.G = BGLSON[1,:]
@@ -105,13 +107,13 @@ class DM_model:
 
         nan_mat = np.full((6, 8), np.nan)
 
-        params_temp = params[4:]
+        params_temp = params[3:]
 
         # parse the model name
         ns = re.search(r'B(.)G(.)L(.)S(.)O(.)N(.)', model_name).groups()
         _sum = sum([int(x)+1 for x in ns if x != '-'])
 
-        assert _sum + 4 == len(params), 'input parameters dimension do not match the model name'
+        assert _sum + 3 == len(params), 'input parameters dimension do not match the model name'
 
         for i, n in enumerate(ns):
             if n != '-':
