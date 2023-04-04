@@ -330,6 +330,7 @@ class Solver:
             self.density_estimator.append(density_estimator)
             
             posterior = self.inference.build_posterior(density_estimator)
+            self.check_posterior(posterior, run)
             self.posterior.append(posterior)
             
             proposal = posterior.set_default_x(x_o)
@@ -358,34 +359,35 @@ class Solver:
         print('density_estimator saved to: ',   density_estimator_dir)
         print('posterior saved to: ',           posterior_dir)
 
-    def check_posterior(self):
+    def check_posterior(self, posterior, run):
         
         sampling_num = self.config['train']['posterior']['sampling_num']
         
-        for run in range(self.config['train']['training']['num_runs']):
+        # for run in range(self.config['train']['training']['num_runs']):
             
-            print(f'---\nchecking posterior of run {run}')
-            
-            posterior = self.posterior[run]
-            samples = posterior.sample((sampling_num,), x=self.x_o)
-
-            fig, axes = analysis.pairplot(
-                samples =samples.cpu().numpy(),
-                limits  =self._get_limits(),
-                figsize =(10, 10),
-                labels  =self.config['prior']['prior_labels'],
-                # ticks=[[], []],
-                upper=["kde"],
-                diag=["kde"],
-                # points=true_params.cpu().numpy(),
-                # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
-                # points_colors='r',
-            )
-            
-            save_path = self.log_dir / f'x_o_posterior_run{run}.png'
-            fig.savefig(save_path)
-            print(f'x_o_posterior_run{run} saved to: {save_path}')
-            
+        print(f'---\nchecking posterior of run {run}')
+        
+        start_time = time.time()
+        samples = posterior.sample((sampling_num,), x=self.x_o)
+        print(f'---\nfinished sampling in {(time.time()-start_time)/60:.2f} min')
+        
+        fig, axes = analysis.pairplot(
+            samples =samples.cpu().numpy(),
+            limits  =self._get_limits(),
+            figsize =(10, 10),
+            labels  =self.config['prior']['prior_labels'],
+            # ticks=[[], []],
+            upper=["kde"],
+            diag=["kde"],
+            # points=true_params.cpu().numpy(),
+            # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
+            # points_colors='r',
+        )
+        
+        save_path = self.log_dir / f'x_o_posterior_run{run}.png'
+        fig.savefig(save_path)
+        print(f'x_o_posterior_run{run} saved to: {save_path}')
+        
     def _get_limits(self):
         return [[x, y] for x, y in zip(self.prior_min_train, self.prior_max_train)]
 
