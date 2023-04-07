@@ -6,12 +6,12 @@
 #SBATCH --time=0-24:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1       
 
-#SBATCH --mem 16G
+#SBATCH --mem 32G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:V100:1
 
-#SBATCH --job-name=train_L0_rnn_a0
-#SBATCH --output=./cluster/uzh/train_L0_rnn/train_logs/train_L0_rnn_a0.out
+#SBATCH --job-name=train_L0_rnn_a2
+#SBATCH --output=./cluster/uzh/train_L0_rnn/train_logs/train_L0_rnn_a2.out
 
 # module load amd
 
@@ -23,10 +23,10 @@ source activate sbi
 # module load cuda
 
 
-RUN_ID=a0
+RUN_ID=a2
 TRAIN_FILE_NAME=train_L0_rnn
 CLUSTER=uzh
-CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
+CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator_2.yaml
 CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
 CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
 
@@ -58,4 +58,4 @@ echo 'finished simulation'
 # SBATCH --gres=gpu:T4:1
 # SBATCH --gres=gpu:V100:1
 # SBATCH --gres=gpu:A100:1
-# sbatch ./cluster/uzh/train_L0_rnn/train_L0_rnn_a0.sh 
+# sbatch ./cluster/uzh/train_L0_rnn/train_L0_rnn_a2.sh 

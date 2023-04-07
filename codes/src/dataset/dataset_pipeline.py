@@ -45,7 +45,7 @@ def reshape_shuffle_x_theta(x, theta):
     x_processed = torch.empty_like(x_)
     theta_processed = torch.empty_like(theta_)
     for d in range(D):
-        for t in range(T):
+        for t in range(T): #TODO ! check dimension
             # for c in range(C):
             x_temp = x_[d,t,:,:,:]
             theta_temp = theta_[d,t,:,:,:]

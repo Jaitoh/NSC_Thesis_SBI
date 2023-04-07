@@ -109,6 +109,7 @@ class Solver:
         self.gpu = self.args.gpu and torch.cuda.is_available()
         # self.device = torch.device('cuda') if self.gpu else torch.device('cpu')
         self.device = 'cuda' if self.gpu else 'cpu'
+        print(f'using device: {self.device}')
         print_cuda_info(self.device)
 
         self.log_dir = Path(self.args.log_dir)

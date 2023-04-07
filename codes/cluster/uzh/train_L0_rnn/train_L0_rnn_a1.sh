@@ -3,38 +3,37 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 
-RUN_ID=a0
-TRAIN_FILE_NAME=train_L0_rnn
-MEM=4G
-CPU=16
-CLUSTER=uzh
-CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
-CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
-CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
-
-JOB_NAME=$TRAIN_FILE_NAME_$RUN_ID
-OUTPUT_FILE=./cluster/$CLUSTER/$TRAIN_FILE_NAME/train_logs/$JOB_NAME.out
-LOG_DIR=./src/train/logs/$TRAIN_FILE_NAME/$RUN_ID
-PRINT_LOG=./cluster/$CLUSTER/$TRAIN_FILE_NAME/train_logs/$JOB_NAME.log
-
-
 #SBATCH --time=0-24:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1       
 
-#SBATCH --mem $MEM
-#SBATCH --cpus-per-task=$CPU 
+#SBATCH --mem 64G
+#SBATCH --cpus-per-task=16
+#SBATCH --gres=gpu:V100:1
 
-#SBATCH --job-name=$JOB_NAME
-#SBATCH --output=$OUTPUT_FILE
+#SBATCH --job-name=train_L0_rnn_a1
+#SBATCH --output=./cluster/uzh/train_L0_rnn/train_logs/train_L0_rnn_a1.out
 
 # module load amd
 
 module load intel
 module load anaconda3
 source activate sbi
-module load t4
+# module load v100
 # module load gpu
-module load cuda
+# module load cuda
+
+
+RUN_ID=a1
+TRAIN_FILE_NAME=train_L0_rnn
+CLUSTER=uzh
+CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator_all.yaml
+CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
+CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
+
+JOB_NAME=$TRAIN_FILE_NAME_$RUN_ID
+OUTPUT_FILE=./cluster/$CLUSTER/$TRAIN_FILE_NAME/train_logs/$JOB_NAME.out
+LOG_DIR=./src/train/logs/$TRAIN_FILE_NAME/$RUN_ID
+
 
 python3 -u ./src/train/$TRAIN_FILE_NAME.py \
 --seed 100 \
@@ -43,7 +42,7 @@ python3 -u ./src/train/$TRAIN_FILE_NAME.py \
 --config_train_path $CONFIG_TRAIN_PATH \
 --log_dir $LOG_DIR \
 --gpu \
--y > $PRINT_LOG
+-y
 
 echo 'finished simulation'
 
@@ -59,3 +58,4 @@ echo 'finished simulation'
 # SBATCH --gres=gpu:T4:1
 # SBATCH --gres=gpu:V100:1
 # SBATCH --gres=gpu:A100:1
+# sbatch ./cluster/uzh/train_L0_rnn/train_L0_rnn_a1.sh 
