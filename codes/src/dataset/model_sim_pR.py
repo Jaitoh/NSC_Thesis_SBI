@@ -97,6 +97,7 @@ def DM_sim_for_seqCs_parallel(
         model_name='B-G-L0S-O-N-',
         num_workers=16,
         save_data_path=None,
+        privided_prior=False,
 ):
     """sample params from prior and simulate probR with DM model with multiple seqCs inputs
     
@@ -106,7 +107,9 @@ def DM_sim_for_seqCs_parallel(
         num_prior_sample:   number of prior samples
         model_name:         model name
         num_workers:        number of workers for parallel processing (default: -1)
-    
+        save_data_path:     path to save data (default: None)
+        privided_prior:     whether the prior parameters are privided (default: False)
+        
     Return:
         seqC:               input sequences of shape [dur_len, MS_len, sample_size, num_prior_sample, 15] e.g. [7, 3, 700, 500, 15]
         theta:              parameters of shape [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]
@@ -114,8 +117,11 @@ def DM_sim_for_seqCs_parallel(
     
     """
     
-    print(f'---\nsimulating pR with \nprior sample size: {num_prior_sample}\nmodel_name: {model_name}')
-    params = prior.sample((num_prior_sample,)).cpu().numpy()
+    print(f'---\nsimulating pR with... \nprior sample size: {num_prior_sample}\nmodel_name: {model_name}')
+    if not privided_prior:
+        params = prior.sample((num_prior_sample,)).cpu().numpy()
+    else:
+        params = prior
 
     seqC  = np.empty((*seqCs.shape[:-1], params.shape[0], seqCs.shape[-1])) # [dur_len, MS_len, sample_size, num_prior_sample, 15]
     theta = np.empty((*seqCs.shape[:-1], *params.shape)) # [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]

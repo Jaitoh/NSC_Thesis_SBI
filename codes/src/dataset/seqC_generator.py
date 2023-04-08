@@ -1,6 +1,8 @@
 """
 generate input sequence for model
 """
+import tqdm
+import itertools
 import sys
 sys.path.append('./src')
 import numpy as np
@@ -69,6 +71,21 @@ class seqC_generator:
 
         return np.pad(arr, ((0, 0), (0, self.dur_max - dur)), 'constant', constant_values=self.nan_padding)
 
+    
+def seqC_combinatorial_generator(dur):
+    """generate all possible seqC combinations for a given dur
+
+    Args:
+        dur (int):  duration of the sequence
+    """
+    # Generate all possible sequences
+    seqs = []
+    for s in itertools.product([-1,0,1], repeat=dur-1):
+        seqs.append([0] + list(s))
+
+    return np.array(seqs)
+        
+    
 
 if __name__ == '__main__':
     
