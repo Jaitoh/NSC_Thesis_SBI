@@ -4,6 +4,7 @@
 *sbi-logs*
 *.txt
 *.log
+*.err
 *.logs
 
 presentations/*
