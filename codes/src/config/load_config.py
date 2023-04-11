@@ -57,16 +57,16 @@ def load_config(config_simulator_path=None,
         config_train_path:
 
     Returns:
-
+        config
     """
     if config_simulator_path is None:
-        config_simulator_path = Path('./src/config') / 'simulator' / 'simulator_Ca_Pa_Ma.yaml'
+        config_simulator_path = Path('./src/config') / 'test' / 'test_simulator.yaml'
         warnings.warn(f'config_simulator_path is not specified, use default: {config_simulator_path}')
         if not config_simulator_path.exists():
             raise FileNotFoundError(f'config_simulator_path: {config_simulator_path} does not exist')
 
     if config_train_path is None:
-        config_train_path = Path('./src/config') / 'train'/ 'train_Ta0.yaml'
+        config_train_path = Path('./src/config') / 'test'/ 'test_train.yaml'
         warnings.warn(f'config_train_path is not specified, use default: {config_train_path}')
         if not config_train_path.exists():
             raise FileNotFoundError(f'config_train_path: {config_train_path} does not exist')
@@ -80,7 +80,7 @@ def load_config(config_simulator_path=None,
 
 
     if config_dataset_path is None:
-        config_dataset_path = Path('./src/config') / 'dataset' /'dataset_Sa0_Ra0_suba0.yaml'
+        config_dataset_path = Path('./src/config') / 'test' /'test_dataset.yaml'
         warnings.warn(f'config_dataset_path is not specified, use default: {config_dataset_path}')
 
     # check if the file exists
@@ -99,9 +99,9 @@ def load_config(config_simulator_path=None,
 if __name__ == '__main__':
 
     config = load_config(
-        config_simulator_path=Path('./src/config') / 'simulator' / 'test_simulator.yaml',
-        config_dataset_path=Path('./src/config') / 'dataset' /'test_dataset.yaml',
-        config_train_path=Path('./src/config') / 'train' / 'test_train.yaml',
+        config_simulator_path=Path('./src/config') / 'test' / 'test_simulator.yaml',
+        config_dataset_path=Path('./src/config') / 'test' /'test_dataset.yaml',
+        config_train_path=Path('./src/config') / 'test' / 'test_train.yaml',
     )
     print(config.keys())
     print(config)

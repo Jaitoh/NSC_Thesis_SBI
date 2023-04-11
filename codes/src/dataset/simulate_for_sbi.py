@@ -10,13 +10,13 @@ from dataset.model_sim_pR import get_boxUni_prior, DM_sim_for_seqCs_parallel
 from dataset.dataset_pipeline import training_dataset
 
 
-def simulate_for_sbi(proposal, config, run, save_sim_data, save_train_data):
+def simulate_for_sbi(proposal, config, run=0, save_sim_data=False, save_train_data=False):
     
     tic = time.time()
     seqC = seqC_generator(nan_padding=None).generate(
-        dur_list = config['x_o']['chosen_dur_list'],
-        MS_list=config['x_o']['chosen_MS_list'],
-        seqC_sample_per_MS=config['x_o']['seqC_sample_per_MS'],
+        dur_list            = config['x_o']['chosen_dur_list'],
+        MS_list             = config['x_o']['chosen_MS_list'],
+        seqC_sample_per_MS  = config['x_o']['seqC_sample_per_MS'],
     )
     print(f'---\nseqC generated in {(time.time()-tic)/60:.2f}min')
 
@@ -27,11 +27,11 @@ def simulate_for_sbi(proposal, config, run, save_sim_data, save_train_data):
     
     tic = time.time()
     seqC, theta, probR = DM_sim_for_seqCs_parallel(
-            seqCs = seqC,
-            prior=proposal,
-            num_prior_sample=config['prior']['num_prior_sample'],
-            model_name=config['simulator']['model_name'],
-            save_data_path=save_data_path,
+            seqCs           = seqC,
+            prior           = proposal,
+            num_prior_sample= config['prior']['num_prior_sample'],
+            model_name      = config['simulator']['model_name'],
+            save_data_path  = save_data_path,
     )
     print(f'---\nDM parallel simulation finished in {(time.time()-tic)/60:.2f}min')
     
@@ -44,7 +44,7 @@ def simulate_for_sbi(proposal, config, run, save_sim_data, save_train_data):
     dataset = training_dataset(config)
     x, theta = dataset.data_process_pipeline(
         seqC, theta, probR,
-        save_data_path=save_data_path
+        save_data_path  = save_data_path
     )
     print(f'---\nx, theta processing finished in {(time.time()-tic)/60:.2f}min')
     
@@ -54,9 +54,9 @@ def simulate_for_sbi(proposal, config, run, save_sim_data, save_train_data):
 if __name__ == '__main__':
 
     config = load_config(
-        config_simulator_path=Path('./src/config') / 'test' / 'test_simulator.yaml',
-        config_dataset_path=Path('./src/config') / 'test' / 'test_dataset.yaml',
-        config_train_path=Path('./src/config') / 'test' / 'test_train.yaml',
+        config_simulator_path   = Path('./src/config') / 'test' / 'test_simulator.yaml',
+        config_dataset_path     = Path('./src/config') / 'test' / 'test_dataset.yaml',
+        config_train_path       = Path('./src/config') / 'test' / 'test_train.yaml',
     )
     
     # initialize prior and proposal
