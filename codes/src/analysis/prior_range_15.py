@@ -65,7 +65,7 @@ for dur in dur_list:
     for i, ms in enumerate(ms_list):
         seqs[:,i,:] = output_seqs[f"dur_{dur}"]*ms_list[i]
 
-    num_parts = 100 if dur > 8 else 1
+    num_parts = 1000 if dur > 8 else 1
     # subdivide seqs into 16 chunks along the 3rd axis
     seqs_divided = np.array_split(seqs, num_parts, axis=2)
     print(f'reshaped seqs of size: {seqs.shape}\nsubdivide into {len(seqs_divided)} chunks along the 3rd axis\nthe divided seqs has size: {seqs_divided[0].shape}')
