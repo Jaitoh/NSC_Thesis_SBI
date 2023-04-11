@@ -19,8 +19,7 @@ from pathlib import Path
 import time
 import shutil
 from typing import Any, Callable
-# from sbi.inference import SNPE_C
-from inference.MySNPE_C import MySNPE_C
+
 from sbi import analysis
 from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
@@ -40,6 +39,7 @@ from dataset.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
 from utils.collate_fn import collate_fn_probR
 from neural_nets.embedding_nets import LSTM_Embedding
+from inference.MySNPE_C import MySNPE_C
 from dataset.model_sim_pR import get_boxUni_prior
 
 
@@ -63,7 +63,7 @@ def get_args():
                         help="Path to config_train file")
     # parser.add_argument('--data_dir', type=str, default="../data/train_datas/",
     #                     help="simulated data store/load dir")
-    parser.add_argument('--log_dir', type=str, default="./src/train/log_test", help="training log dir")
+    parser.add_argument('--log_dir', type=str, default="./src/train/logs/log_test", help="training log dir")
     parser.add_argument('--gpu', action='store_true', help='Use GPU.')
     # parser.add_argument('--finetune', type=str, default=None, help='Load model from this job for finetuning.')
     parser.add_argument('--eval', action='store_true', help='Evaluation mode.')
@@ -116,7 +116,7 @@ class Solver:
         with open(yaml_path, 'w') as f:
             yaml.dump(config, f)
         print(f'config file saved to: {yaml_path}')
-        
+
         # set seed
         seed = args.seed
         setup_seed(seed)
@@ -128,7 +128,8 @@ class Solver:
         self.density_estimator  = None
         self.prior_max_train    = None
         self.prior_min_train    = None
-        
+        self.inference          = None
+
     def _check_path(self):
         """
         check the path of log_dir and data_dir
@@ -154,34 +155,34 @@ class Solver:
 
 
     def get_neural_posterior(self):
-        
+
         # dms, l_x = x.shape[1], x.shape[2]
         d = len(self.config['x_o']['chosen_dur_list'])
         m = len(self.config['x_o']['chosen_MS_list'])
         s = self.config['x_o']['seqC_sample_per_MS']
-        
+
         dms = d*m*s
         l_x = 15+1
-        
+
         config_density = self.config['train']['density_estimator']
-        
+
         embedding_net = LSTM_Embedding(
             dms         = dms,
             l           = l_x,
             hidden_size = config_density['embedding_net']['hidden_size'],
             output_size = config_density['embedding_net']['output_size'],
         )
-        
+
         neural_posterior = posterior_nn(
             model           = config_density['posterior_nn']['model'],
-            embedding_net   = embedding_net, 
+            embedding_net   = embedding_net,
             hidden_features = config_density['posterior_nn']['hidden_features'],
             num_transforms  = config_density['posterior_nn']['num_transforms'],
         )
-        
+
         return neural_posterior
-    
-    
+
+
     def sbi_train(self):
         """
         train the sbi model
@@ -206,21 +207,21 @@ class Solver:
         #     summary_type        = self.config['dataset']['summary_type'],
         # )
         # self.x_o = torch.tensor(x_o, device=self.device)
-        
+
         # prior
         self.prior_min_train = self.config['prior']['prior_min']
         self.prior_max_train = self.config['prior']['prior_max']
-        
+
         prior = utils.torchutils.BoxUniform(
             low     = np.array(self.prior_min_train, dtype=np.float32),
             high    = np.array(self.prior_max_train, dtype=np.float32),
             device  = self.device,
         )
         self.prior = prior
-        
+
         # get neural posterior
         neural_posterior = self.get_neural_posterior()
-        
+
         self.inference = MySNPE_C(
             prior               = prior,
             density_estimator   = neural_posterior,
@@ -237,7 +238,7 @@ class Solver:
         self.posterior = []
         proposal = prior
         training_config = self.config['train']['training']
-        
+
         # dataloader kwargs
         Rchoice_method = self.config['dataset']['Rchoice_method']
         if Rchoice_method == 'probR':
@@ -245,12 +246,12 @@ class Solver:
                 'num_workers': training_config['num_workers'],
                 'worker_init_fn':  seed_worker,
                 'generator':   self.g,
-                'collate_fn':  lambda batch: 
-                    collate_fn_probR(
-                        batch, 
-                        Rchoice_method=Rchoice_method, 
-                        num_probR_sample=self.config['dataset']['num_probR_sample'],
-                    ),
+                'collate_fn':  lambda batch:
+                collate_fn_probR(
+                    batch,
+                    Rchoice_method=Rchoice_method,
+                    num_probR_sample=self.config['dataset']['num_probR_sample'],
+                ),
             }
         else:
             my_dataloader_kwargs = {
@@ -260,13 +261,13 @@ class Solver:
             }
         if self.gpu:
             my_dataloader_kwargs['pin_memory'] = True
-        
-        
+
+
         # start training
         for run in range(training_config['num_runs']):
-            
+
             print(f"======\nstart of run {run+1}/{training_config['num_runs']}\n======")
-            
+
             # get simulated data
             x, theta = simulate_for_sbi(
                 proposal        = proposal,
@@ -275,15 +276,15 @@ class Solver:
                 save_sim_data   = self.config['simulator']['save_sim_data'],
                 save_train_data = self.config['dataset']['save_train_data'],
             )
-            
+
             theta = torch.tensor(theta, dtype=torch.float32) # avoid float64 error
             x     = torch.tensor(x,     dtype=torch.float32)
-            
+
             print(f"---\nstart training")
             start_time = time.time()
             density_estimator = self.inference.append_simulations(
-                theta    = theta, 
-                x        = x, 
+                theta    = theta,
+                x        = x,
                 proposal = proposal,
             ).train(
                 num_atoms               = training_config['num_atoms'],
@@ -302,24 +303,24 @@ class Solver:
                 show_train_summary      = training_config['show_train_summary'],
                 dataloader_kwargs       = my_dataloader_kwargs,
             )  # density estimator
-            
+
             print(f'finished training of run{run} in {(time.time()-start_time)/60:.2f} min')
-        
+
             self.density_estimator.append(density_estimator)
-            
+
             posterior = self.inference.build_posterior(density_estimator)
             self.check_posterior(posterior, run)
             self.posterior.append(posterior)
-            
-            proposal = posterior.set_default_x(x_o)
-            
+
+            # proposal = posterior.set_default_x(x_o)
+
         print(f"finished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
 
 
     def save_model(self):
-        
+
         print('---\nsaving model...')
-        
+
         inference_dir           = self.log_dir / 'inference.pkl'
         density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
         posterior_dir           = self.log_dir / 'posterior.pkl'
@@ -332,23 +333,23 @@ class Solver:
 
         with open(posterior_dir, 'wb') as f:
             pickle.dump(self.posterior, f)
-            
+
         print('inference saved to: ',           inference_dir)
         print('density_estimator saved to: ',   density_estimator_dir)
         print('posterior saved to: ',           posterior_dir)
 
     def check_posterior(self, posterior, run):
-        
+
         sampling_num = self.config['train']['posterior']['sampling_num']
-        
+
         # for run in range(self.config['train']['training']['num_runs']):
-            
+
         print(f'---\nchecking posterior of run {run}')
-        
+
         start_time = time.time()
         samples = posterior.sample((sampling_num,), x=self.x_o)
         print(f'---\nfinished sampling in {(time.time()-start_time)/60:.2f} min')
-        
+
         fig, axes = analysis.pairplot(
             samples =samples.cpu().numpy(),
             limits  =self._get_limits(),
@@ -361,11 +362,11 @@ class Solver:
             # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
             # points_colors='r',
         )
-        
+
         save_path = self.log_dir / f'x_o_posterior_run{run}.png'
         fig.savefig(save_path)
         print(f'x_o_posterior_run{run} saved to: {save_path}')
-        
+
     def _get_limits(self):
         return [[x, y] for x, y in zip(self.prior_min_train, self.prior_max_train)]
 
@@ -400,7 +401,7 @@ class Solver:
         save_path = self.log_dir / f'seen_data_idx_{truth_idx}.png'
         fig.savefig(save_path, dpi=300)
         print('data simulation result saved to: ', save_path)
-        
+
         samples = self.posterior.sample((sample_num,), x=x[truth_idx, :])
 
         fig, axes = analysis.pairplot(
@@ -436,10 +437,10 @@ class Solver:
     def _from_1seqC_to_1x(self, MS, dur):
 
         seqC = seqC_generator().generate(
-                MS_list=[MS],
-                sample_size=1,
-                single_dur=dur,
-            )[0,:]
+            MS_list=[MS],
+            sample_size=1,
+            single_dur=dur,
+        )[0,:]
 
         params = self.prior_simulator.sample((1,)).cpu().numpy()[0]
         model_name = self.config['simulator']['model_name']
