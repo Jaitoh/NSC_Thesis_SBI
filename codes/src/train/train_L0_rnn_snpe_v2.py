@@ -42,6 +42,7 @@ from utils.collate_fn import collate_fn_probR
 from neural_nets.embedding_nets import LSTM_Embedding
 from dataset.model_sim_pR import get_boxUni_prior
 
+
 def get_args():
     """
     Returns:
@@ -95,6 +96,10 @@ class Solver:
 
     def __init__(self, args, config):
 
+        self.posterior = None
+        self.density_estimator = None
+        self.prior_max_train = None
+        self.prior_min_train = None
         self.args = args
         self.config = config
         # self.test = self.args.run_test
@@ -107,9 +112,6 @@ class Solver:
 
         self.log_dir = Path(self.args.log_dir)
         self.data_dir = Path(config['data_dir'])
-        # self.log_dir = self.log_dir.parent / 'log_test' if self.test else self.log_dir
-        # self.sim_data_name = 'sim_data_test.h5' if self.test else self.config['simulator']['save_name']
-        # self.train_data_name = 'train_data_test.h5' if self.test else self.config['dataset']['save_name']
         self.sim_data_name = self.config['simulator']['save_name']
         self.train_data_name = self.config['dataset']['save_name']
         self._check_path()
@@ -119,12 +121,13 @@ class Solver:
             yaml.dump(config, f)
         print(f'config file saved to: {yaml_path}')
         
-        
         # set seed
         seed = args.seed
         setup_seed(seed)
         self.g = torch.Generator()
         self.g.manual_seed(seed)
+
+        self.prior = None
         
     def _check_path(self):
         """
@@ -160,7 +163,7 @@ class Solver:
         dms = d*m*s
         l_x = 15+1
         
-        config_density =self.config['train']['density_estimator']
+        config_density = self.config['train']['density_estimator']
         
         embedding_net = LSTM_Embedding(
             dms         = dms,
@@ -180,18 +183,18 @@ class Solver:
     
     
     def sbi_train(self):
-        '''
+        """
         train the sbi model
 
         Args:
             x     (torch.tensor): shape (T*C, D*M*S, L_x)
             theta (torch.tensor): shape (T*C, L_theta)
-        '''
+        """
         # train the sbi model
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # observed data from trial experiment
-        x_o = get_xo (
+        x_o = get_xo(
             subject_id          = self.config['x_o']['subject_id'],
             chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
             chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
@@ -351,9 +354,9 @@ class Solver:
             limits  =self._get_limits(),
             figsize =(10, 10),
             labels  =self.config['prior']['prior_labels'],
-            # ticks=[[], []],
             upper=["kde"],
             diag=["kde"],
+            # ticks=[[], []],
             # points=true_params.cpu().numpy(),
             # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
             # points_colors='r',
