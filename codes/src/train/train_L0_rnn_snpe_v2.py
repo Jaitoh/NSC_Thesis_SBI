@@ -96,10 +96,6 @@ class Solver:
 
     def __init__(self, args, config):
 
-        self.posterior = None
-        self.density_estimator = None
-        self.prior_max_train = None
-        self.prior_min_train = None
         self.args = args
         self.config = config
         # self.test = self.args.run_test
@@ -127,7 +123,11 @@ class Solver:
         self.g = torch.Generator()
         self.g.manual_seed(seed)
 
-        self.prior = None
+        self.prior              = None
+        self.posterior          = None
+        self.density_estimator  = None
+        self.prior_max_train    = None
+        self.prior_min_train    = None
         
     def _check_path(self):
         """
@@ -193,19 +193,19 @@ class Solver:
         # train the sbi model
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
-        # observed data from trial experiment
-        x_o = get_xo(
-            subject_id          = self.config['x_o']['subject_id'],
-            chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
-            chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
-            seqC_sample_per_MS  = self.config['x_o']['seqC_sample_per_MS'],
-            trial_data_path     = self.config['x_o']['trial_data_path'],
-            
-            seqC_process_method = self.config['dataset']['seqC_process'],
-            nan2num             = self.config['dataset']['nan2num'],
-            summary_type        = self.config['dataset']['summary_type'],
-        )
-        self.x_o = torch.tensor(x_o, device=self.device)
+        # # observed data from trial experiment
+        # x_o = get_xo(
+        #     subject_id          = self.config['x_o']['subject_id'],
+        #     chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
+        #     chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
+        #     seqC_sample_per_MS  = self.config['x_o']['seqC_sample_per_MS'],
+        #     trial_data_path     = self.config['x_o']['trial_data_path'],
+        #
+        #     seqC_process_method = self.config['dataset']['seqC_process'],
+        #     nan2num             = self.config['dataset']['nan2num'],
+        #     summary_type        = self.config['dataset']['summary_type'],
+        # )
+        # self.x_o = torch.tensor(x_o, device=self.device)
         
         # prior
         self.prior_min_train = self.config['prior']['prior_min']
