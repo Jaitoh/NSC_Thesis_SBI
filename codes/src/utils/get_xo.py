@@ -1,6 +1,6 @@
 import sys
 sys.path.append('./src')
-from utils.data_process import process_x_seqC_part
+from codes.src.dataset.data_process import process_x_seqC_part
 from parse_data.parse_trial_data import parse_trial_data
 import warnings
 import numpy as np

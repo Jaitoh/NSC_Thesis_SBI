@@ -32,62 +32,16 @@ sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
-from dataset.dataset_pipeline import training_dataset
-from dataset.seqC_generator import seqC_generator
-from dataset.simulate_for_sbi import simulate_for_sbi
-from dataset.get_xo import get_xo
+from codes.src.dataset.dataset import training_dataset
+from codes.src.simulator.seqC_generator import seqC_generator
+from codes.src.dataset.simulate_for_sbi import simulate_for_sbi
+from codes.src.utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
-from utils.collate_fn import collate_fn_probR
+from codes.src.train.collate_fn import collate_fn_probR
 from neural_nets.embedding_nets import LSTM_Embedding
 from inference.MySNPE_C import MySNPE_C
-from dataset.model_sim_pR import get_boxUni_prior
-
-
-def get_args():
-    """
-    Returns:
-        args: Arguments
-    """
-    parser = argparse.ArgumentParser(description='pipeline for sbi')
-    # parser.add_argument('--run_test', action='store_true', help="")
-    parser.add_argument('--seed', type=int, default=0, help="")
-    # parser.add_argument('--run_simulator', type=int, default=0, help="""run simulation to generate dataset and store to local file
-    #                                                                     0: no simulation, load file directly and do the training
-    #                                                                     1: run simulation and do the training afterwards
-    #                                                                     2: only run the simulation and do not train""")
-    parser.add_argument('--config_simulator_path', type=str, default="./src/config/test/test_simulator.yaml",
-                        help="Path to config_simulator file")
-    parser.add_argument('--config_dataset_path', type=str, default="./src/config/test/test_dataset.yaml",
-                        help="Path to config_train file")
-    parser.add_argument('--config_train_path', type=str, default="./src/config/test/test_train.yaml",
-                        help="Path to config_train file")
-    # parser.add_argument('--data_dir', type=str, default="../data/train_datas/",
-    #                     help="simulated data store/load dir")
-    parser.add_argument('--log_dir', type=str, default="./src/train/logs/log_test", help="training log dir")
-    parser.add_argument('--gpu', action='store_true', help='Use GPU.')
-    # parser.add_argument('--finetune', type=str, default=None, help='Load model from this job for finetuning.')
-    parser.add_argument('--eval', action='store_true', help='Evaluation mode.')
-    parser.add_argument('-y', '--overwrite', action='store_true', help='Overwrite log dir.')
-    args = parser.parse_args()
-
-    return args
-
-
-
-def print_cuda_info(device):
-    """
-    Args:
-        device: 'cuda' or 'cpu'
-    """
-    if device == 'cuda':
-        print('--- CUDA info ---')
-        print(torch.cuda.get_device_name(0))
-        print('Memory Usage:')
-        print('Allocated:', round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1), 'GB')
-        print('Cached:   ', round(torch.cuda.memory_cached(0) / 1024 ** 3, 1), 'GB')
-
-        torch.cuda.memory_summary(device=None, abbreviated=False)
-
+from codes.src.simulator.model_sim_pR import get_boxUni_prior
+from utils.train import get_args, print_cuda_info
 
 class Solver:
     """
@@ -517,3 +471,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

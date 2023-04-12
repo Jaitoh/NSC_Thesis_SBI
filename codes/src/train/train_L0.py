@@ -30,9 +30,9 @@ sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
-from src.dataset.model_sim_pR import DM_simulate_and_store, _one_DM_simulation, _one_DM_simulation_and_output_figure
-from dataset.dataset_pipeline import training_dataset
-from dataset.seqC_generator import seqC_generator
+from codes.src.simulator.model_sim_pR import DM_simulate_and_store, _one_DM_simulation, _one_DM_simulation_and_output_figure
+from codes.src.dataset.dataset import training_dataset
+from codes.src.simulator.seqC_generator import seqC_generator
 
 def get_args():
     """

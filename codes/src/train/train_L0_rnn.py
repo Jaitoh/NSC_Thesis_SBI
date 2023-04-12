@@ -32,13 +32,13 @@ sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
-from dataset.dataset_pipeline import training_dataset
-from dataset.seqC_generator import seqC_generator
-from dataset.simulate_for_sbi import simulate_for_sbi
-from dataset.get_xo import get_xo
+from codes.src.dataset.dataset import training_dataset
+from codes.src.simulator.seqC_generator import seqC_generator
+from codes.src.dataset.simulate_for_sbi import simulate_for_sbi
+from codes.src.utils.get_xo import get_xo
 from utils.set_seed import setup_seed
 from neural_nets.embedding_nets import LSTM_Embedding
-from dataset.model_sim_pR import get_boxUni_prior
+from codes.src.simulator.model_sim_pR import get_boxUni_prior
 
 def get_args():
     """

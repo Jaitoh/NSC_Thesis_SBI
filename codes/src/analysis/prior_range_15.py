@@ -5,8 +5,8 @@ from tqdm import tqdm
 import sys
 sys.path.append('./src')
 
-from dataset.model_sim_pR import DM_sim_for_seqCs_parallel as sim_parallel
-from dataset.model_sim_pR import get_boxUni_prior
+from codes.src.simulator.model_sim_pR import DM_sim_for_seqCs_parallel as sim_parallel
+from codes.src.simulator.model_sim_pR import get_boxUni_prior
 from utils.set_seed import setup_seed
 
 setup_seed(100)

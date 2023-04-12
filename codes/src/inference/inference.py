@@ -12,7 +12,7 @@ import sys
 sys.path.append('./src')
 from utils.set_seed import setup_seed, seed_worker
 setup_seed(0)
-from dataset.dataset_pipeline import process_x_seqC_part
+from codes.src.dataset.dataset import process_x_seqC_part
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
