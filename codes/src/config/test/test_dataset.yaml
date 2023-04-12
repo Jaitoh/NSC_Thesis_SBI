@@ -12,8 +12,8 @@ dataset:
   summary_type: 0
 
 # ========== parameter settings for the probR ==========
-  Rchoice_method: 'probR' # -> in this case, the probR will be expanded in the collate_fn 
-  # Rchoice_method: 'probR_sampling'
+#  Rchoice_method: 'probR' # -> in this case, the probR will be expanded in the collate_fn
+  Rchoice_method: 'probR_sampling'
   num_probR_sample: 100
   # Rchoice_method: 'probR_threshold'
   # R_threshold: 0.5

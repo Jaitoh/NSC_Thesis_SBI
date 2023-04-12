@@ -1,10 +1,10 @@
 import torch
 import numpy as np
-    
+import time
 
 def reshape_shuffle_x_theta(x, theta):
     """do reshape for x and theta for network input
-
+    do shuffle the data for each (DMS, L_x) data after the reshape in each T*C
     Args:
         x     (np.array): shape (D,M,S,T,C, L_x)
         theta (np.array): shape (D,M,S,T,C, L_theta)
@@ -57,7 +57,7 @@ def reshape_shuffle_x_theta(x, theta):
     
     print('\nreshaped and shuffled: \nx.shape', x_.shape, 'theta.shape', theta_.shape)
     
-    #TODO ! check dimension
+
     return x_, theta_
 
 def seqC_nan2num_norm(seqC, nan2num=-1):
@@ -178,31 +178,32 @@ def probR_sampling_for_choice(probR, num_probR_sample=10):
         Return:
             probR_sample (np.array): sampled probability of right choice of shape (D,M,S,T, num_probR_sample(C), 1)
     """
-    if not isinstance(probR, np.ndarray):
-        probR = np.array(probR)
-    probR = np.reshape(probR, (*probR.shape[:-1], ))
+    # if not isinstance(probR, np.ndarray):
+    #     probR = np.array(probR)
+    # probR = np.reshape(probR, (*probR.shape[:-1], ))
+    #
+    # choice = np.empty((*probR.shape, num_probR_sample))
+    # for D in range(probR.shape[0]):
+    #     for M in range(probR.shape[1]):
+    #         for S in range(probR.shape[2]):
+    #             for T in range(probR.shape[3]):
+    #                 prob = probR[D, M, S, T]
+    #                 # choice[D, M, S, :] = np.random.choice([0, 1], size=num_probR_sample, p=[1 - prob, prob])
+    #                 cs = np.random.binomial(1, prob, size=num_probR_sample)
+    #                 choice[D, M, S, T, :] = cs
+    # choice = choice[:, :, :, :, :, np.newaxis]
+    # # choice.shape = (D,M,S,T, num_probR_sample)
     
-    choice = np.empty((*probR.shape, num_probR_sample))
-    for D in range(probR.shape[0]):
-        for M in range(probR.shape[1]):
-            for S in range(probR.shape[2]):
-                for T in range(probR.shape[3]):
-                    prob = probR[D, M, S, T]
-                    # choice[D, M, S, :] = np.random.choice([0, 1], size=num_probR_sample, p=[1 - prob, prob])
-                    cs = np.random.binomial(1, prob, size=num_probR_sample)
-                    choice[D, M, S, T, :] = cs
-    choice = choice[:, :, :, :, :, np.newaxis]
-    # TODO choice.shape = (D,M,S,T, num_probR_sample)
-    
-    
+    probR_origin = probR
     # torch version TODO compare the speed
-    # if not isinstance(probR, torch.Tensor):
-    #     probR = torch.tensor(probR) # (D,M,S,T, 1)
+    if not isinstance(probR, torch.Tensor):
+        probR = torch.tensor(probR) # (D,M,S,T, 1)
 
-    # probR  = probR.repeat_interleave(num_probR_sample, dim=-1) # (D,M,S,T, C)
-    # choice = torch.bernoulli(probR) # (D,M,S,T, C)
-    # choice = choice.unsqueeze_(dim=-1) # (D,M,S,T, C, 1)
-    
+    probR  = probR.repeat_interleave(num_probR_sample, dim=-1) # (D,M,S,T, C)
+    choice = torch.bernoulli(probR) # (D,M,S,T, C)
+    choice = choice.unsqueeze_(dim=-1) # (D,M,S,T, C, 1)
+    choice = np.array(choice)
+
     return choice
 
 

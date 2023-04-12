@@ -5,9 +5,9 @@ sys.path.append('./src')
 from config.load_config import load_config
 from pathlib import Path
 import time
-from codes.src.simulator.seqC_generator import seqC_generator
-from codes.src.simulator.model_sim_pR import get_boxUni_prior, DM_sim_for_seqCs_parallel
-from codes.src.dataset.dataset import training_dataset
+from simulator.seqC_generator import seqC_generator
+from simulator.model_sim_pR import get_boxUni_prior, DM_sim_for_seqCs_parallel
+from dataset.dataset import training_dataset
 
 
 def simulate_for_sbi(proposal, config, run=0, save_sim_data=False, save_train_data=False):

@@ -13,7 +13,13 @@ sys.path.append('./src')
 
 from config.load_config import load_config
 from parse_data.parse_trial_data import parse_trial_data
-
+from dataset.data_process import (
+    probR_sampling_for_choice,
+    probR_threshold_for_choice,
+    seqC_nan2num_norm,
+    seqC_pattern_summary,
+    reshape_shuffle_x_theta,
+)
 
 class training_dataset:
     """
@@ -49,8 +55,8 @@ class training_dataset:
         output the R part of the input x of shape (D, M, S, T, C, 1)
         """
         R_method = self.config['dataset']['Rchoice_method']
-        if len(probR_sub.shape) <= 1:
-            probR_sub = probR_sub.reshape(1, -1)
+        # if len(probR_sub.shape) <= 1:
+        #     probR_sub = probR_sub.reshape(1, -1)
 
         if R_method == 'probR':
             R_part = np.expand_dims(probR_sub, axis=-2)
@@ -65,9 +71,6 @@ class training_dataset:
 
 
     def _process_x_seqC_part(self, seqC):
-
-        if len(seqC.shape) == 1:
-            seqC = seqC.reshape(1, -1)
 
         seqC_process_method = self.config['dataset']['seqC_process']
         if seqC_process_method == 'norm':

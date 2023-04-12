@@ -32,15 +32,15 @@ sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
-from codes.src.dataset.dataset import training_dataset
-from codes.src.simulator.seqC_generator import seqC_generator
-from codes.src.dataset.simulate_for_sbi import simulate_for_sbi
-from codes.src.utils.get_xo import get_xo
+from dataset.dataset import training_dataset
+from simulator.seqC_generator import seqC_generator
+from dataset.simulate_for_sbi import simulate_for_sbi
+from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
-from codes.src.train.collate_fn import collate_fn_probR
+from train.collate_fn import collate_fn_probR
 from neural_nets.embedding_nets import LSTM_Embedding
 from inference.MySNPE_C import MySNPE_C
-from codes.src.simulator.model_sim_pR import get_boxUni_prior
+from simulator.model_sim_pR import get_boxUni_prior
 from utils.train import get_args, print_cuda_info
 
 class Solver:

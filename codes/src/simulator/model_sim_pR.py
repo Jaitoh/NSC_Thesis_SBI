@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 from simulator.DM_model import DM_model
-from codes.src.simulator.seqC_generator import seqC_generator
+from simulator.seqC_generator import seqC_generator
 from config.load_config import load_config
 
 from sbi import utils as utils
