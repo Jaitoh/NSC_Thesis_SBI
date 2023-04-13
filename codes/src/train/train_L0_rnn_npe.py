@@ -175,7 +175,7 @@ class Solver:
 
         # get neural posterior
         neural_posterior = self.get_neural_posterior()
-
+        print(f'neural_posterior: {neural_posterior}')
         self.inference = MySNPE_C(
             prior               = prior,
             density_estimator   = neural_posterior,
@@ -209,12 +209,12 @@ class Solver:
             }
         else:
             my_dataloader_kwargs = {
-                'num_workers': training_config['num_workers'],
+                # 'num_workers': training_config['num_workers'],
                 'worker_init_fn':  seed_worker,
                 'generator':   self.g,
             }
-        if self.gpu:
-            my_dataloader_kwargs['pin_memory'] = True
+        # if self.gpu:
+        #     my_dataloader_kwargs['pin_memory'] = True
 
 
         # start training
@@ -292,35 +292,82 @@ class Solver:
         print('density_estimator saved to: ',   density_estimator_dir)
         print('posterior saved to: ',           posterior_dir)
 
-    def check_posterior(self, posterior, run):
+    # def check_posterior_xo(self, posterior, run):
 
-        sampling_num = self.config['train']['posterior']['sampling_num']
+    #     sampling_num = self.config['train']['posterior']['sampling_num']
 
-        # for run in range(self.config['train']['training']['num_runs']):
+    #     # for run in range(self.config['train']['training']['num_runs']):
 
-        print(f'---\nchecking posterior of run {run}')
+    #     print(f'---\nchecking posterior of run {run}')
 
-        start_time = time.time()
-        samples = posterior.sample((sampling_num,), x=self.x_o)
-        print(f'---\nfinished sampling in {(time.time()-start_time)/60:.2f} min')
+    #     start_time = time.time()
+    #     samples = posterior.sample((sampling_num,), x=self.x_o)
+    #     print(f'---\nfinished sampling in {(time.time()-start_time)/60:.2f} min')
 
-        fig, axes = analysis.pairplot(
-            samples =samples.cpu().numpy(),
-            limits  =self._get_limits(),
-            figsize =(10, 10),
-            labels  =self.config['prior']['prior_labels'],
-            upper=["kde"],
-            diag=["kde"],
-            # ticks=[[], []],
-            # points=true_params.cpu().numpy(),
-            # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
-            # points_colors='r',
-        )
+    #     fig, axes = analysis.pairplot(
+    #         samples =samples.cpu().numpy(),
+    #         limits  =self._get_limits(),
+    #         figsize =(10, 10),
+    #         labels  =self.config['prior']['prior_labels'],
+    #         upper=["kde"],
+    #         diag=["kde"],
+    #         # ticks=[[], []],
+    #         # points=true_params.cpu().numpy(),
+    #         # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
+    #         # points_colors='r',
+    #     )
 
-        save_path = self.log_dir / f'x_o_posterior_run{run}.png'
-        fig.savefig(save_path)
-        print(f'x_o_posterior_run{run} saved to: {save_path}')
+    #     save_path = self.log_dir / f'x_o_posterior_run{run}.png'
+    #     fig.savefig(save_path)
+    #     print(f'x_o_posterior_run{run} saved to: {save_path}')
 
+    def check_posterior_seen(self, x, theta, truth_idx, sample_num=1000):
+        """
+        check the posterior with
+            - trained data x -> theta distribution
+            - unseen data x -> theta distribution
+
+        Returns:
+            distribution plot for each dimension of theta
+        """
+
+        if isinstance(truth_idx, list):
+            for idx in truth_idx:
+                self._check_posterior_seen_one(x, theta, idx, sample_num)
+        else:
+            self._check_posterior_seen_one(x, theta, truth_idx, sample_num)
+    
+    def check_posterior_unseen(self, x, sample_num=1000):
+
+        # probR sampling method
+        for i, (dur, MS) in enumerate(
+                itertools.product(self.config['dataset']['train_data_dur_list'], self.config['dataset']['train_data_MS_list'])):
+
+            # num_unseen_sample = 1
+
+            x_new, fig = self._from_1seqC_to_1x(MS, dur)
+            while np.any(np.all(x.cpu().numpy() == x_new, axis=1)):
+                x_new, fig = self._from_1seqC_to_1x(MS, dur)
+
+            save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}.png'
+            fig.savefig(save_path, dpi=300)
+            print('simulation result saved to: ', save_path)
+
+            samples = self.posterior.sample((sample_num,), x=torch.from_numpy(x_new).float().to(self.device))
+            fig, axes = analysis.pairplot(
+                samples.cpu().numpy(),
+                limits=self._get_limits(),
+                # ticks=[[], []],
+                figsize=(10, 10),
+                # points=true_params,
+                # points_offdiag={'markersize': 10, 'markeredgewidth': 1},
+                # points_colors='r',
+                labels=self.config['prior']['prior_labels'],
+            )
+            save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}_posterior.png'
+            fig.savefig(save_path)
+            print(f'posterior_with_unseen_data saved to: {save_path}')
+            
     def _get_limits(self):
         return [[x, y] for x, y in zip(self.prior_min_train, self.prior_max_train)]
 
@@ -372,22 +419,6 @@ class Solver:
         fig.savefig(save_path)
         print(f'posterior_with_seen_data saved to: {save_path}')
 
-    def check_posterior_seen(self, x, theta, truth_idx, sample_num=1000):
-        """
-        check the posterior with
-            - trained data x -> theta distribution
-            - unseen data x -> theta distribution
-
-        Returns:
-            distribution plot for each dimension of theta
-        """
-
-        if isinstance(truth_idx, list):
-            for idx in truth_idx:
-                self._check_posterior_seen_one(x, theta, idx, sample_num)
-        else:
-            self._check_posterior_seen_one(x, theta, truth_idx, sample_num)
-
     def _from_1seqC_to_1x(self, MS, dur):
 
         seqC = seqC_generator().generate(
@@ -409,36 +440,7 @@ class Solver:
 
         return x_new, fig
 
-    def check_posterior_unseen(self, x, sample_num=1000):
-
-        # probR sampling method
-        for i, (dur, MS) in enumerate(
-                itertools.product(self.config['dataset']['train_data_dur_list'], self.config['dataset']['train_data_MS_list'])):
-
-            # num_unseen_sample = 1
-
-            x_new, fig = self._from_1seqC_to_1x(MS, dur)
-            while np.any(np.all(x.cpu().numpy() == x_new, axis=1)):
-                x_new, fig = self._from_1seqC_to_1x(MS, dur)
-
-            save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}.png'
-            fig.savefig(save_path, dpi=300)
-            print('simulation result saved to: ', save_path)
-
-            samples = self.posterior.sample((sample_num,), x=torch.from_numpy(x_new).float().to(self.device))
-            fig, axes = analysis.pairplot(
-                samples.cpu().numpy(),
-                limits=self._get_limits(),
-                # ticks=[[], []],
-                figsize=(10, 10),
-                # points=true_params,
-                # points_offdiag={'markersize': 10, 'markeredgewidth': 1},
-                # points_colors='r',
-                labels=self.config['prior']['prior_labels'],
-            )
-            save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}_posterior.png'
-            fig.savefig(save_path)
-            print(f'posterior_with_unseen_data saved to: {save_path}')
+    
 
 
 def main():

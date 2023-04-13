@@ -29,13 +29,9 @@ class MySNPE_C(SNPE_C, MyPosteriorEstimator):
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,    
     ):
-        super().__init__(
-            prior=prior,
-            device=device,
-            logging_level=logging_level,
-            summary_writer=summary_writer,
-            show_progress_bars=show_progress_bars,
-        )
+        kwargs = del_entries(locals(), entries=("self", "__class__"))
+        # print(kwargs)
+        super().__init__(**kwargs)
     
     def train(
         self,

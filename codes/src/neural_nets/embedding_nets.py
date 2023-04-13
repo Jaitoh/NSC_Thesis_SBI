@@ -33,7 +33,7 @@ class LSTM_Embedding(nn.Module):
         out = F.dropout(out, p=0.5)
         # print(out.shape)
         out = F.relu(self.fc2(out))
-        # print(out.shape)
+        # print(f'out.shape: {out.shape}')
         return out
     
 class Mixed_LSTM_Embedding(nn.Module):

@@ -13,6 +13,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from sbi.utils import (
     test_posterior_net_for_multi_d_x,
     x_shape_from_simulation,
+    del_entries,
 )
 
 class MyPosteriorEstimator(PosteriorEstimator):
@@ -25,18 +26,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,    
     ):
-        super().__init__(
-            prior=prior,
-            device=device,
-            logging_level=logging_level,
-            summary_writer=summary_writer,
-            show_progress_bars=show_progress_bars,
-        )
-    
-    @staticmethod
-    def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
-        if show:
-            print("\r", f"Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:4.2f}min ||  log_prob: train: {train_log_prob:.2f} val: {val_log_prob:.2f}", end="")
+        kwargs = del_entries(locals(), entries=("self", "__class__"))
+        super().__init__(**kwargs)
     
     def get_dataloaders(
         self,
@@ -69,10 +60,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # + load and show some examples of the dataset
         for i in range(1):
             sample = dataset[i]
-            print('some examples of the dataset:', i,
-                    f'| theta[{i}]:', sample[0], 
-                    f'| x[{i}]:', sample[1],
-                    f'| mask shape:', sample[2])
+            print(f'some examples of the dataset [{i}]:',
+                    f'\n| theta[{i}] info:', f'shape {theta[i].shape}, dtype: {theta[i].dtype}, device: {theta[i].device}',
+                    f'\n| x[{i}] info:', f'shape {x[i].shape}, dtype: {x[i].dtype}, device: {x[i].device}',
+                    )
         
         # Get total number of training examples.
         num_examples = theta.size(0)
@@ -107,14 +98,17 @@ class MyPosteriorEstimator(PosteriorEstimator):
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
 
+        print(f'\n---\ntrain_loader_kwargs: {train_loader_kwargs}')
+        print(f'val_loader_kwargs: {val_loader_kwargs}')
+        
         train_loader = data.DataLoader(dataset, **train_loader_kwargs)
         val_loader = data.DataLoader(dataset, **val_loader_kwargs)
 
         # + load and show some examples of the dataloader
-        train_batch = next(iter(train_loader))
-        val_batch = next(iter(val_loader))
-        print('train batch: ', train_batch)
-        print('val batch: '  , val_batch ) 
+        # train_batch = next(iter(train_loader))
+        # val_batch = next(iter(val_loader))
+        # print('train batch: ', train_batch)
+        # print('val batch: '  , val_batch ) 
         
         return train_loader, val_loader
     
@@ -229,7 +223,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 x[self.train_indices].to("cpu"),
             )
             self._x_shape = x_shape_from_simulation(x.to("cpu"))
-
+            
+            print('\nfinished build network')
+            print(f'\n{self._neural_net}')
             test_posterior_net_for_multi_d_x(
                 self._neural_net,
                 theta.to("cpu"),
@@ -319,7 +315,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._summary["validation_log_probs"].append(self._val_log_prob)
             self._summary["epoch_durations_sec"].append(time.time() - epoch_start_time)
 
-            self._maybe_show_progress(self._show_progress_bars, self.epoch, starting_time)
+            self._maybe_show_progress(self._show_progress_bars, self.epoch, starting_time, train_log_prob_average, self._val_log_prob)
 
         self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
 
@@ -339,3 +335,57 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._neural_net.zero_grad(set_to_none=True)
 
         return deepcopy(self._neural_net)
+    
+    def _describe_round(self, round_: int, summary: Dict[str, list]) -> str:
+        epochs = summary["epochs_trained"][-1]
+        best_validation_log_prob = summary["best_validation_log_prob"][-1]
+
+        description = f"""
+        -------------------------
+        ||||| ROUND {round_ + 1} STATS |||||:
+        -------------------------
+        Epochs trained: {epochs}
+        Best validation performance: {best_validation_log_prob:.4f} from epoch {self._best_model_from_epoch:5}
+        Model from best epoch {self._best_model_from_epoch} is loaded for further training
+        -------------------------
+        """
+
+        return description
+    
+    @staticmethod
+    def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
+        if show:
+            print("\r", f"Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:4.2f}min ||  log_prob: train: {train_log_prob:.2f} val: {val_log_prob:.2f}", end="")
+    
+    def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
+        """Return whether the training converged yet and save best model state so far.
+
+        Checks for improvement in validation performance over previous epochs.
+
+        Args:
+            epoch: Current epoch in training.
+            stop_after_epochs: How many fruitless epochs to let pass before stopping.
+
+        Returns:
+            Whether the training has stopped improving, i.e. has converged.
+        """
+        converged = False
+
+        assert self._neural_net is not None
+        neural_net = self._neural_net
+
+        # (Re)-start the epoch count with the first epoch or any improvement.
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob:
+            self._best_val_log_prob = self._val_log_prob
+            self._epochs_since_last_improvement = 0
+            self._best_model_state_dict = deepcopy(neural_net.state_dict())
+            self._best_model_from_epoch = epoch
+        else:
+            self._epochs_since_last_improvement += 1
+
+        # If no validation improvement over many epochs, stop training.
+        if self._epochs_since_last_improvement > stop_after_epochs - 1:
+            neural_net.load_state_dict(self._best_model_state_dict)
+            converged = True
+
+        return converged
