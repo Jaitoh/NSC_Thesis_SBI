@@ -5,6 +5,7 @@ sys.path.append('./src')
 from config.load_config import load_config
 from pathlib import Path
 import time
+import torch
 from simulator.seqC_generator import seqC_generator
 from simulator.model_sim_pR import get_boxUni_prior, DM_sim_for_seqCs_parallel
 from dataset.dataset import training_dataset
@@ -47,6 +48,9 @@ def simulate_for_sbi(proposal, config, run=0, save_sim_data=False, save_train_da
         save_data_path  = save_data_path
     )
     print(f'---\nx, theta processing finished in {(time.time()-tic)/60:.2f}min')
+    
+    theta = torch.tensor(theta, dtype=torch.float32) # avoid float64 error
+    x     = torch.tensor(x,     dtype=torch.float32)
     
     return x, theta
 

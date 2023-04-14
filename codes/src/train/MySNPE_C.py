@@ -17,7 +17,7 @@ from sbi.utils import (
 
 import sys
 sys.path.append('./src')
-from inference.MyPosteriorEstimator import MyPosteriorEstimator
+from train.MyPosteriorEstimator import MyPosteriorEstimator
     
 class MySNPE_C(SNPE_C, MyPosteriorEstimator):
     def __init__(

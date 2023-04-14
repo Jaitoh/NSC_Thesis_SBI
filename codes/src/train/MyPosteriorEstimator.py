@@ -29,6 +29,96 @@ class MyPosteriorEstimator(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
     
+    # def append_simulations_for_run(
+    #     self, 
+    #     theta: Tensor,
+    #     x: Tensor,
+    #     current_round: int = 0,
+    #     ):
+        
+    #     theta, x = validate_theta_and_x(
+    #         theta, x, data_device=data_device, training_device=self._device
+    #     )
+
+    #     is_valid_x, num_nans, num_infs = handle_invalid_x(
+    #         x, exclude_invalid_x=exclude_invalid_x
+    #     )
+
+    #     x = x[is_valid_x]
+    #     theta = theta[is_valid_x]
+        
+    def append_simulations_for_run(
+        self,
+        theta: Tensor,
+        x: Tensor,
+        current_round: int = 0,
+        exclude_invalid_x: Optional[bool] = None,
+        data_device: Optional[str] = None,
+    ):
+        if exclude_invalid_x is None:
+            if current_round == 0:
+                exclude_invalid_x = True
+            else:
+                exclude_invalid_x = False
+
+        if data_device is None:
+            data_device = self._device
+
+        theta, x = validate_theta_and_x(
+            theta, x, data_device=data_device, training_device=self._device
+        )
+
+        is_valid_x, num_nans, num_infs = handle_invalid_x(
+            x, exclude_invalid_x=exclude_invalid_x
+        )
+
+        x = x[is_valid_x]
+        theta = theta[is_valid_x]
+
+        # Check for problematic z-scoring
+        warn_if_zscoring_changes_data(x)
+        if (
+            type(self).__name__ == "SNPE_C"
+            and current_round > 0
+            and not self.use_non_atomic_loss
+        ):
+            nle_nre_apt_msg_on_invalid_x(
+                num_nans, num_infs, exclude_invalid_x, "Multiround SNPE-C (atomic)"
+            )
+        else:
+            npe_msg_on_invalid_x(
+                num_nans, num_infs, exclude_invalid_x, "Single-round NPE"
+            )
+
+        self._check_proposal(proposal)
+
+        self._data_round_index.append(current_round)
+        prior_masks = mask_sims_from_prior(int(current_round > 0), theta.size(0))
+
+        self._theta_roundwise.append(theta)
+        self._x_roundwise.append(x)
+        self._prior_masks.append(prior_masks)
+
+        self._proposal_roundwise.append(proposal)
+
+        if self._prior is None or isinstance(self._prior, ImproperEmpirical):
+            if proposal is not None:
+                raise ValueError(
+                    "You had not passed a prior at initialization, but now you "
+                    "passed a proposal. If you want to run multi-round SNPE, you have "
+                    "to specify a prior (set the `.prior` argument or re-initialize "
+                    "the object with a prior distribution). If the samples you passed "
+                    "to `append_simulations()` were sampled from the prior, you can "
+                    "run single-round inference with "
+                    "`append_simulations(..., proposal=None)`."
+                )
+            theta_prior = self.get_simulations()[0].to(self._device)
+            self._prior = ImproperEmpirical(
+                theta_prior, ones(theta_prior.shape[0], device=self._device)
+            )
+
+        return self
+    
     def get_dataloaders(
         self,
         starting_round: int = 0,
@@ -57,14 +147,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         dataset = data.TensorDataset(theta, x, prior_masks)
 
-        # + load and show some examples of the dataset
-        for i in range(1):
-            sample = dataset[i]
-            print(f'some examples of the dataset [{i}]:',
-                    f'\n| theta[{i}] info:', f'shape {theta[i].shape}, dtype: {theta[i].dtype}, device: {theta[i].device}',
-                    f'\n| x[{i}] info:', f'shape {x[i].shape}, dtype: {x[i].dtype}, device: {x[i].device}',
-                    )
-        
+        # load and show one example of the dataset
+        # for i in range(1):
+        i = 1
+        sample = dataset[i]
+        print(f'\ndataset size [{len(dataset)}]:',
+              f'\none examples of the dataset [{i}]:',
+              f'\n| theta[{i}] info:', f'shape {theta[i].shape}, dtype: {theta[i].dtype}, device: {theta[i].device}',
+              f'\n| x[{i}] info:', f'shape {x[i].shape}, dtype: {x[i].dtype}, device: {x[i].device}',
+             )
+        # TODO print dataset size
         # Get total number of training examples.
         num_examples = theta.size(0)
         # Select random train and validation splits from (theta, x) pairs.
@@ -120,12 +212,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
         stop_after_epochs: int = 20,
         max_num_epochs: int = 2**31 - 1,
         clip_max_norm: Optional[float] = 5.0,
+        
         calibration_kernel: Optional[Callable] = None,
         resume_training: bool = False,
         force_first_round_loss: bool = False,
         discard_prior_samples: bool = False,
         retrain_from_scratch: bool = False,
         show_train_summary: bool = True,
+        
         dataloader_kwargs: Optional[dict] = None,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.
