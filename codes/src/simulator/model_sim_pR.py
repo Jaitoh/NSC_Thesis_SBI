@@ -117,7 +117,7 @@ def DM_sim_for_seqCs_parallel(
     
     """
     
-    print(f'---\nsimulating pR with... \nprior sample size: {num_prior_sample}\nmodel_name: {model_name}')
+    print(f'\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}')
     if not privided_prior:
         params = prior.sample((num_prior_sample,)).cpu().numpy()
     else:
@@ -126,7 +126,7 @@ def DM_sim_for_seqCs_parallel(
     seqC  = np.empty((*seqCs.shape[:-1], params.shape[0], seqCs.shape[-1])) # [dur_len, MS_len, sample_size, num_prior_sample, 15]
     theta = np.empty((*seqCs.shape[:-1], *params.shape)) # [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]
     probR = np.empty((*seqCs.shape[:-1], params.shape[0], 1)) # [dur_len, MS_len, sample_size, num_prior_sample, 1]
-    print(f'total number of simulations', np.product(probR.shape), f'with {num_workers} workers\n---')
+    print(f'total number of simulations', np.product(probR.shape), f'with {num_workers} workers ...\n')
 
     # limit the number of workers to the number of available cores
     tic = time.time()
@@ -165,7 +165,7 @@ def DM_sim_for_seqCs_parallel(
         probR[i, j, k, l, 0] = probR_
     print('done stacking the results')
 
-    print(f'---\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}')
+    print(f'\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}')
     
     if save_data_path!=None:
         f = h5py.File(save_data_path, 'w')

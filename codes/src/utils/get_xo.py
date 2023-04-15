@@ -60,7 +60,7 @@ def get_xo(
         warnings.warn('x_seqC_chosen.shape[0] != seqC_sample_per_MS*len(chosen_dur_list)*len(chosen_MS_list)')
     
     x_o = x_o_chosen
-    print('---\nx_o information')
+    print('\n--- x_o information ---')
     print('x_o.shape: ', x_o.shape)
     print('subject_id: ', subject_id)
     print('chosen_dur_list: ', chosen_dur_list)

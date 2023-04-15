@@ -8,13 +8,15 @@ TRAIN_FILE_NAME=train_L0_rnn_npe
 MEM=4G
 CPU=16
 CLUSTER=snn
+LOG_DIR=./src/train/logs/$TRAIN_FILE_NAME/$RUN_ID
+
 CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
 CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
 
 JOB_NAME=$TRAIN_FILE_NAME_$RUN_ID
 OUTPUT_FILE=./cluster/$CLUSTER/$TRAIN_FILE_NAME/train_logs/$JOB_NAME.out
-LOG_DIR=./src/train/logs/$TRAIN_FILE_NAME/$RUN_ID
+
 PRINT_LOG=./cluster/$CLUSTER/$TRAIN_FILE_NAME/train_logs/$JOB_NAME.log
 
 

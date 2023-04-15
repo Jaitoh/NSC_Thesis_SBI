@@ -49,7 +49,7 @@ class seqC_generator:
         zeros = np.zeros([temp.shape[0], temp.shape[1], temp.shape[2], 1])
         temp = np.concatenate([zeros, temp], axis=-1)
         
-        print('---\ngenerated seqC info')
+        print('\n--- generated seqC info ---')
         print('dur_list:', dur_list)
         print('MS_list:', MS_list)
         print('seqC_sample_per_MS:', seqC_sample_per_MS)

@@ -19,6 +19,8 @@ from pathlib import Path
 import time
 import shutil
 from typing import Any, Callable
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from sbi import analysis
 from sbi import utils as utils
@@ -33,15 +35,18 @@ sys.path.append('./src')
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
 from dataset.dataset import training_dataset
-from simulator.seqC_generator import seqC_generator
 from dataset.simulate_for_sbi import simulate_for_sbi
+from simulator.seqC_generator import seqC_generator
+from train.collate_fn import collate_fn_probR
+from train.MySNPE_C import MySNPE_C
+from neural_nets.embedding_nets import LSTM_Embedding
+from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
-from train.collate_fn import collate_fn_probR
-from neural_nets.embedding_nets import LSTM_Embedding
-from train.MySNPE_C import MySNPE_C
-from simulator.model_sim_pR import get_boxUni_prior
-from utils.train import get_args, print_cuda_info
+from utils.train import (
+    get_args, print_cuda_info, choose_cat_validation_set, 
+    plot_posterior_seen, plot_posterior_unseen
+)
 
 class Solver:
     """
@@ -62,8 +67,17 @@ class Solver:
 
         self.log_dir = Path(self.args.log_dir)
         self.data_dir = Path(config['data_dir'])
-        self.sim_data_name = self.config['simulator']['save_name']
-        self.train_data_name = self.config['dataset']['save_name']
+        
+        
+        # get dataset size
+        d = len(self.config['x_o']['chosen_dur_list'])
+        m = len(self.config['x_o']['chosen_MS_list'])
+        s = self.config['x_o']['seqC_sample_per_MS']
+        self.dms = d*m*s
+        self.l_x = 15+1
+        self.l_theta = len(self.config['prior']['prior_min'])
+        
+        
         self._check_path()
         # save the config file using yaml
         yaml_path = Path(self.log_dir) / 'config.yaml'
@@ -80,8 +94,8 @@ class Solver:
         self.prior              = None
         self.posterior          = None
         self.density_estimator  = None
-        self.prior_max_train    = None
-        self.prior_min_train    = None
+        self.prior_max    = None
+        self.prior_min    = None
         self.inference          = None
 
     def _check_path(self):
@@ -89,34 +103,41 @@ class Solver:
         check the path of log_dir and data_dir
         """
 
-        print(f'---\nlog dir: {str(self.log_dir)}')
+        print(f'\n--- dir settings ---\nlog dir: {str(self.log_dir)}')
         print(f'data dir: {str(self.data_dir)}')
 
         # check log path: if not exists, create; if exists, remove or a fatal error
         if not self.log_dir.exists():
             os.makedirs(str(self.log_dir))
+            os.makedirs(f'{str(self.log_dir)}/model/')
+            os.makedirs(f'{str(self.log_dir)}/training_dataset/')
+            os.makedirs(f'{str(self.log_dir)}/posterior/')
+            
+
         elif self.log_dir.exists() and not self.args.eval:
             if self.args.overwrite:
                 shutil.rmtree(self.log_dir)
                 print(f'Run dir {str(self.log_dir)} emptied.')
                 os.makedirs(str(self.log_dir))
+                os.makedirs(f'{str(self.log_dir)}/model/')
+                os.makedirs(f'{str(self.log_dir)}/training_dataset/')
+                os.makedirs(f'{str(self.log_dir)}/posterior/')
+                
             else:
                 assert False, f'Run dir {str(self.log_dir)} already exists.'
 
-        # check data path exists
+        # check data path, where to read the data from, exists
         if not Path(self.data_dir).exists():
             assert False, f'Data dir {str(self.data_dir)} does not exist.'
 
 
+    def _get_limits(self):
+        return [[x, y] for x, y in zip(self.prior_min, self.prior_max)]
+    
+    
     def get_neural_posterior(self):
 
-        # dms, l_x = x.shape[1], x.shape[2]
-        d = len(self.config['x_o']['chosen_dur_list'])
-        m = len(self.config['x_o']['chosen_MS_list'])
-        s = self.config['x_o']['seqC_sample_per_MS']
-
-        dms = d*m*s
-        l_x = 15+1
+        dms, l_x = self.dms, self.l_x
 
         config_density = self.config['train']['density_estimator']
 
@@ -148,27 +169,27 @@ class Solver:
         # train the sbi model
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
-        # # observed data from trial experiment
-        # x_o = get_xo(
-        #     subject_id          = self.config['x_o']['subject_id'],
-        #     chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
-        #     chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
-        #     seqC_sample_per_MS  = self.config['x_o']['seqC_sample_per_MS'],
-        #     trial_data_path     = self.config['x_o']['trial_data_path'],
-        #
-        #     seqC_process_method = self.config['dataset']['seqC_process'],
-        #     nan2num             = self.config['dataset']['nan2num'],
-        #     summary_type        = self.config['dataset']['summary_type'],
-        # )
-        # self.x_o = torch.tensor(x_o, device=self.device)
+        # observed data from trial experiment
+        x_o = get_xo(
+            subject_id          = self.config['x_o']['subject_id'],
+            chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
+            chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
+            seqC_sample_per_MS  = self.config['x_o']['seqC_sample_per_MS'],
+            trial_data_path     = self.config['x_o']['trial_data_path'],
+        
+            seqC_process_method = self.config['dataset']['seqC_process'],
+            nan2num             = self.config['dataset']['nan2num'],
+            summary_type        = self.config['dataset']['summary_type'],
+        )
+        self.x_o = torch.tensor(x_o, dtype=torch.float32)
 
         # prior
-        self.prior_min_train = self.config['prior']['prior_min']
-        self.prior_max_train = self.config['prior']['prior_max']
+        self.prior_min = self.config['prior']['prior_min']
+        self.prior_max = self.config['prior']['prior_max']
 
         prior = utils.torchutils.BoxUniform(
-            low     = np.array(self.prior_min_train, dtype=np.float32),
-            high    = np.array(self.prior_max_train, dtype=np.float32),
+            low     = np.array(self.prior_min, dtype=np.float32),
+            high    = np.array(self.prior_max, dtype=np.float32),
             device  = self.device,
         )
         self.prior = prior
@@ -219,23 +240,31 @@ class Solver:
             my_dataloader_kwargs['pin_memory'] = True
 
         self.post_val_set = {
-            "x"    : [],
-            "theta": [],
+            "x"             : torch.empty((0, self.dms, self.l_x)),
+            "x_shuffled"    : torch.empty((0, self.dms, self.l_x)),
+            "theta"         : torch.empty((0, self.l_theta)),
         }
         
         # start training
-        for current_round in [0]:
+        for current_round in range(self.config['train']['training']['num_rounds']):
             
             # get simulated data
             x, theta = simulate_for_sbi(
                 proposal        = proposal,
                 config          = self.config,
-                run             = run,
-                save_sim_data   = self.config['simulator']['save_sim_data'],
-                save_train_data = self.config['dataset']['save_train_data'],
             )
-
-            density_estimator = self.inference.append_simulations(
+            
+            # choose and update the validation set
+            if len(self.post_val_set['x']) <= 5:
+                self.post_val_set = choose_cat_validation_set(
+                    x               = x, 
+                    theta           = theta, 
+                    val_set_size    = self.config['train']['posterior']['val_set_size'],
+                    post_val_set    = self.post_val_set,
+                )
+            
+            # append simulated data to "current round" dataset
+            self.inference.append_simulations(
                 theta         = theta,
                 x             = x,
                 proposal      = proposal,
@@ -245,12 +274,21 @@ class Solver:
             # train for multiple runs
             for run in range(training_config['num_runs']):
 
-                print(f"\n======\nstart of round {current_round+1} run {run+1}/{training_config['num_runs']}\n======")
+                print(f"\n======\nstart of training round {current_round} run {run}/{training_config['num_runs']-1}\n======")
 
-                print(f"---\nstart training")
+                # print(f"---\nstart training")
                 start_time = time.time()
                 
-                density_estimator = density_estimator.train(
+                # save x, theta for each round and run
+                if self.config['dataset']['save_train_data']:
+                    
+                    torch.save(x, f'{self.log_dir}/training_dataset/x_round{current_round}_run{run}.pt')
+                    torch.save(theta, f'{self.log_dir}/training_dataset/theta_round{current_round}_run{run}.pt')
+                    
+                    print(f'x and theta saved to {self.log_dir}/training_dataset')
+                
+                # run training with current run updated dataset
+                density_estimator = self.inference.train(
                     # num_atoms               = training_config['num_atoms'],
                     training_batch_size     = training_config['training_batch_size'],
                     learning_rate           = eval(training_config['learning_rate']),
@@ -259,43 +297,101 @@ class Solver:
                     # max_num_epochs          = training_config['max_num_epochs'],
                     clip_max_norm           = training_config['clip_max_norm'],
                     calibration_kernel      = None,
-                    resume_training         = training_config['resume_training'],
-                    force_first_round_loss  = training_config['force_first_round_loss'],
-                    discard_prior_samples   = training_config['discard_prior_samples'],
-                    use_combined_loss       = training_config['use_combined_loss'],
-                    retrain_from_scratch    = training_config['retrain_from_scratch'],
-                    show_train_summary      = training_config['show_train_summary'],
+                    resume_training         = (run!=0) or (current_round!=0), # resume training if not the first run
+                    force_first_round_loss  = True if current_round==0 else False,
+                    discard_prior_samples   = False,
+                    use_combined_loss       = True,
+                    retrain_from_scratch    = False,
+                    show_train_summary      = True,
                     dataloader_kwargs       = my_dataloader_kwargs,
                 )  # density estimator
 
-                print(f'finished training of round {current_round+1} run{run} in {(time.time()-start_time)/60:.2f} min')
-
-                # run simulation and append to existing dataset TODO check if the dataset size increases
-                x, theta = simulate_for_sbi(
-                    proposal        = proposal,
-                    config          = self.config,
-                    run             = run,
-                    save_sim_data   = self.config['simulator']['save_sim_data'],
-                    save_train_data = self.config['dataset']['save_train_data'],
-                )
-                theta_old = density_estimator._theta_roundwise[-1]
-                x_old = density_estimator._x_roundwise[-1]
-                density_estimator._theta_roundwise[-1] = 
+                # save best model for each round and run
+                best_model_state_dict = self.inference._best_model_state_dict
+                torch.save(best_model_state_dict, f"{self.log_dir}/model/best_model_round{current_round}_run{run}.pt")
+                
+                print(f'finished training of === round {current_round} run {run} === in {(time.time()-start_time)/60:.2f} min\n\n')
                 
                 
-                self.density_estimator.append(density_estimator)
-
+                # posterior analysis
                 posterior = self.inference.build_posterior(density_estimator)
-                # self.check_posterior_seen(posterior, run)
-                # self.check_posterior_unseen(posterior, run)
-                # self.check_posterior_xo(posterior, run)
                 self.posterior.append(posterior)
-                # proposal = posterior.set_default_x(x_o)
                 
-                # if not the last run, run the simulation and append to existing dataset
-            
+                print(f"\n--- posterior sampling ---")
+                for fig_idx in tqdm(range(len(self.post_val_set['x']))):
+                    
+                    fig_x, _ = plot_posterior_seen(
+                        posterior       = posterior, 
+                        sample_num      = self.config['train']['posterior']['sampling_num'],
+                        x               = self.post_val_set['x'][fig_idx].to(self.device),
+                        true_params     = self.post_val_set['theta'][fig_idx],
+                        limits          = self._get_limits(),
+                        prior_labels    = self.config['prior']['prior_labels'],
+                    )
+                    plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
+                    plt.close(fig_x)
+                    fig_x_shuffle, _ = plot_posterior_seen(
+                        posterior       = posterior, 
+                        sample_num      = self.config['train']['posterior']['sampling_num'],
+                        x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
+                        true_params     = self.post_val_set['theta'][fig_idx],
+                        limits          = self._get_limits(),
+                        prior_labels    = self.config['prior']['prior_labels'],
+                    )
+                    plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
+                
+                # save posterior for each round and run using pickle
+                with open(f"{self.log_dir}/posterior/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
+                    pickle.dump(posterior, f)
+                    
+                # check posterior for x_o
+                fig, _ = plot_posterior_unseen(
+                    posterior       = posterior, 
+                    sample_num      = self.config['train']['posterior']['sampling_num'],
+                    x               = self.x_o.to(self.device),
+                    limits          = self._get_limits(),
+                    prior_labels    = self.config['prior']['prior_labels'],
+                )
+                plt.savefig(f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png")
+                
+                
+                # if not the last run
+                # run simulation during training 
+                # append to existing dataset after training TODO check if the dataset size increases
+                if run != training_config['num_runs']-1:
+                    
+                    x, theta = simulate_for_sbi(
+                        proposal        = proposal,
+                        config          = self.config,
+                    )
+                    
+                    # choose and update the validation set
+                    if len(self.post_val_set['x']) <= 5:
+                        self.post_val_set = choose_cat_validation_set(
+                            x               = x, 
+                            theta           = theta, 
+                            val_set_size    = self.config['train']['posterior']['val_set_size'],
+                            post_val_set    = self.post_val_set,
+                        )
+                    
+                    self.inference.append_simulations_for_run(
+                        theta = theta,
+                        x = x,
+                        current_round = current_round,    
+                        data_device = 'cpu',
+                    )
+                
+                else:
+                    
+                    print(f"---\nfinished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
+                    proposal = posterior.set_default_x(x_o)
+                
+        # save post_val_set for after all runs
+        with open(f"{self.log_dir}/posterior/post_val_set.pkl", 'wb') as f:
+            pickle.dump(self.post_val_set, f)
 
-        print(f"finished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
+                            
+        print(f"finished training of {training_config['num_rounds']} rounds each of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
 
 
     def save_model(self):
@@ -303,172 +399,26 @@ class Solver:
         print('---\nsaving model...')
 
         inference_dir           = self.log_dir / 'inference.pkl'
-        density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
-        posterior_dir           = self.log_dir / 'posterior.pkl'
-
         with open(inference_dir, 'wb') as f:
             pickle.dump(self.inference, f)
-
-        with open(density_estimator_dir, 'wb') as f:
-            pickle.dump(self.density_estimator, f)
-
-        with open(posterior_dir, 'wb') as f:
-            pickle.dump(self.posterior, f)
-
-        print('inference saved to: ',           inference_dir)
-        print('density_estimator saved to: ',   density_estimator_dir)
-        print('posterior saved to: ',           posterior_dir)
-
-    def check_posterior_xo(self, posterior, run):
-
-        sampling_num = self.config['train']['posterior']['sampling_num']
-
-        # for run in range(self.config['train']['training']['num_runs']):
-
-        print(f'---\nchecking posterior of run {run}')
-
-        start_time = time.time()
-        samples = posterior.sample((sampling_num,), x=self.x_o)
-        print(f'---\nfinished sampling in {(time.time()-start_time)/60:.2f} min')
-
-        fig, axes = analysis.pairplot(
-            samples =samples.cpu().numpy(),
-            limits  =self._get_limits(),
-            figsize =(10, 10),
-            labels  =self.config['prior']['prior_labels'],
-            upper=["kde"],
-            diag=["kde"],
-            # ticks=[[], []],
-            # points=true_params.cpu().numpy(),
-            # points_offdiag={'markersize': 5, 'markeredgewidth': 1},
-            # points_colors='r',
-        )
-
-        save_path = self.log_dir / f'x_o_posterior_run{run}.png'
-        fig.savefig(save_path)
-        print(f'x_o_posterior_run{run} saved to: {save_path}')
-
-    def check_posterior_seen(self, x, theta, truth_idx, sample_num=1000):
-        """
-        check the posterior with
-            - trained data x -> theta distribution
-            - unseen data x -> theta distribution
-
-        Returns:
-            distribution plot for each dimension of theta
-        """
-
-        if isinstance(truth_idx, list):
-            for idx in truth_idx:
-                self._check_posterior_seen_one(x, theta, idx, sample_num)
-        else:
-            self._check_posterior_seen_one(x, theta, truth_idx, sample_num)
-    
-    def check_posterior_unseen(self, x, sample_num=1000):
-
-        # probR sampling method
-        for i, (dur, MS) in enumerate(
-                itertools.product(self.config['dataset']['train_data_dur_list'], self.config['dataset']['train_data_MS_list'])):
-
-            # num_unseen_sample = 1
-
-            x_new, fig = self._from_1seqC_to_1x(MS, dur)
-            while np.any(np.all(x.cpu().numpy() == x_new, axis=1)):
-                x_new, fig = self._from_1seqC_to_1x(MS, dur)
-
-            save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}.png'
-            fig.savefig(save_path, dpi=300)
-            print('simulation result saved to: ', save_path)
-
-            samples = self.posterior.sample((sample_num,), x=torch.from_numpy(x_new).float().to(self.device))
-            fig, axes = analysis.pairplot(
-                samples.cpu().numpy(),
-                limits=self._get_limits(),
-                # ticks=[[], []],
-                figsize=(10, 10),
-                # points=true_params,
-                # points_offdiag={'markersize': 10, 'markeredgewidth': 1},
-                # points_colors='r',
-                labels=self.config['prior']['prior_labels'],
-            )
-            save_path = self.log_dir / f'unseen_data_dur{dur}_MS{MS}_{i}_posterior.png'
-            fig.savefig(save_path)
-            print(f'posterior_with_unseen_data saved to: {save_path}')
             
-    def _get_limits(self):
-        return [[x, y] for x, y in zip(self.prior_min_train, self.prior_max_train)]
+        print('inference saved to: ',           inference_dir)
 
-    def __decode_x_to_seqC(self, x):
-        # x shape should be 1
-        if len(x.shape) != 1:
-            raise ValueError('x dimension should be 1')
+        # density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
+        # posterior_dir           = self.log_dir / 'posterior.pkl'
+        
+        # with open(density_estimator_dir, 'wb') as f:
+        #     pickle.dump(self.density_estimator, f)
 
-        x = x[:-1]
-        x = x[x != 0] # remove zeros
-        nan2num = self.config['dataset']['nan2num']
+        # with open(posterior_dir, 'wb') as f:
+        #     pickle.dump(self.posterior, f)
 
-        seqC = nan2num + x*(1-nan2num)
+        # print('density_estimator saved to: ',   density_estimator_dir)
+        # print('posterior saved to: ',           posterior_dir)
 
-        return seqC
 
-    def _check_posterior_seen_one(self, x, theta, truth_idx=300, sample_num=1000):
-
-        true_params = theta[truth_idx, :]
-        print(f'->\nevaluate with input x[{truth_idx},:]: {x[truth_idx, :]}')
-        print(f'evaluation true params: {true_params}')
-
-        seqC = self.__decode_x_to_seqC(x[truth_idx, :])
-        model_name = self.config['simulator']['model_name']
-        figure_name = f'seqC: {seqC}\nparams: {true_params}\nmodel: {model_name}'
-        # insert 0 in the 2nd position of the tensor
-        device = true_params.device
-        params = torch.cat((true_params[:2], torch.zeros(1).to(device), true_params[2:]))
-        simulator_output = _one_DM_simulation_and_output_figure(seqC.cpu().numpy(), params.cpu().numpy(), model_name, figure_name)
-        (seqC, params, probR, fig) = simulator_output
-
-        save_path = self.log_dir / f'seen_data_idx_{truth_idx}.png'
-        fig.savefig(save_path, dpi=300)
-        print('data simulation result saved to: ', save_path)
-
-        samples = self.posterior.sample((sample_num,), x=x[truth_idx, :])
-
-        fig, axes = analysis.pairplot(
-            samples.cpu().numpy(),
-            limits=self._get_limits(),
-            # ticks=[[], []],
-            figsize=(10, 10),
-            points=true_params.cpu().numpy(),
-            points_offdiag={'markersize': 5, 'markeredgewidth': 1},
-            points_colors='r',
-            labels=self.config['prior']['prior_labels'],
-        )
-        save_path = self.log_dir / f'seen_data_idx_{truth_idx}_posterior.png'
-        fig.savefig(save_path)
-        print(f'posterior_with_seen_data saved to: {save_path}')
-
-    def _from_1seqC_to_1x(self, MS, dur):
-
-        seqC = seqC_generator().generate(
-            MS_list=[MS],
-            sample_size=1,
-            single_dur=dur,
-        )[0,:]
-
-        params = self.prior_simulator.sample((1,)).cpu().numpy()[0]
-        model_name = self.config['simulator']['model_name']
-        # simulator_output = _one_DM_simulation((seqC, params, model_name))
-        figure_name = f'seqC:{seqC}\nmodel{model_name}\nparams:{params}'
-        simulator_output = _one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name)
-        seqC, params, probR, fig = simulator_output
-
-        dataset = training_dataset(self.config)
-        x_seqC, theta, x_R = dataset.data_process_pipeline(seqC, params, probR)
-        x_new = np.concatenate((x_seqC, x_R), axis=1)
-
-        return x_new, fig
 
     
-
 
 def main():
     args = get_args()
@@ -479,17 +429,16 @@ def main():
         config_train_path=args.config_train_path,
     )
 
-    print(f'---\nget args:')
+    print(f'\n--- args ---')
     for arg, value in vars(args).items():
         print(f'{arg}: {value}')
 
-    print('---\nconfig keys: ')
+    print('\n--- config keys ---')
     print(config.keys())
 
     solver = Solver(args, config)
     solver.sbi_train()
     solver.save_model()
-    solver.check_posterior()
     
     # # save the solver
     # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:

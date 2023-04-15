@@ -13,21 +13,22 @@ def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10
     ''' 
     
     theta, x, _ = zip(*batch)
-    # theta, x    = zip(*batch)
     
     theta   = torch.stack(theta)
     x       = torch.stack(x)
+    _       = torch.stack(_)
     
     if Rchoice_method == 'probR':
         # repeat theta and x for each probR sample
-        theta_new   = theta.repeat_interleave(num_probR_sample, dim=0)
-        x_new       = x.repeat_interleave(num_probR_sample, dim=0)
-        x_seqC      = x_new[:, :, :-1]
-        x_probRs    = x_new[:, :, -1].unsqueeze_(dim=2)
+        theta_new   = theta.repeat_interleave(num_probR_sample, dim=0) # (T*C, L_theta)
+        x_new       = x.repeat_interleave(num_probR_sample, dim=0) # (T*C, DMS, 15+1)
+        _           = _.repeat_interleave(num_probR_sample, dim=0) # (T*C, 1)
+        x_seqC      = x_new[:, :, :-1] # (T*C, DMS, 15)
+        x_probRs    = x_new[:, :, -1].unsqueeze_(dim=2) # (T*C, DMS, 1)
         
         # sample Rchoice from probR with Bernoulli
         x_Rchoice   = torch.bernoulli(x_probRs)
         x           = torch.cat((x_seqC, x_Rchoice), dim=2)
         theta       = theta_new
-    
+        
     return theta, x, _

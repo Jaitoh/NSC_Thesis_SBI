@@ -14,7 +14,13 @@ from sbi.utils import (
     test_posterior_net_for_multi_d_x,
     x_shape_from_simulation,
     del_entries,
+    validate_theta_and_x,
+    handle_invalid_x,
+    warn_if_zscoring_changes_data,
+    nle_nre_apt_msg_on_invalid_x,
+    npe_msg_on_invalid_x,
 )
+from sbi.utils.sbiutils import mask_sims_from_prior
 
 class MyPosteriorEstimator(PosteriorEstimator):
     def __init__(
@@ -29,24 +35,47 @@ class MyPosteriorEstimator(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
     
-    # def append_simulations_for_run(
-    #     self, 
-    #     theta: Tensor,
-    #     x: Tensor,
-    #     current_round: int = 0,
-    #     ):
-        
-    #     theta, x = validate_theta_and_x(
-    #         theta, x, data_device=data_device, training_device=self._device
-    #     )
+    @staticmethod
+    def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
+        if show:
+            print("\r", f"Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} val: {val_log_prob:.2f}", end="")
+    
+    def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
+        """Return whether the training converged yet and save best model state so far.
 
-    #     is_valid_x, num_nans, num_infs = handle_invalid_x(
-    #         x, exclude_invalid_x=exclude_invalid_x
-    #     )
+        Checks for improvement in validation performance over previous epochs.
 
-    #     x = x[is_valid_x]
-    #     theta = theta[is_valid_x]
-        
+        Args:
+            epoch: Current epoch in training.
+            stop_after_epochs: How many fruitless epochs to let pass before stopping.
+
+        Returns:
+            Whether the training has stopped improving, i.e. has converged.
+        """
+        converged = False
+
+        assert self._neural_net is not None
+        neural_net = self._neural_net
+
+        # (Re)-start the epoch count with the first epoch or any improvement.
+        if epoch == 0 or self._val_log_prob >= self._best_val_log_prob:
+            self._best_val_log_prob = self._val_log_prob
+            self._epochs_since_last_improvement = 0
+            self._best_model_state_dict = deepcopy(neural_net.state_dict())
+            self._best_model_from_epoch = epoch
+        else:
+            self._epochs_since_last_improvement += 1
+
+        # If no validation improvement over many epochs, stop training.
+        if self._epochs_since_last_improvement > stop_after_epochs - 1:
+            neural_net.load_state_dict(self._best_model_state_dict)
+            converged = True
+            self._neural_net.load_state_dict(self._best_model_state_dict)
+            self._val_log_prob = self._best_val_log_prob
+            
+        return converged
+    
+    
     def append_simulations_for_run(
         self,
         theta: Tensor,
@@ -55,6 +84,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         exclude_invalid_x: Optional[bool] = None,
         data_device: Optional[str] = None,
     ):
+        """ update theta and x for the current round
+        """
         if exclude_invalid_x is None:
             if current_round == 0:
                 exclude_invalid_x = True
@@ -90,33 +121,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 num_nans, num_infs, exclude_invalid_x, "Single-round NPE"
             )
 
-        self._check_proposal(proposal)
-
-        self._data_round_index.append(current_round)
         prior_masks = mask_sims_from_prior(int(current_round > 0), theta.size(0))
 
-        self._theta_roundwise.append(theta)
-        self._x_roundwise.append(x)
-        self._prior_masks.append(prior_masks)
-
-        self._proposal_roundwise.append(proposal)
-
-        if self._prior is None or isinstance(self._prior, ImproperEmpirical):
-            if proposal is not None:
-                raise ValueError(
-                    "You had not passed a prior at initialization, but now you "
-                    "passed a proposal. If you want to run multi-round SNPE, you have "
-                    "to specify a prior (set the `.prior` argument or re-initialize "
-                    "the object with a prior distribution). If the samples you passed "
-                    "to `append_simulations()` were sampled from the prior, you can "
-                    "run single-round inference with "
-                    "`append_simulations(..., proposal=None)`."
-                )
-            theta_prior = self.get_simulations()[0].to(self._device)
-            self._prior = ImproperEmpirical(
-                theta_prior, ones(theta_prior.shape[0], device=self._device)
-            )
-
+        old_theta   = self._theta_roundwise[current_round]
+        old_x       = self._x_roundwise[current_round]
+        old_masks   = self._prior_masks[current_round]
+        
+        self._theta_roundwise[current_round] = torch.cat((old_theta, theta), dim=0)
+        self._x_roundwise[current_round]     = torch.cat((old_x, x), dim=0)
+        self._prior_masks[current_round]     = torch.cat((old_masks, prior_masks), dim=0)
+        
         return self
     
     def get_dataloaders(
@@ -148,28 +162,26 @@ class MyPosteriorEstimator(PosteriorEstimator):
         dataset = data.TensorDataset(theta, x, prior_masks)
 
         # load and show one example of the dataset
-        # for i in range(1):
         i = 1
-        sample = dataset[i]
-        print(f'\ndataset size [{len(dataset)}]:',
+        #  print dataset size
+        print(f'\n--- dataset ---\nsize [{len(dataset)}]',
               f'\none examples of the dataset [{i}]:',
               f'\n| theta[{i}] info:', f'shape {theta[i].shape}, dtype: {theta[i].dtype}, device: {theta[i].device}',
               f'\n| x[{i}] info:', f'shape {x[i].shape}, dtype: {x[i].dtype}, device: {x[i].device}',
              )
-        # TODO print dataset size
         # Get total number of training examples.
         num_examples = theta.size(0)
         # Select random train and validation splits from (theta, x) pairs.
         num_training_examples = int((1 - validation_fraction) * num_examples)
         num_validation_examples = num_examples - num_training_examples
 
-        if not resume_training:
-            # Seperate indicies for training and validation
-            permuted_indices = torch.randperm(num_examples)
-            self.train_indices, self.val_indices = (
-                permuted_indices[:num_training_examples],
-                permuted_indices[num_training_examples:],
-            )
+        # if not resume_training:
+        # Seperate indicies for training and validation
+        permuted_indices = torch.randperm(num_examples)
+        self.train_indices, self.val_indices = (
+            permuted_indices[:num_training_examples],
+            permuted_indices[num_training_examples:],
+        )
 
         # Create training and validation loaders using a subset sampler.
         # Intentionally use dicts to define the default dataloader args
@@ -190,7 +202,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
 
-        print(f'\n---\ntrain_loader_kwargs: {train_loader_kwargs}')
+        print(f'\n--- data loader ---\ntrain_loader_kwargs: {train_loader_kwargs}')
         print(f'val_loader_kwargs: {val_loader_kwargs}')
         
         train_loader = data.DataLoader(dataset, **train_loader_kwargs)
@@ -411,8 +423,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
             self._maybe_show_progress(self._show_progress_bars, self.epoch, starting_time, train_log_prob_average, self._val_log_prob)
 
-        self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
-
+        # self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
+        # self._val_log_prob = self._best_val_log_prob
+        
         # Update summary.
         self._summary["epochs_trained"].append(self.epoch)
         self._summary["best_validation_log_prob"].append(self._best_val_log_prob)
@@ -424,6 +437,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
         if show_train_summary:
             print(self._describe_round(self._round, self._summary))
 
+        # load best model from state dict
+        self._neural_net.load_state_dict(self._best_model_state_dict)
+        self._val_log_prob = self._best_val_log_prob
+        self._epochs_since_last_improvement = 0
+        
         # Avoid keeping the gradients in the resulting network, which can
         # cause memory leakage when benchmarking.
         self._neural_net.zero_grad(set_to_none=True)
@@ -436,50 +454,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         description = f"""
         -------------------------
-        ||||| ROUND {round_ + 1} STATS |||||:
+        ||||| ROUND {round_} STATS |||||:
         -------------------------
         Epochs trained: {epochs}
-        Best validation performance: {best_validation_log_prob:.4f} from epoch {self._best_model_from_epoch:5}
+        Best validation performance: {best_validation_log_prob:.4f}, from epoch {self._best_model_from_epoch:5}
         Model from best epoch {self._best_model_from_epoch} is loaded for further training
         -------------------------
         """
 
         return description
     
-    @staticmethod
-    def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
-        if show:
-            print("\r", f"Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:4.2f}min ||  log_prob: train: {train_log_prob:.2f} val: {val_log_prob:.2f}", end="")
     
-    def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
-        """Return whether the training converged yet and save best model state so far.
-
-        Checks for improvement in validation performance over previous epochs.
-
-        Args:
-            epoch: Current epoch in training.
-            stop_after_epochs: How many fruitless epochs to let pass before stopping.
-
-        Returns:
-            Whether the training has stopped improving, i.e. has converged.
-        """
-        converged = False
-
-        assert self._neural_net is not None
-        neural_net = self._neural_net
-
-        # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob > self._best_val_log_prob:
-            self._best_val_log_prob = self._val_log_prob
-            self._epochs_since_last_improvement = 0
-            self._best_model_state_dict = deepcopy(neural_net.state_dict())
-            self._best_model_from_epoch = epoch
-        else:
-            self._epochs_since_last_improvement += 1
-
-        # If no validation improvement over many epochs, stop training.
-        if self._epochs_since_last_improvement > stop_after_epochs - 1:
-            neural_net.load_state_dict(self._best_model_state_dict)
-            converged = True
-
-        return converged
