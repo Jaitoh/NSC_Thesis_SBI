@@ -45,7 +45,7 @@ def simulate_for_sbi(proposal, config):
     x, theta = dataset.data_process_pipeline(
         seqC, theta, probR,
     )
-    print(f'\nx, theta processing finished in {(time.time()-tic)/60:.2f}min\n--- processing for x, theta ---')
+    print(f'\nx, theta processing finished in {(time.time()-tic)/60:.2f}min\n--- finished processing for x, theta ---')
     
     theta = theta.clone().detach().to(torch.float32) # avoid float64 error
     x     = x.clone().detach().to(torch.float32)

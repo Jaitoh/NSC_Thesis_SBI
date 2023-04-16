@@ -452,7 +452,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # cause memory leakage when benchmarking.
         self._neural_net.zero_grad(set_to_none=True)
 
-        return deepcopy(self._neural_net)
+        return self, deepcopy(self._neural_net)
     
     def _describe_round(self, round_: int, summary: Dict[str, list]) -> str:
         epochs = summary["epochs_trained"][-1]

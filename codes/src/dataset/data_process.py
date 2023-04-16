@@ -3,59 +3,96 @@ import numpy as np
 import time
 
 def reshape_shuffle_x_theta(x, theta):
-    """do reshape for x and theta for network input
-    do shuffle the data for each (DMS, L_x) data after the reshape in each T*C
-    Args:
-        x     (np.array): shape (D,M,S,T,C, L_x)
-        theta (np.array): shape (D,M,S,T,C, L_theta)
     
-    Return:
-        x     (torch.tensor): shape (T*C, D*M*S, L_x)
-        theta (torch.tensor): shape (T*C, L_theta)
-    """
     print(f'\nbefore reshape_shuffle_x_theta: \nx.shape={x.shape}, theta.shape={theta.shape}')
-    D,M,S,T,C,L_x = x.shape
-    # 0,1,2,3,4,5
-    _,_,_,_,_,L_theta = theta.shape
-    x = torch.from_numpy(x)
-    theta = torch.from_numpy(theta)
+    D, M, S, T, C, L_x = x.shape
+    _, _, _, _, _, L_theta = theta.shape
     
-    x_ = x.permute(0,3,4,5,1,2).reshape(D,T,C,L_x,M*S) # D,T,C,L_x,M*S
-    x_ = x_.permute(0,1,2,4,3)  # D,T,C,M*S,L_x
-                                # 0,1,2,3  ,4
+    x = torch.tensor(x, dtype=torch.float32)
+    theta = torch.tensor(theta, dtype=torch.float32)
 
-    theta_ = theta.permute(0,3,4,5,1,2).reshape(D,T,C,L_theta,M*S) # D,T,C,L_theta,M*S
-    theta_ = theta_.permute(0,1,2,4,3)  # D,T,C,M*S,L_theta
-                                        # 0,1,2,3  ,4
+    x = x.permute(0, 3, 4, 5, 1, 2).contiguous().view(D, T, C, L_x, M*S)
+    x = x.permute(0, 1, 2, 4, 3) # D,T,C,M*S,L_x
+    x = x.permute(1, 2, 4, 0, 3).contiguous().view(T, C, L_x, D*M*S) 
+    x = x.permute(2, 3, 0, 1).contiguous().view(L_x, D*M*S, T*C)
+    x = x.permute(2, 1, 0)
 
-    # to shape T,C,L_x,D,M*S
-    x_ = x_.permute(1,2,4,0,3).reshape(T,C,L_x,D*M*S)# T,C,L_x,D*M*S
-                                                     # 0,1,2  ,3
-    # to shape L_x, D*M*S, T, C
-    x_ = x_.permute(2, 3, 0, 1).reshape(L_x, D*M*S, T*C) # L_x, D*M*S, T*C
-                                                         # 0  ,1     ,2
-    x_ = x_.permute(2,1,0) # T*C, D*M*S, L_x
+    theta = theta.permute(0, 3, 4, 5, 1, 2).contiguous().view(D, T, C, L_theta, M*S)
+    theta = theta.permute(0, 1, 2, 4, 3) # D,T,C,M*S,L_theta
+    theta = theta.permute(1, 2, 4, 0, 3).contiguous().view(T, C, L_theta, D*M*S)
+    theta = theta.permute(2, 3, 0, 1).contiguous().view(L_theta, D*M*S, T*C)
+    theta = theta.permute(2, 1, 0)
+
+    # Select the first L_theta component of each sequence
+    theta = theta[:, 0, :]
+
+    x_processed = torch.empty_like(x)
+    for tc in range(T * C):
+        x_temp = x[tc, :, :]
+        idx = torch.randperm(D * M * S)
+        x_processed[tc, :, :] = x_temp[idx, :]
+
+    x = x_processed
+
+    print('\nreshaped and shuffled: \nx.shape', x.shape, 'theta.shape', theta.shape)
+
+    return x, theta
+
+
+# def reshape_shuffle_x_theta(x, theta):
+#     """do reshape for x and theta for network input
+#     do shuffle the data for each (DMS, L_x) data after the reshape in each T*C
+#     Args:
+#         x     (np.array): shape (D,M,S,T,C, L_x)
+#         theta (np.array): shape (D,M,S,T,C, L_theta)
     
-    # to shape T,C,L_theta,D,M*S
-    theta_ = theta_.permute(1,2,4,0,3).reshape(T,C,L_theta,D*M*S) # T,C,L_theta,D*M*S
-                                                                  # 0,1,2      ,3
-    # to shape L_theta, D*M*S, T, C
-    theta_ = theta_.permute(2, 3, 0, 1).reshape(L_theta, D*M*S, T*C) # L_theta, D*M*S, T*C
-                                                                    # 0      ,1     ,2 
-    theta_ = theta_.permute(2,1,0) # T*C, D*M*S, L_theta
-    # output shape: T*C, 0, L_theta
-    theta_ = theta_[:,0,:]
+#     Return:
+#         x     (torch.tensor): shape (T*C, D*M*S, L_x)
+#         theta (torch.tensor): shape (T*C, L_theta)
+#     """
+#     print(f'\nbefore reshape_shuffle_x_theta: \nx.shape={x.shape}, theta.shape={theta.shape}')
+#     D,M,S,T,C,L_x = x.shape
+#     # 0,1,2,3,4,5
+#     _,_,_,_,_,L_theta = theta.shape
+#     x = torch.from_numpy(x)
+#     theta = torch.from_numpy(theta)
     
-    # randomize the order of each sequence of each line
-    x_processed = torch.empty_like(x_)
-    for tc in range(T*C): 
-        x_temp = x_[tc,:,:]
-        idx = torch.randperm(D*M*S)
-        x_processed[tc,:,:] = x_temp[idx,:] # D*M*S,L_x
+#     x_ = x.permute(0,3,4,5,1,2).reshape(D,T,C,L_x,M*S) # D,T,C,L_x,M*S
+#     x_ = x_.permute(0,1,2,4,3)  # D,T,C,M*S,L_x
+#                                 # 0,1,2,3  ,4
+
+#     theta_ = theta.permute(0,3,4,5,1,2).reshape(D,T,C,L_theta,M*S) # D,T,C,L_theta,M*S
+#     theta_ = theta_.permute(0,1,2,4,3)  # D,T,C,M*S,L_theta
+#                                         # 0,1,2,3  ,4
+
+#     # to shape T,C,L_x,D,M*S
+#     x_ = x_.permute(1,2,4,0,3).reshape(T,C,L_x,D*M*S)# T,C,L_x,D*M*S
+#                                                      # 0,1,2  ,3
+#     # to shape L_x, D*M*S, T, C
+#     x_ = x_.permute(2, 3, 0, 1).reshape(L_x, D*M*S, T*C) # L_x, D*M*S, T*C
+#                                                          # 0  ,1     ,2
+#     x_ = x_.permute(2,1,0) # T*C, D*M*S, L_x
+    
+#     # to shape T,C,L_theta,D,M*S
+#     theta_ = theta_.permute(1,2,4,0,3).reshape(T,C,L_theta,D*M*S) # T,C,L_theta,D*M*S
+#                                                                   # 0,1,2      ,3
+#     # to shape L_theta, D*M*S, T, C
+#     theta_ = theta_.permute(2, 3, 0, 1).reshape(L_theta, D*M*S, T*C) # L_theta, D*M*S, T*C
+#                                                                     # 0      ,1     ,2 
+#     theta_ = theta_.permute(2,1,0) # T*C, D*M*S, L_theta
+#     # output shape: T*C, 0, L_theta
+#     theta_ = theta_[:,0,:]
+    
+#     # randomize the order of each sequence of each line
+#     x_processed = torch.empty_like(x_)
+#     for tc in range(T*C): 
+#         x_temp = x_[tc,:,:]
+#         idx = torch.randperm(D*M*S)
+#         x_processed[tc,:,:] = x_temp[idx,:] # D*M*S,L_x
         
-    x_ = x_processed
+#     x_ = x_processed
     
-    print('\nreshaped and shuffled: \nx.shape', x_.shape, 'theta.shape', theta_.shape)
+#     print('\nreshaped and shuffled: \nx.shape', x_.shape, 'theta.shape', theta_.shape)
     
 
     return x_, theta_
