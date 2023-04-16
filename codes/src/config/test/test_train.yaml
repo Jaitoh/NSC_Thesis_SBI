@@ -23,7 +23,7 @@ train:
 
   training:
     num_rounds            : 1
-    num_runs              : 50
+    num_runs              : 100
 
     num_atoms             : 10
     

@@ -257,31 +257,11 @@ class Solver:
                 config          = self.config,
             )
             
-            # # choose and update the validation set
-            # if len(self.post_val_set['x']) <= 5:
-            #     self.post_val_set = choose_cat_validation_set(
-            #         x               = x, 
-            #         theta           = theta, 
-            #         val_set_size    = self.config['train']['posterior']['val_set_size'],
-            #         post_val_set    = self.post_val_set,
-            #     )
-            
-            # # append simulated data to "current round" dataset
-            # self.inference.append_simulations(
-            #     theta         = theta,
-            #     x             = x,
-            #     proposal      = proposal,
-            #     data_device   = 'cpu',
-            # )
-            
             # train for multiple runs
             for run in range(training_config['num_runs']):
 
                 print(f"\n======\nstart of round {current_round} run {run}/{training_config['num_runs']-1}\n======")
 
-                # print(f"---\nstart training")
-                start_time = time.time()
-                
                 # save x, theta for each round and run
                 if self.config['dataset']['save_train_data']:
                     
@@ -291,8 +271,6 @@ class Solver:
                     print(f'x and theta saved to {self.log_dir}/training_dataset')
                 
                 # if not the last run
-                # run simulation during training 
-                # append to existing dataset after training TODO check if the dataset size increases
                 if run != training_config['num_runs']-1:
                     
                     x, theta = simulate_for_sbi(
@@ -301,32 +279,7 @@ class Solver:
                     )
                     
         
-    def save_model(self):
-
-        print('---\nsaving model...')
-
-        inference_dir           = self.log_dir / 'inference.pkl'
-        with open(inference_dir, 'wb') as f:
-            pickle.dump(self.inference, f)
-            
-        print('inference saved to: ',           inference_dir)
-
-        # density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
-        # posterior_dir           = self.log_dir / 'posterior.pkl'
-        
-        # with open(density_estimator_dir, 'wb') as f:
-        #     pickle.dump(self.density_estimator, f)
-
-        # with open(posterior_dir, 'wb') as f:
-        #     pickle.dump(self.posterior, f)
-
-        # print('density_estimator saved to: ',   density_estimator_dir)
-        # print('posterior saved to: ',           posterior_dir)
-
-
-
     
-
 def main():
     args = get_args()
 

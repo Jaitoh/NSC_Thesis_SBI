@@ -6,7 +6,7 @@
 #SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
 
-#SBATCH --mem 24G
+#SBATCH --mem 100G
 #SBATCH --cpus-per-task=16
 
 #SBATCH --job-name=train_L0_rnn_npe_data
