@@ -49,6 +49,7 @@ class MySNPE_C(SNPE_C, MyPosteriorEstimator):
         use_combined_loss: bool = False,
         retrain_from_scratch: bool = False,
         show_train_summary: bool = False,
+        seed: Optional[int] = 100,
         dataloader_kwargs: Optional[Dict] = None,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.

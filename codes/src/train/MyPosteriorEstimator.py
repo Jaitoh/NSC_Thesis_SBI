@@ -139,6 +139,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         training_batch_size: int = 50,
         validation_fraction: float = 0.1,
         resume_training: bool = False,
+        seed: Optional[int] = 100,
         dataloader_kwargs: Optional[dict] = None,
     ) -> Tuple[data.DataLoader, data.DataLoader]:
         """Return dataloaders for training and validation.
@@ -205,8 +206,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
         print(f'\n--- data loader ---\ntrain_loader_kwargs: {train_loader_kwargs}')
         print(f'val_loader_kwargs: {val_loader_kwargs}')
         
-        train_loader = data.DataLoader(dataset, **train_loader_kwargs)
-        val_loader = data.DataLoader(dataset, **val_loader_kwargs)
+        g = torch.Generator()
+        g.manual_seed(seed)
+        
+        train_loader = data.DataLoader(dataset, generator=g, **train_loader_kwargs)
+        val_loader = data.DataLoader(dataset, generator=g, **val_loader_kwargs)
 
         # + load and show some examples of the dataloader
         # train_batch = next(iter(train_loader))
@@ -232,6 +236,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         retrain_from_scratch: bool = False,
         show_train_summary: bool = True,
         
+        seed: Optional[int] = 100,
         dataloader_kwargs: Optional[dict] = None,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.
@@ -312,6 +317,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             training_batch_size,
             validation_fraction,
             resume_training,
+            seed=seed,
             dataloader_kwargs=dataloader_kwargs,
         )
         # First round or if retraining from scratch:

@@ -93,8 +93,8 @@ class Solver:
         # set seed
         seed = args.seed
         setup_seed(seed)
-        self.g = torch.Generator()
-        self.g.manual_seed(seed)
+        # self.g = torch.Generator()
+        # self.g.manual_seed(seed)
 
         self.prior              = None
         self.posterior          = None
@@ -207,7 +207,7 @@ class Solver:
             my_dataloader_kwargs = {
                 # 'num_workers': training_config['num_workers'],
                 'worker_init_fn':  seed_worker,
-                'generator':   self.g,
+                # 'generator':   self.g,
                 'collate_fn':  lambda batch: collate_fn_probR(
                                                 batch,
                                                 Rchoice_method=Rchoice_method,
@@ -218,7 +218,7 @@ class Solver:
             my_dataloader_kwargs = {
                 # 'num_workers': training_config['num_workers'],
                 'worker_init_fn':  seed_worker,
-                'generator':   self.g,
+                # 'generator':   self.g,
             }
             
             
@@ -352,6 +352,7 @@ class Solver:
                         'use_combined_loss'       : True,
                         'retrain_from_scratch'    : False,
                         'show_train_summary'      : True,
+                        'seed'                    : self.args.seed,
                         'dataloader_kwargs'       : my_dataloader_kwargs,
                     }))
                 

@@ -88,8 +88,8 @@ class Solver:
         # set seed
         seed = args.seed
         setup_seed(seed)
-        self.g = torch.Generator()
-        self.g.manual_seed(seed)
+        # self.g = torch.Generator()
+        # self.g.manual_seed(seed)
 
         self.prior              = None
         self.posterior          = None
@@ -303,6 +303,7 @@ class Solver:
                     use_combined_loss       = True,
                     retrain_from_scratch    = False,
                     show_train_summary      = True,
+                    seed                    = self.args.seed,
                     dataloader_kwargs       = my_dataloader_kwargs,
                 )  # density estimator
 
