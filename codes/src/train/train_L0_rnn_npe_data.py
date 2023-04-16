@@ -50,7 +50,7 @@ from utils.train import (
 
 from memory_profiler import profile
 
-@profile
+
 class Solver:
     """
         Solver for training sbi
@@ -160,7 +160,7 @@ class Solver:
 
         return neural_posterior
 
-
+    @profile
     def sbi_train(self):
         """
         train the sbi model
