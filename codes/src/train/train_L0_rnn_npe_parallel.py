@@ -105,6 +105,7 @@ class Solver:
         self.inference          = None
 
 
+
     def _get_limits(self):
         return [[x, y] for x, y in zip(self.prior_min, self.prior_max)]
     
@@ -130,7 +131,8 @@ class Solver:
         )
 
         return neural_posterior
-    
+
+
     def posterior_analysis(self, posterior, current_round, run):
         # posterior analysis
         print(f"\n--- posterior sampling ---")
@@ -375,9 +377,9 @@ class Solver:
                     self.inference.append_simulations_for_run(
                                         theta = theta,
                                         x = x,
-                                        current_round = current_round,    
+                                        current_round = current_round,
                                         data_device = 'cpu',
-                                    )             
+                                    )
                             
                 if run == training_config['num_runs']-1: # last run
                     
@@ -415,6 +417,7 @@ class Solver:
         # print('posterior saved to: ',           posterior_dir)
 
 
+
 def main():
     args = get_args()
     PID = os.getpid()
@@ -448,9 +451,9 @@ def main():
 
     finally:
         monitor_process.terminate()
-    
 
-    
+
+
 if __name__ == '__main__':
     main()
 

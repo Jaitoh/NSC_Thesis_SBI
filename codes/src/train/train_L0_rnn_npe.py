@@ -12,20 +12,21 @@ import yaml
 # import glob
 import argparse
 import torch
-import os
-import numpy as np
-import random
-from pathlib import Path
 import time
-import shutil
+import os
+import multiprocessing
+import numpy as np
+from pathlib import Path
+from copy import deepcopy
 from typing import Any, Callable
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
 
 from sbi import analysis
 from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
-
 from torch.utils.tensorboard import SummaryWriter
 
 import sys
@@ -45,10 +46,13 @@ from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
 from utils.train import (
     get_args, print_cuda_info, choose_cat_validation_set, 
-    plot_posterior_seen, plot_posterior_unseen
+    plot_posterior_seen, plot_posterior_unseen,
+    check_path, train_inference_helper,
 )
-from memory_profiler import profile
+from utils.resource import monitor_resources
 
+# Set the start method to 'spawn' before creating the ProcessPoolExecutor instance
+mp.set_start_method('spawn', force=True)
 
 class Solver:
     """
@@ -69,6 +73,7 @@ class Solver:
 
         self.log_dir = Path(self.args.log_dir)
         self.data_dir = Path(config['data_dir'])
+        check_path(self.log_dir, self.data_dir, args)
         
         
         # get dataset size
@@ -80,7 +85,6 @@ class Solver:
         self.l_theta = len(self.config['prior']['prior_min'])
         
         
-        self._check_path()
         # save the config file using yaml
         yaml_path = Path(self.log_dir) / 'config.yaml'
         with open(yaml_path, 'w') as f:
@@ -96,41 +100,10 @@ class Solver:
         self.prior              = None
         self.posterior          = None
         self.density_estimator  = None
-        self.prior_max    = None
-        self.prior_min    = None
+        self.prior_max          = None
+        self.prior_min          = None
         self.inference          = None
 
-    def _check_path(self):
-        """
-        check the path of log_dir and data_dir
-        """
-
-        print(f'\n--- dir settings ---\nlog dir: {str(self.log_dir)}')
-        print(f'data dir: {str(self.data_dir)}')
-
-        # check log path: if not exists, create; if exists, remove or a fatal error
-        if not self.log_dir.exists():
-            os.makedirs(str(self.log_dir))
-            os.makedirs(f'{str(self.log_dir)}/model/')
-            os.makedirs(f'{str(self.log_dir)}/training_dataset/')
-            os.makedirs(f'{str(self.log_dir)}/posterior/')
-            
-
-        elif self.log_dir.exists() and not self.args.eval:
-            if self.args.overwrite:
-                shutil.rmtree(self.log_dir)
-                print(f'Run dir {str(self.log_dir)} emptied.')
-                os.makedirs(str(self.log_dir))
-                os.makedirs(f'{str(self.log_dir)}/model/')
-                os.makedirs(f'{str(self.log_dir)}/training_dataset/')
-                os.makedirs(f'{str(self.log_dir)}/posterior/')
-                
-            else:
-                assert False, f'Run dir {str(self.log_dir)} already exists.'
-
-        # check data path, where to read the data from, exists
-        if not Path(self.data_dir).exists():
-            assert False, f'Data dir {str(self.data_dir)} does not exist.'
 
 
     def _get_limits(self):
@@ -158,6 +131,7 @@ class Solver:
         )
 
         return neural_posterior
+
 
     def posterior_analysis(self, posterior, current_round, run):
         # posterior analysis
@@ -210,7 +184,7 @@ class Solver:
                                                 Rchoice_method=Rchoice_method,
                                                 num_probR_sample=self.config['dataset']['num_probR_sample'],
                                             ),
-            }
+            } # TODO 简化成 1个 arg 同时将 probR_sampling method 建立 collate_fn 以减少MEM 使用
         else:
             my_dataloader_kwargs = {
                 # 'num_workers': training_config['num_workers'],
@@ -221,7 +195,6 @@ class Solver:
             
         return my_dataloader_kwargs
     
-    @profile
     def sbi_train(self):
         """
         train the sbi model
@@ -282,7 +255,7 @@ class Solver:
         # dataloader kwargs
         Rchoice_method = self.config['dataset']['Rchoice_method']
         my_dataloader_kwargs = self.get_my_dataloader_kwargs(Rchoice_method)
-            
+        
         if self.gpu:
             my_dataloader_kwargs['pin_memory'] = True
 
@@ -311,6 +284,7 @@ class Solver:
                 )
             
             # append simulated data to "current round" dataset
+            print('appending simulated data to current round dataset')
             self.inference.append_simulations(
                 theta         = theta,
                 x             = x,
@@ -361,51 +335,15 @@ class Solver:
                 print(f'finished training of === round {current_round} run {run} === in {(time.time()-start_time)/60:.2f} min\n\n')
                 
                 
-                # posterior analysis TODO move to a separate function
+                # posterior analysis
                 posterior = self.inference.build_posterior(density_estimator)
                 self.posterior.append(posterior)
                 self.posterior_analysis(posterior, current_round, run)
-                # print(f"\n--- posterior sampling ---")
-                # for fig_idx in tqdm(range(len(self.post_val_set['x']))):
-                    
-                #     fig_x, _ = plot_posterior_seen(
-                #         posterior       = posterior, 
-                #         sample_num      = self.config['train']['posterior']['sampling_num'],
-                #         x               = self.post_val_set['x'][fig_idx].to(self.device),
-                #         true_params     = self.post_val_set['theta'][fig_idx],
-                #         limits          = self._get_limits(),
-                #         prior_labels    = self.config['prior']['prior_labels'],
-                #     )
-                #     plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
-                #     plt.close(fig_x)
-                #     fig_x_shuffle, _ = plot_posterior_seen(
-                #         posterior       = posterior, 
-                #         sample_num      = self.config['train']['posterior']['sampling_num'],
-                #         x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
-                #         true_params     = self.post_val_set['theta'][fig_idx],
-                #         limits          = self._get_limits(),
-                #         prior_labels    = self.config['prior']['prior_labels'],
-                #     )
-                #     plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
-                
-                # # save posterior for each round and run using pickle
-                # with open(f"{self.log_dir}/posterior/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
-                #     pickle.dump(posterior, f)
-                    
-                # # check posterior for x_o
-                # fig, _ = plot_posterior_unseen(
-                #     posterior       = posterior, 
-                #     sample_num      = self.config['train']['posterior']['sampling_num'],
-                #     x               = self.x_o.to(self.device),
-                #     limits          = self._get_limits(),
-                #     prior_labels    = self.config['prior']['prior_labels'],
-                # )
-                # plt.savefig(f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png")
                 
                 
                 # if not the last run
                 # run simulation during training 
-                # append to existing dataset after training TODO check if the dataset size increases
+                # append to existing dataset after training
                 if run != training_config['num_runs']-1:
                     
                     x, theta = simulate_for_sbi(
@@ -425,7 +363,7 @@ class Solver:
                     self.inference.append_simulations_for_run(
                         theta = theta,
                         x = x,
-                        current_round = current_round,    
+                        current_round = current_round,
                         data_device = 'cpu',
                     )
                 
@@ -433,6 +371,7 @@ class Solver:
                     
                     print(f"---\nfinished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
                     proposal = posterior.set_default_x(x_o)
+                
                 
         # save post_val_set for after all runs
         with open(f"{self.log_dir}/posterior/post_val_set.pkl", 'wb') as f:
@@ -453,11 +392,10 @@ class Solver:
         print('inference saved to: ',           inference_dir)
 
         # density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
-        # posterior_dir           = self.log_dir / 'posterior.pkl'
-        
         # with open(density_estimator_dir, 'wb') as f:
         #     pickle.dump(self.density_estimator, f)
 
+        # posterior_dir           = self.log_dir / 'posterior.pkl'
         # with open(posterior_dir, 'wb') as f:
         #     pickle.dump(self.posterior, f)
 
@@ -466,33 +404,40 @@ class Solver:
 
 
 
-    
-
 def main():
     args = get_args()
+    PID = os.getpid()
+    log_file = f"{args.log_dir}/resource_usage.log"
+    monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
+    monitor_process.start()
+    try:
+            
+        config = load_config(
+            config_simulator_path=args.config_simulator_path,
+            config_dataset_path=args.config_dataset_path,
+            config_train_path=args.config_train_path,
+        )
 
-    config = load_config(
-        config_simulator_path=args.config_simulator_path,
-        config_dataset_path=args.config_dataset_path,
-        config_train_path=args.config_train_path,
-    )
+        print(f'\n--- args ---')
+        for arg, value in vars(args).items():
+            print(f'{arg}: {value}')
 
-    print(f'\n--- args ---')
-    for arg, value in vars(args).items():
-        print(f'{arg}: {value}')
+        print('\n--- config keys ---')
+        print(config.keys())
 
-    print('\n--- config keys ---')
-    print(config.keys())
+        solver = Solver(args, config)
+        solver.sbi_train()
+        solver.save_model()
+        
+        # # save the solver
+        # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:
+        #     # pickle.dump(solver, f)
+        #     dill.dump(solver, f)
+        # print(f'solver saved to: {Path(args.log_dir) / "solver.pkl"}')
 
-    solver = Solver(args, config)
-    solver.sbi_train()
-    solver.save_model()
-    
-    # # save the solver
-    # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:
-    #     # pickle.dump(solver, f)
-    #     dill.dump(solver, f)
-    # print(f'solver saved to: {Path(args.log_dir) / "solver.pkl"}')
+    finally:
+        monitor_process.terminate()
+
 
 
 if __name__ == '__main__':

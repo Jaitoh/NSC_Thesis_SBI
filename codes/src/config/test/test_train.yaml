@@ -22,7 +22,7 @@ train:
       output_size: 20
 
   training:
-    num_rounds            : 1
+    num_rounds            : 2
     num_runs              : 50
 
     num_atoms             : 10
