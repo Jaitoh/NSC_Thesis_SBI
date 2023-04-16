@@ -370,8 +370,13 @@ class Solver:
 
                         if task_name == 'train':
                             
-                            density_estimator = future.result()
-                            
+                            # density_estimator = future.result()
+                            try:
+                                density_estimator = future.result()
+                            except Exception as e:
+                                # Handle the exception here
+                                print(f'Error in {task_name}: {e}')
+                                
                             # save best model for each round and run
                             best_model_state_dict = self.inference._best_model_state_dict
                             torch.save(best_model_state_dict, f"{self.log_dir}/model/best_model_round{current_round}_run{run}.pt")
@@ -395,13 +400,14 @@ class Solver:
                                             val_set_size    = self.config['train']['posterior']['val_set_size'],
                                             post_val_set    = self.post_val_set,
                                         )
-                                    
-                                self.inference.append_simulations_for_run(
-                                    theta = theta,
-                                    x = x,
-                                    current_round = current_round,    
-                                    data_device = 'cpu',
-                                )
+                                 
+                if run != training_config['num_runs']-1:   
+                    self.inference.append_simulations_for_run(
+                                        theta = theta,
+                                        x = x,
+                                        current_round = current_round,    
+                                        data_device = 'cpu',
+                                    )             
                             
                 if run == training_config['num_runs']-1: # last run
                     

@@ -47,6 +47,7 @@ from utils.train import (
     get_args, print_cuda_info, choose_cat_validation_set, 
     plot_posterior_seen, plot_posterior_unseen
 )
+
 from memory_profiler import profile
 
 @profile
@@ -159,68 +160,7 @@ class Solver:
 
         return neural_posterior
 
-    def posterior_analysis(self, posterior, current_round, run):
-        # posterior analysis
-        print(f"\n--- posterior sampling ---")
-        for fig_idx in tqdm(range(len(self.post_val_set['x']))):
-            
-            fig_x, _ = plot_posterior_seen(
-                posterior       = posterior, 
-                sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x'][fig_idx].to(self.device),
-                true_params     = self.post_val_set['theta'][fig_idx],
-                limits          = self._get_limits(),
-                prior_labels    = self.config['prior']['prior_labels'],
-            )
-            plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
-            plt.close(fig_x)
-            fig_x_shuffle, _ = plot_posterior_seen(
-                posterior       = posterior, 
-                sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
-                true_params     = self.post_val_set['theta'][fig_idx],
-                limits          = self._get_limits(),
-                prior_labels    = self.config['prior']['prior_labels'],
-            )
-            plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
-        
-        # save posterior for each round and run using pickle
-        with open(f"{self.log_dir}/posterior/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
-            pickle.dump(posterior, f)
-            
-        # check posterior for x_o
-        fig, _ = plot_posterior_unseen(
-            posterior       = posterior, 
-            sample_num      = self.config['train']['posterior']['sampling_num'],
-            x               = self.x_o.to(self.device),
-            limits          = self._get_limits(),
-            prior_labels    = self.config['prior']['prior_labels'],
-        )
-        plt.savefig(f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png")
 
-    def get_my_dataloader_kwargs(self, Rchoice_method):
-        
-        if Rchoice_method == 'probR':
-            my_dataloader_kwargs = {
-                # 'num_workers': training_config['num_workers'],
-                'worker_init_fn':  seed_worker,
-                # 'generator':   self.g,
-                'collate_fn':  lambda batch: collate_fn_probR(
-                                                batch,
-                                                Rchoice_method=Rchoice_method,
-                                                num_probR_sample=self.config['dataset']['num_probR_sample'],
-                                            ),
-            }
-        else:
-            my_dataloader_kwargs = {
-                # 'num_workers': training_config['num_workers'],
-                'worker_init_fn':  seed_worker,
-                # 'generator':   self.g,
-            }
-            
-            
-        return my_dataloader_kwargs
-    
     def sbi_train(self):
         """
         train the sbi model
@@ -280,7 +220,24 @@ class Solver:
 
         # dataloader kwargs
         Rchoice_method = self.config['dataset']['Rchoice_method']
-        my_dataloader_kwargs = self.get_my_dataloader_kwargs(Rchoice_method)
+        
+        if Rchoice_method == 'probR':
+            my_dataloader_kwargs = {
+                # 'num_workers': training_config['num_workers'],
+                'worker_init_fn':  seed_worker,
+                # 'generator':   self.g,
+                'collate_fn':  lambda batch: collate_fn_probR(
+                                                batch,
+                                                Rchoice_method=Rchoice_method,
+                                                num_probR_sample=self.config['dataset']['num_probR_sample'],
+                                            ),
+            }
+        else:
+            my_dataloader_kwargs = {
+                # 'num_workers': training_config['num_workers'],
+                'worker_init_fn':  seed_worker,
+                # 'generator':   self.g,
+            }
             
         if self.gpu:
             my_dataloader_kwargs['pin_memory'] = True
@@ -300,27 +257,27 @@ class Solver:
                 config          = self.config,
             )
             
-            # choose and update the validation set
-            if len(self.post_val_set['x']) <= 5:
-                self.post_val_set = choose_cat_validation_set(
-                    x               = x, 
-                    theta           = theta, 
-                    val_set_size    = self.config['train']['posterior']['val_set_size'],
-                    post_val_set    = self.post_val_set,
-                )
+            # # choose and update the validation set
+            # if len(self.post_val_set['x']) <= 5:
+            #     self.post_val_set = choose_cat_validation_set(
+            #         x               = x, 
+            #         theta           = theta, 
+            #         val_set_size    = self.config['train']['posterior']['val_set_size'],
+            #         post_val_set    = self.post_val_set,
+            #     )
             
-            # append simulated data to "current round" dataset
-            self.inference.append_simulations(
-                theta         = theta,
-                x             = x,
-                proposal      = proposal,
-                data_device   = 'cpu',
-            )
+            # # append simulated data to "current round" dataset
+            # self.inference.append_simulations(
+            #     theta         = theta,
+            #     x             = x,
+            #     proposal      = proposal,
+            #     data_device   = 'cpu',
+            # )
             
             # train for multiple runs
             for run in range(training_config['num_runs']):
 
-                print(f"\n======\nstart of training round {current_round} run {run}/{training_config['num_runs']-1}\n======")
+                print(f"\n======\nstart of round {current_round} run {run}/{training_config['num_runs']-1}\n======")
 
                 # print(f"---\nstart training")
                 start_time = time.time()
@@ -333,75 +290,6 @@ class Solver:
                     
                     print(f'x and theta saved to {self.log_dir}/training_dataset')
                 
-                # run training with current run updated dataset
-                density_estimator = self.inference.train(
-                    # num_atoms               = training_config['num_atoms'],
-                    training_batch_size     = training_config['training_batch_size'],
-                    learning_rate           = eval(training_config['learning_rate']),
-                    validation_fraction     = training_config['validation_fraction'],
-                    stop_after_epochs       = training_config['stop_after_epochs'],
-                    # max_num_epochs          = training_config['max_num_epochs'],
-                    clip_max_norm           = training_config['clip_max_norm'],
-                    calibration_kernel      = None,
-                    resume_training         = (run!=0) or (current_round!=0), # resume training if not the first run
-                    force_first_round_loss  = True if current_round==0 else False,
-                    discard_prior_samples   = False,
-                    use_combined_loss       = True,
-                    retrain_from_scratch    = False,
-                    show_train_summary      = True,
-                    seed                    = self.args.seed,
-                    dataloader_kwargs       = my_dataloader_kwargs,
-                )  # density estimator
-
-                # save best model for each round and run
-                best_model_state_dict = self.inference._best_model_state_dict
-                torch.save(best_model_state_dict, f"{self.log_dir}/model/best_model_round{current_round}_run{run}.pt")
-                
-                print(f'finished training of === round {current_round} run {run} === in {(time.time()-start_time)/60:.2f} min\n\n')
-                
-                
-                # posterior analysis TODO move to a separate function
-                posterior = self.inference.build_posterior(density_estimator)
-                self.posterior.append(posterior)
-                self.posterior_analysis(posterior, current_round, run)
-                # print(f"\n--- posterior sampling ---")
-                # for fig_idx in tqdm(range(len(self.post_val_set['x']))):
-                    
-                #     fig_x, _ = plot_posterior_seen(
-                #         posterior       = posterior, 
-                #         sample_num      = self.config['train']['posterior']['sampling_num'],
-                #         x               = self.post_val_set['x'][fig_idx].to(self.device),
-                #         true_params     = self.post_val_set['theta'][fig_idx],
-                #         limits          = self._get_limits(),
-                #         prior_labels    = self.config['prior']['prior_labels'],
-                #     )
-                #     plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
-                #     plt.close(fig_x)
-                #     fig_x_shuffle, _ = plot_posterior_seen(
-                #         posterior       = posterior, 
-                #         sample_num      = self.config['train']['posterior']['sampling_num'],
-                #         x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
-                #         true_params     = self.post_val_set['theta'][fig_idx],
-                #         limits          = self._get_limits(),
-                #         prior_labels    = self.config['prior']['prior_labels'],
-                #     )
-                #     plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
-                
-                # # save posterior for each round and run using pickle
-                # with open(f"{self.log_dir}/posterior/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
-                #     pickle.dump(posterior, f)
-                    
-                # # check posterior for x_o
-                # fig, _ = plot_posterior_unseen(
-                #     posterior       = posterior, 
-                #     sample_num      = self.config['train']['posterior']['sampling_num'],
-                #     x               = self.x_o.to(self.device),
-                #     limits          = self._get_limits(),
-                #     prior_labels    = self.config['prior']['prior_labels'],
-                # )
-                # plt.savefig(f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png")
-                
-                
                 # if not the last run
                 # run simulation during training 
                 # append to existing dataset after training TODO check if the dataset size increases
@@ -412,35 +300,7 @@ class Solver:
                         config          = self.config,
                     )
                     
-                    # choose and update the validation set
-                    if len(self.post_val_set['x']) <= 5:
-                        self.post_val_set = choose_cat_validation_set(
-                            x               = x, 
-                            theta           = theta, 
-                            val_set_size    = self.config['train']['posterior']['val_set_size'],
-                            post_val_set    = self.post_val_set,
-                        )
-                    
-                    self.inference.append_simulations_for_run(
-                        theta = theta,
-                        x = x,
-                        current_round = current_round,    
-                        data_device = 'cpu',
-                    )
-                
-                else:
-                    
-                    print(f"---\nfinished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
-                    proposal = posterior.set_default_x(x_o)
-                
-        # save post_val_set for after all runs
-        with open(f"{self.log_dir}/posterior/post_val_set.pkl", 'wb') as f:
-            pickle.dump(self.post_val_set, f)
-
-                            
-        print(f"finished training of {training_config['num_rounds']} rounds each of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
-
-
+        
     def save_model(self):
 
         print('---\nsaving model...')
@@ -485,7 +345,7 @@ def main():
 
     solver = Solver(args, config)
     solver.sbi_train()
-    solver.save_model()
+    # solver.save_model()
     
     # # save the solver
     # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:
