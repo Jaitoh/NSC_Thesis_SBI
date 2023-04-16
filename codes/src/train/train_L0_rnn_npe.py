@@ -309,7 +309,7 @@ class Solver:
                     print(f'x and theta saved to {self.log_dir}/training_dataset')
                 
                 # run training with current run updated dataset
-                density_estimator = self.inference.train(
+                self.inference, density_estimator = self.inference.train(
                     # num_atoms               = training_config['num_atoms'],
                     training_batch_size     = training_config['training_batch_size'],
                     learning_rate           = eval(training_config['learning_rate']),
@@ -407,6 +407,7 @@ class Solver:
 def main():
     args = get_args()
     PID = os.getpid()
+    print(f"PID: {PID}")
     log_file = f"{args.log_dir}/resource_usage.log"
     monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
     monitor_process.start()

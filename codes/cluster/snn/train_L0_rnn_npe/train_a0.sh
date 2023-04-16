@@ -8,30 +8,41 @@
 
 #SBATCH --mem 24G
 #SBATCH --cpus-per-task=16
+#SBATCH --gres=gpu:V100:1
 
 #SBATCH --job-name=train_L0_rnn_npe_data
-#SBATCH --output=./cluster/uzh/train_L0_rnn_npe_data/train_logs/a0.out
-#SBATCH --error=./cluster/uzh/train_L0_rnn_npe_data/train_logs/a0.err
+# SBATCH --output=./cluster/uzh/train_L0_rnn_npe_data/train_logs/a0.out
+# SBATCH --error=./cluster/uzh/train_L0_rnn_npe_data/train_logs/a0.err
 
-
-RUN_ID=a0
-TRAIN_FILE_NAME=train_L0_rnn_npe_data
 
 CLUSTER=snn
+TRAIN_FILE_NAME=train_L0_rnn_npe
+RUN_ID=a0
+
 CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
 CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
 
-LOG_DIR=./src/train/logs/$TRAIN_FILE_NAME/$RUN_ID
-# LOG_DIR=/home/wehe/scratch/train/logs/$TRAIN_FILE_NAME/$RUN_ID
-PRINT_LOG=./cluster/$CLUSTER/$TRAIN_FILE_NAME/train_logs/$RUN_ID.log
+if [ "$CLUSTER" == "uzh" ]; then
+    LOG_DIR=/home/wehe/scratch/train/logs/$TRAIN_FILE_NAME/$RUN_ID
+else
+    LOG_DIR=./src/train/logs/$TRAIN_FILE_NAME/$RUN_ID
+fi
 
-# module load anaconda3
-# source activate sbi
-# # module load t4
+PRINT_LOG=./cluster/$CLUSTER/$TRAIN_FILE_NAME/output_logs/$RUN_ID.log
+
+if [ "$CLUSTER" == "uzh" ]; then
+    module load anaconda3
+    source activate sbi
+fi
+# module load t4
 # module load gpu
 # module load cuda
-echo $LOG_DIR
+
+echo "file name: $TRAIN_FILE_NAME"
+echo "log_dir: $LOG_DIR"
+echo "print_log: $PRINT_LOG"
+
 
 python3 -u ./src/train/$TRAIN_FILE_NAME.py \
 --seed 100 \
@@ -40,7 +51,7 @@ python3 -u ./src/train/$TRAIN_FILE_NAME.py \
 --config_train_path $CONFIG_TRAIN_PATH \
 --log_dir $LOG_DIR \
 --gpu \
--y > $PRINT_LOG
+-y &> $PRINT_LOG
 
 echo 'finished simulation'
 

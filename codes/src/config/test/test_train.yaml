@@ -30,7 +30,7 @@ train:
     training_batch_size   : 200
     learning_rate         : 5e-4
     validation_fraction   : 0.2
-    stop_after_epochs     : 3
+    stop_after_epochs     : 20
     max_num_epochs        : 2147483647
     clip_max_norm         : 5.0
     

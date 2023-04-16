@@ -1,5 +1,5 @@
 dataset:
-  save_train_data: True
+  save_train_data: False
   # save_name: 'test_train_data'
 
 # ========== parameter settings for the seqC ==========

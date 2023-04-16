@@ -421,6 +421,7 @@ class Solver:
 def main():
     args = get_args()
     PID = os.getpid()
+    print(f"PID: {PID}")
     log_file = f"{args.log_dir}/resource_usage.log"
     monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
     monitor_process.start()

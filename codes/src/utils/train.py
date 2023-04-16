@@ -6,41 +6,6 @@ import shutil
 from pathlib import Path
 
 import os
-import psutil
-import GPUtil
-import time
-
-def monitor_resources(interval):
-    while True:
-        print("\nResource usage:")
-        show_resource_usage()
-        time.sleep(interval)
-        
-def show_resource_usage():
-    process = psutil.Process(os.getpid())
-    
-    # CPU usage
-    cpu_percent = process.cpu_percent()
-    print(f"CPU usage: {cpu_percent}%")
-    
-    # Memory usage
-    mem_info = process.memory_info()
-    rss = mem_info.rss / (1024 ** 2)  # Resident set size (portion of the process's memory held in RAM) in GB
-    print(f"Memory usage: {rss / 1024:.2f} GB")
-    
-    # GPU usage
-    gpus = GPUtil.getGPUs()
-    print(torch.cuda.get_device_name(0))
-    if gpus:
-        for gpu in gpus:
-            gpu_percent = gpu.load * 100
-            gpu_memory_used = gpu.memoryUsed
-            gpu_memory_total = gpu.memoryTotal
-            print(f"GPU ID: {gpu.id}, GPU usage: {gpu_percent:.2f}%, GPU memory used: {gpu_memory_used:.2f}/{gpu_memory_total:.2f} MB")
-    else:
-        print("No GPU detected")
-
-
 
 def train_inference_helper(inference, **kwargs):
     return inference.train(**kwargs)
@@ -48,9 +13,8 @@ def train_inference_helper(inference, **kwargs):
 
 def remove_files_except_training_dataset(path):
     for root, dirs, files in os.walk(path):
-        
         for name in files:
-            if not (name.startswith('training_dataset') and name.startswith('x') and name.startswith('theta')):
+            if not (name.startswith('training_dataset') or name.startswith('x') or name.startswith('theta')):
                 file_path = os.path.join(root, name)
                 os.remove(file_path)
                 
@@ -62,17 +26,25 @@ def check_path(log_dir, data_dir, args):
     print(f'\n--- dir settings ---\nlog dir: {str(log_dir)}')
     print(f'data dir: {str(data_dir)}')
 
+    model_dir = log_dir / 'model'
+    training_dataset_dir = log_dir / 'training_dataset'
+    posterior_dir = log_dir / 'posterior'
     # check log path: if not exists, create; if exists, remove or a fatal error
     if not log_dir.exists():
         os.makedirs(str(log_dir))
         os.makedirs(f'{str(log_dir)}/model/')
         os.makedirs(f'{str(log_dir)}/training_dataset/')
         os.makedirs(f'{str(log_dir)}/posterior/')
-        
 
     elif log_dir.exists() and not args.eval:
         if args.overwrite:
             remove_files_except_training_dataset(log_dir)
+            if not model_dir.exists():
+                os.makedirs(str(model_dir))
+            if not training_dataset_dir.exists():
+                os.makedirs(str(training_dataset_dir))
+            if not posterior_dir.exists():
+                os.makedirs(str(posterior_dir))
             
         else:
             assert False, f'Run dir {str(log_dir)} already exists.'
