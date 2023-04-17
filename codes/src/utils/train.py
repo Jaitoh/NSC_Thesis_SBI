@@ -149,6 +149,7 @@ def get_args():
     # parser.add_argument('--finetune', type=str, default=None, help='Load model from this job for finetuning.')
     parser.add_argument('--eval', action='store_true', help='Evaluation mode.')
     parser.add_argument('-y', '--overwrite', action='store_true', help='Overwrite log dir.')
+    parser.add_argument('--run', type=int, default=0, help='run of Round0')
     args = parser.parse_args()
 
     return args

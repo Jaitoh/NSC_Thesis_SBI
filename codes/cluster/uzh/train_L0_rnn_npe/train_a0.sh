@@ -6,18 +6,18 @@
 #SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
 
-#SBATCH --mem 24G
+#SBATCH --mem 100G
 #SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:V100:1
-
-#SBATCH --job-name=train_L0_rnn_npe_data
-# SBATCH --output=./cluster/uzh/train_L0_rnn_npe_data/train_logs/a0.out
-# SBATCH --error=./cluster/uzh/train_L0_rnn_npe_data/train_logs/a0.err
-
+# SBATCH --gres=gpu:V100:1
 
 CLUSTER=uzh
 TRAIN_FILE_NAME=train_L0_rnn_npe
 RUN_ID=a0
+
+#SBATCH --job-name=$TRAIN_FILE_NAME
+#SBATCH --output=./cluster/uzh/$TRAIN_FILE_NAME/train_logs/$RUN_ID.out
+#SBATCH --error=./cluster/uzh/$TRAIN_FILE_NAME/train_logs/$RUN_ID.err
+
 
 CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml

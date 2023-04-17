@@ -19,7 +19,7 @@ def show_resource_usage(PID):
     # GPU usage
     gpu_messages = []
     gpus = GPUtil.getGPUs()
-    if gpus:
+    if torch.cuda.is_available():
         for gpu in gpus:
             gpu_percent = gpu.load * 100
             gpu_memory_used = gpu.memoryUsed
