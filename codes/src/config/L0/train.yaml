@@ -1,0 +1,35 @@
+train:
+  inference:
+    method: 'snpe'
+
+  # density_estimator:
+  #   posterior_nn:
+  #     model: maf
+  #     # model_parameters:
+  #     hidden_features: 64
+  #     # num_components: 5
+  #     num_transforms: 2
+  #   embedding_net: 
+  #     type: lstm
+  #     hidden_size: 64
+  #     output_size: 20
+
+  training:
+    num_rounds            : 3
+    num_runs              : 10
+
+    num_atoms             : 10
+    
+    training_batch_size   : 200
+    learning_rate         : 5e-4
+    validation_fraction   : 0.2
+    stop_after_epochs     : 10
+    max_num_epochs        : 2147483647
+    clip_max_norm         : 5.0
+    
+    # for dataloader:
+    # num_workers           : 4
+  
+  posterior:
+    sampling_num: 10000
+    val_set_size: 1
