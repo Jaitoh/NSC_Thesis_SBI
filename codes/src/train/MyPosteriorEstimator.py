@@ -58,7 +58,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         neural_net = self._neural_net
 
         # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob >= self._best_val_log_prob:
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob:
             self._best_val_log_prob = self._val_log_prob
             self._epochs_since_last_improvement = 0
             self._best_model_state_dict = deepcopy(neural_net.state_dict())
@@ -68,10 +68,12 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         # If no validation improvement over many epochs, stop training.
         if self._epochs_since_last_improvement > stop_after_epochs - 1:
-            neural_net.load_state_dict(self._best_model_state_dict)
+            # neural_net.load_state_dict(self._best_model_state_dict)
             converged = True
             self._neural_net.load_state_dict(self._best_model_state_dict)
             self._val_log_prob = self._best_val_log_prob
+            
+            self._epochs_since_last_improvement = 0
             
         return converged
     

@@ -1,6 +1,6 @@
 """
-using cnn to parse input sequence of shape x(batch_size, D,M,S,T,C, L_x) theta(D,M,S,T,C, L_theta)
-and output the probability of each base
+- dataset: online generation 
+- training: multi-round
 """
 import itertools
 import pickle
@@ -266,7 +266,7 @@ class Solver:
         }
         
         # start training
-        for current_round in range(self.config['train']['training']['num_rounds']):
+        for current_round in [0,]:
             
             # get simulated data
             x, theta = simulate_for_sbi(
@@ -406,11 +406,14 @@ class Solver:
 
 def main():
     args = get_args()
+    
+    # monitor resources usage
     PID = os.getpid()
     print(f"PID: {PID}")
     log_file = f"{args.log_dir}/resource_usage.log"
     monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
     monitor_process.start()
+    
     try:
             
         config = load_config(

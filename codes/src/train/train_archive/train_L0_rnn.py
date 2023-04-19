@@ -32,13 +32,13 @@ sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
-from codes.src.dataset.dataset import training_dataset
-from codes.src.simulator.seqC_generator import seqC_generator
-from codes.src.dataset.simulate_for_sbi import simulate_for_sbi
-from codes.src.utils.get_xo import get_xo
+from dataset.dataset import training_dataset
+from simulator.seqC_generator import seqC_generator
+from dataset.simulate_for_sbi import simulate_for_sbi
+from utils.get_xo import get_xo
 from utils.set_seed import setup_seed
 from neural_nets.embedding_nets import LSTM_Embedding
-from codes.src.simulator.model_sim_pR import get_boxUni_prior
+from simulator.model_sim_pR import get_boxUni_prior
 
 def get_args():
     """
@@ -285,18 +285,24 @@ class Solver:
         
         for run in range(training_config['num_runs']):
             
-            print(f"======\nstart of run {run+1}/{training_config['num_runs']}\n======")
+            print(f"======\nstart of round {run+1}/{training_config['num_runs']}\n======")
             
             x, theta = simulate_for_sbi(
                 proposal        = proposal,
                 config          = self.config,
-                run             = run,
-                save_sim_data   = self.config['simulator']['save_sim_data'],
-                save_train_data = self.config['dataset']['save_train_data'],
+                # run             = run,
+                # save_sim_data   = self.config['simulator']['save_sim_data'],
+                # save_train_data = self.config['dataset']['save_train_data'],
             )
             
             theta = torch.tensor(theta, dtype=torch.float32, device=self.device) # avoid float64 error
             x     = torch.tensor(x,     dtype=torch.float32, device=self.device)
+            
+            if run == 0:
+                # random choose one of the x as validation data
+                rand_idx = torch.randperm(x.shape[0])[0]
+                x_valid = x[rand_idx]
+                theta_valid = theta[rand_idx]
             
             print(f"---\nstart training")
             start_time = time.time()
@@ -313,12 +319,12 @@ class Solver:
                 max_num_epochs          = training_config['max_num_epochs'],
                 clip_max_norm           = training_config['clip_max_norm'],
                 calibration_kernel      = None,
-                resume_training         = training_config['resume_training'],
-                force_first_round_loss  = training_config['force_first_round_loss'],
-                discard_prior_samples   = training_config['discard_prior_samples'],
-                use_combined_loss       = training_config['use_combined_loss'],
-                retrain_from_scratch    = training_config['retrain_from_scratch'],
-                show_train_summary      = training_config['show_train_summary'],
+                resume_training         = False,
+                force_first_round_loss  = False,
+                discard_prior_samples   = False,
+                use_combined_loss       = False,
+                retrain_from_scratch    = False,
+                show_train_summary      = True,
                 # dataloader_kwargs = {'shuffle': True,
                 #                      'num_workers': 16,
                 #                      'worker_init_fn':  seed_worker,
@@ -331,7 +337,7 @@ class Solver:
             self.density_estimator.append(density_estimator)
             
             posterior = self.inference.build_posterior(density_estimator)
-            self.check_posterior(posterior, run)
+            self.check_posterior(posterior, run, x_valid, theta_valid)
             self.posterior.append(posterior)
             
             proposal = posterior.set_default_x(x_o)
@@ -360,13 +366,32 @@ class Solver:
         print('density_estimator saved to: ',   density_estimator_dir)
         print('posterior saved to: ',           posterior_dir)
 
-    def check_posterior(self, posterior, run):
+    def check_posterior(self, posterior, run, x_valid, theta_valid):
         
         sampling_num = self.config['train']['posterior']['sampling_num']
         
         # for run in range(self.config['train']['training']['num_runs']):
             
-        print(f'---\nchecking posterior of run {run}')
+        print(f'---\nchecking posterior of round {run}')
+        
+        samples = posterior.sample((sampling_num,), x=x_valid)
+        
+        fig, axes = analysis.pairplot(
+            samples.cpu().numpy(),
+            limits=self._get_limits(),
+            # ticks=[[], []],
+            figsize=(10, 10),
+            points=theta_valid.cpu().numpy(),
+            points_offdiag={'markersize': 5, 'markeredgewidth': 1},
+            points_colors='r',
+            labels=self.config['prior']['prior_labels'],
+            upper=["kde"],
+            diag=["kde"],
+        )
+        
+        save_path = self.log_dir / f'x_seen_posterior_run{run}.png'
+        fig.savefig(save_path)
+        print(f'x_o_posterior_run{run} saved to: {save_path}')
         
         start_time = time.time()
         samples = posterior.sample((sampling_num,), x=self.x_o)

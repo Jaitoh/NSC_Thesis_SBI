@@ -1,18 +1,18 @@
 x_o:
   trial_data_path: '../data/trials.mat'
   subject_id: 2
-  # chosen_dur_list: [3, 5, 7, 9, 11, 13, 15] # [3, 7, 11, 15] # [3, 5, 7, 9, 11, 13, 15]
-  # chosen_MS_list:  [0.2, 0.4, 0.8] # [0.4, 0.8] # [0.2, 0.4, 0.8]
-  chosen_dur_list: [3, 9, 15] # [3, 7, 11, 15] # [3, 5, 7, 9, 11, 13, 15]
-  chosen_MS_list:  [0.4, 0.8] # [0.4, 0.8] # [0.2, 0.4, 0.8]
+  chosen_dur_list: [9] # [3, 7, 11, 15] # [3, 5, 7, 9, 11, 13, 15]
+  chosen_MS_list:  [0.2, 0.4, 0.8] # [0.4, 0.8] # [0.2, 0.4, 0.8]
+  # chosen_dur_list: [3, 9, 15] # [3, 7, 11, 15] # [3, 5, 7, 9, 11, 13, 15]
+  # chosen_MS_list:  [0.4, 0.8] # [0.4, 0.8] # [0.2, 0.4, 0.8]
   seqC_sample_per_MS: 700 # should be fixed as 700 for subject 2-10
 
 data_dir: '../data/datasets/'
 
 simulator:
   model_name: 'B-G-L0S-O-N-'
-  # save_sim_data: True
-  # save_name: 'sim_data_seqC0_prior0_model0'
+  save_sim_data: False
+  save_name: 'sim_data_seqC0_prior0_model0'
 
 prior: # theta / params
   prior_min: [-2.5,   0,  0,  -11]

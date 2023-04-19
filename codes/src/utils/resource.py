@@ -27,7 +27,7 @@ def show_resource_usage(PID):
             gpu_message = f"| GPU{gpu.id}, {gpu_percent:.2f}% - {gpu_memory_used:.2f}/{gpu_memory_total:.2f} MB "
             gpu_messages.append(gpu_message)
     else:
-        gpu_messages.append("No GPU detected")
+        gpu_messages.append("| No GPU detected")
     
     return cpu_message, mem_message, gpu_messages
 

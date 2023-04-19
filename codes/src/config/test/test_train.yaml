@@ -22,15 +22,15 @@ train:
       output_size: 20
 
   training:
-    num_rounds            : 2
-    num_runs              : 50
+    num_rounds            : 3
+    num_runs              : 10
 
     num_atoms             : 10
     
     training_batch_size   : 200
     learning_rate         : 5e-4
     validation_fraction   : 0.2
-    stop_after_epochs     : 20
+    stop_after_epochs     : 10
     max_num_epochs        : 2147483647
     clip_max_norm         : 5.0
     

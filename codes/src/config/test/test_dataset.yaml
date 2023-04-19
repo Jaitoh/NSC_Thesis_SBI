@@ -1,6 +1,6 @@
 dataset:
   save_train_data: False
-  # save_name: 'test_train_data'
+  save_name: 'test_train_data'
 
 # ========== parameter settings for the seqC ==========
   # subset_theta: 1
@@ -14,7 +14,7 @@ dataset:
 # ========== parameter settings for the probR ==========
   #Rchoice_method: 'probR' # -> in this case, the probR will be expanded in the collate_fn
   Rchoice_method: 'probR_sampling'
-  num_probR_sample: 100
+  num_probR_sample: 10 # 100
   # Rchoice_method: 'probR_threshold'
   # R_threshold: 0.5
 
