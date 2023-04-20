@@ -16,3 +16,7 @@
 ./gdrive files move 1BqVrU_bbD29346t3ttfaCmbIsQutYSH5 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 141LcJ5Sj-IkvYvaxvVrtbW0vRZ0-kwMD 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 1jVfHONCf_TQN552A9BOq5UkMThA_9Xmh 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+
+# upload L0_exp_set_0 simulated dataset 
+./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_0.h5" # 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om
+./gdrive files move 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U

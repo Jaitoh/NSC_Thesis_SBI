@@ -82,6 +82,8 @@ def simulate_and_save(data_path, config, seed):
     store_info(data_path, dur_list, MS_list, seqC_sample_per_MS, model_name, num_prior_sample, prior_min, prior_max, prior_labels)
     store_data(data_path, seqC, theta, probR)
     print(f'Results written to the file {data_path}')
+    print(f'file size {os.path.getsize(data_path)} bytes')
+    print(f'{os.path.getsize(data_path)/1024} MB')
 
 
 def main():

@@ -3,12 +3,12 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 
-#SBATCH --array=0-100
+#SBATCH --array=2-100
 
 #SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
 
-#SBATCH --mem 16G
+#SBATCH --mem 22G
 #SBATCH --cpus-per-task=18
 
 #SBATCH --job-name=dataset
@@ -36,14 +36,14 @@ PRINT_DIR="./cluster/${CLUSTER}/dataset/"
 PRINT_LOG="./cluster/${CLUSTER}/dataset/${RUN_ID}_${SLURM_ARRAY_TASK_ID}.log"
 SEED=$((100 + SLURM_ARRAY_TASK_ID))
 
-# module load anaconda3
-# source activate sbi
+module load anaconda3
+source activate sbi
 
 echo "print_log: ${PRINT_LOG}"
 echo "SEED: ${SEED}"
 
-mkdir -p $DATA_DIR
-mkdir -p $PRINT_DIR
+# mkdir -p $DATA_DIR
+# mkdir -p $PRINT_DIR
 
 python3 -u ./src/dataset/simulate_and_save.py \
 --seed ${SEED} \
@@ -68,3 +68,5 @@ echo 'finished simulation'
 # SBATCH --gres=gpu:T4:1
 # SBATCH --gres=gpu:V100:1
 # SBATCH --gres=gpu:A100:1
+# 0: 22G
+# 1: 32G
