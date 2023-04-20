@@ -87,7 +87,8 @@ def one_DM_simulation(seqC, params, model_name, i, j, k, l):
     model = DM_model(params=params, model_name=model_name)
     _, probR = model.simulate(np.array(seqC))
 
-    return seqC, params, probR, i, j, k, l
+    # return seqC, params, probR, i, j, k, l
+    return probR, i, j, k, l
 
 
 def DM_sim_for_seqCs_parallel(
@@ -134,17 +135,6 @@ def DM_sim_for_seqCs_parallel(
     if num_workers > available_workers:
         num_workers = available_workers
 
-    # run the simulations in parallel
-    # for i in range(seqCs.shape[0]):
-    #     for j in range(seqCs.shape[1]):
-    #         for k in range(seqCs.shape[2]):
-    #             for l in range(params.shape[0]):
-    #                 seqC = seqCs[i, j, k, :]
-    #                 param = params[l, :]
-    #                 seqC_, param_, probR_ = one_DM_simulation(seqC, param, model_name)
-    #                 theta[i, j, k, l, :] = param_
-    #                 probR[i, j, k, l, 0] = probR_
-    
     results = Parallel(n_jobs=num_workers, verbose=1)(delayed(one_DM_simulation)(seqCs[i, j, k, :], params[l,:], model_name, i, j, k, l) \
         for i in range(seqCs.shape[0]) \
         for j in range(seqCs.shape[1]) \
@@ -177,6 +167,62 @@ def DM_sim_for_seqCs_parallel(
         print(f'Computed results written to the file {save_data_path}\n')
     
     return seqC, theta, probR
+
+
+def DM_sim_for_seqCs_parallel_with_smaller_output(
+        seqCs,
+        prior,
+        num_prior_sample,
+        model_name='B-G-L0S-O-N-',
+        num_workers=16,
+        save_data_path=None,
+        privided_prior=False,
+):
+    """sample params from prior and simulate probR with DM model with multiple seqCs inputs
+    
+    Args:   
+        seqCs:              input sequences of shape [dur_len, MS_len, sample_size, 15] e.g. [7, 3, 700, 15]
+        prior:              prior distribution
+        num_prior_sample:   number of prior samples
+        model_name:         model name
+        num_workers:        number of workers for parallel processing (default: -1)
+        save_data_path:     path to save data (default: None)
+        privided_prior:     whether the prior parameters are privided (default: False)
+        
+    Return:
+        seqC:               input sequences of shape [dur_len, MS_len, sample_size, num_prior_sample, 15] e.g. [7, 3, 700, 500, 15]
+        theta:              parameters of shape [dur_len, MS_len, sample_size, num_prior_sample, num_params(4)]
+        probR:              probability of reward of shape [dur_len, MS_len, sample_size, num_prior_sample, 1]
+    
+    """
+    
+    print(f'\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}')
+    
+    params =  prior if privided_prior else prior.sample((num_prior_sample,)).cpu().numpy()
+    
+    probR = np.empty((*seqCs.shape[:-1], params.shape[0], 1)) # [dur_len, MS_len, sample_size, num_prior_sample, 1]
+    print(f'total number of simulations {np.product(probR.shape)} with {num_workers} workers ...\n')
+
+    # limit the number of workers to the number of available cores
+    tic = time.time()
+    num_workers = min(num_workers, os.cpu_count())
+
+    results = Parallel(n_jobs=num_workers, verbose=1)(delayed(one_DM_simulation)(seqCs[i, j, k, :], params[l,:], model_name, i, j, k, l) \
+        for i in range(seqCs.shape[0]) \
+        for j in range(seqCs.shape[1]) \
+        for k in range(seqCs.shape[2]) \
+        for l in range(params.shape[0]))
+    print(f'time elapsed for simulation: {(time.time() - tic)/60:.2f} minutes')
+
+    # store the results
+    print('stacking the results')
+    for probR_, i, j, k, l in results:
+        probR[i, j, k, l, 0] = probR_
+    print('done stacking the results')
+
+    print(f'\nseqC.shape: {seqCs.shape}, params.shape: {params.shape}, probR.shape: {probR.shape}')
+
+    return params, probR
 
 
 def seqC_gen_and_DM_simulate(

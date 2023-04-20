@@ -138,7 +138,7 @@ def get_args():
                         help="Path to config_train file")
     parser.add_argument('--config_train_path', type=str, default="./src/config/test/test_train.yaml",
                         help="Path to config_train file")
-    parser.add_argument('--data_dir', type=str, default="../data/datasets/",
+    parser.add_argument('--data_path', type=str, default="../data/datasets/dataset_part_0.h5",
                         help="simulated data store/load dir")
     parser.add_argument('--log_dir', type=str, default="./src/train/logs/log_test", help="training log dir")
     parser.add_argument('--gpu', action='store_true', help='Use GPU.')
