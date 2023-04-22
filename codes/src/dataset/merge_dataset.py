@@ -1,8 +1,16 @@
 import os
 import h5py
+import argparse
+
+parser = argparse.ArgumentParser(description='pipeline for sbi')
+parser.add_argument('--data_dir', type=str, default="'/home/wehe/scratch/data/dataset",
+                    help="simulated data store/load dir")
+args = parser.parse_args()
 
 # list the files in the data directory using python
-data_dir = '../../data/dataset'
+# data_dir = '../../data/dataset'
+# data_dir = '/home/wehe/scratch/data/dataset'
+data_dir = args.data_dir
 files = [f for f in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, f))]
 
 data_paths = []
