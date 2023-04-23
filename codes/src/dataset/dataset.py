@@ -140,6 +140,59 @@ class training_dataset:
         
         return x, theta
 
+    def x_seqC_data_process(self, seqC):
+        '''
+        pipeline for processing the seqC for training
+
+        Args:
+            seqC : ndarray, shape (D,M,S, 15)
+            theta: ndarray, shape (T, 4)
+            probR: ndarray, shape (D,M,S,T, 1)
+
+        1. do choice sampling for probR and process seqC, theta
+            x_seqC: ndarray, shape (D,M,S,T,C, 15)
+            theta_: ndarray, shape (D,M,S,T,C, 5)
+        2. then reshape and shuffle for training
+        
+        Returns:
+            x     (torch.tensor): shape (T*C, D*M*S, L_x)
+            theta (torch.tensor): shape (T*C, L_theta)
+        '''
+
+        print(f'\n--- processing for x, theta with ---\ninputs: seqC.shape {seqC.shape}, theta.shape {theta.shape}, probR.shape {probR.shape}')
+        # process seqC
+        seqC   = seqC[:,:,:,:, np.newaxis, :]
+        x_seqC = np.repeat(seqC, self.num_probR_sample, axis=4)
+        x_seqC = self._process_x_seqC_part(x_seqC)
+        #  x_seqC.shape = (D,M,S,T,C, 15)
+        
+        # process theta
+        theta  = theta[:,:,:,:, np.newaxis, :] 
+        theta_ = np.repeat(theta, self.num_probR_sample, axis=4)
+        # theta_ = self._process_theta(theta_)
+        #  theta_.shape = (D,M,S,T,C, 4)
+        
+        # process probR
+        x_ch = self._process_x_R_part(probR)
+
+        x = np.concatenate([x_seqC, x_ch], axis=-1)
+        #  x.shape = (D,M,S,T,C, 16)
+        
+        # print(f'x.shape = {x.shape}, theta.shape = {theta.shape}')
+        x, theta = reshape_shuffle_x_theta(x, theta_)
+        
+        if save_data_path != None:
+            # save dataset
+            f = h5py.File(save_data_path, 'w')
+            f.create_dataset('x', data=x)
+            f.create_dataset('theta', data=theta)
+            f.close()
+            print(f'training dataset saved to {save_data_path}')
+        # else:
+        #     print('you chose not to save the training data')
+        
+        return x, theta
+
     
 if __name__ == '__main__':
     # load and merge yaml files

@@ -38,7 +38,7 @@ from config.load_config import load_config
 from dataset.dataset import training_dataset
 from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
-from train.collate_fn import collate_fn_probR
+from codes.src.train.MyDataset import collate_fn_probR
 from train.MySNPE_C import MySNPE_C
 from neural_nets.embedding_nets import LSTM_Embedding
 from simulator.model_sim_pR import get_boxUni_prior

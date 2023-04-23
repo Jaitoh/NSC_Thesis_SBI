@@ -4,5 +4,5 @@ channels:
 dependencies:
   - jupyter
   - pyyaml
-
+  - memory_profiler
 prefix: /Users/admin/anaconda3/envs/sbi
