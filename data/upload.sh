@@ -19,4 +19,6 @@
 
 # upload L0_exp_set_0 simulated dataset 
 ./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_0.h5" # 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om
+./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_1.h5" # 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy
 ./gdrive files move 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
+./gdrive files move 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
