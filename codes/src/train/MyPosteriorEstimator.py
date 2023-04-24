@@ -430,6 +430,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             train_log_probs_sum = 0
             epoch_start_time = time.time()
             train_batch_num = 0
+            batch_timer = time.time()
             for batch in train_loader:
                 self.optimizer.zero_grad()
                 # Get batches on current device.
@@ -462,7 +463,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     )
                 self.optimizer.step()
                 if train_batch_num % 5 == 0:
-                    print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}')
+                    print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
+                    # batch_timer = time.time()
                 train_batch_num += 1
                 
             self.epoch += 1
