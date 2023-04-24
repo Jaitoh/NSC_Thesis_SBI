@@ -11,10 +11,11 @@ def train_inference_helper(inference, **kwargs):
     return inference.train(**kwargs)
 
 
-def remove_files_except_training_dataset(path):
+def remove_files_except_resource_log(path):
     for root, dirs, files in os.walk(path):
         for name in files:
-            if not (name.startswith('training_dataset') or name.startswith('x') or name.startswith('theta')):
+            # if not (name.startswith('training_dataset') or name.startswith('x') or name.startswith('theta') or name.startswith('resource_usage')):
+            if not name.startswith('resource_usage'):
                 file_path = os.path.join(root, name)
                 os.remove(file_path)
                 
@@ -39,13 +40,14 @@ def check_path(log_dir, data_path, args):
 
     elif log_dir.exists() and not args.eval:
         if args.overwrite:
-            remove_files_except_training_dataset(log_dir)
+            remove_files_except_resource_log(log_dir)
             if not model_dir.exists():
                 os.makedirs(str(model_dir))
             if not training_dataset_dir.exists():
                 os.makedirs(str(training_dataset_dir))
             if not posterior_dir.exists():
                 os.makedirs(str(posterior_dir))
+                os.makedirs(f'{str(log_dir)}/posterior/figures/')
             
         else:
             assert False, f'Run dir {str(log_dir)} already exists.'

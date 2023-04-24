@@ -20,9 +20,11 @@ train:
     num_atoms             : 10
     
     training_batch_size   : 50
-    learning_rate         : 5e-4
+    stop_after_epochs     : 25
+
     validation_fraction   : 0.2
-    stop_after_epochs     : 10
+    learning_rate         : 5e-4
+
     max_num_epochs        : 2147483647
     clip_max_norm         : 5.0
     
@@ -30,6 +32,6 @@ train:
     # num_workers           : 4
   
   posterior:
-    step        : 10 # the epoch steps to check posterior during training
+    step        : 5 # the epoch steps to check posterior during training
     sampling_num: 10000
     val_set_size: 1

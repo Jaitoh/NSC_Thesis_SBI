@@ -331,7 +331,7 @@ def main():  # sourcery skip: extract-method
     PID = os.getpid()
     print(f"PID: {PID}")
     log_file = f"{args.log_dir}/resource_usage.log"
-    monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 1, log_file))
+    monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
     monitor_process.start()
     
     try:

@@ -22,6 +22,7 @@ RUN_ID=a0
 CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
 CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
+# DATA_PATH=/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -50,6 +51,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --log_dir ${LOG_DIR} \
 --gpu \
 -y &> ${PRINT_LOG}
+# --data_path ${DATA_PATH}
 
 echo 'finished simulation'
 

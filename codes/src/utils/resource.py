@@ -20,9 +20,10 @@ def show_resource_usage(PID):
     gpu_messages = []
     gpus = GPUtil.getGPUs()
     if torch.cuda.is_available():
-        
-        gpu_message = f"| GPU {torch.cuda.get_device_name(0)}, {round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1)} GB "
-        gpu_messages.append(gpu_message)
+        num_gpus = torch.cuda.device_count()
+        for i in range(num_gpus):
+            gpu_message = f"| GPU {torch.cuda.get_device_name(i)}, {round(torch.cuda.memory_allocated(i) / 1024 ** 3, 1)} GB "
+            gpu_messages.append(gpu_message)
         
     else:
         gpu_messages.append("| No GPU detected")
@@ -30,8 +31,11 @@ def show_resource_usage(PID):
     return cpu_message, mem_message, gpu_messages
 
 def monitor_resources(PID, interval, log_file):
+    
     start_time = time.time()
+    
     with open(log_file, 'w') as f:
+        print(f"Monitoring resources for PID {PID} every {interval} seconds and writing to {log_file}")
         while True:
             cpu_message, mem_message, gpu_messages = show_resource_usage(PID)
             f.write(f"\n{(time.time()-start_time)/60:.2f} min | ")

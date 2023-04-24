@@ -394,8 +394,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
             # Use only training data for building the neural net (z-scoring transforms)
             self._neural_net = self._build_neural_net(
-                theta[self.train_indices].to("cpu"),
-                x[self.train_indices].to("cpu"),
+                theta[0:2].to("cpu"),
+                x[0:2].to("cpu"),
             )
             self._x_shape = x_shape_from_simulation(x.to("cpu"))
             
