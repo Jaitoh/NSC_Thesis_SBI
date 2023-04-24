@@ -205,7 +205,7 @@ def probR_threshold_for_choice(probR, threshold=0.5):
 
 def process_x_seqC_part(
     seqC, 
-    seqC_process_method,
+    seqC_process,
     nan2num,
     summary_type,
 ):
@@ -216,14 +216,14 @@ def process_x_seqC_part(
         seqC = seqC.reshape(1, -1)
 
     
-    if seqC_process_method == 'norm':
+    if seqC_process == 'norm':
         seqC = seqC_nan2num_norm(seqC, nan2num=nan2num)
         #TODO check shape
             
-    elif seqC_process_method == 'summary':
+    elif seqC_process == 'summary':
         seqC = seqC_pattern_summary(seqC, summary_type=summary_type)
         
     else:
-        raise ValueError(f'Invalid seqC_process: {seqC_process_method}')
+        raise ValueError(f'Invalid seqC_process: {seqC_process}')
 
     return seqC

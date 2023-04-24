@@ -31,5 +31,6 @@ train:
     # num_workers           : 4
   
   posterior:
+    step        : 10 # the epoch steps to check posterior during training
     sampling_num: 10000
     val_set_size: 1

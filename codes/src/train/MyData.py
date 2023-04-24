@@ -14,7 +14,7 @@ class MyDataset(Dataset):
     def __init__(self, 
                  data_path, 
                  num_theta_each_set=5000, 
-                 seqC_process_method='norm',
+                 seqC_process='norm',
                  nan2num=-1,
                  summary_type=0):
         self.data_path = data_path
@@ -22,7 +22,7 @@ class MyDataset(Dataset):
             self.total_sets = len(f.keys())  # Total number of groups (sets)
             self.total_samples = num_theta_each_set*self.total_sets
             self.num_theta_each_set = num_theta_each_set
-            self.seqC_process_method = seqC_process_method
+            self.seqC_process = seqC_process
             self.nan2num = nan2num
             self.summary_type = summary_type
                         
@@ -35,18 +35,23 @@ class MyDataset(Dataset):
         
         # Load seqC, theta, and probR for the given idx
         with h5py.File(self.data_path, 'r') as f:
-            seqC = f[f'set_{set_idx}']['seqC'][:]
-            seqC = seqC.reshape((seqC.shape[0]*seqC.shape[1]*seqC.shape[2], seqC.shape[3]))
+            
+            seqC_ = f[f'set_{set_idx}']['seqC'][:]
+            seqC = seqC_.reshape((seqC_.shape[0]*seqC_.shape[1]*seqC_.shape[2], seqC_.shape[3]))
+            del seqC_
             # print(f"seqC shape: {seqC.shape}")
+
             theta = f[f'set_{set_idx}']['theta'][theta_idx,:]
+            
             # print(f"theta shape: {theta.shape}")
-            probR = f[f'set_{set_idx}']['probR'][..., theta_idx, :]
-            probR = probR.reshape((probR.shape[0]*probR.shape[1]*probR.shape[2], probR.shape[3]))
+            probR_ = f[f'set_{set_idx}']['probR'][..., theta_idx, :]
+            probR = probR_.reshape((probR_.shape[0]*probR_.shape[1]*probR_.shape[2], probR_.shape[3]))
+            del probR_
             # print(f"probR shape: {probR.shape}")
 
         seqC = process_x_seqC_part(
             seqC                = seqC, 
-            seqC_process_method = self.seqC_process_method,
+            seqC_process        = self.seqC_process,
             nan2num             = self.nan2num,
             summary_type        = self.summary_type,
             )
@@ -68,22 +73,21 @@ class MyDataLoader(DataLoader):
         theta_batch = torch.empty((self.C * len(batch), batch[0][1].shape[0]))
         
         for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
-            probR    = torch.tensor(probR).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 1)
-            x_choice = torch.bernoulli(probR) # (C, D*M*S, 1)
             
-            x_seqC   = torch.tensor(seqC).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 15)
-            x = torch.cat([x_seqC, x_choice], dim=-1)
+            probR     = torch.tensor(probR).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 1)
+            x_seqC    = torch.tensor(seqC).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 15)
+            x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)
             
-            # Shuffle x along the 2nd axis
-            for c in range(self.C):
-                indices = torch.randperm(x.shape[1])
-                x[c] = x[c][indices]
+            x         = torch.cat([x_seqC, x_choice], dim=-1)
             
             theta = torch.tensor(theta).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, 4)
             
             x_batch[i*self.C:(i+1)*self.C] = x
             theta_batch[i*self.C:(i+1)*self.C] = theta
-            
+        
+        # Shuffle x along the 2nd axis
+        x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
+        
         # Shuffle the batched dataset
         indices     = torch.randperm(x_batch.shape[0])
         x_batch     = x_batch[indices]

@@ -11,6 +11,8 @@ from torch.utils.tensorboard.writer import SummaryWriter
 from torch.nn.utils.clip_grad import clip_grad_norm_
 from pyknos.mdn.mdn import MultivariateGaussianMDN as mdn
 from typing import Any, Callable, Dict, Optional, Tuple, Union
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from sbi.inference import SNPE_C
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
@@ -31,7 +33,10 @@ from sbi.utils.sbiutils import mask_sims_from_prior
 
 import sys
 sys.path.append('./src')
-
+from train.MyData import MyDataset, MyDataLoader
+from utils.train import (
+    plot_posterior_seen,
+)
 
 class MyPosteriorEstimator(PosteriorEstimator):
     def __init__(
@@ -88,64 +93,44 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
         return converged
     
-    
-    def append_simulations_for_run(
-        self,
-        theta: Tensor,
-        x: Tensor,
-        current_round: int = 0,
-        exclude_invalid_x: Optional[bool] = None,
-        data_device: Optional[str] = None,
-    ):
-        """ update theta and x for the current round
-        """
-        if exclude_invalid_x is None:
-            if current_round == 0:
-                exclude_invalid_x = True
-            else:
-                exclude_invalid_x = False
+    def check_posterior_behavior(self, config, limits, log_dir):
+        with torch.no_grad():
+            
+            epoch = self.epoch
+            current_net = deepcopy(self._neural_net)
 
-        if data_device is None:
-            data_device = self._device
+            if epoch%config['train']['step'] == 0: 
+                
+                print("Plotting posterior...")
 
-        theta, x = validate_theta_and_x(
-            theta, x, data_device=data_device, training_device=self._device
-        )
+                posterior = self.inference.build_posterior(current_net)
 
-        is_valid_x, num_nans, num_infs = handle_invalid_x(
-            x, exclude_invalid_x=exclude_invalid_x
-        )
+                for fig_idx in range(len(self.posterior_train_set['x'])):
 
-        x = x[is_valid_x]
-        theta = theta[is_valid_x]
+                    fig_x, _ = plot_posterior_seen(
+                        posterior       = posterior, 
+                        sample_num      = config['train']['posterior']['sampling_num'],
+                        x               = self.posterior_train_set['x'][fig_idx].to(self._device),
+                        true_params     = self.posterior_train_set['theta'][fig_idx],
+                        limits          = limits,
+                        prior_labels    = config['prior']['prior_labels'],
+                    )
+                    plt.savefig(f"{log_dir}/posterior/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
+                    plt.close(fig_x)
 
-        # Check for problematic z-scoring
-        warn_if_zscoring_changes_data(x)
-        if (
-            type(self).__name__ == "SNPE_C"
-            and current_round > 0
-            and not self.use_non_atomic_loss
-        ):
-            nle_nre_apt_msg_on_invalid_x(
-                num_nans, num_infs, exclude_invalid_x, "Multiround SNPE-C (atomic)"
-            )
-        else:
-            npe_msg_on_invalid_x(
-                num_nans, num_infs, exclude_invalid_x, "Single-round NPE"
-            )
-
-        prior_masks = mask_sims_from_prior(int(current_round > 0), theta.size(0))
-
-        old_theta   = self._theta_roundwise[current_round]
-        old_x       = self._x_roundwise[current_round]
-        old_masks   = self._prior_masks[current_round]
+                    fig_x_val, _ = plot_posterior_seen(
+                        posterior       = posterior, 
+                        sample_num      = config['train']['posterior']['sampling_num'],
+                        x               = self.posterior_val_set['x'][fig_idx].to(self._device),
+                        true_params     = self.posterior_val_set['theta'][fig_idx],
+                        limits          = limits,
+                        prior_labels    = config['prior']['prior_labels'],
+                    )
+                    plt.savefig(f"{log_dir}/posterior/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
+                    plt.close(fig_x_val)
+                    
+                print(f"posteriors plots saved to {log_dir}/posterior/")
         
-        self._theta_roundwise[current_round] = torch.cat((old_theta, theta), dim=0)
-        self._x_roundwise[current_round]     = torch.cat((old_x, x), dim=0)
-        self._prior_masks[current_round]     = torch.cat((old_masks, prior_masks), dim=0)
-        
-        return self
-    
     def get_dataloaders(
         self,
         starting_round: int = 0,
@@ -153,6 +138,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         validation_fraction: float = 0.1,
         resume_training: bool = False,
         seed: Optional[int] = 100,
+        dataset_kwargs: Optional[dict] = None,
         dataloader_kwargs: Optional[dict] = None,
     ) -> Tuple[data.DataLoader, data.DataLoader]:
         """Return dataloaders for training and validation.
@@ -170,22 +156,20 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         """
 
-        #
-        theta, x, prior_masks = self.get_simulations(starting_round)
+        # theta, x, prior_masks = self.get_simulations(starting_round)
+        # dataset = data.TensorDataset(theta, x, prior_masks)
 
-        dataset = data.TensorDataset(theta, x, prior_masks)
-        # dataset = MyDataset()
+        dataset = MyDataset(
+            data_path           = dataset_kwargs['data_path'],
+            num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
+            seqC_process_method = dataset_kwargs['seqC_process_method'],
+            nan2num             = dataset_kwargs['nan2num'],
+            summary_type        = dataset_kwargs['summary_type'],
+        )
 
-        # load and show one example of the dataset
-        i = 1
-        #  print dataset size
-        print(f'\n--- dataset ---\nsize [{len(dataset)}]',
-              f'\none examples of the dataset [{i}]:',
-              f'\n| theta[{i}] info:', f'shape {theta[i].shape}, dtype: {theta[i].dtype}, device: {theta[i].device}',
-              f'\n| x[{i}] info:', f'shape {x[i].shape}, dtype: {x[i].dtype}, device: {x[i].device}',
-             )
+        
         # Get total number of training examples.
-        num_examples = theta.size(0)
+        num_examples = len(dataset)
         # Select random train and validation splits from (theta, x) pairs.
         num_training_examples = int((1 - validation_fraction) * num_examples)
         num_validation_examples = num_examples - num_training_examples
@@ -204,33 +188,75 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # https://stackoverflow.com/questions/44784577/in-method-call-args-how-to-override-keyword-argument-of-unpacked-dict
         train_loader_kwargs = {
             "batch_size": min(training_batch_size, num_training_examples),
-            "drop_last": True,
-            "sampler": SubsetRandomSampler(self.train_indices.tolist()),
+            "shuffle"   : True,
+            "drop_last" : True,
+            "sampler"   : SubsetRandomSampler(self.train_indices.tolist()),
+            "C"         : 100,
+            "pin_memory": True,
         }
         val_loader_kwargs = {
             "batch_size": min(training_batch_size, num_validation_examples),
-            "shuffle": False,
-            "drop_last": True,
-            "sampler": SubsetRandomSampler(self.val_indices.tolist()),
+            "shuffle"   : False,
+            "drop_last" : True,
+            "sampler"   : SubsetRandomSampler(self.val_indices.tolist()),
+            "C"         : 100,
+            "pin_memory": True,
         }
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
 
-        print(f'\n--- data loader ---\ntrain_loader_kwargs: {train_loader_kwargs}')
-        print(f'val_loader_kwargs: {val_loader_kwargs}')
+        print(f'\n--- data loader ---\nfinal train_loader_kwargs: {train_loader_kwargs}')
+        print(f'final val_loader_kwargs: {val_loader_kwargs}')
         
         g = torch.Generator()
         g.manual_seed(seed)
         
-        train_loader = data.DataLoader(dataset, generator=g, **train_loader_kwargs)
-        val_loader = data.DataLoader(dataset, generator=g, **val_loader_kwargs)
-
-        # + load and show some examples of the dataloader
-        # train_batch = next(iter(train_loader))
-        # val_batch = next(iter(val_loader))
-        # print('train batch: ', train_batch)
-        # print('val batch: '  , val_batch ) 
+        train_loader = MyDataLoader(dataset, generator=g, **train_loader_kwargs)
+        val_loader   = MyDataLoader(dataset, generator=g, **val_loader_kwargs)
+        
+        # load and show one example of the dataset
+        # TODO add plot of the dataset
+        x, theta = next(iter(train_loader))
+        print(f'\n--- dataset ---\nwhole original dataset size [{len(dataset)}]',
+              f'\none batch of the training dataset:',
+              f'\n| x info:', f'shape {x.shape}, dtype: {x.dtype}, device: {x.device}',
+              f'\n| theta info:', f'shape {theta.shape}, dtype: {theta.dtype}, device: {theta.device}',
+             )
+        
+        print(f'\n--- posterior set ---\n collecting posterior sets')
+        self.posterior_train_set = {
+            'x': [],
+            'theta': [],
+        }
+        
+        self.posterior_val_set = {
+            'x': [],
+            'theta': [],
+        }
+        
+        self.posterior_train_set['x'].append(x[0, ...])
+        self.posterior_train_set['x'].append(x[1, ...])
+        self.posterior_train_set['theta'].append(theta[0, ...])
+        self.posterior_train_set['theta'].append(theta[1, ...])
+        
+        x, theta = next(iter(train_loader))
+        self.posterior_train_set['x'].append(x[0, ...])
+        self.posterior_train_set['x'].append(x[1, ...])
+        self.posterior_train_set['theta'].append(theta[0, ...])
+        self.posterior_train_set['theta'].append(theta[1, ...])
+        
+        x, theta = next(iter(val_loader))
+        self.posterior_val_set['x'].append(x[0, ...])
+        self.posterior_val_set['x'].append(x[1, ...])
+        self.posterior_val_set['theta'].append(theta[0, ...])
+        self.posterior_val_set['theta'].append(theta[1, ...])
+        
+        x, theta = next(iter(val_loader))
+        self.posterior_val_set['x'].append(x[0, ...])
+        self.posterior_val_set['x'].append(x[1, ...])
+        self.posterior_val_set['theta'].append(theta[0, ...])
+        self.posterior_val_set['theta'].append(theta[1, ...])
         
         return train_loader, val_loader
     
@@ -244,14 +270,19 @@ class MyPosteriorEstimator(PosteriorEstimator):
         clip_max_norm: Optional[float] = 5.0,
         
         calibration_kernel: Optional[Callable] = None,
-        resume_training: bool = False,
-        force_first_round_loss: bool = False,
-        discard_prior_samples: bool = False,
+        resume_training: bool = False, # False in the first epoch
+        force_first_round_loss: bool = False, # True for the first round
+        discard_prior_samples: bool = False, # False for the first round
         retrain_from_scratch: bool = False,
         show_train_summary: bool = True,
         
         seed: Optional[int] = 100,
+        dataset_kwargs: Optional[dict] = None,
         dataloader_kwargs: Optional[dict] = None,
+        
+        config = None,
+        limits = None,
+        log_dir= None,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -332,6 +363,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             validation_fraction,
             resume_training,
             seed=seed,
+            dataset_kwargs=dataset_kwargs,
             dataloader_kwargs=dataloader_kwargs,
         )
         # First round or if retraining from scratch:
@@ -342,7 +374,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         if self._neural_net is None or retrain_from_scratch:
 
             # Get theta,x to initialize NN
-            theta, x, _ = self.get_simulations(starting_round=start_idx)
+            # theta, x, _ = self.get_simulations(starting_round=start_idx)
+            x, theta = next(iter(train_loader))
+            
             # Use only training data for building the neural net (z-scoring transforms)
             self._neural_net = self._build_neural_net(
                 theta[self.train_indices].to("cpu"),
@@ -380,11 +414,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
             for batch in train_loader:
                 self.optimizer.zero_grad()
                 # Get batches on current device.
-                theta_batch, x_batch, masks_batch = (
+                # theta_batch, x_batch, masks_batch = (
+                #     batch[0].to(self._device),
+                #     batch[1].to(self._device),
+                #     batch[2].to(self._device),
+                # )
+                x_batch, theta_batch = (
                     batch[0].to(self._device),
-                    batch[1].to(self._device),
-                    batch[2].to(self._device),
+                    batch[1].to(self._device)
                 )
+                masks_batch = torch.ones_like(theta_batch[:, 0])
 
                 train_losses = self._loss(
                     theta_batch,
@@ -417,11 +456,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
             with torch.no_grad():
                 for batch in val_loader:
-                    theta_batch, x_batch, masks_batch = (
+                    # theta_batch, x_batch, masks_batch = (
+                    #     batch[0].to(self._device),
+                    #     batch[1].to(self._device),
+                    #     batch[2].to(self._device),
+                    # )
+                    x_batch, theta_batch = (
                         batch[0].to(self._device),
-                        batch[1].to(self._device),
-                        batch[2].to(self._device),
+                        batch[1].to(self._device)
                     )
+                    masks_batch = torch.ones_like(theta_batch[:, 0])
                     # Take negative loss here to get validation log_prob.
                     val_losses = self._loss(
                         theta_batch,
@@ -443,6 +487,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
             self._maybe_show_progress(self._show_progress_bars, self.epoch, starting_time, train_log_prob_average, self._val_log_prob)
 
+            self.check_posterior_behavior(config, limits, log_dir)
         # self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
         # self._val_log_prob = self._best_val_log_prob
         
@@ -483,6 +528,63 @@ class MyPosteriorEstimator(PosteriorEstimator):
         """
 
         return description
+
+    def append_simulations_for_run(
+        self,
+        theta: Tensor,
+        x: Tensor,
+        current_round: int = 0,
+        exclude_invalid_x: Optional[bool] = None,
+        data_device: Optional[str] = None,
+    ):
+        """ update theta and x for the current round
+        """
+        if exclude_invalid_x is None:
+            if current_round == 0:
+                exclude_invalid_x = True
+            else:
+                exclude_invalid_x = False
+
+        if data_device is None:
+            data_device = self._device
+
+        theta, x = validate_theta_and_x(
+            theta, x, data_device=data_device, training_device=self._device
+        )
+
+        is_valid_x, num_nans, num_infs = handle_invalid_x(
+            x, exclude_invalid_x=exclude_invalid_x
+        )
+
+        x = x[is_valid_x]
+        theta = theta[is_valid_x]
+
+        # Check for problematic z-scoring
+        warn_if_zscoring_changes_data(x)
+        if (
+            type(self).__name__ == "SNPE_C"
+            and current_round > 0
+            and not self.use_non_atomic_loss
+        ):
+            nle_nre_apt_msg_on_invalid_x(
+                num_nans, num_infs, exclude_invalid_x, "Multiround SNPE-C (atomic)"
+            )
+        else:
+            npe_msg_on_invalid_x(
+                num_nans, num_infs, exclude_invalid_x, "Single-round NPE"
+            )
+
+        prior_masks = mask_sims_from_prior(int(current_round > 0), theta.size(0))
+
+        old_theta   = self._theta_roundwise[current_round]
+        old_x       = self._x_roundwise[current_round]
+        old_masks   = self._prior_masks[current_round]
+        
+        self._theta_roundwise[current_round] = torch.cat((old_theta, theta), dim=0)
+        self._x_roundwise[current_round]     = torch.cat((old_x, x), dim=0)
+        self._prior_masks[current_round]     = torch.cat((old_masks, prior_masks), dim=0)
+        
+        return self
     
 
 class MySNPE_C(SNPE_C, MyPosteriorEstimator):
@@ -516,7 +618,11 @@ class MySNPE_C(SNPE_C, MyPosteriorEstimator):
         retrain_from_scratch: bool = False,
         show_train_summary: bool = False,
         seed: Optional[int] = 100,
+        dataset_kwargs: Optional[Dict] = None,
         dataloader_kwargs: Optional[Dict] = None,
+        config = None,
+        limits = None,
+        log_dir= None,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.
 

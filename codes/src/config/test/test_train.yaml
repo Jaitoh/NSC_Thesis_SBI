@@ -2,24 +2,17 @@ train:
   inference:
     method: 'snpe'
 
-  # prior:
-  #  prior_min_train: [-3.7, 0, 0, 5]
-  #  prior_max_train: [2.5, 71, 18, 7]
-    # prior_min_train: [-3.7,   0,  0, -1]
-    # prior_max_train: [ 2.5,  30, 18,  1]
-    # prior_labels: ['bias', 'sigma2a', 'sigma2s', 'L0']
-
-  density_estimator:
-    posterior_nn:
-      model: maf
-      # model_parameters:
-      hidden_features: 64
-      # num_components: 5
-      num_transforms: 2
-    embedding_net: 
-      type: lstm
-      hidden_size: 64
-      output_size: 20
+  # density_estimator:
+  #   posterior_nn:
+  #     model: maf
+  #     # model_parameters:
+  #     hidden_features: 64
+  #     # num_components: 5
+  #     num_transforms: 2
+  #   embedding_net: 
+  #     type: lstm
+  #     hidden_size: 64
+  #     output_size: 20
 
   training:
     num_rounds            : 3
@@ -36,8 +29,8 @@ train:
     
     # for dataloader:
     # num_workers           : 4
-    
   
   posterior:
+    step        : 10 # the epoch steps to check posterior during training
     sampling_num: 10000
     val_set_size: 1

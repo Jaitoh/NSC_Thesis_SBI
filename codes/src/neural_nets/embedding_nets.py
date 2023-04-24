@@ -11,8 +11,8 @@ class LSTM_Embedding(nn.Module):
                  output_size=20,
             ):
         super(LSTM_Embedding, self).__init__()
-        self.rnn1 = nn.LSTM(input_size=dms, hidden_size=hidden_size, num_layers=1, batch_first=True)
-        self.rnn2 = nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, num_layers=2, batch_first=True)
+        self.rnn1 = nn.LSTM(input_size=dms, hidden_size=hidden_size*4, num_layers=1, batch_first=True)
+        self.rnn2 = nn.LSTM(input_size=hidden_size*4, hidden_size=hidden_size, num_layers=2, batch_first=True)
         # self.bn1 = nn.BatchNorm1d(l*hidden_size)
         self.fc1 = nn.Linear(l*hidden_size, 2*hidden_size)
         self.fc2 = nn.Linear(2*hidden_size, output_size)

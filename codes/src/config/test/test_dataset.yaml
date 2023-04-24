@@ -1,23 +1,13 @@
 dataset:
-  save_train_data: False
-  save_name: 'test_train_data'
 
 # ========== parameter settings for the seqC ==========
-  # subset_theta: 1
-  # subset_theta: [0, 1, 2] # choose the idx of the theta
   seqC_process: 'norm'
-  # seqC_process: 'summary'
   nan2num: -1
-  # summary_type: 1  # 0: detailed information, 1: brief information
+  # seqC_process: 'summary'
   summary_type: 0
+  # summary_type: 1  # 0: detailed information, 1: brief information
 
-# ========== parameter settings for the probR ==========
-  #Rchoice_method: 'probR' # -> in this case, the probR will be expanded in the collate_fn
-  Rchoice_method: 'probR_sampling'
-  num_probR_sample: 10 # 100
-  # Rchoice_method: 'probR_threshold'
-  # R_threshold: 0.5
-
-# ========== parameter settings for the theta ==========
-  # remove_sigma2i: True
-  # remove_sigma2i: False
+# # ========== parameter settings for the probR ==========
+  num_probR_sample: 100
+  
+  num_theta_each_set: 500
