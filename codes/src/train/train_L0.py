@@ -38,8 +38,7 @@ from config.load_config import load_config
 from dataset.dataset import training_dataset
 from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
-from codes.src.train.MyDataset import collate_fn_probR
-from train.MySNPE_C import MySNPE_C
+from train.MyPosteriorEstimator import MySNPE_C
 from neural_nets.embedding_nets import LSTM_Embedding
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
@@ -50,6 +49,7 @@ from utils.train import (
     check_path, train_inference_helper,
 )
 from utils.resource import monitor_resources
+from train.MyData import collate_fn
 
 # Set the start method to 'spawn' before creating the ProcessPoolExecutor instance
 # mp.set_start_method('spawn', force=True)
@@ -72,14 +72,14 @@ class Solver:
         print_cuda_info(self.device)
 
         self.log_dir = Path(self.args.log_dir)
-        self.data_dir = Path(config['data_dir'])
-        check_path(self.log_dir, self.data_dir, args)
+        self.data_path = Path(self.args.data_path)
+        check_path(self.log_dir, self.data_path, args)
         
         
         # get dataset size
-        d = len(self.config['x_o']['chosen_dur_list'])
-        m = len(self.config['x_o']['chosen_MS_list'])
-        s = self.config['x_o']['seqC_sample_per_MS']
+        d = len(self.config['experiment_settings']['chosen_dur_list'])
+        m = len(self.config['experiment_settings']['chosen_MS_list'])
+        s = self.config['experiment_settings']['seqC_sample_per_MS']
         self.dms = d*m*s
         self.l_x = 15+1
         self.l_theta = len(self.config['prior']['prior_min'])
@@ -176,12 +176,16 @@ class Solver:
         
         my_dataloader_kwargs = {
             'worker_init_fn':  seed_worker,
+            'collate_fn':  lambda batch: collate_fn(batch=batch, C=self.config['dataset']['num_probR_sample']),
         } 
+        
+        if self.gpu:
+            my_dataloader_kwargs['pin_memory'] = True
         
         my_dataset_kwargs = {
             'data_path'             : self.args.data_path,
             'num_theta_each_set'    : self.config['dataset']['num_theta_each_set'],
-            'seqC_process_method'   : self.config['dataset']['seqC_process'],
+            'seqC_process'          : self.config['dataset']['seqC_process'],
             'nan2num'               : self.config['dataset']['nan2num'],
             'summary_type'          : self.config['dataset']['summary_type'],
         }
@@ -189,6 +193,7 @@ class Solver:
         return my_dataloader_kwargs, my_dataset_kwargs
     
     def sbi_train(self):
+        # sourcery skip: boolean-if-exp-identity, remove-unnecessary-cast
         """
         train the sbi model
 
@@ -202,9 +207,9 @@ class Solver:
         # observed data from trial experiment
         x_o = get_xo(
             subject_id          = self.config['x_o']['subject_id'],
-            chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
-            chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
-            seqC_sample_per_MS  = self.config['x_o']['seqC_sample_per_MS'],
+            chosen_dur_list     = self.config['experiment_settings']['chosen_dur_list'],
+            chosen_MS_list      = self.config['experiment_settings']['chosen_MS_list'],
+            seqC_sample_per_MS  = self.config['experiment_settings']['seqC_sample_per_MS'],
             trial_data_path     = self.config['x_o']['trial_data_path'],
         
             seqC_process_method = self.config['dataset']['seqC_process'],
@@ -246,17 +251,14 @@ class Solver:
         training_config = self.config['train']['training']
 
         # dataloader kwargs
-        Rchoice_method = self.config['dataset']['Rchoice_method']
         my_dataloader_kwargs, my_dataset_kwargs = self.get_my_data_kwargs()
-        
-        if self.gpu:
-            my_dataloader_kwargs['pin_memory'] = True
-
-        # self.post_val_set = {
-        #     "x"             : torch.empty((0, self.dms, self.l_x)),
-        #     "x_shuffled"    : torch.empty((0, self.dms, self.l_x)),
-        #     "theta"         : torch.empty((0, self.l_theta)),
-        # }
+            
+        self.inference.append_simulations(
+                theta         = torch.empty(1),
+                x             = torch.empty(1),
+                proposal      = prior,
+                data_device   = 'cpu',
+            )
         
         # start training
         for current_round in [0]:

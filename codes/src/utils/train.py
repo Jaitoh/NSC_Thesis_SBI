@@ -18,13 +18,13 @@ def remove_files_except_training_dataset(path):
                 file_path = os.path.join(root, name)
                 os.remove(file_path)
                 
-def check_path(log_dir, data_dir, args):
+def check_path(log_dir, data_path, args):
     """
     check the path of log_dir and data_dir
     """
 
     print(f'\n--- dir settings ---\nlog dir: {str(log_dir)}')
-    print(f'data dir: {str(data_dir)}')
+    print(f'data dir: {str(data_path)}')
 
     model_dir = log_dir / 'model'
     training_dataset_dir = log_dir / 'training_dataset'
@@ -50,8 +50,8 @@ def check_path(log_dir, data_dir, args):
             assert False, f'Run dir {str(log_dir)} already exists.'
 
     # check data path, where to read the data from, exists
-    if not Path(data_dir).exists():
-        assert False, f'Data dir {str(data_dir)} does not exist.'
+    if not Path(data_path).exists():
+        assert False, f'Data dir {str(data_path)} does not exist.'
         
 def plot_posterior_seen(posterior, sample_num, x, true_params, limits, prior_labels):
     """ plot the posterior distribution of the seen data """
@@ -138,7 +138,7 @@ def get_args():
                         help="Path to config_train file")
     parser.add_argument('--config_train_path', type=str, default="./src/config/test/test_train.yaml",
                         help="Path to config_train file")
-    parser.add_argument('--data_path', type=str, default="../data/datasets/dataset_part_0.h5",
+    parser.add_argument('--data_path', type=str, default="../data/dataset/dataset_L0_exp_set_0.h5",
                         help="simulated data store/load dir")
     parser.add_argument('--log_dir', type=str, default="./src/train/logs/log_test", help="training log dir")
     parser.add_argument('--gpu', action='store_true', help='Use GPU.')

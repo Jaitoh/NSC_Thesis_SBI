@@ -61,9 +61,9 @@ class MyDataset(Dataset):
 
 
 class MyDataLoader(DataLoader):
-    def __init__(self, dataset, batch_size, C, shuffle=True, pin_memory=True, num_workers=0):
-        super().__init__(dataset, batch_size, shuffle=shuffle, collate_fn=self.collate_fn, pin_memory=pin_memory, num_workers=num_workers)
-        self.C = C
+    def __init__(self, dataset, kwargs):
+        super().__init__(dataset, **kwargs)
+        self.C = kwargs['num_probR_sample']
         
     def collate_fn(self, batch):
         # Process the batch
@@ -95,6 +95,36 @@ class MyDataLoader(DataLoader):
         
         return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)    
 
+
+def collate_fn(batch, C):
+    # Process the batch
+    x_batch, theta_batch = [], []
+    
+    x_batch     = torch.empty((C * len(batch), batch[0][0].shape[0], batch[0][0].shape[1]+batch[0][2].shape[1]))
+    theta_batch = torch.empty((C * len(batch), batch[0][1].shape[0]))
+    
+    for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
+        
+        probR     = torch.tensor(probR).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 1)
+        x_seqC    = torch.tensor(seqC).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 15)
+        x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)
+        
+        x         = torch.cat([x_seqC, x_choice], dim=-1)
+        
+        theta = torch.tensor(theta).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, 4)
+        
+        x_batch[i*C:(i+1)*C] = x
+        theta_batch[i*C:(i+1)*C] = theta
+    
+    # Shuffle x along the 2nd axis
+    x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
+    
+    # Shuffle the batched dataset
+    indices     = torch.randperm(x_batch.shape[0])
+    x_batch     = x_batch[indices]
+    theta_batch = theta_batch[indices]
+    
+    return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)    
 
 
 def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10):

@@ -2,17 +2,15 @@ train:
   inference:
     method: 'snpe'
 
-  # density_estimator:
-  #   posterior_nn:
-  #     model: maf
-  #     # model_parameters:
-  #     hidden_features: 64
-  #     # num_components: 5
-  #     num_transforms: 2
-  #   embedding_net: 
-  #     type: lstm
-  #     hidden_size: 64
-  #     output_size: 20
+  density_estimator:
+    embedding_net: 
+      type: lstm
+      hidden_size: 64
+      output_size: 20
+    posterior_nn:
+      model: maf
+      hidden_features: 64
+      num_transforms: 2
 
   training:
     num_rounds            : 3

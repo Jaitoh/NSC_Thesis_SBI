@@ -106,7 +106,17 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 posterior = self.inference.build_posterior(current_net)
 
                 for fig_idx in range(len(self.posterior_train_set['x'])):
-
+                    
+                    figure = plt.figure()
+                    plt.imshow(self.posterior_train_set['x'][fig_idx][:100, :])
+                    plt.savefig(f'{log_dir}/posterior/x_train_{fig_idx}.png')
+                    plt.close(figure)
+                    
+                    figure = plt.figure()
+                    plt.imshow(self.posterior_val_set['x'][fig_idx][:100, :])
+                    plt.savefig(f'{log_dir}/posterior/x_val_{fig_idx}.png')
+                    plt.close(figure)
+                    
                     fig_x, _ = plot_posterior_seen(
                         posterior       = posterior, 
                         sample_num      = config['train']['posterior']['sampling_num'],
@@ -162,7 +172,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         dataset = MyDataset(
             data_path           = dataset_kwargs['data_path'],
             num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
-            seqC_process_method = dataset_kwargs['seqC_process_method'],
+            seqC_process        = dataset_kwargs['seqC_process'],
             nan2num             = dataset_kwargs['nan2num'],
             summary_type        = dataset_kwargs['summary_type'],
         )
@@ -188,10 +198,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # https://stackoverflow.com/questions/44784577/in-method-call-args-how-to-override-keyword-argument-of-unpacked-dict
         train_loader_kwargs = {
             "batch_size": min(training_batch_size, num_training_examples),
-            "shuffle"   : True,
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.train_indices.tolist()),
-            "C"         : 100,
             "pin_memory": True,
         }
         val_loader_kwargs = {
@@ -199,32 +207,38 @@ class MyPosteriorEstimator(PosteriorEstimator):
             "shuffle"   : False,
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.val_indices.tolist()),
-            "C"         : 100,
             "pin_memory": True,
         }
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
 
-        print(f'\n--- data loader ---\nfinal train_loader_kwargs: {train_loader_kwargs}')
-        print(f'final val_loader_kwargs: {val_loader_kwargs}')
+        print(f'\n--- data loader ---\n---final train_loader_kwargs: \n{train_loader_kwargs}')
+        print(f'---final val_loader_kwargs: \n{val_loader_kwargs}')
         
         g = torch.Generator()
         g.manual_seed(seed)
         
-        train_loader = MyDataLoader(dataset, generator=g, **train_loader_kwargs)
-        val_loader   = MyDataLoader(dataset, generator=g, **val_loader_kwargs)
+        # train_loader = MyDataLoader(dataset, generator=g, **train_loader_kwargs)
+        # val_loader   = MyDataLoader(dataset, generator=g, **val_loader_kwargs)
+        train_loader = data.DataLoader(dataset, generator=g, **train_loader_kwargs)
+        val_loader   = data.DataLoader(dataset, generator=g, **val_loader_kwargs)
         
         # load and show one example of the dataset
         # TODO add plot of the dataset
+        print('loading one batch of the training dataset...')
+        start_time = time.time()
         x, theta = next(iter(train_loader))
+        print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds')
+        
         print(f'\n--- dataset ---\nwhole original dataset size [{len(dataset)}]',
               f'\none batch of the training dataset:',
               f'\n| x info:', f'shape {x.shape}, dtype: {x.dtype}, device: {x.device}',
               f'\n| theta info:', f'shape {theta.shape}, dtype: {theta.dtype}, device: {theta.device}',
              )
         
-        print(f'\n--- posterior set ---\n collecting posterior sets')
+        print(f'\n--- collect posterior set ---\n')
+        start_time = time.time()
         self.posterior_train_set = {
             'x': [],
             'theta': [],
@@ -258,6 +272,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.posterior_val_set['theta'].append(theta[0, ...])
         self.posterior_val_set['theta'].append(theta[1, ...])
         
+        print(f'collect posterior set takes {time.time() - start_time:.2f} seconds')
         return train_loader, val_loader
     
     def train_base(
