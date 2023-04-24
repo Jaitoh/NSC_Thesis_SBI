@@ -97,6 +97,9 @@ class MyDataLoader(DataLoader):
 
 
 def collate_fn(batch, C):
+    # check cuda availability
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"device: {device}")
     # Process the batch
     x_batch, theta_batch = [], []
     
@@ -105,13 +108,13 @@ def collate_fn(batch, C):
     
     for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
         
-        probR     = torch.tensor(probR).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 1)
-        x_seqC    = torch.tensor(seqC).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 15)
+        probR     = torch.tensor(probR, device=device).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 1)
+        x_seqC    = torch.tensor(seqC, device=device).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 15)
         x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)
         
         x         = torch.cat([x_seqC, x_choice], dim=-1)
         
-        theta = torch.tensor(theta).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, 4)
+        theta = torch.tensor(theta, device=device).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, 4)
         
         x_batch[i*C:(i+1)*C] = x
         theta_batch[i*C:(i+1)*C] = theta
@@ -124,7 +127,7 @@ def collate_fn(batch, C):
     x_batch     = x_batch[indices]
     theta_batch = theta_batch[indices]
     
-    return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)    
+    return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)
 
 
 def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10):

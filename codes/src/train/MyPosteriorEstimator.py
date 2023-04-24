@@ -213,8 +213,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
 
-        print(f'\n--- data loader ---\n---final train_loader_kwargs: \n{train_loader_kwargs}')
-        print(f'---final val_loader_kwargs: \n{val_loader_kwargs}')
+        print(f'\n--- data loader ---\nfinal train_loader_kwargs: \n{train_loader_kwargs}')
+        print(f'final val_loader_kwargs: \n{val_loader_kwargs}')
         
         g = torch.Generator()
         g.manual_seed(seed)
