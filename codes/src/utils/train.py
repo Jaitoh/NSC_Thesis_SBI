@@ -30,6 +30,7 @@ def check_path(log_dir, data_path, args):
     model_dir = log_dir / 'model'
     training_dataset_dir = log_dir / 'training_dataset'
     posterior_dir = log_dir / 'posterior'
+    posterior_figures_dir = log_dir / 'posterior' / 'figures'
     # check log path: if not exists, create; if exists, remove or a fatal error
     if not log_dir.exists():
         os.makedirs(str(log_dir))
@@ -47,7 +48,8 @@ def check_path(log_dir, data_path, args):
                 os.makedirs(str(training_dataset_dir))
             if not posterior_dir.exists():
                 os.makedirs(str(posterior_dir))
-                os.makedirs(f'{str(log_dir)}/posterior/figures/')
+            if not posterior_figures_dir.exists():
+                os.makedirs(str(posterior_figures_dir))
             
         else:
             assert False, f'Run dir {str(log_dir)} already exists.'

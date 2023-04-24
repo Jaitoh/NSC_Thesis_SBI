@@ -292,11 +292,11 @@ class Solver:
             )  # density estimator
 
             
-        with open(f"{self.log_dir}/posterior/posterior_train_set.pkl", 'wb') as f:
-            pickle.dump(self.inference.posterior_train_set, f)
-        with open(f"{self.log_dir}/posterior/posterior_val_set.pkl", 'wb') as f:
-            pickle.dump(self.inference.posterior_val_set, f)
-        torch.save(deepcopy(density_estimator.state_dict()), f"{self.log_dir}/model/best_model_state_dict.pt")
+        # with open(f"{self.log_dir}/posterior/posterior_train_set.pkl", 'wb') as f:
+        #     pickle.dump(self.inference.posterior_train_set, f)
+        # with open(f"{self.log_dir}/posterior/posterior_val_set.pkl", 'wb') as f:
+        #     pickle.dump(self.inference.posterior_val_set, f)
+        torch.save(deepcopy(density_estimator.state_dict()), f"{self.log_dir}/model/a_best_model_state_dict.pt")
         
         print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
 

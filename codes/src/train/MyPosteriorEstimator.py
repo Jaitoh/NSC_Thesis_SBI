@@ -55,7 +55,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
     @staticmethod
     def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
         if show:
-            print("\r", f"Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} val: {val_log_prob:.2f}", end="")
+            print(f"\n | Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} val: {val_log_prob:.2f} \n")
     
     def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
         """Return whether the training converged yet and save best model state so far.
@@ -80,7 +80,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._epochs_since_last_improvement = 0
             self._best_model_state_dict = deepcopy(neural_net.state_dict())
             self._best_model_from_epoch = epoch
-            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_epoch{epoch}.pt")
+            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict.pt")
         else:
             self._epochs_since_last_improvement += 1
 
@@ -91,7 +91,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._neural_net.load_state_dict(self._best_model_state_dict)
             self._val_log_prob = self._best_val_log_prob
             self._epochs_since_last_improvement = 0
-            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_epoch{epoch}.pt")
+            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict.pt")
             
         return converged
     
@@ -429,6 +429,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._neural_net.train()
             train_log_probs_sum = 0
             epoch_start_time = time.time()
+            train_batch_num = 0
             for batch in train_loader:
                 self.optimizer.zero_grad()
                 # Get batches on current device.
@@ -460,7 +461,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         self._neural_net.parameters(), max_norm=clip_max_norm
                     )
                 self.optimizer.step()
-
+                if train_batch_num % 5 == 0:
+                    print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}')
+                train_batch_num += 1
+                
             self.epoch += 1
 
             train_log_prob_average = train_log_probs_sum / (
@@ -471,7 +475,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             # Calculate validation performance.
             self._neural_net.eval()
             val_log_prob_sum = 0
-
+            
+            val_batch_num = 0
             with torch.no_grad():
                 for batch in val_loader:
                     # theta_batch, x_batch, masks_batch = (
@@ -494,6 +499,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         force_first_round_loss=force_first_round_loss,
                     )
                     val_log_prob_sum -= val_losses.sum().item()
+                    if val_batch_num % 5 == 0:
+                        print(f'epoch {self.epoch}: val_log_prob_sum {val_log_prob_sum:.2f}')
+                    val_batch_num += 1
 
             # Take mean over all validation samples.
             self._val_log_prob = val_log_prob_sum / (
