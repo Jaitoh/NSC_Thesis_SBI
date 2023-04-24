@@ -80,6 +80,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._epochs_since_last_improvement = 0
             self._best_model_state_dict = deepcopy(neural_net.state_dict())
             self._best_model_from_epoch = epoch
+            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_epoch{epoch}.pt")
         else:
             self._epochs_since_last_improvement += 1
 
@@ -89,8 +90,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             converged = True
             self._neural_net.load_state_dict(self._best_model_state_dict)
             self._val_log_prob = self._best_val_log_prob
-            
             self._epochs_since_last_improvement = 0
+            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_epoch{epoch}.pt")
             
         return converged
     
@@ -334,6 +335,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         Returns:
             Density estimator that approximates the distribution $p(\theta|x)$.
         """
+        self.log_dir = log_dir
+        
         # Load data from most recent round.
         self._round = max(self._data_round_index)
 
