@@ -1,3 +1,4 @@
+import os
 import time
 from copy import deepcopy
 
@@ -33,7 +34,7 @@ from sbi.utils.sbiutils import mask_sims_from_prior
 
 import sys
 sys.path.append('./src')
-from train.MyData import MyDataset, MyDataLoader
+from train.MyData import MyDataset
 from utils.train import (
     plot_posterior_seen,
 )
@@ -99,22 +100,22 @@ class MyPosteriorEstimator(PosteriorEstimator):
             epoch = self.epoch
             current_net = deepcopy(self._neural_net)
 
-            if epoch%config['train']['step'] == 0: 
+            if epoch%config['train']['posterior']['step'] == 0: 
                 
-                print("Plotting posterior...")
+                print("\nPlotting posterior...")
 
-                posterior = self.inference.build_posterior(current_net)
+                posterior = self.build_posterior(current_net)
 
                 for fig_idx in range(len(self.posterior_train_set['x'])):
                     
                     figure = plt.figure()
-                    plt.imshow(self.posterior_train_set['x'][fig_idx][:100, :])
-                    plt.savefig(f'{log_dir}/posterior/x_train_{fig_idx}.png')
+                    plt.imshow(self.posterior_train_set['x'][fig_idx][:100, :].cpu())
+                    plt.savefig(f'{log_dir}/posterior/figures/x_train_{fig_idx}.png')
                     plt.close(figure)
                     
                     figure = plt.figure()
-                    plt.imshow(self.posterior_val_set['x'][fig_idx][:100, :])
-                    plt.savefig(f'{log_dir}/posterior/x_val_{fig_idx}.png')
+                    plt.imshow(self.posterior_val_set['x'][fig_idx][:100, :].cpu())
+                    plt.savefig(f'{log_dir}/posterior/figures/x_val_{fig_idx}.png')
                     plt.close(figure)
                     
                     fig_x, _ = plot_posterior_seen(
@@ -125,7 +126,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         limits          = limits,
                         prior_labels    = config['prior']['prior_labels'],
                     )
-                    plt.savefig(f"{log_dir}/posterior/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
+                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
                     plt.close(fig_x)
 
                     fig_x_val, _ = plot_posterior_seen(
@@ -136,10 +137,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         limits          = limits,
                         prior_labels    = config['prior']['prior_labels'],
                     )
-                    plt.savefig(f"{log_dir}/posterior/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
+                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
                     plt.close(fig_x_val)
                     
-                print(f"posteriors plots saved to {log_dir}/posterior/")
+                print(f"posteriors plots saved to {log_dir}/posterior/figures/")
         
     def get_dataloaders(
         self,
@@ -200,14 +201,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
             "batch_size": min(training_batch_size, num_training_examples),
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.train_indices.tolist()),
-            "pin_memory": True,
+            # "pin_memory": True,
         }
         val_loader_kwargs = {
             "batch_size": min(training_batch_size, num_validation_examples),
             "shuffle"   : False,
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.val_indices.tolist()),
-            "pin_memory": True,
+            # "pin_memory": True,
         }
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
@@ -225,8 +226,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         val_loader   = data.DataLoader(dataset, generator=g, **val_loader_kwargs)
         
         # load and show one example of the dataset
-        # TODO add plot of the dataset
-        print('loading one batch of the training dataset...')
+        print('\nloading one batch of the training dataset...')
         start_time = time.time()
         x, theta = next(iter(train_loader))
         print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds')
@@ -526,6 +526,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # cause memory leakage when benchmarking.
         self._neural_net.zero_grad(set_to_none=True)
 
+        figure = plt.figure(figsize=(16, 10))
+        plt.plot(self._summary["training_log_probs"], label="training")
+        plt.plot(self._summary["validation_log_probs"], label="validation")
+        plt.xlabel("Epoch")
+        plt.ylabel("Log prob")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(log_dir, f"model/round_{self._round}_training_curve.png"))
+        plt.close(figure)
+        
         return self, deepcopy(self._neural_net)
     
     def _describe_round(self, round_: int, summary: Dict[str, list]) -> str:

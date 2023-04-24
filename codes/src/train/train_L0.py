@@ -146,7 +146,7 @@ class Solver:
                 limits          = self._get_limits(),
                 prior_labels    = self.config['prior']['prior_labels'],
             )
-            plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
+            plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
             plt.close(fig_x)
             fig_x_shuffle, _ = plot_posterior_seen(
                 posterior       = posterior, 
@@ -156,10 +156,10 @@ class Solver:
                 limits          = self._get_limits(),
                 prior_labels    = self.config['prior']['prior_labels'],
             )
-            plt.savefig(f"{self.log_dir}/posterior/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
+            plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
         
         # save posterior for each round and run using pickle
-        with open(f"{self.log_dir}/posterior/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
+        with open(f"{self.log_dir}/posterior/figures/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
             pickle.dump(posterior, f)
             
         # check posterior for x_o
@@ -170,7 +170,7 @@ class Solver:
             limits          = self._get_limits(),
             prior_labels    = self.config['prior']['prior_labels'],
         )
-        plt.savefig(f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png")
+        plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_o_round{current_round}_run{run}.png")
 
     def get_my_data_kwargs(self):
         
@@ -179,8 +179,8 @@ class Solver:
             'collate_fn':  lambda batch: collate_fn(batch=batch, C=self.config['dataset']['num_probR_sample']),
         } 
         
-        if self.gpu:
-            my_dataloader_kwargs['pin_memory'] = True
+        # if self.gpu:
+        #     my_dataloader_kwargs['pin_memory'] = True
         
         my_dataset_kwargs = {
             'data_path'             : self.args.data_path,
@@ -325,12 +325,13 @@ class Solver:
 
 def main():  # sourcery skip: extract-method
     args = get_args()
+    print(args.log_dir)
     
     # monitor resources usage
     PID = os.getpid()
     print(f"PID: {PID}")
     log_file = f"{args.log_dir}/resource_usage.log"
-    monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
+    monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 1, log_file))
     monitor_process.start()
     
     try:

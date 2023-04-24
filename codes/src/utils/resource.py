@@ -20,12 +20,10 @@ def show_resource_usage(PID):
     gpu_messages = []
     gpus = GPUtil.getGPUs()
     if torch.cuda.is_available():
-        for gpu in gpus:
-            gpu_percent = gpu.load * 100
-            gpu_memory_used = gpu.memoryUsed
-            gpu_memory_total = gpu.memoryTotal
-            gpu_message = f"| GPU{gpu.id}, {gpu_percent:.2f}% - {gpu_memory_used:.2f}/{gpu_memory_total:.2f} MB "
-            gpu_messages.append(gpu_message)
+        
+        gpu_message = f"| GPU {torch.cuda.get_device_name(0)}, {round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1)} GB "
+        gpu_messages.append(gpu_message)
+        
     else:
         gpu_messages.append("| No GPU detected")
     

@@ -25,7 +25,9 @@ class MyDataset(Dataset):
             self.seqC_process = seqC_process
             self.nan2num = nan2num
             self.summary_type = summary_type
-                        
+        
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
     def __len__(self):
         return self.total_samples
 
@@ -56,69 +58,32 @@ class MyDataset(Dataset):
             summary_type        = self.summary_type,
             )
         
-        return seqC, theta, probR
+        # return seqC, theta, probR
+        return torch.tensor(seqC, device=self.device), torch.tensor(theta, device=self.device), torch.tensor(probR, device=self.device)
     
-
-
-class MyDataLoader(DataLoader):
-    def __init__(self, dataset, kwargs):
-        super().__init__(dataset, **kwargs)
-        self.C = kwargs['num_probR_sample']
-        
-    def collate_fn(self, batch):
-        # Process the batch
-        x_batch, theta_batch = [], []
-        
-        x_batch     = torch.empty((self.C * len(batch), batch[0][0].shape[0], batch[0][0].shape[1]+batch[0][2].shape[1]))
-        theta_batch = torch.empty((self.C * len(batch), batch[0][1].shape[0]))
-        
-        for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
-            
-            probR     = torch.tensor(probR).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 1)
-            x_seqC    = torch.tensor(seqC).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 15)
-            x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)
-            
-            x         = torch.cat([x_seqC, x_choice], dim=-1)
-            
-            theta = torch.tensor(theta).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, 4)
-            
-            x_batch[i*self.C:(i+1)*self.C] = x
-            theta_batch[i*self.C:(i+1)*self.C] = theta
-        
-        # Shuffle x along the 2nd axis
-        x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
-        
-        # Shuffle the batched dataset
-        indices     = torch.randperm(x_batch.shape[0])
-        x_batch     = x_batch[indices]
-        theta_batch = theta_batch[indices]
-        
-        return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)    
-
-
+    
 def collate_fn(batch, C):
     # check cuda availability
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"device: {device}")
+    # print(f" device: {device}")
     # Process the batch
     x_batch, theta_batch = [], []
     
-    x_batch     = torch.empty((C * len(batch), batch[0][0].shape[0], batch[0][0].shape[1]+batch[0][2].shape[1]))
-    theta_batch = torch.empty((C * len(batch), batch[0][1].shape[0]))
+    x_batch     = torch.empty((C * len(batch), batch[0][0].shape[0], batch[0][0].shape[1]+batch[0][2].shape[1]), device=device)
+    theta_batch = torch.empty((C * len(batch), batch[0][1].shape[0]), device=device)
     
     for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
-        
-        probR     = torch.tensor(probR, device=device).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 1)
-        x_seqC    = torch.tensor(seqC, device=device).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 15)
+        # print(seqC.device, theta.device, probR.device)
+        probR     = probR.unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 1)
+        x_seqC    = seqC.unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 15)
         x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)
         
         x         = torch.cat([x_seqC, x_choice], dim=-1)
-        
-        theta = torch.tensor(theta, device=device).unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, 4)
+        theta = theta.unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, 4)
         
         x_batch[i*C:(i+1)*C] = x
         theta_batch[i*C:(i+1)*C] = theta
-    
+        
     # Shuffle x along the 2nd axis
     x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
     
@@ -127,7 +92,44 @@ def collate_fn(batch, C):
     x_batch     = x_batch[indices]
     theta_batch = theta_batch[indices]
     
-    return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)
+    return torch.tensor(x_batch, dtype=torch.float32, device=device), torch.tensor(theta_batch, dtype=torch.float32, device=device)
+
+
+# class MyDataLoader(DataLoader):
+#     def __init__(self, dataset, kwargs):
+#         super().__init__(dataset, **kwargs)
+#         self.C = kwargs['num_probR_sample']
+        
+#     def collate_fn(self, batch):
+#         # Process the batch
+#         x_batch, theta_batch = [], []
+        
+#         x_batch     = torch.empty((self.C * len(batch), batch[0][0].shape[0], batch[0][0].shape[1]+batch[0][2].shape[1]))
+#         theta_batch = torch.empty((self.C * len(batch), batch[0][1].shape[0]))
+        
+#         for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
+            
+#             probR     = torch.tensor(probR).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 1)
+#             x_seqC    = torch.tensor(seqC).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, D*M*S, 15)
+#             x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)
+            
+#             x         = torch.cat([x_seqC, x_choice], dim=-1)
+            
+#             theta = torch.tensor(theta).unsqueeze_(dim=0).repeat_interleave(self.C, dim=0) # (C, 4)
+            
+#             x_batch[i*self.C:(i+1)*self.C] = x
+#             theta_batch[i*self.C:(i+1)*self.C] = theta
+        
+#         # Shuffle x along the 2nd axis
+#         x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
+        
+#         # Shuffle the batched dataset
+#         indices     = torch.randperm(x_batch.shape[0])
+#         x_batch     = x_batch[indices]
+#         theta_batch = theta_batch[indices]
+        
+#         return torch.tensor(x_batch, dtype=torch.float32), torch.tensor(theta_batch, dtype=torch.float32)    
+
 
 
 def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10):

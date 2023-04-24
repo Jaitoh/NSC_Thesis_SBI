@@ -218,7 +218,6 @@ def process_x_seqC_part(
     
     if seqC_process == 'norm':
         seqC = seqC_nan2num_norm(seqC, nan2num=nan2num)
-        #TODO check shape
             
     elif seqC_process == 'summary':
         seqC = seqC_pattern_summary(seqC, summary_type=summary_type)
