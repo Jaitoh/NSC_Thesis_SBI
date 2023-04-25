@@ -55,7 +55,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
     @staticmethod
     def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
         if show:
-            print(f"\n | Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} val: {val_log_prob:.2f} \n")
+            print(f" | Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} val: {val_log_prob:.2f}")
     
     def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
         """Return whether the training converged yet and save best model state so far.

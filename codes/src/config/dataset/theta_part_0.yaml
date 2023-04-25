@@ -8,6 +8,6 @@ dataset:
   # summary_type: 1  # 0: detailed information, 1: brief information
 
 # # ========== parameter settings for the probR ==========
-  num_probR_sample: 100
+  num_probR_sample: 50
   
-  num_theta_each_set: 500
+  num_theta_each_set: 1

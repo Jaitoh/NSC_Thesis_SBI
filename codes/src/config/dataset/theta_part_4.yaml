@@ -10,4 +10,4 @@ dataset:
 # # ========== parameter settings for the probR ==========
   num_probR_sample: 50
   
-  num_theta_each_set: 500
+  num_theta_each_set: 5000

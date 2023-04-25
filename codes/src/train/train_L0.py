@@ -73,8 +73,7 @@ class Solver:
 
         self.log_dir = Path(self.args.log_dir)
         self.data_path = Path(self.args.data_path)
-        check_path(self.log_dir, self.data_path, args)
-        
+        # check_path(self.log_dir, self.data_path, args)
         
         # get dataset size
         d = len(self.config['experiment_settings']['chosen_dur_list'])
@@ -326,6 +325,10 @@ class Solver:
 def main():  # sourcery skip: extract-method
     args = get_args()
     print(args.log_dir)
+    
+    log_dir = Path(args.log_dir)
+    data_path = Path(args.data_path)
+    check_path(log_dir, data_path, args)
     
     # monitor resources usage
     PID = os.getpid()

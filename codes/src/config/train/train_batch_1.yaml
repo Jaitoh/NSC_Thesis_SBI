@@ -19,7 +19,7 @@ train:
 
     num_atoms             : 10
     
-    training_batch_size   : 25
+    training_batch_size   : 125
     stop_after_epochs     : 25
 
     validation_fraction   : 0.2
