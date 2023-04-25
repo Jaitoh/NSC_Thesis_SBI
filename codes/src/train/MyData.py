@@ -16,16 +16,18 @@ class MyDataset(Dataset):
                  num_theta_each_set=5000, 
                  seqC_process='norm',
                  nan2num=-1,
-                 summary_type=0):
+                 summary_type=0,
+                 num_sets=None,
+                 ):
         self.data_path = data_path
         with h5py.File(self.data_path, 'r') as f:
-            self.total_sets = len(f.keys())  # Total number of groups (sets)
+            self.total_sets = len(f.keys()) if num_sets is None else num_sets
             self.total_samples = num_theta_each_set*self.total_sets
             self.num_theta_each_set = num_theta_each_set
             self.seqC_process = seqC_process
             self.nan2num = nan2num
             self.summary_type = summary_type
-        
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
     def __len__(self):

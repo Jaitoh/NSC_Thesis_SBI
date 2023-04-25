@@ -183,6 +183,7 @@ class Solver:
         
         my_dataset_kwargs = {
             'data_path'             : self.args.data_path,
+            'num_sets'              : self.config['dataset']['num_sets'],
             'num_theta_each_set'    : self.config['dataset']['num_theta_each_set'],
             'seqC_process'          : self.config['dataset']['seqC_process'],
             'nan2num'               : self.config['dataset']['nan2num'],

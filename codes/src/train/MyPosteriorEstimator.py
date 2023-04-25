@@ -173,10 +173,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         dataset = MyDataset(
             data_path           = dataset_kwargs['data_path'],
-            num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
             seqC_process        = dataset_kwargs['seqC_process'],
             nan2num             = dataset_kwargs['nan2num'],
             summary_type        = dataset_kwargs['summary_type'],
+            num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
+            num_sets            = dataset_kwargs['num_sets'],
         )
 
         
