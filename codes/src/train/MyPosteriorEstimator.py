@@ -227,8 +227,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         train_loader = data.DataLoader(dataset, generator=g, **train_loader_kwargs)
         val_loader   = data.DataLoader(dataset, generator=g, **val_loader_kwargs)
         
+        self.num_train_batches = len(train_loader)
         # load and show one example of the dataset
-        print('\nloading one batch of the training dataset...')
+        print(f'\nloading one / {self.num_train_batches} batch of the training dataset...')
         start_time = time.time()
         x, theta = next(iter(train_loader))
         print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds')
@@ -239,7 +240,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
               f'\n| theta info:', f'shape {theta.shape}, dtype: {theta.dtype}, device: {theta.device}',
              )
         
-        print(f'\n--- collect posterior set ---\n')
+        print(f'\ncollect posterior sets...')
         start_time = time.time()
         self.posterior_train_set = {
             'x': [],
@@ -274,7 +275,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.posterior_val_set['theta'].append(theta[0, ...])
         self.posterior_val_set['theta'].append(theta[1, ...])
         
-        print(f'collect posterior set takes {time.time() - start_time:.2f} seconds')
+        print(f'collect posterior sets takes {time.time() - start_time:.2f} seconds')
         return train_loader, val_loader
     
     def train_base(
@@ -463,7 +464,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         self._neural_net.parameters(), max_norm=clip_max_norm
                     )
                 self.optimizer.step()
-                if train_batch_num % 5 == 0:
+                if train_batch_num % (self.num_train_batches//20) == 0: # print every 5% of batches
                     print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
                     # batch_timer = time.time()
                 train_batch_num += 1
@@ -502,14 +503,13 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         force_first_round_loss=force_first_round_loss,
                     )
                     val_log_prob_sum -= val_losses.sum().item()
-                    if val_batch_num % 5 == 0:
-                        print(f'epoch {self.epoch}: val_log_prob_sum {val_log_prob_sum:.2f}')
                     val_batch_num += 1
 
             # Take mean over all validation samples.
             self._val_log_prob = val_log_prob_sum / (
                 len(val_loader) * val_loader.batch_size  # type: ignore
             )
+            print(f'epoch {self.epoch}: val_log_prob_sum {self._val_log_prob:.2f}')
             # Log validation log prob for every epoch.
             self._summary["validation_log_probs"].append(self._val_log_prob)
             self._summary["epoch_durations_sec"].append(time.time() - epoch_start_time)
