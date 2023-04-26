@@ -15,7 +15,7 @@
 
 # SLURM_ARRAY_TASK_ID=$1
 
-CLUSTER=snn
+CLUSTER=uzh
 
 if [ "${CLUSTER}" == "uzh" ]; then
     # DATA_PATH=/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5

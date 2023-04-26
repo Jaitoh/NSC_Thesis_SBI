@@ -16,24 +16,19 @@
 # SLURM_ARRAY_TASK_ID=$1
 
 CLUSTER=uzh
-RUN_ID=exp_set_0
 
 if [ "${CLUSTER}" == "uzh" ]; then
-    DATA_PATH=/home/wehe/scratch/data/dataset/dataset_part_${SLURM_ARRAY_TASK_ID}.h5
     DATA_DIR=/home/wehe/scratch/data/dataset/
+    # module load anaconda3
+    # source activate sbi
 else
-    DATA_PATH=../data/dataset/dataset_part_${SLURM_ARRAY_TASK_ID}.h5
     DATA_DIR=../data/dataset/
 fi
 
-PRINT_DIR="./cluster/${CLUSTER}/dataset/"
-PRINT_LOG="./cluster/${CLUSTER}/dataset/merge_dataset_exp_set_0.log"
-
-module load anaconda3
-source activate sbi
+PRINT_DIR="./cluster/${CLUSTER}/dataset/process"
+PRINT_LOG="./cluster/${CLUSTER}/dataset/process/merge_dataset_exp_set_0.log"
 
 echo "print_log: ${PRINT_LOG}"
-echo "SEED: ${SEED}"
 
 # mkdir -p $DATA_DIR
 # mkdir -p $PRINT_DIR
