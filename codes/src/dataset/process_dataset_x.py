@@ -18,14 +18,17 @@ args = args.parse_args()
 
 data_path = args.data_path
 
-# process and write the dataset
+# process and write the seqC, seqC_normed, seqC_summary_0, seqC_summary_1
 with h5py.File(data_path, 'r+') as f:
 
     set_list = list(f.keys())
     print("preprocessing the seqC ...")
     
     for one_set in tqdm(set_list):
-            
+        
+        
+        # probR = f[one_set].pop('seqC_normed')
+        
         seqC = f[one_set]['seqC']
 
         seqC_normed = process_x_seqC_part(
@@ -57,13 +60,17 @@ with h5py.File(data_path, 'r+') as f:
         the_shape = seqC_summary_1.shape
         seqC_summary_1 = seqC_summary_1.reshape(the_shape[0]*the_shape[1]*the_shape[2], the_shape[3])
 
-        if 'seqC_normed' in f[one_set].keys(): #update the dataset
+        if 'seqC_normed' in f[one_set].keys():
             f[one_set].pop('seqC_normed')
+        if 'seqC_summary_0' in f[one_set].keys():
             f[one_set].pop('seqC_summary_0')
+        if 'seqC_summary_1' in f[one_set].keys():
             f[one_set].pop('seqC_summary_1')
         
         f[one_set].create_dataset('seqC_normed', data=seqC_normed)
         f[one_set].create_dataset('seqC_summary_0', data=seqC_summary_0)
         f[one_set].create_dataset('seqC_summary_1', data=seqC_summary_1)
+        
+        
         
 # TODO profiling the collate_fn in this file

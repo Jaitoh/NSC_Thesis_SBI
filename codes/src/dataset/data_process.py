@@ -67,7 +67,7 @@ def seqC_pattern_summary(seqC, summary_type=0, dur_max=15):
 
     """ extract the input sequence pattern summary from the input seqC
 
-        can either input a array of shape (D,M,S,T,C, 15)
+        can either input a array of shape (D,M,S,T, 15)
         or a dictionary of pulse sequences contain all the information listed below for the further computation
         
         Args:
