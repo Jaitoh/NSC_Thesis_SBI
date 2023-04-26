@@ -22,7 +22,10 @@
 ./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_1.h5" # 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy
 ./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_3.h5" # 1ecJ85SPYKBdzRxSsJ4ydb0Y10QQ1IbFa
 ./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5" # 1LMMR2O51WZYw2Ml53W4GYnlrG2zoXQRH
+
 ./gdrive files move 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
 ./gdrive files move 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
-1LMMR2O51WZYw2Ml53W4GYnlrG2zoXQRH
 ./gdrive files move 1LMMR2O51WZYw2Ml53W4GYnlrG2zoXQRH 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
+
+
+./gdrive files upload "/home/wehe/data/NSC/codes/src/dataset/probR_set_0.npy" # 1CVyuUxRY_0RetrwVRTn46iu7uaC4c3m7

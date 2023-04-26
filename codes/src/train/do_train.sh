@@ -27,7 +27,7 @@ CONFIG_DATASET_PATH=./src/config/dataset/theta_part_${SLURM_ARRAY_TASK_ID}.yaml
 if [ "$SLURM_ARRAY_TASK_ID" == "5" ]; then
     CONFIG_TRAIN_PATH=./src/config/train/train_batch_1.yaml
 else
-    CONFIG_TRAIN_PATH=./src/config/train/default.yaml    
+    CONFIG_TRAIN_PATH=./src/config/train/default.yaml
 fi
 
 if [ "${CLUSTER}" == "uzh" ]; then

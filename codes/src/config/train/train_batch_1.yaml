@@ -14,7 +14,7 @@ train:
     
 
   training:
-    training_batch_size   : 600
+    training_batch_size   : 100
     stop_after_epochs     : 25
 
     num_rounds            : 3
