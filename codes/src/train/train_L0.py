@@ -175,7 +175,8 @@ class Solver:
         
         my_dataloader_kwargs = {
             'worker_init_fn':  seed_worker,
-            'collate_fn':  lambda batch: collate_fn(batch=batch, C=self.config['dataset']['num_probR_sample']),
+            # 'collate_fn':  lambda batch: collate_fn(batch=batch, C=self.config['dataset']['num_probR_sample']),
+            'collate_fn':  lambda batch: collate_fn(batch=batch, config=self.config),
         } 
         
         # if self.gpu:

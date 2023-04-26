@@ -47,8 +47,23 @@ def seqC_nan2num_norm(seqC, nan2num=-1):
 
     return seqC
 
+import torch
 
-def seqC_pattern_summary(seqC, summary_type=1, dur_max=15):
+def seqC_nan2num_norm_torch(seqC, nan2num=-1):
+    """Fill the NaNs in seqC with nan2num and normalize to (0, 1) using PyTorch."""
+    # assert seqC is a torch tensor
+    assert isinstance(seqC, torch.Tensor), "seqC should be a torch tensor given your choice of using PyTorch to process"
+    
+    # Fill NaNs with nan2num
+    seqC[seqC.isnan()] = nan2num
+
+    # Normalize the seqC from (nan2num, 1) to (0, 1)
+    seqC = (seqC - nan2num) / (1 - nan2num)
+
+    return seqC
+
+# TODO change into torch
+def seqC_pattern_summary(seqC, summary_type=0, dur_max=15):
 
     """ extract the input sequence pattern summary from the input seqC
 
@@ -61,8 +76,8 @@ def seqC_pattern_summary(seqC, summary_type=1, dur_max=15):
                                 [0, 0.4, -0.4, 0, 0.4, 0.4, -0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]])
 
             summary_type:   (default: 1)
-                0: with separate left and right (same/oppo/new)
-                1: combine left and right (same/oppo/new)
+                0: with separate left and right (same/oppo/new) detailed
+                1: combine left and right (same/oppo/new) brief
 
         Return:
             summary_type 0:
@@ -208,6 +223,7 @@ def process_x_seqC_part(
     seqC_process,
     nan2num,
     summary_type,
+    torch=False,
 ):
 
     # input seqC is a 2D array with shape (num_seqC, seqC_len)
@@ -217,9 +233,13 @@ def process_x_seqC_part(
 
     
     if seqC_process == 'norm':
-        seqC = seqC_nan2num_norm(seqC, nan2num=nan2num)
+        if torch:
+            seqC = seqC_nan2num_norm_torch(seqC, nan2num=nan2num)
+        else:
+            seqC = seqC_nan2num_norm(seqC, nan2num=nan2num)
             
     elif seqC_process == 'summary':
+        # TODO add torch version
         seqC = seqC_pattern_summary(seqC, summary_type=summary_type)
         
     else:

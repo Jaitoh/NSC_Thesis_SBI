@@ -60,15 +60,15 @@ class MyDataset(Dataset):
             summary_type        = self.summary_type,
             )
         
+        return torch.from_numpy(seqC).to(self.device), torch.from_numpy(theta).to(self.device), torch.from_numpy(probR).to(self.device)
         # return seqC, theta, probR
-        return torch.tensor(seqC, device=self.device), torch.tensor(theta, device=self.device), torch.tensor(probR, device=self.device)
     
     
-def collate_fn(batch, C):
-    # check cuda availability
+def collate_fn(batch, config):
+    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # print(f" device: {device}")
-    # Process the batch
+    C = config['dataset']['num_probR_sample']
+    
     x_batch, theta_batch = [], []
     
     x_batch     = torch.empty((C * len(batch), batch[0][0].shape[0], batch[0][0].shape[1]+batch[0][2].shape[1]), device=device)
@@ -76,6 +76,18 @@ def collate_fn(batch, C):
     
     for i, (seqC, theta, probR) in enumerate(batch): # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
         # print(seqC.device, theta.device, probR.device)
+        # seqC  = torch.from_numpy(seqC).to(device) # TODO compare pin_mem or this way
+        # theta = torch.from_numpy(theta).to(device)
+        # probR = torch.from_numpy(probR).to(device)
+        
+        # seqC = process_x_seqC_part(
+        #     seqC                = seqC, 
+        #     seqC_process        = config['dataset']['seqC_process'],
+        #     nan2num             = config['dataset']['nan2num'],
+        #     summary_type        = config['dataset']['summary_type'],
+        #     torch               = True,
+        #     )
+        
         probR     = probR.unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 1)
         x_seqC    = seqC.unsqueeze_(dim=0).repeat_interleave(C, dim=0) # (C, D*M*S, 15)
         x_choice  = torch.bernoulli(probR) # (C, D*M*S, 1)

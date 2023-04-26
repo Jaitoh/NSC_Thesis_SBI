@@ -103,7 +103,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
             if epoch%config['train']['posterior']['step'] == 0: 
                 
-                print("\nPlotting posterior...")
+                posterior_start_time = time.time()
+                print("Plotting posterior...", end=" ")
 
                 posterior = self.build_posterior(current_net)
 
@@ -141,7 +142,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
                     plt.close(fig_x_val)
                     
-                print(f"posteriors plots saved to {log_dir}/posterior/figures/")
+                print(f"saved to {log_dir}/posterior/figures/ in {(time.time()-posterior_start_time)/60:.2f}min")
         
     def get_dataloaders(
         self,
@@ -464,7 +465,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         self._neural_net.parameters(), max_norm=clip_max_norm
                     )
                 self.optimizer.step()
-                if train_batch_num % (self.num_train_batches//20) == 0: # print every 5% of batches
+                
+                if self.num_train_batches <= 20:
+                    print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
+                elif train_batch_num % (self.num_train_batches//20) == 0: # print every 5% of batches
                     print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
                     # batch_timer = time.time()
                 train_batch_num += 1
