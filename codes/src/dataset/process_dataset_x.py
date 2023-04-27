@@ -27,7 +27,6 @@ with h5py.File(data_path, 'r+') as f:
     
     for one_set in tqdm(set_list):
         
-        
         # probR = f[one_set].pop('seqC_normed')
         
         seqC = f[one_set]['seqC']
@@ -62,12 +61,11 @@ with h5py.File(data_path, 'r+') as f:
         seqC_summary_1 = seqC_summary_1.reshape(the_shape[0]*the_shape[1]*the_shape[2], the_shape[3])
 
         if 'seqC_normed' in f[one_set].keys():
-        if 'seqC_normed' in f[one_set].keys():
             f[one_set].pop('seqC_normed')
-        if 'seqC_summary_0' in f[one_set].keys():
+        
         if 'seqC_summary_0' in f[one_set].keys():
             f[one_set].pop('seqC_summary_0')
-        if 'seqC_summary_1' in f[one_set].keys():
+        
         if 'seqC_summary_1' in f[one_set].keys():
             f[one_set].pop('seqC_summary_1')
         
@@ -83,10 +81,7 @@ with h5py.File(data_path, 'r+') as f:
             f[one_set].pop('probR')
             f[one_set].create_dataset('probR', data=probR)
 
-        
 
-        
-# TODO profiling the collate_fn in this file
 
 data_path = '../../../data/dataset/dataset_L0_exp_set_0.h5'
 f = h5py.File(data_path, 'r+') 
@@ -102,4 +97,5 @@ dataset_path = '/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5'
 with h5py.File(dataset_path, 'r+') as f:
     seqC_0 = f['set_0']['seqC'][:]
 
-seqC_0[0,0,2,:], seqC_ref[0,0,2,:]
+print(seqC_0[0,0,2,:], seqC_ref[0,0,2,:])
+print('if the output are the same, the dataset is merged correctly')
