@@ -82,10 +82,6 @@ with h5py.File(data_path, 'r+') as f:
             f[one_set].create_dataset('probR', data=probR)
 
 
-
-data_path = '../../../data/dataset/dataset_L0_exp_set_0.h5'
-f = h5py.File(data_path, 'r+') 
-
 # check the merged datasets are the same
 dataset_path = '/home/wehe/scratch/data/dataset/dataset_part_0.h5'
 with h5py.File(dataset_path, 'r+') as f:

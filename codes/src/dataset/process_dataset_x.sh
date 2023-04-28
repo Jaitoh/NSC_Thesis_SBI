@@ -7,11 +7,11 @@
 #SBATCH --ntasks=1
 
 #SBATCH --mem 16G
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=16
 
 #SBATCH --job-name=process_dataset_x
-#SBATCH --output=./cluster/uzh/dataset/other_logs/process_dataset_x_exp_set_0_%a.out
-#SBATCH --error=./cluster/uzh/dataset/other_logs/process_dataset_x_exp_set_0_%a.err
+#SBATCH --output=./cluster/uzh/dataset/process/process_dataset_x_exp_set_0_%a.out
+#SBATCH --error=./cluster/uzh/dataset/process/process_dataset_x_exp_set_0_%a.err
 
 # SLURM_ARRAY_TASK_ID=$1
 
@@ -27,7 +27,7 @@ else
 fi
 
 PRINT_DIR="./cluster/${CLUSTER}/dataset/"
-PRINT_LOG="./cluster/${CLUSTER}/dataset/process_dataset_x_exp_set_0.log"
+PRINT_LOG="./cluster/${CLUSTER}/dataset/process/process_dataset_x_exp_set_0.log"
 
 echo "print_log: ${PRINT_LOG}"
 
@@ -35,6 +35,9 @@ python3 -u ./src/dataset/process_dataset_x.py \
 --data_path ${DATA_PATH} &> ${PRINT_LOG}
 
 echo 'finished dataset x seqC process'
+echo 'start uploading'
+cd "/home/wehe/data"
+./gdrive files upload "/home/wehe/data/NSC/data/dataset/dataset_L0_exp_set_0.h5"
 
 # sbatch ./cluster/dataset_gen.sh
 # squeue -u $USER
