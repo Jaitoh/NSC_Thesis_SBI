@@ -15,7 +15,7 @@
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=snn
-RUN_ID=exp_set_0_2
+RUN_ID=exp_a0
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
@@ -27,10 +27,12 @@ CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
     module load anaconda3
     source activate sbi
 else
     LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 fi
 
 PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs/${RUN_ID}.log"
@@ -46,6 +48,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --config_simulator_path ${CONFIG_SIMULATOR_PATH} \
 --config_dataset_path ${CONFIG_DATASET_PATH} \
 --config_train_path ${CONFIG_TRAIN_PATH} \
+--data_path ${DATA_PATH} \
 --log_dir ${LOG_DIR} \
 --gpu \
 -y &> ${PRINT_LOG}
@@ -65,3 +68,7 @@ echo 'finished simulation'
 # SBATCH --gres=gpu:V100:1
 # SBATCH --gres=gpu:A100:1
 # SBATCH --array=0-49
+
+# cd ~/tmp/NSC/codes/
+# conda activate sbi
+# ./src/train/do_train_snn.sh

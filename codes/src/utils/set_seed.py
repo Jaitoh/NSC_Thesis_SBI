@@ -14,13 +14,13 @@ def setup_seed(seed):
     torch.backends.cudnn.deterministic = True
 
 
-# def seed_worker(worker_id):
-#     worker_seed = torch.initial_seed() % 2 ** 32
-#     np.random.seed(worker_seed)
-#     random.seed(worker_seed)
-
 def seed_worker(worker_id):
-    # Set a fixed seed for the worker
-    np.random.seed(int(42 + worker_id))
-    random.seed(int(42 + worker_id))
+    worker_seed = torch.initial_seed() % 2 ** 32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+# def seed_worker(worker_id):
+#     # Set a fixed seed for the worker
+#     np.random.seed(int(42 + worker_id))
+#     random.seed(int(42 + worker_id))
 

@@ -174,11 +174,13 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         dataset = MyDataset(
             data_path           = dataset_kwargs['data_path'],
+            
+            num_sets            = dataset_kwargs['num_sets'],
+            num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
+            
             seqC_process        = dataset_kwargs['seqC_process'],
             nan2num             = dataset_kwargs['nan2num'],
             summary_type        = dataset_kwargs['summary_type'],
-            num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
-            num_sets            = dataset_kwargs['num_sets'],
         )
 
         
@@ -204,14 +206,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
             "batch_size": min(training_batch_size, num_training_examples),
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.train_indices.tolist()),
-            # "pin_memory": True,
+            "pin_memory": True,
         }
         val_loader_kwargs = {
             "batch_size": min(training_batch_size, num_validation_examples),
             "shuffle"   : False,
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.val_indices.tolist()),
-            # "pin_memory": True,
+            "pin_memory": True,
         }
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
@@ -257,26 +259,61 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.posterior_train_set['x'].append(x[1, ...])
         self.posterior_train_set['theta'].append(theta[0, ...])
         self.posterior_train_set['theta'].append(theta[1, ...])
+        del x, theta
         
         x, theta = next(iter(train_loader))
         self.posterior_train_set['x'].append(x[0, ...])
         self.posterior_train_set['x'].append(x[1, ...])
         self.posterior_train_set['theta'].append(theta[0, ...])
         self.posterior_train_set['theta'].append(theta[1, ...])
+        del x, theta
+        print(f'collect 1 posterior sets takes {time.time() - start_time:.2f} seconds')
         
         x, theta = next(iter(val_loader))
         self.posterior_val_set['x'].append(x[0, ...])
         self.posterior_val_set['x'].append(x[1, ...])
         self.posterior_val_set['theta'].append(theta[0, ...])
         self.posterior_val_set['theta'].append(theta[1, ...])
+        del x, theta
+        print(f'collect 2 posterior sets takes {time.time() - start_time:.2f} seconds')
         
         x, theta = next(iter(val_loader))
         self.posterior_val_set['x'].append(x[0, ...])
         self.posterior_val_set['x'].append(x[1, ...])
         self.posterior_val_set['theta'].append(theta[0, ...])
         self.posterior_val_set['theta'].append(theta[1, ...])
+        # del x, theta
         
-        print(f'collect posterior sets takes {time.time() - start_time:.2f} seconds')
+        print(f'collect 3 posterior sets takes {time.time() - start_time:.2f} seconds')
+        
+        # First round or if retraining from scratch:
+        # Call the `self._build_neural_net` with the rounds' thetas and xs as
+        # arguments, which will build the neural network.
+        # This is passed into NeuralPosterior, to create a neural posterior which
+        # can `sample()` and `log_prob()`. The network is accessible via `.net`.
+        if self._neural_net is None or self._retrain_from_scratch:
+
+            # Get theta,x to initialize NN
+            # theta, x, _ = self.get_simulations(starting_round=start_idx)
+            # x, theta = next(iter(train_loader))
+            
+            # Use only training data for building the neural net (z-scoring transforms)
+            self._neural_net = self._build_neural_net(
+                theta[:3].to("cpu"),
+                x[:3].to("cpu"),
+            )
+            self._x_shape = x_shape_from_simulation(x.to("cpu"))
+            
+            print('\nfinished build network')
+            print(f'\n{self._neural_net}')
+            test_posterior_net_for_multi_d_x(
+                self._neural_net,
+                theta.to("cpu"),
+                x.to("cpu"),
+            )
+
+            del theta, x
+        
         return train_loader, val_loader
     
     def train_base(
@@ -378,6 +415,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # last proposal.
         proposal = self._proposal_roundwise[-1]
 
+        self._retrain_from_scratch = retrain_from_scratch
+        
+        time0 = time.time()
         train_loader, val_loader = self.get_dataloaders(
             start_idx,
             training_batch_size,
@@ -387,34 +427,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             dataset_kwargs=dataset_kwargs,
             dataloader_kwargs=dataloader_kwargs,
         )
-        # First round or if retraining from scratch:
-        # Call the `self._build_neural_net` with the rounds' thetas and xs as
-        # arguments, which will build the neural network.
-        # This is passed into NeuralPosterior, to create a neural posterior which
-        # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        if self._neural_net is None or retrain_from_scratch:
-
-            # Get theta,x to initialize NN
-            # theta, x, _ = self.get_simulations(starting_round=start_idx)
-            x, theta = next(iter(train_loader))
-            
-            # Use only training data for building the neural net (z-scoring transforms)
-            self._neural_net = self._build_neural_net(
-                theta[0:2].to("cpu"),
-                x[0:2].to("cpu"),
-            )
-            self._x_shape = x_shape_from_simulation(x.to("cpu"))
-            
-            print('\nfinished build network')
-            print(f'\n{self._neural_net}')
-            test_posterior_net_for_multi_d_x(
-                self._neural_net,
-                theta.to("cpu"),
-                x.to("cpu"),
-            )
-
-            del theta, x
-
+        print(f"time for dataloaders: {(time.time() - time0)/60:.2f} min")
+        
         # Move entire net to device for training.
         self._neural_net.to(self._device)
 
@@ -466,6 +480,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     )
                 self.optimizer.step()
                 
+                del x_batch, theta_batch, masks_batch, batch
+                
                 if self.num_train_batches <= 20:
                     print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
                 elif train_batch_num % (self.num_train_batches//20) == 0: # print every 5% of batches
@@ -508,7 +524,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     )
                     val_log_prob_sum -= val_losses.sum().item()
                     val_batch_num += 1
-
+                    
+                    del x_batch, theta_batch, masks_batch, batch
+                    
             # Take mean over all validation samples.
             self._val_log_prob = val_log_prob_sum / (
                 len(val_loader) * val_loader.batch_size  # type: ignore

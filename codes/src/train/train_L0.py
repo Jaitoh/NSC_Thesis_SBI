@@ -12,6 +12,7 @@ import yaml
 # import glob
 import argparse
 import torch
+# torch.autograd.detect_anomaly(True)
 import time
 import os
 import multiprocessing
@@ -175,8 +176,8 @@ class Solver:
         
         my_dataloader_kwargs = {
             'worker_init_fn':  seed_worker,
-            # 'collate_fn':  lambda batch: collate_fn(batch=batch, C=self.config['dataset']['num_probR_sample']),
-            'collate_fn':  lambda batch: collate_fn(batch=batch, config=self.config),
+            'collate_fn'    :  lambda batch: collate_fn(batch=batch, config=self.config),
+            'num_workers'   :  self.config['train']['training']['num_workers'],
         } 
         
         # if self.gpu:
@@ -335,38 +336,38 @@ def main():  # sourcery skip: extract-method
     # monitor resources usage
     PID = os.getpid()
     print(f"PID: {PID}")
-    log_file = f"{args.log_dir}/resource_usage.log"
-    monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
-    monitor_process.start()
+    # log_file = f"{args.log_dir}/resource_usage.log"
+    # monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
+    # monitor_process.start()
     
-    try:
+    # try:
             
-        config = load_config(
-            config_simulator_path=args.config_simulator_path,
-            config_dataset_path=args.config_dataset_path,
-            config_train_path=args.config_train_path,
-        )
+    config = load_config(
+        config_simulator_path=args.config_simulator_path,
+        config_dataset_path=args.config_dataset_path,
+        config_train_path=args.config_train_path,
+    )
 
-        print(f'\n--- args ---')
-        for arg, value in vars(args).items():
-            print(f'{arg}: {value}')
+    print(f'\n--- args ---')
+    for arg, value in vars(args).items():
+        print(f'{arg}: {value}')
 
-        print('\n--- config keys ---')
-        print(config.keys())
+    print('\n--- config keys ---')
+    print(config.keys())
 
-        solver = Solver(args, config)
-        solver.sbi_train()
-        
-        # solver.save_model()
-        
-        # # save the solver
-        # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:
-        #     # pickle.dump(solver, f)
-        #     dill.dump(solver, f)
-        # print(f'solver saved to: {Path(args.log_dir) / "solver.pkl"}')
+    solver = Solver(args, config)
+    solver.sbi_train()
+    
+    # solver.save_model()
+    
+    # # save the solver
+    # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:
+    #     # pickle.dump(solver, f)
+    #     dill.dump(solver, f)
+    # print(f'solver saved to: {Path(args.log_dir) / "solver.pkl"}')
 
-    finally:
-        monitor_process.terminate()
+    # finally:
+    #     monitor_process.terminate()
 
 
 

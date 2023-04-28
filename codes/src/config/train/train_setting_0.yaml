@@ -6,31 +6,30 @@ train:
     embedding_net: 
       type: lstm
       hidden_size: 64
-      output_size: 20
+      output_size: 32
     posterior_nn:
       model: maf
-      hidden_features: 64
-      num_transforms: 2
+      hidden_features: 128
+      num_transforms: 5
     
 
   training:
-    training_batch_size   : 100
+    training_batch_size   : 150
     stop_after_epochs     : 25
+
+    num_workers           : 8
 
     num_rounds            : 3
     num_runs              : 10
     num_atoms             : 10
     
     validation_fraction   : 0.2
-    learning_rate         : 5e-4
+    learning_rate         : 1e-4
 
     max_num_epochs        : 2147483647
-    clip_max_norm         : 5.0
+    clip_max_norm         : 4.0
     
-    # for dataloader:
-    # num_workers           : 4
-  
   posterior:
-    step          : 2     # the epoch steps to check posterior during training
+    step          : 5     # the epoch steps to check posterior during training
     sampling_num  : 10000
     val_set_size  : 1

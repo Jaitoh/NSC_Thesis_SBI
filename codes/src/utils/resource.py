@@ -22,7 +22,7 @@ def show_resource_usage(PID):
     if torch.cuda.is_available():
         num_gpus = torch.cuda.device_count()
         for i in range(num_gpus):
-            gpu_message = f"| GPU {torch.cuda.get_device_name(i)}, {round(torch.cuda.memory_allocated(i) / 1024 ** 3, 1)} GB "
+            gpu_message = f"| GPU {torch.cuda.get_device_name(i)}, {round(torch.cuda.max_memory_allocated(i) / 1024 ** 3, 1)} GB "
             gpu_messages.append(gpu_message)
         
     else:
