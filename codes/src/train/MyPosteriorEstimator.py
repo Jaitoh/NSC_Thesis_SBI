@@ -146,10 +146,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
     def get_dataloaders(
         self,
-        starting_round: int = 0,
+        # starting_round: int = 0,
         training_batch_size: int = 50,
         validation_fraction: float = 0.1,
-        resume_training: bool = False,
+        # resume_training: bool = False,
         seed: Optional[int] = 100,
         dataset_kwargs: Optional[dict] = None,
         dataloader_kwargs: Optional[dict] = None,
@@ -232,7 +232,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         self.num_train_batches = len(train_loader)
         # load and show one example of the dataset
-        print(f'\nloading one / {self.num_train_batches} batch of the training dataset...')
+        print(f'\nloading 1 / {self.num_train_batches} batch of the training dataset...')
         start_time = time.time()
         x, theta = next(iter(train_loader))
         print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds')

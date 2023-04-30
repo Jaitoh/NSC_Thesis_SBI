@@ -1,8 +1,10 @@
-import numpy as np
+import time
 import h5py
 import torch
+import numpy as np
 from torch.utils.data import Dataset, DataLoader
-from dataset.data_process import process_x_seqC_part
+# from dataset.data_process import process_x_seqC_part
+
 
 class MyDataset(Dataset):
     """MyDataset class
@@ -64,12 +66,122 @@ class MyDataset(Dataset):
         # print(f"theta shape: {theta.shape}")
 
         return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
+
+class My_Dataset_Mem():
+    
+    """My_Dataset_Mem:  load data into memory
+
+    Returns:
+        seqC :             -> (DMS, 15 or L_x)
+        theta: (5000, 4)   -> (4,)
+        probR: (DMS, 5000) -> (DMS, )
         
+    """
+    def __init__(self, 
+                 data_path, 
+
+                 config,
+                 ):
+        chosen_sets = config['dataset']['chosen_sets']
+        chosen_theta_each_set = config['dataset']['chosen_theta_each_set']
+        
+        self.data_path = data_path
+
+        # with h5py.File(self.data_path, 'r') as f:
+        f = h5py.File(self.data_path, 'r', libver='latest', swmr=True)
+
+        self.total_sets             = len(f.keys())
+        self.all_set_names          = list(f.keys())
+        self.total_theta_in_a_set   = f[self.all_set_names[0]]['theta'].shape[0]
+        if chosen_sets is None:
+            chosen_sets = self.total_sets
+        self.total_samples          = chosen_theta_each_set*chosen_sets
+        self.chosen_theta_each_set  = chosen_theta_each_set
+
+        seqC_process   = config['dataset']['seqC_process']
+        nan2num        = config['dataset']['nan2num']
+        summary_type   = config['dataset']['summary_type']
+
+        # Load all data into memory
+        randomly_chosen_set_idx   = np.random.choice(self.all_set_names, chosen_sets, replace=False)
+        randomly_chosen_theta_idx = np.random.choice(self.total_theta_in_a_set, chosen_theta_each_set, replace=False)
+        
+        DMS = f[self.all_set_names[0]]['seqC_normed'].shape[0]
+        print(f"seqC shape: {f[self.all_set_names[0]]['seqC_normed'].shape}")
+        seqC_all  = np.empty((chosen_sets, DMS, 15))
+        theta_all = np.empty((chosen_sets, chosen_theta_each_set, 4))
+        probR_all = np.empty((chosen_sets, DMS, self.chosen_theta_each_set))
+        print(f['set_0']['theta'][:].shape)
+        for set_idx, set_name in enumerate(randomly_chosen_set_idx):
+            if seqC_process == 'norm':
+                seqC_all[set_idx] = f[set_name]['seqC_normed'][:]
+            elif seqC_process == 'summary':
+                if summary_type == 0:
+                    seqC_all[set_idx] = f[set_name]['seqC_summary_0'][:]
+                elif summary_type == 1:
+                    seqC_all[set_idx] = f[set_name]['seqC_summary_1'][:]
+            else:
+                raise ValueError(f"seqC_process {seqC_process} not supported")
+
+            theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
+            probR_all[set_idx] = f[set_name]['probR'][:][:, randomly_chosen_theta_idx]
+        
+        
+        self.seqC_all = seqC_all
+        self.theta_all = theta_all
+        self.probR_all = probR_all
+        
+        print(f"seqC_all shape: {self.seqC_all.shape}")
+        print(f"theta_all shape: {self.theta_all.shape}")
+        print(f"probR_all shape: {self.probR_all.shape}")
+
+        f.close()
+
+    def __len__(self):
+        return self.total_samples
+
+    def __getitem__(self, idx):
+        # Calculate set index and theta index within the set
+        set_idx, theta_idx = divmod(idx, self.chosen_theta_each_set)
+
+        seqC = self.seqC_all[set_idx]
+        theta = self.theta_all[set_idx, theta_idx]
+        probR = self.probR_all[set_idx, :, theta_idx][:, np.newaxis]
+        
+        return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
+   
+class Data_Prefetcher():
+    def __init__(self, loader):
+        self.loader = iter(loader)
+        self.stream = torch.cuda.Stream()
+        self.preload()
+
+    def preload(self):
+        try:
+            self.next_input, self.next_target = next(self.loader)
+        except StopIteration:
+            self.next_input = None
+            self.next_target = None
+            return
+        with torch.cuda.stream(self.stream):
+            self.next_input = self.next_input.cuda(non_blocking=True)
+            self.next_target = self.next_target.cuda(non_blocking=True)
+            # self.next_input = self.next_input.float()
+        
+    def next(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        input = self.next_input
+        target = self.next_target
+        self.preload()
+        return input, target
+            
     
-    
-def collate_fn(batch, config):
+def collate_fn(batch, config, debug=False):
     
     C = config['dataset']['num_probR_sample']
+    
+    if debug:
+        start_time_0 = time.time()
     
     x_batch, theta_batch = [], []
     
@@ -87,20 +199,104 @@ def collate_fn(batch, config):
         
         x_batch[i*C:(i+1)*C] = x
         theta_batch[i*C:(i+1)*C] = theta
-        
+    
+    if debug:
+        print(f"\ncollate_fn: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
+    
+    if debug:
+        start_time = time.time()
     # Shuffle x along the 2nd axis
     x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
+    if debug:
+        print(f"collate_fn: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
     
+    if debug:
+        start_time = time.time()
     # Shuffle the batched dataset
     indices     = torch.randperm(x_batch.shape[0])
     x_batch     = x_batch[indices]
     theta_batch = theta_batch[indices]
+    if debug:
+        print(f"collate_fn: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
+        print(f"collate_fn: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
     
     return x_batch.to(torch.float32), theta_batch.to(torch.float32)
 
 
+def collate_fn_vec(batch, config, debug=False):
+    """
+    batch: [
+            (seqC, theta, probR),
+            (seqC, theta, probR),
+            ...
+            (seqC, theta, probR),
+            ]
+            seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
+    """
+    
+    C = config['dataset']['num_probR_sample']
+    B = len(batch)
+    
+    if debug:
+        start_time_0 = time.time()
+    
+    seqC_shape = batch[0][0].shape
+    theta_shape = batch[0][1].shape
+    probR_shape = batch[0][2].shape
+    
+    # Preallocate tensors
+    seqC_batch = torch.empty((B, *seqC_shape))
+    theta_batch = torch.empty((B, *theta_shape))
+    probR_batch = torch.empty((B, *probR_shape))
+    
+    # Fill tensors with data from the batch
+    for i, (seqC, theta, probR) in enumerate(batch):
+        seqC_batch[i] = seqC
+        theta_batch[i] = theta
+        probR_batch[i] = probR
+    print(f"collate_fn_vec: dataloading {(time.time() - start_time_0)*1000:.2f} ms")
+    
+    # Repeat seqC and theta C times along a new dimension
+    x_seqC = seqC_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 15) first C samples are the same, from the first batch
+    theta_batch = theta_batch.repeat_interleave(C, dim=0)  # (C*B, 4)
+    
+    # Repeat probR C times along a new dimension and sample from Bernoulli distribution
+    probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 1)
+    x_choice = torch.bernoulli(probR_batch)  # (C*B, D*M*S, 1)
+    
+    # Concatenate x_seqC and x_choice
+    x_batch = torch.cat([x_seqC, x_choice], dim=-1)  # (C*B, D*M*S, 16)
+    if debug:
+        print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
+    
+    if debug:
+        start_time = time.time()
+    # Shuffle x along the 2nd axis
+    # x_batch = torch.stack([x_batch[i,:,:][torch.randperm(x_batch.shape[1]),:] for i in range(x_batch.shape[0])])
+    DMS = x_batch.shape[1]
+    x_batch_shuffled = torch.empty_like(x_batch)
+    for i in range(B*C):
+        x_batch_shuffled[i] = x_batch[i][torch.randperm(DMS)]
+    
+    if debug:
+        print(f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
+    
+    if debug:
+        start_time = time.time()
+    
+    # Shuffle the batched dataset
+    indices             = torch.randperm(x_batch_shuffled.shape[0])
+    x_batch_shuffled    = x_batch_shuffled[indices]
+    theta_batch         = theta_batch[indices]
+    if debug:
+        print(f"collate_fn_vec: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
+        print(f"collate_fn_vec: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
+    
+    return x_batch_shuffled.to(torch.float32), theta_batch.to(torch.float32)
+
+
 def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10):
-    '''
+    ''' OLD VERSION
     batch is a list of tuples, each tuple is (theta, x, prior_masks) 
         original shapes:
         theta.shape = (T*C, L_theta)
@@ -131,3 +327,69 @@ def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10
         theta       = theta_new
         
     return theta, x, _
+
+
+if __name__ == '__main__':
+    batch_size = 20
+    num_probR_sample = 100
+
+    # Configuration
+    config = {
+        'dataset': {
+            'num_probR_sample'  : num_probR_sample,
+            'chosen_sets'       : 9,
+            'chosen_theta_each_set' : 500, #500
+            'seqC_process'      : 'norm',
+            'nan2num'           : -1,
+            'summary_type'      : 0
+        }
+    }
+
+    # dataset_path = '../../../data/dataset/dataset_L0_exp_set_0_test.h5'
+    dataset_path = '../data/dataset/dataset_L0_exp_set_0_test.h5'
+    
+    debug = True
+    dataset = MyDataset(dataset_path)
+    # dataset = My_Dataset_Mem(dataset_path, config)
+    counter = 0
+    
+    case = 1
+    
+    if case == 0:
+        data_loader = DataLoader(dataset, batch_size=batch_size, 
+                                pin_memory=True, num_workers=2,
+                                collate_fn=lambda b: collate_fn(b, config, debug))
+    elif case == 1: # vec version
+        data_loader = DataLoader(dataset, batch_size=batch_size, 
+                                pin_memory=True, num_workers=2,
+                                collate_fn=lambda b: collate_fn_vec(b, config, debug))
+    elif case == 2: # prefected version
+        data_loader = DataLoader(dataset, batch_size=batch_size, 
+                                pin_memory=True, num_workers=2,
+                                collate_fn=lambda b: collate_fn_vec(b, config, debug))
+        prefetcher = Data_Prefetcher(data_loader)
+    
+    elif case == 3: # load to memory
+        print()
+        
+    
+    if debug:
+        start_time = time.time()
+    
+    if case == 2:
+        data, label = prefetcher.next()
+        iteration = 1
+        while data is not None:
+            data, label = prefetcher.next()
+            iteration += 1
+            if iteration == 5:
+                break
+    else:
+        for x_batch, theta_batch in data_loader:
+            counter += 1
+            if counter == 5:
+                counter = 0
+                break
+            
+    
+    print(f"--- finished {case} in: {(time.time() - start_time)*1000:.2f} ms")
