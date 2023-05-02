@@ -1,0 +1,12 @@
+sbi
+torch
+jupyter
+pyyaml
+memory_profiler
+h5py
+numpy
+pandas
+cython
+tqdm
+matplotlib
+torchinfo

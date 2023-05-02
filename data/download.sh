@@ -25,3 +25,6 @@
 
 # dataset_L0_exp_set_0.h5 new
 ./gdrive files download 1bcv3Nxh7nFBMbD5_6lThYQcFdFQlg0zV --destination ./tmp/NSC/data/dataset/
+
+# trial.mat
+./gdrive files download 188QshxMlik3JW6Z_GM8lj1erx5xtT2cO --destination ./tmp/NSC/data/

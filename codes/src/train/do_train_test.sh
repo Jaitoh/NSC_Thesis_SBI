@@ -14,8 +14,8 @@
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
 TRAIN_FILE_NAME=train_L0
-CLUSTER=snn
-RUN_ID=exp_a0
+CLUSTER=test
+RUN_ID=exp_b0_test
 
 CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
@@ -23,12 +23,12 @@ CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
-    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0_test.h5"
     module load anaconda3
     source activate sbi
 else
     LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
-    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0_test.h5"
 fi
 
 PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs/${RUN_ID}.log"
@@ -55,10 +55,6 @@ echo 'finished simulation'
 # squeue -u $USER
 # scancel 466952
 # sacct -j 466952
-# squeue -u $USER
-# scancel --user=wehe
-# squeue -u $USER
-# squeue -u $USER
 
 # SBATCH --gres=gpu:T4:1
 # SBATCH --gres=gpu:V100:1
@@ -67,4 +63,4 @@ echo 'finished simulation'
 
 # cd ~/tmp/NSC/codes/
 # conda activate sbi
-# ./src/train/do_train_snn.sh
+# ./src/train/do_train_test.sh
