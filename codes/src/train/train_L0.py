@@ -182,6 +182,7 @@ class Solver:
             'config'                         : self.config,
             'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
             'validation_fraction'            : self.config['dataset']['validation_fraction'],
+            'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
         }
         
         my_dataloader_kwargs = {
@@ -278,6 +279,8 @@ class Solver:
             
             'num_atoms'            : training_config['num_atoms'],
             'use_combined_loss'    : True,
+            'scheduler'            : training_config['scheduler'],
+            'scheduler_params'     : training_config['scheduler_params'],
         }
         
         # run training with current run updated dataset

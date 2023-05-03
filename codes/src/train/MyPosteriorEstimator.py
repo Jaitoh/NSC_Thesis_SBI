@@ -90,7 +90,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         chosen_dur_trained_in_sequence  = dataset_kwargs['chosen_dur_trained_in_sequence']
         clip_max_norm                   = training_kwargs['clip_max_norm']
         print_freq                      = training_kwargs['print_freq']
-        use_data_prefetcher             = training_kwargs['use_data_prefetcher']
+        use_data_prefetcher             = dataset_kwargs['use_data_prefetcher']
         self.use_data_prefetcher        = use_data_prefetcher
         self.batch_counter = 0
         self.epoch_counter = 0
@@ -145,7 +145,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         # validate and log 
                         self._neural_net.eval()
                         with torch.no_grad():
-                            self._val_log_prob = self._val_one_epoch(val_prefetcher)
+                            val = val_prefetcher if use_data_prefetcher else val_loader
+                            self._val_log_prob = self._val_one_epoch(val)
                             self._val_one_epoch_log(epoch_start_time)
                             if do_print_memory_usage:
                                 print('gpu memory usage after validation', end=' | ')
@@ -171,10 +172,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
                             self.epoch += 1
                             self.epoch_counter += 1
                         
-                        self.scheduler.step()
+                        if training_kwargs['scheduler'] == 'ReduceLROnPlateau':
+                            self.scheduler.step(self._val_log_prob)
+                        else:
+                            self.scheduler.step()
                             
-                    
-                    del train_prefetcher, val_prefetcher, train_loader, val_loader, self.dataset
+                    if self.use_data_prefetcher:
+                        del train_prefetcher, val_prefetcher, train_loader, val_loader, self.dataset
+                    else:
+                        del train_loader, val_loader, self.dataset
+                        
                     torch.cuda.empty_cache()
                     print(self._describe_dset())
                     
@@ -197,13 +204,16 @@ class MyPosteriorEstimator(PosteriorEstimator):
                             x, theta = self._collect_posterior_sets(train_prefetcher, val_prefetcher, use_data_prefetcher)
                         else:
                             x, theta = self._collect_posterior_sets(train_loader, val_loader, use_data_prefetcher)
-                    
-                del train_prefetcher, val_prefetcher, train_loader, val_loader, x, theta
+                
+                if use_data_prefetcher:
+                    del train_prefetcher, val_prefetcher, train_loader, val_loader, x, theta
+                else:
+                    del train_loader, val_loader, x, theta
                 torch.cuda.empty_cache()
             
-            finally:
-                train_loader.terminate()
-                val_loader.terminate()
+            except KeyboardInterrupt:
+                print("Interrupted by Ctrl+C. Cleaning up...")
+
                 
         # Avoid keeping the gradients in the resulting network, which can
         # cause memory leakage when benchmarking. save the network
@@ -257,7 +267,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         torch.cuda.empty_cache()
         return train_prefetcher, val_prefetcher
     
-    def _collect_posterior_sets_prefetcher(self, train_prefetcher_or_loader, val_prefetcher_or_loader, use_data_prefetcher):
+    def _collect_posterior_sets(self, train_prefetcher_or_loader, val_prefetcher_or_loader, use_data_prefetcher):
         # load and show one example of the dataset
         print(f'\nloading 1 / {self.num_train_batches} batch of the training dataset...')
         start_time = time.time()
@@ -370,9 +380,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.optimizer = optim.Adam(list(self._neural_net.parameters()), lr=training_kwargs['learning_rate'])
 
         if training_kwargs['scheduler'] == 'ReduceLROnPlateau':
-            self.scheduler = ReduceLROnPlateau(self.optimizer, *training_kwargs['scheduler_params'])
+            self.scheduler = ReduceLROnPlateau(self.optimizer, **training_kwargs['scheduler_params'])
         if training_kwargs['scheduler'] == 'CosineAnnealingWarmRestarts':
-            self.scheduler = CosineAnnealingWarmRestarts(self.optimizer, *training_kwargs['scheduler_params'])
+            self.scheduler = CosineAnnealingWarmRestarts(self.optimizer, **training_kwargs['scheduler_params'])
         # if training_kwargs['scheduler'] == 'CosineAnnealingLR':
         #     self.scheduler = CosineAnnealingLR(self.optimizer, *training_kwargs['scheduler_params'])
         
@@ -488,7 +498,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         train_log_prob_average = train_log_probs_sum / self.train_data_size
         # train_log_prob_average = train_log_probs_sum / (self.num_train_batches * dataset_kwargs['batch_size'] * dataset_kwargs['num_probR_sample'])
         self._summary_writer.add_scalars("log_probs", {'training': train_log_prob_average}, self.epoch_counter)
-        self._summary_writer.add_scalars("log_probs", {'learning rate': self.scheduler.get_lr()}, self.epoch_counter)
+        self._summary_writer.add_scalar("learning rate", self.scheduler.optimizer.param_groups[0]['lr'], self.epoch_counter)
         self._summary["training_log_probs"].append(train_log_prob_average)
         
         return train_log_prob_average
