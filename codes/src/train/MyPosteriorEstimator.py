@@ -120,7 +120,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 self._val_log_prob, self._val_log_prob_dset = float("-Inf"), float("-Inf")
                 self._best_val_log_prob, self._best_val_log_prob_dset = float("-Inf"), float("-Inf")
                 
-                while self.dset <= training_kwargs['max_num_dsets'] and not self._converged_dset(training_kwargs['stop_after_dsets']):
+                while self.dset <= training_kwargs['max_num_dsets'] and not self._converged_dset(training_kwargs['stop_after_dsets'], training_kwargs['improvement_threshold']):
                     
                     # init optimizer and scheduler
                     self._init_optimizer(training_kwargs)
@@ -131,7 +131,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         print_gpu_memory_usage()
                         print_cpu_memory_usage()
                     
-                    while self.epoch <= training_kwargs['max_num_epochs'] and not self._converged(self.epoch, training_kwargs['stop_after_epochs']):
+                    while self.epoch <= training_kwargs['max_num_epochs'] and not self._converged(self.epoch, training_kwargs['stop_after_epochs'], training_kwargs['improvement_threshold']):
                         
                         # train and log one epoch
                         self._neural_net.train()
@@ -700,7 +700,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 
                 print(f"posterior check finished in {(time.time()-posterior_start_time)/60:.2f}min")
     
-    def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
+    def _converged(self, epoch: int, stop_after_epochs: int, improvement_threshold: float) -> bool:
         """Return whether the training converged yet and save best model state so far.
 
         Checks for improvement in validation performance over previous epochs.
@@ -717,8 +717,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         assert self._neural_net is not None
         neural_net = self._neural_net
 
+        improvement = self._val_log_prob - self._best_val_log_prob
         # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob > self._best_val_log_prob:
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob or improvement > improvement_threshold:
             
             self._epochs_since_last_improvement = 0
             
@@ -742,12 +743,13 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
         return converged
     
-    def _converged_dset(self, stop_after_dsets):
+    def _converged_dset(self, stop_after_dsets, improvement_threshold):
         
         converged = False
         assert self._neural_net is not None
         
-        if self.dset == 0 or self._val_log_prob_dset > self._best_val_log_prob_dset:
+        improvement = self._val_log_prob - self._best_val_log_prob
+        if self.dset == 0 or self._val_log_prob_dset > self._best_val_log_prob_dset or improvement > improvement_threshold:
             
             self._dset_since_last_improvement = 0
             

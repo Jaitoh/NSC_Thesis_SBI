@@ -269,6 +269,8 @@ class Solver:
 
         my_training_kwargs = {
             'learning_rate'        : eval(training_config['learning_rate']),
+            
+            'improvement_threshold': training_config['improvement_threshold'],
             'stop_after_epochs'    : training_config['stop_after_epochs'],
             'stop_after_dsets'     : training_config['stop_after_dsets'],
             'max_num_epochs'       : training_config['max_num_epochs'],
