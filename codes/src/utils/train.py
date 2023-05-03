@@ -11,7 +11,7 @@ def train_inference_helper(inference, **kwargs):
     return inference.train(**kwargs)
 
         
-def plot_posterior_seen(posterior, sample_num, x, true_params, limits, prior_labels):
+def plot_posterior_with_label(posterior, sample_num, x, true_params, limits, prior_labels):
     """ plot the posterior distribution of the seen data """
     
     samples = posterior.sample((sample_num,), x=x, show_progress_bars=False)

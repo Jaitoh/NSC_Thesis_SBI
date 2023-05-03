@@ -10,3 +10,4 @@ cython
 tqdm
 matplotlib
 torchinfo
+gpustat

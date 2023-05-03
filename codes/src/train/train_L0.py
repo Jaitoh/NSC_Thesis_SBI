@@ -46,7 +46,7 @@ from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
 from utils.train import (
     print_cuda_info, choose_cat_validation_set, 
-    plot_posterior_seen, plot_posterior_unseen,
+    plot_posterior_with_label, plot_posterior_unseen,
     train_inference_helper,
 )
 from utils.setup import(
@@ -136,44 +136,44 @@ class Solver:
         return neural_posterior
 
 
-    def posterior_analysis(self, posterior, current_round, run):
-        # posterior analysis
-        print(f"\n--- posterior sampling ---")
-        for fig_idx in tqdm(range(len(self.post_val_set['x']))):
+    # def posterior_analysis(self, posterior, current_round, run):
+    #     # posterior analysis
+    #     print(f"\n--- posterior sampling ---")
+    #     for fig_idx in tqdm(range(len(self.post_val_set['x']))):
             
-            fig_x, _ = plot_posterior_seen(
-                posterior       = posterior, 
-                sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x'][fig_idx].to(self.device),
-                true_params     = self.post_val_set['theta'][fig_idx],
-                limits          = self._get_limits(),
-                prior_labels    = self.config['prior']['prior_labels'],
-            )
-            plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
-            plt.close(fig_x)
-            fig_x_shuffle, _ = plot_posterior_seen(
-                posterior       = posterior, 
-                sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
-                true_params     = self.post_val_set['theta'][fig_idx],
-                limits          = self._get_limits(),
-                prior_labels    = self.config['prior']['prior_labels'],
-            )
-            plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
+    #         fig_x, _ = plot_posterior_with_label(
+    #             posterior       = posterior, 
+    #             sample_num      = self.config['train']['posterior']['sampling_num'],
+    #             x               = self.post_val_set['x'][fig_idx].to(self.device),
+    #             true_params     = self.post_val_set['theta'][fig_idx],
+    #             limits          = self._get_limits(),
+    #             prior_labels    = self.config['prior']['prior_labels'],
+    #         )
+    #         plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
+    #         plt.close(fig_x)
+    #         fig_x_shuffle, _ = plot_posterior_with_label(
+    #             posterior       = posterior, 
+    #             sample_num      = self.config['train']['posterior']['sampling_num'],
+    #             x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
+    #             true_params     = self.post_val_set['theta'][fig_idx],
+    #             limits          = self._get_limits(),
+    #             prior_labels    = self.config['prior']['prior_labels'],
+    #         )
+    #         plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
         
-        # save posterior for each round and run using pickle
-        with open(f"{self.log_dir}/posterior/figures/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
-            pickle.dump(posterior, f)
+    #     # save posterior for each round and run using pickle
+    #     with open(f"{self.log_dir}/posterior/figures/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
+    #         pickle.dump(posterior, f)
             
-        # check posterior for x_o
-        fig, _ = plot_posterior_unseen(
-            posterior       = posterior, 
-            sample_num      = self.config['train']['posterior']['sampling_num'],
-            x               = self.x_o.to(self.device),
-            limits          = self._get_limits(),
-            prior_labels    = self.config['prior']['prior_labels'],
-        )
-        plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_o_round{current_round}_run{run}.png")
+    #     # check posterior for x_o
+    #     fig, _ = plot_posterior_unseen(
+    #         posterior       = posterior, 
+    #         sample_num      = self.config['train']['posterior']['sampling_num'],
+    #         x               = self.x_o.to(self.device),
+    #         limits          = self._get_limits(),
+    #         prior_labels    = self.config['prior']['prior_labels'],
+    #     )
+    #     plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_o_round{current_round}_run{run}.png")
 
     def get_my_data_kwargs(self):
         
@@ -189,7 +189,7 @@ class Solver:
             'batch_size'    :  self.config['dataset']['batch_size'],
             
             'worker_init_fn':  seed_worker,
-            'collate_fn'    :  lambda batch: collate_fn_vec(batch=batch, config=self.config),
+            'collate_fn'    :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
         } 
             
         return my_dataloader_kwargs, my_dataset_kwargs

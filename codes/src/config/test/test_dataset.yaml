@@ -11,6 +11,7 @@ dataset:
   num_probR_sample            : 25 #25
   num_chosen_sets             : 5 #50
   num_chosen_theta_each_set   : 50 #500
+  shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
   validation_fraction         : 0.2
   batch_size                  : 20
