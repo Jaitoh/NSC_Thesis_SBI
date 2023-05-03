@@ -8,6 +8,16 @@ dataset:
   # summary_type: 1  # 0: detailed information, 1: brief information
 
 # # ========== parameter settings for the probR ==========
-  num_probR_sample    : 25 #25
-  num_sets            : 50 #50
-  num_theta_each_set  : 500 #500
+  num_probR_sample            : 25 #25
+  num_chosen_sets             : 50 #101 in total
+  num_chosen_theta_each_set   : 500 #5000 in total
+  shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
+
+  validation_fraction         : 0.1
+  batch_size                  : 64
+  num_workers                 : 4
+  chosen_dur_trained_in_sequence: 
+    - [3, 9, 15]
+    - [3, 5, 9, 13, 15]
+    - [3, 5, 7, 9, 11, 13, 15]
+  

@@ -15,11 +15,7 @@
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=snn
-RUN_ID=exp_a0
-
-# CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
-# CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
-# CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
+RUN_ID=exp_b0
 
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0.yaml
@@ -59,10 +55,6 @@ echo 'finished simulation'
 # squeue -u $USER
 # scancel 466952
 # sacct -j 466952
-# squeue -u $USER
-# scancel --user=wehe
-# squeue -u $USER
-# squeue -u $USER
 
 # SBATCH --gres=gpu:T4:1
 # SBATCH --gres=gpu:V100:1

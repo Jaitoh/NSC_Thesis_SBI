@@ -14,7 +14,7 @@ from pyknos.mdn.mdn import MultivariateGaussianMDN as mdn
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from torchinfo import summary
+# from torchinfo import summary
 
 from sbi.inference import SNPE_C
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
@@ -571,7 +571,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         prior_labels    = config['prior']['prior_labels'],
                     )
                     # plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
-                    self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
+                    self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}_shuffled", fig_x, self.epoch_counter)
                     plt.close(fig_x)
                     del fig_x, _
                     
@@ -601,7 +601,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         prior_labels    = config['prior']['prior_labels'],
                     )
                     # plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
-                    self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
+                    self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}_shuffled", fig_x_val, self.epoch_counter)
                     plt.close(fig_x_val)
                     del fig_x_val, _
                 

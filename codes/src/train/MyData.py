@@ -87,6 +87,10 @@ class My_Dataset_Mem(Dataset):
         num_chosen_sets = config['dataset']['num_chosen_sets']
         num_chosen_theta_each_set = config['dataset']['num_chosen_theta_each_set']
         
+        print('Loading data into memory...')
+        print(f"num_chosen_sets (randomly choose dataset from total 101 sets): {num_chosen_sets}")
+        print(f"num_chosen_theta_each_set: {num_chosen_theta_each_set}")
+        start_loading_time = time.time()
         self.data_path = data_path
 
         # with h5py.File(self.data_path, 'r') as f:
@@ -141,6 +145,7 @@ class My_Dataset_Mem(Dataset):
         self.probR_all = probR_all
         
         print(f"dur of {list(chosen_dur)} are chosen, others are set to 0")
+        print(f"finished loading data into memory, time used: {time.time()-start_loading_time:.2f}s")
         print(f"current dataset seqC of shape: {self.seqC_all.shape}")
         print(f"current dataset theta of shape: {self.theta_all.shape}")
         print(f"current dataset probR of shape: {self.probR_all.shape}")

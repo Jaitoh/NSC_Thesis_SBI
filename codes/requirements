@@ -9,5 +9,4 @@ pandas
 cython
 tqdm
 matplotlib
-torchinfo
 gpustat

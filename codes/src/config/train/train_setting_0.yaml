@@ -14,22 +14,23 @@ train:
     
 
   training:
-    training_batch_size   : 150
-    stop_after_epochs     : 25
+    
+    stop_after_epochs     : 10
+    stop_after_dsets      : 50
+    max_num_epochs        : 2147483647
+    max_num_dsets         : 2147483647
 
-    num_workers           : 8
+    print_freq            : 20 # 20 records per epoch
+
+    learning_rate         : 1e-5
+
+    clip_max_norm         : 4.0
 
     num_rounds            : 3
     num_runs              : 10
     num_atoms             : 10
     
-    validation_fraction   : 0.2
-    learning_rate         : 1e-4
-
-    max_num_epochs        : 2147483647
-    clip_max_norm         : 4.0
-    
   posterior:
-    step          : 5     # the epoch steps to check posterior during training
-    sampling_num  : 10000
+    step          : 2     # the epoch steps to check posterior during training
+    sampling_num  : 5000
     val_set_size  : 1
