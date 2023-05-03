@@ -27,5 +27,7 @@
 ./gdrive files move 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
 ./gdrive files move 1bcv3Nxh7nFBMbD5_6lThYQcFdFQlg0zV 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
 
+./gdrive files move 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
 
 ./gdrive files upload "/home/wehe/data/NSC/codes/src/dataset/probR_set_0.npy" # 1CVyuUxRY_0RetrwVRTn46iu7uaC4c3m7
+./gdrive files upload "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_set_0_test.h5" # 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf
