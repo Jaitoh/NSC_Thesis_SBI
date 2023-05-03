@@ -45,12 +45,15 @@ from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
 from utils.train import (
-    get_args, print_cuda_info, choose_cat_validation_set, 
-    plot_posterior_seen, plot_posterior_unseen,
-    check_path, train_inference_helper,
+    print_cuda_info, choose_cat_validation_set, 
+    plot_posterior_with_label, plot_posterior_unseen,
+    train_inference_helper,
 )
-from utils.resource import monitor_resources
-from train.MyData import collate_fn
+from utils.setup import(
+    check_path, get_args
+)
+# from utils.resource import monitor_resources
+from train.MyData import collate_fn_vec
 
 # Set the start method to 'spawn' before creating the ProcessPoolExecutor instance
 # mp.set_start_method('spawn', force=True)
@@ -133,66 +136,64 @@ class Solver:
         return neural_posterior
 
 
-    def posterior_analysis(self, posterior, current_round, run):
-        # posterior analysis
-        print(f"\n--- posterior sampling ---")
-        for fig_idx in tqdm(range(len(self.post_val_set['x']))):
+    # def posterior_analysis(self, posterior, current_round, run):
+    #     # posterior analysis
+    #     print(f"\n--- posterior sampling ---")
+    #     for fig_idx in tqdm(range(len(self.post_val_set['x']))):
             
-            fig_x, _ = plot_posterior_seen(
-                posterior       = posterior, 
-                sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x'][fig_idx].to(self.device),
-                true_params     = self.post_val_set['theta'][fig_idx],
-                limits          = self._get_limits(),
-                prior_labels    = self.config['prior']['prior_labels'],
-            )
-            plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
-            plt.close(fig_x)
-            fig_x_shuffle, _ = plot_posterior_seen(
-                posterior       = posterior, 
-                sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
-                true_params     = self.post_val_set['theta'][fig_idx],
-                limits          = self._get_limits(),
-                prior_labels    = self.config['prior']['prior_labels'],
-            )
-            plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
+    #         fig_x, _ = plot_posterior_with_label(
+    #             posterior       = posterior, 
+    #             sample_num      = self.config['train']['posterior']['sampling_num'],
+    #             x               = self.post_val_set['x'][fig_idx].to(self.device),
+    #             true_params     = self.post_val_set['theta'][fig_idx],
+    #             limits          = self._get_limits(),
+    #             prior_labels    = self.config['prior']['prior_labels'],
+    #         )
+    #         plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_{fig_idx}_round{current_round}_run{run}.png")
+    #         plt.close(fig_x)
+    #         fig_x_shuffle, _ = plot_posterior_with_label(
+    #             posterior       = posterior, 
+    #             sample_num      = self.config['train']['posterior']['sampling_num'],
+    #             x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
+    #             true_params     = self.post_val_set['theta'][fig_idx],
+    #             limits          = self._get_limits(),
+    #             prior_labels    = self.config['prior']['prior_labels'],
+    #         )
+    #         plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_val_shuffled_{fig_idx}_round{current_round}_run{run}.png")
         
-        # save posterior for each round and run using pickle
-        with open(f"{self.log_dir}/posterior/figures/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
-            pickle.dump(posterior, f)
+    #     # save posterior for each round and run using pickle
+    #     with open(f"{self.log_dir}/posterior/figures/posterior_round{current_round}_run{run}.pkl", 'wb') as f:
+    #         pickle.dump(posterior, f)
             
-        # check posterior for x_o
-        fig, _ = plot_posterior_unseen(
-            posterior       = posterior, 
-            sample_num      = self.config['train']['posterior']['sampling_num'],
-            x               = self.x_o.to(self.device),
-            limits          = self._get_limits(),
-            prior_labels    = self.config['prior']['prior_labels'],
-        )
-        plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_o_round{current_round}_run{run}.png")
+    #     # check posterior for x_o
+    #     fig, _ = plot_posterior_unseen(
+    #         posterior       = posterior, 
+    #         sample_num      = self.config['train']['posterior']['sampling_num'],
+    #         x               = self.x_o.to(self.device),
+    #         limits          = self._get_limits(),
+    #         prior_labels    = self.config['prior']['prior_labels'],
+    #     )
+    #     plt.savefig(f"{self.log_dir}/posterior/figures/post_plot_x_o_round{current_round}_run{run}.png")
 
     def get_my_data_kwargs(self):
         
-        my_dataloader_kwargs = {
-            'worker_init_fn':  seed_worker,
-            'collate_fn'    :  lambda batch: collate_fn(batch=batch, config=self.config),
-            'num_workers'   :  self.config['train']['training']['num_workers'],
-        } 
-        
-        # if self.gpu:
-        #     my_dataloader_kwargs['pin_memory'] = True
-        
         my_dataset_kwargs = {
-            'data_path'             : self.args.data_path,
-            'num_sets'              : self.config['dataset']['num_sets'],
-            'num_theta_each_set'    : self.config['dataset']['num_theta_each_set'],
-            'seqC_process'          : self.config['dataset']['seqC_process'],
-            'nan2num'               : self.config['dataset']['nan2num'],
-            'summary_type'          : self.config['dataset']['summary_type'],
+            'data_path'                      : self.args.data_path,
+            'config'                         : self.config,
+            'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
+            'validation_fraction'            : self.config['dataset']['validation_fraction'],
         }
+        
+        my_dataloader_kwargs = {
+            'num_workers'   :  self.config['dataset']['num_workers'],
+            'batch_size'    :  self.config['dataset']['batch_size'],
+            
+            'worker_init_fn':  seed_worker,
+            'collate_fn'    :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
+        } 
             
         return my_dataloader_kwargs, my_dataset_kwargs
+    
     
     def sbi_train(self):
         # sourcery skip: boolean-if-exp-identity, remove-unnecessary-cast
@@ -263,68 +264,41 @@ class Solver:
             )
         
         # start training
-        for current_round in [0]:
-            
-            print(f"\n======\nstart of training\n======")
+        print(f"\n======\nstart of training\n======")
 
-            start_time = time.time()
+        my_training_kwargs = {
+            'learning_rate'        : eval(training_config['learning_rate']),
+            'stop_after_epochs'    : training_config['stop_after_epochs'],
+            'stop_after_dsets'     : training_config['stop_after_dsets'],
+            'max_num_epochs'       : training_config['max_num_epochs'],
+            'max_num_dsets'        : training_config['max_num_dsets'],
+            'print_freq'           : training_config['print_freq'],
+            'chosen_dur_trained_in_sequence': self.config['dataset']['chosen_dur_trained_in_sequence'],
+            'clip_max_norm'        : training_config['clip_max_norm'],
             
-            # run training with current run updated dataset
-            self.inference, density_estimator = self.inference.train(
-                # num_atoms               = training_config['num_atoms'],
-                training_batch_size     = training_config['training_batch_size'],
-                learning_rate           = eval(training_config['learning_rate']),
-                validation_fraction     = training_config['validation_fraction'],
-                stop_after_epochs       = training_config['stop_after_epochs'],
-                # max_num_epochs          = training_config['max_num_epochs'],
-                clip_max_norm           = training_config['clip_max_norm'],
-                calibration_kernel      = None,
-                resume_training         = (current_round!=0), # resume training if not the first run
-                force_first_round_loss  = True if current_round==0 else False,
-                discard_prior_samples   = False,
-                use_combined_loss       = True,
-                retrain_from_scratch    = False,
-                show_train_summary      = True,
-                seed                    = self.args.seed,
-                dataset_kwargs          = my_dataset_kwargs,
-                dataloader_kwargs       = my_dataloader_kwargs,
-                config                  = self.config,
-                limits                  = self._get_limits(),
-                log_dir                 = self.log_dir,
-            )  # density estimator
+            'num_atoms'            : training_config['num_atoms'],
+            'use_combined_loss'    : True,
+        }
+        
+        # run training with current run updated dataset
+        self.inference, density_estimator = self.inference.train(
+            log_dir                 = self.log_dir,
+            config                  = self.config,
+            
+            seed                    = self.args.seed,
+            prior_limits            = self._get_limits(),
+            
+            dataset_kwargs          = my_dataset_kwargs,
+            dataloader_kwargs       = my_dataloader_kwargs,
+            training_kwargs         = my_training_kwargs,
+        )  # density estimator
 
             
-        # with open(f"{self.log_dir}/posterior/posterior_train_set.pkl", 'wb') as f:
-        #     pickle.dump(self.inference.posterior_train_set, f)
-        # with open(f"{self.log_dir}/posterior/posterior_val_set.pkl", 'wb') as f:
-        #     pickle.dump(self.inference.posterior_val_set, f)
-        torch.save(deepcopy(density_estimator.state_dict()), f"{self.log_dir}/model/a_best_model_state_dict.pt")
+        torch.save(deepcopy(density_estimator.state_dict()), f"{self.log_dir}/model/a_final_best_model_state_dict.pt")
         
         print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
 
-    def save_model(self):
-        
-        # print('---\nsaving model...')
-
-        # inference_dir           = self.log_dir / 'inference.pkl'
-        # with open(inference_dir, 'wb') as f:
-        #     pickle.dump(self.inference, f)
-            
-        # print('inference saved to: ', inference_dir)
-
-        # density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
-        # with open(density_estimator_dir, 'wb') as f:
-        #     pickle.dump(self.density_estimator, f)
-
-        # posterior_dir           = self.log_dir / 'posterior.pkl'
-        # with open(posterior_dir, 'wb') as f:
-        #     pickle.dump(self.posterior, f)
-
-        # print('density_estimator saved to: ',   density_estimator_dir)
-        # print('posterior saved to: ',           posterior_dir)
-
-        pass
-
+    
 def main():  # sourcery skip: extract-method
     args = get_args()
     print(args.log_dir)
@@ -358,14 +332,6 @@ def main():  # sourcery skip: extract-method
     solver = Solver(args, config)
     solver.sbi_train()
     
-    # solver.save_model()
-    
-    # # save the solver
-    # with open(Path(args.log_dir) / 'solver.pkl', 'wb') as f:
-    #     # pickle.dump(solver, f)
-    #     dill.dump(solver, f)
-    # print(f'solver saved to: {Path(args.log_dir) / "solver.pkl"}')
-
     # finally:
     #     monitor_process.terminate()
 

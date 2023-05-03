@@ -14,6 +14,7 @@ from pyknos.mdn.mdn import MultivariateGaussianMDN as mdn
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from torchinfo import summary
 
 from sbi.inference import SNPE_C
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
@@ -34,10 +35,15 @@ from sbi.utils.sbiutils import mask_sims_from_prior
 
 import sys
 sys.path.append('./src')
-from train.MyData import MyDataset
+from train.MyData import My_Dataset_Mem, Data_Prefetcher
 from utils.train import (
-    plot_posterior_seen,
+    plot_posterior_with_label,
 )
+from utils.resource import(
+    print_gpu_memory_usage, print_cpu_memory_usage
+)
+
+do_print_mem = 1
 
 class MyPosteriorEstimator(PosteriorEstimator):
     def __init__(
@@ -52,107 +58,281 @@ class MyPosteriorEstimator(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
     
-    @staticmethod
-    def _maybe_show_progress(show, epoch, starting_time, train_log_prob, val_log_prob):
-        if show:
-            print(f" | Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} val: {val_log_prob:.2f}")
-    
-    def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
-        """Return whether the training converged yet and save best model state so far.
-
-        Checks for improvement in validation performance over previous epochs.
-
-        Args:
-            epoch: Current epoch in training.
-            stop_after_epochs: How many fruitless epochs to let pass before stopping.
-
-        Returns:
-            Whether the training has stopped improving, i.e. has converged.
-        """
-        converged = False
-
-        assert self._neural_net is not None
-        neural_net = self._neural_net
-
-        # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob > self._best_val_log_prob:
-            self._best_val_log_prob = self._val_log_prob
-            self._epochs_since_last_improvement = 0
-            self._best_model_state_dict = deepcopy(neural_net.state_dict())
-            self._best_model_from_epoch = epoch
-            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict.pt")
-        else:
-            self._epochs_since_last_improvement += 1
-
-        # If no validation improvement over many epochs, stop training.
-        if self._epochs_since_last_improvement > stop_after_epochs - 1:
-            # neural_net.load_state_dict(self._best_model_state_dict)
-            converged = True
-            self._neural_net.load_state_dict(self._best_model_state_dict)
-            self._val_log_prob = self._best_val_log_prob
-            self._epochs_since_last_improvement = 0
-            torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict.pt")
-            
-        return converged
-    
-    def check_posterior_behavior(self, config, limits, log_dir):
-        with torch.no_grad():
-            
-            epoch = self.epoch
-            current_net = deepcopy(self._neural_net)
-
-            if epoch%config['train']['posterior']['step'] == 0: 
-                
-                posterior_start_time = time.time()
-                print("Plotting posterior...", end=" ")
-
-                posterior = self.build_posterior(current_net)
-
-                for fig_idx in range(len(self.posterior_train_set['x'])):
-                    
-                    figure = plt.figure()
-                    plt.imshow(self.posterior_train_set['x'][fig_idx][:100, :].cpu())
-                    plt.savefig(f'{log_dir}/posterior/figures/x_train_{fig_idx}.png')
-                    plt.close(figure)
-                    
-                    figure = plt.figure()
-                    plt.imshow(self.posterior_val_set['x'][fig_idx][:100, :].cpu())
-                    plt.savefig(f'{log_dir}/posterior/figures/x_val_{fig_idx}.png')
-                    plt.close(figure)
-                    
-                    fig_x, _ = plot_posterior_seen(
-                        posterior       = posterior, 
-                        sample_num      = config['train']['posterior']['sampling_num'],
-                        x               = self.posterior_train_set['x'][fig_idx].to(self._device),
-                        true_params     = self.posterior_train_set['theta'][fig_idx],
-                        limits          = limits,
-                        prior_labels    = config['prior']['prior_labels'],
-                    )
-                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
-                    plt.close(fig_x)
-
-                    fig_x_val, _ = plot_posterior_seen(
-                        posterior       = posterior, 
-                        sample_num      = config['train']['posterior']['sampling_num'],
-                        x               = self.posterior_val_set['x'][fig_idx].to(self._device),
-                        true_params     = self.posterior_val_set['theta'][fig_idx],
-                        limits          = limits,
-                        prior_labels    = config['prior']['prior_labels'],
-                    )
-                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
-                    plt.close(fig_x_val)
-                    
-                print(f"saved to {log_dir}/posterior/figures/ in {(time.time()-posterior_start_time)/60:.2f}min")
-        
-    def get_dataloaders(
+    def train_base(
         self,
-        starting_round: int = 0,
-        training_batch_size: int = 50,
-        validation_fraction: float = 0.1,
-        resume_training: bool = False,
-        seed: Optional[int] = 100,
-        dataset_kwargs: Optional[dict] = None,
+        
+        log_dir,
+        config, 
+        
+        seed,
+        prior_limits,
+        
+        dataset_kwargs,
+        dataloader_kwargs,
+        training_kwargs,
+        
+        do_print_memory_usage=do_print_mem,
+    ):
+        """ train base model (first round for SNPE)
+        
+        """
+        self.log_dir = log_dir
+        
+        chosen_dur_trained_in_sequence  = dataset_kwargs['chosen_dur_trained_in_sequence']
+        clip_max_norm                   = training_kwargs['clip_max_norm']
+        print_freq                      = training_kwargs['print_freq']
+        self.batch_counter = 0
+        self.epoch_counter = 0
+        self.dset_counter  = 0
+        self.dset          = 0
+        self.epoch         = 0
+        
+        for self.run, chosen_dur in enumerate(chosen_dur_trained_in_sequence):
+            
+            # prepare dataset and dataloader
+            train_loader, val_loader = self._prepare_data_loader(dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
+            train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
+            x, theta = self._collect_posterior_sets(train_prefetcher, val_prefetcher)
+            
+            # init neural net, move to device only once
+            if self.run == 0 and self.dset_counter == 0:
+                self._init_training(training_kwargs, x, theta)
+            
+            # init log prob
+            self.dset  = 0
+            self.epoch = 0
+            self._val_log_prob, self._val_log_prob_dset = float("-Inf"), float("-Inf")
+            self._best_val_log_prob, self._best_val_log_prob_dset = float("-Inf"), float("-Inf")
+            
+            while self.dset <= training_kwargs['max_num_dsets'] and not self._converged_dset(training_kwargs['stop_after_dsets']):
+                
+                print(f'\n\n=== run {self.run}, chosen_dur {chosen_dur}, dset {self.dset} ===')
+                if do_print_memory_usage:
+                    print('gpu memory usage after loading dataset', end=' | ')
+                    print_gpu_memory_usage()
+                    print_cpu_memory_usage()
+                
+                while self.epoch <= training_kwargs['max_num_epochs'] and not self._converged(self.epoch, training_kwargs['stop_after_epochs']):
+                    
+                    # train and log one epoch
+                    self._neural_net.train()
+                    epoch_start_time, train_log_probs_sum = self._train_one_epoch(clip_max_norm, print_freq, train_prefetcher, x, theta)
+                    train_log_prob_average = self._train_one_epoch_log(train_log_probs_sum)
+                    
+                    # validate and log 
+                    self._neural_net.eval()
+                    with torch.no_grad():
+                        self._val_log_prob = self._val_one_epoch(val_prefetcher)
+                        self._val_one_epoch_log(epoch_start_time)
+                        if do_print_memory_usage:
+                            print('gpu memory usage after validation', end=' | ')
+                            print_gpu_memory_usage()
+                            print_cpu_memory_usage()
+                            
+                        # check posterior behavior after each epoch
+                        self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
+                        self._posterior_behavior_log(config, prior_limits, log_dir)
+                        if do_print_memory_usage:
+                            print('gpu memory usage after posterior behavior log', end=' | ')
+                            print_gpu_memory_usage()
+                            print_cpu_memory_usage()
+                        # fetcher same dataset for next epoch
+                        train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
+                        if do_print_memory_usage:
+                            print('gpu memory usage after prefetcher', end=' | ')
+                            print_gpu_memory_usage()
+                            print_cpu_memory_usage()
+
+                        self.epoch += 1
+                        self.epoch_counter += 1
+                
+                del train_prefetcher, val_prefetcher, train_loader, val_loader, self.dataset
+                print(self._describe_dset())
+                
+                # log info for this dset
+                self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_of_dset", self._best_model_from_epoch, self.dset_counter)
+                self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_of_dset", self._best_val_log_prob, self.dset_counter)
+
+                # update dset info
+                self._val_log_prob_dset = self._best_val_log_prob
+                
+                # load data for next dset
+                self.dset         += 1
+                self.dset_counter += 1
+                
+                with torch.no_grad():
+                    train_loader, val_loader = self._prepare_data_loader(dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
+                    train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
+                    x, theta = self._collect_posterior_sets(train_prefetcher, val_prefetcher)
+                
+            del train_prefetcher, val_prefetcher, train_loader, val_loader
+                    
+                
+        # Avoid keeping the gradients in the resulting network, which can
+        # cause memory leakage when benchmarking. save the network
+        self._neural_net.zero_grad(set_to_none=True)
+        torch.save(self._neural_net, os.path.join(log_dir, f"model/round_{self._round}_model.pt"))
+        
+        # log training curve to tensorboard
+        figure = plt.figure(figsize=(16, 10))
+        plt.plot(self._summary["training_log_probs"], label="training")
+        plt.plot(self._summary["validation_log_probs"], label="validation")
+        plt.xlabel("Epoch")
+        plt.ylabel("Log prob")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(log_dir, f"model/round_{self._round}_training_curve.png"))
+        self._summary_writer.add_figure("training_curve", figure, self._round)
+        plt.close(figure)
+        
+        return self, deepcopy(self._neural_net)
+
+    
+    def _prepare_data_loader(self, dataset_kwargs, dataloader_kwargs, seed, chosen_dur):
+        
+        self.dataset = My_Dataset_Mem(
+            data_path           = dataset_kwargs['data_path'],
+            config              = dataset_kwargs['config'],
+            chosen_dur          = chosen_dur, 
+        )
+        
+        train_loader, val_loader = self._get_dataloaders(
+            dataset = self.dataset,
+            seed    = seed,
+            dataloader_kwargs=dataloader_kwargs,
+            dataset_kwargs=dataset_kwargs,
+        )
+        
+        self.num_train_batches = len(train_loader)
+        self.num_val_batches   = len(val_loader)
+        
+        print(f'\nnumber of batches in the training dataset: {self.num_train_batches}')
+        print(f'number of batches in the validation dataset: {self.num_val_batches}')
+        
+        return train_loader, val_loader
+    
+    def _get_data_prefetcher(self, train_loader, val_loader):
+        
+        train_prefetcher = Data_Prefetcher(train_loader)
+        val_prefetcher   = Data_Prefetcher(val_loader)
+
+        del train_loader, val_loader
+        torch.cuda.empty_cache()
+        return train_prefetcher, val_prefetcher
+        
+    
+    
+    def _collect_posterior_sets(self, train_prefetcher, val_prefetcher):
+        # load and show one example of the dataset
+        print(f'\nloading 1 / {self.num_train_batches} batch of the training dataset...')
+        start_time = time.time()
+        
+        x, theta = train_prefetcher.next()
+        
+        print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds = {(time.time() - start_time) / 60:.2f} minutes')
+        print(f'\none batch of the training dataset:',
+                f'\n| x info:', f'shape {x.shape}, dtype: {x.dtype}, device: {x.device}',
+                f'\n| theta info:', f'shape {theta.shape}, dtype: {theta.dtype}, device: {theta.device}',
+                )
+        print(f'\ncollect posterior sets...')
+        
+        
+        self.posterior_train_set = {
+            'x'         : [],
+            'x_shuffled': [],
+            'theta'     : [],
+        }
+        
+        self.posterior_val_set = {
+            'x'         : [],
+            'x_shuffled': [],
+            'theta'     : [],
+        }
+        
+        for i in range(4):
+            self.posterior_train_set['x'].append(x[i, ...])
+            self.posterior_train_set['x_shuffled'].append(x[i, ...][torch.randperm(x.shape[1])])
+            self.posterior_train_set['theta'].append(theta[i, ...])
+        
+        start_time = time.time()
+        x_val, theta_val = val_prefetcher.next()
+        print(f'collect 1 posterior validation sets takes {time.time() - start_time:.2f} seconds')
+        print(f'x_val.shape: {x_val.shape}, theta_val.shape: {theta_val.shape}')
+        
+        for i in range(4):
+            self.posterior_val_set['x'].append(x_val[i, ...])
+            self.posterior_val_set['x_shuffled'].append(x_val[i, ...][torch.randperm(x_val.shape[1])])
+            self.posterior_val_set['theta'].append(theta_val[i, ...])
+        del x_val, theta_val
+        
+        
+        # collect of the dataset
+        for fig_idx in range(len(self.posterior_train_set['x'])):
+            
+            figure = plt.figure()
+            plt.imshow(self.posterior_train_set['x'][fig_idx][:150, :].cpu())
+            # plt.savefig(f'{self.log_dir}/posterior/figures/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
+            self._summary_writer.add_figure(f"data_run{self.run}/x_train_{fig_idx}", figure, self.dset)
+            plt.close(figure)
+            
+            figure = plt.figure()
+            plt.imshow(self.posterior_train_set['x_shuffled'][fig_idx][:150, :].cpu())
+            # plt.savefig(f'{self.log_dir}/posterior/figures/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
+            self._summary_writer.add_figure(f"data_run{self.run}/x_train_{fig_idx}_shuffled", figure, self.dset)
+            plt.close(figure)
+            
+            figure = plt.figure()
+            plt.imshow(self.posterior_val_set['x'][fig_idx][:150, :].cpu())
+            # plt.savefig(f'{self.log_dir}/posterior/figures/x_val_{fig_idx}_run{self.run}_dset{self.dset}.png')
+            self._summary_writer.add_figure(f"data_run{self.run}/x_val_{fig_idx}", figure, self.dset)
+            plt.close(figure)
+            
+            figure = plt.figure()
+            plt.imshow(self.posterior_val_set['x_shuffled'][fig_idx][:150, :].cpu())
+            # plt.savefig(f'{self.log_dir}/posterior/figures/x_val_{fig_idx}_run{self.run}_dset{self.dset}.png')
+            self._summary_writer.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
+            plt.close(figure)
+        
+        return x, theta
+    
+    def _init_training(self, training_kwargs, x, theta):
+        
+        self._init_neural_net(x, theta)
+        self._neural_net.to(self._device)
+        self.optimizer = optim.Adam(list(self._neural_net.parameters()), lr=training_kwargs['learning_rate'])
+        
+    
+    def _init_neural_net(self, x, theta):
+        # First round or if retraining from scratch:
+        # Call the `self._build_neural_net` with the rounds' thetas and xs as
+        # arguments, which will build the neural network.
+        # This is passed into NeuralPosterior, to create a neural posterior which
+        # can `sample()` and `log_prob()`. The network is accessible via `.net`.
+        if self._neural_net is None:
+            
+            # Use only training data for building the neural net (z-scoring transforms)
+            self._neural_net = self._build_neural_net(
+                theta[:3].to("cpu"),
+                x[:3].to("cpu"),
+            )
+            self._x_shape = x_shape_from_simulation(x.to("cpu"))
+            
+            print('\nfinished build network')
+            
+            print(self._neural_net)
+            
+            test_posterior_net_for_multi_d_x(
+                self._neural_net,
+                theta.to("cpu"),
+                x.to("cpu"),
+            )
+            
+    def _get_dataloaders(
+        self,
+        dataset,
+        seed: int,
         dataloader_kwargs: Optional[dict] = None,
+        dataset_kwargs: Optional[dict] = None,
     ) -> Tuple[data.DataLoader, data.DataLoader]:
         """Return dataloaders for training and validation.
 
@@ -168,21 +348,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             Tuple of dataloaders for training and validation.
 
         """
-
-        # theta, x, prior_masks = self.get_simulations(starting_round)
-        # dataset = data.TensorDataset(theta, x, prior_masks)
-
-        dataset = MyDataset(
-            data_path           = dataset_kwargs['data_path'],
-            
-            num_sets            = dataset_kwargs['num_sets'],
-            num_theta_each_set  = dataset_kwargs['num_theta_each_set'],
-            
-            seqC_process        = dataset_kwargs['seqC_process'],
-            nan2num             = dataset_kwargs['nan2num'],
-            summary_type        = dataset_kwargs['summary_type'],
-        )
-
+        training_batch_size = dataloader_kwargs['batch_size']
+        validation_fraction = dataset_kwargs['validation_fraction']
         
         # Get total number of training examples.
         num_examples = len(dataset)
@@ -190,7 +357,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         num_training_examples = int((1 - validation_fraction) * num_examples)
         num_validation_examples = num_examples - num_training_examples
 
-        # if not resume_training:
         # Seperate indicies for training and validation
         permuted_indices = torch.randperm(num_examples)
         self.train_indices, self.val_indices = (
@@ -223,431 +389,317 @@ class MyPosteriorEstimator(PosteriorEstimator):
         print(f'final val_loader_kwargs: \n{val_loader_kwargs}')
         
         g = torch.Generator()
-        g.manual_seed(seed)
+        g.manual_seed(seed+self.dset)
         
-        # train_loader = MyDataLoader(dataset, generator=g, **train_loader_kwargs)
-        # val_loader   = MyDataLoader(dataset, generator=g, **val_loader_kwargs)
         train_loader = data.DataLoader(dataset, generator=g, **train_loader_kwargs)
         val_loader   = data.DataLoader(dataset, generator=g, **val_loader_kwargs)
         
-        self.num_train_batches = len(train_loader)
-        # load and show one example of the dataset
-        print(f'\nloading one / {self.num_train_batches} batch of the training dataset...')
-        start_time = time.time()
-        x, theta = next(iter(train_loader))
-        print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds')
-        
-        print(f'\n--- dataset ---\nwhole original dataset size [{len(dataset)}]',
-              f'\none batch of the training dataset:',
-              f'\n| x info:', f'shape {x.shape}, dtype: {x.dtype}, device: {x.device}',
-              f'\n| theta info:', f'shape {theta.shape}, dtype: {theta.dtype}, device: {theta.device}',
-             )
-        
-        print(f'\ncollect posterior sets...')
-        start_time = time.time()
-        self.posterior_train_set = {
-            'x': [],
-            'theta': [],
-        }
-        
-        self.posterior_val_set = {
-            'x': [],
-            'theta': [],
-        }
-        
-        self.posterior_train_set['x'].append(x[0, ...])
-        self.posterior_train_set['x'].append(x[1, ...])
-        self.posterior_train_set['theta'].append(theta[0, ...])
-        self.posterior_train_set['theta'].append(theta[1, ...])
-        del x, theta
-        
-        x, theta = next(iter(train_loader))
-        self.posterior_train_set['x'].append(x[0, ...])
-        self.posterior_train_set['x'].append(x[1, ...])
-        self.posterior_train_set['theta'].append(theta[0, ...])
-        self.posterior_train_set['theta'].append(theta[1, ...])
-        del x, theta
-        print(f'collect 1 posterior sets takes {time.time() - start_time:.2f} seconds')
-        
-        x, theta = next(iter(val_loader))
-        self.posterior_val_set['x'].append(x[0, ...])
-        self.posterior_val_set['x'].append(x[1, ...])
-        self.posterior_val_set['theta'].append(theta[0, ...])
-        self.posterior_val_set['theta'].append(theta[1, ...])
-        del x, theta
-        print(f'collect 2 posterior sets takes {time.time() - start_time:.2f} seconds')
-        
-        x, theta = next(iter(val_loader))
-        self.posterior_val_set['x'].append(x[0, ...])
-        self.posterior_val_set['x'].append(x[1, ...])
-        self.posterior_val_set['theta'].append(theta[0, ...])
-        self.posterior_val_set['theta'].append(theta[1, ...])
-        # del x, theta
-        
-        print(f'collect 3 posterior sets takes {time.time() - start_time:.2f} seconds')
-        
-        # First round or if retraining from scratch:
-        # Call the `self._build_neural_net` with the rounds' thetas and xs as
-        # arguments, which will build the neural network.
-        # This is passed into NeuralPosterior, to create a neural posterior which
-        # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        if self._neural_net is None or self._retrain_from_scratch:
-
-            # Get theta,x to initialize NN
-            # theta, x, _ = self.get_simulations(starting_round=start_idx)
-            # x, theta = next(iter(train_loader))
-            
-            # Use only training data for building the neural net (z-scoring transforms)
-            self._neural_net = self._build_neural_net(
-                theta[:3].to("cpu"),
-                x[:3].to("cpu"),
-            )
-            self._x_shape = x_shape_from_simulation(x.to("cpu"))
-            
-            print('\nfinished build network')
-            print(f'\n{self._neural_net}')
-            test_posterior_net_for_multi_d_x(
-                self._neural_net,
-                theta.to("cpu"),
-                x.to("cpu"),
-            )
-
-            del theta, x
-        
         return train_loader, val_loader
     
-    def train_base(
-        self,
-        training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
-        stop_after_epochs: int = 20,
-        max_num_epochs: int = 2**31 - 1,
-        clip_max_norm: Optional[float] = 5.0,
+    def _train_one_epoch(self, clip_max_norm, print_freq, train_prefetcher, x, theta):
+        epoch_start_time = time.time()
+        batch_timer      = time.time()
+                    
+        self.train_data_size    = 0
+        train_log_probs_sum     = 0
+        train_batch_num         = 0
+                    
+        # === train network === 
+        while x is not None:
+            self.optimizer.zero_grad()
+            
+            # train one batch and log progress
+            train_loss, train_log_probs_sum = self._train_one_batch(x, theta, clip_max_norm, train_log_probs_sum)
+            self._train_one_batch_log(print_freq, batch_timer, train_batch_num, train_loss)
+                        
+            # get next batch
+            train_batch_num += 1
+            self.batch_counter += 1
+            x, theta = train_prefetcher.next()
+
+        return epoch_start_time,train_log_probs_sum
+
+    def _train_one_epoch_log(self, train_log_probs_sum):
         
-        calibration_kernel: Optional[Callable] = None,
-        resume_training: bool = False, # False in the first epoch
-        force_first_round_loss: bool = False, # True for the first round
-        discard_prior_samples: bool = False, # False for the first round
-        retrain_from_scratch: bool = False,
-        show_train_summary: bool = True,
+        train_log_prob_average = train_log_probs_sum / self.train_data_size
+        # train_log_prob_average = train_log_probs_sum / (self.num_train_batches * dataset_kwargs['batch_size'] * dataset_kwargs['num_probR_sample'])
+        self._summary_writer.add_scalars("log_probs", {'training': train_log_prob_average}, self.epoch_counter)
+        self._summary["training_log_probs"].append(train_log_prob_average)
         
-        seed: Optional[int] = 100,
-        dataset_kwargs: Optional[dict] = None,
-        dataloader_kwargs: Optional[dict] = None,
+        return train_log_prob_average
+    
+    
+    def _train_one_batch(self, x, theta, clip_max_norm, train_log_probs_sum):
         
-        config = None,
-        limits = None,
-        log_dir= None,
-    ) -> nn.Module:
-        r"""Return density estimator that approximates the distribution $p(\theta|x)$.
+        x_batch     = x.to(self._device)
+        theta_batch = theta.to(self._device)
+        masks_batch = torch.ones_like(theta_batch[:, 0]).to(self._device)
+
+        del x, theta
+        self.train_data_size += len(x_batch)
+        
+        # force_first_round_loss: If `True`, train with maximum likelihood,
+        # i.e., potentially ignoring the correction for using a proposal
+        # distribution different from the prior.
+        train_losses = self._loss(
+            theta_batch,
+            x_batch,
+            masks_batch,
+            proposal=self._proposal_roundwise[-1],
+            calibration_kernel = lambda x: ones([len(x)], device=self._device),
+            force_first_round_loss=True,
+        )
+        train_loss = torch.mean(train_losses)
+        train_log_probs_sum -= train_losses.sum().item()
+
+        train_loss.backward()
+        if clip_max_norm is not None:
+            clip_grad_norm_(
+                self._neural_net.parameters(), max_norm=clip_max_norm
+            )
+            
+        self.optimizer.step()
+        del x_batch, theta_batch, masks_batch
+        
+        torch.cuda.empty_cache()
+        
+        return train_loss, train_log_probs_sum 
+    
+    
+    def _train_one_batch_log(self, print_freq, batch_timer, train_batch_num, train_loss, do_print_memory_usage=do_print_mem):
+        
+        if print_freq == 0: # do nothing
+            pass
+
+        elif self.num_train_batches <= print_freq:
+            if do_print_memory_usage:
+                print('memory usage after batch')
+                print_gpu_memory_usage()
+                print_cpu_memory_usage()
+            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
+
+        elif train_batch_num % (self.num_train_batches//print_freq) == 0: # print every 5% of batches
+            if do_print_memory_usage:
+                print('memory usage after batch')
+                print_gpu_memory_usage()
+                print_cpu_memory_usage()
+            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
+
+        self._summary_writer.add_scalar("train_loss_batch", train_loss, self.batch_counter)
+    
+    
+    def _val_one_epoch(self, val_prefetcher):
+        
+        val_data_size       = 0
+        val_log_prob_sum    = 0
+        
+        x_val, theta_val    = val_prefetcher.next()
+        
+        while x_val is not None:
+            
+            x_batch     = x_val.to(self._device)
+            theta_batch = theta_val.to(self._device)
+            masks_batch = torch.ones_like(theta_batch[:, 0])
+            
+            del x_val, theta_val
+            
+            # update validation loss
+            val_losses = self._loss(
+                theta_batch,
+                x_batch,
+                masks_batch,
+                proposal=self._proposal_roundwise[-1],
+                calibration_kernel = lambda x: ones([len(x)], device=self._device),
+                force_first_round_loss=True,
+            )
+            val_log_prob_sum -= val_losses.sum().item()
+            val_data_size    += len(x_batch)
+            
+            del x_batch, theta_batch, masks_batch
+            torch.cuda.empty_cache()
+            
+            # get next batch
+            x_val, theta_val = val_prefetcher.next()
+        
+        return val_log_prob_sum / val_data_size
+    
+    def _val_one_epoch_log(self, epoch_start_time):
+        
+        # print(f'epoch {self.epoch}: val_log_prob {self._val_log_prob:.2f}')
+        self._summary_writer.add_scalars("log_probs", {'validation': self._val_log_prob}, self.epoch_counter)
+        
+        self._summary["validation_log_probs"].append(self._val_log_prob)
+        self._summary["epoch_durations_sec"].append(time.time() - epoch_start_time)
+    
+    def _posterior_behavior_log(self, config, limits, log_dir):
+        
+        with torch.no_grad():
+            
+            epoch = self.epoch
+            current_net = deepcopy(self._neural_net)
+
+            if epoch%config['train']['posterior']['step'] == 0:
+                
+                posterior_start_time = time.time()
+                print("Plotting posterior...", end=" ")
+
+                posterior = self.build_posterior(current_net)
+
+                for fig_idx in range(len(self.posterior_train_set['x'])):
+                    
+                    # plot posterior - train x
+                    fig_x, _ = plot_posterior_with_label(
+                        posterior       = posterior, 
+                        sample_num      = config['train']['posterior']['sampling_num'],
+                        x               = self.posterior_train_set['x'][fig_idx].to(self._device),
+                        true_params     = self.posterior_train_set['theta'][fig_idx],
+                        limits          = limits,
+                        prior_labels    = config['prior']['prior_labels'],
+                    )
+                    # plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
+                    self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
+                    plt.close(fig_x)
+                    del fig_x, _
+                    
+                    # plot posterior - train x_shuffled
+                    fig_x, _ = plot_posterior_with_label(
+                        posterior       = posterior, 
+                        sample_num      = config['train']['posterior']['sampling_num'],
+                        x               = self.posterior_train_set['x_shuffled'][fig_idx].to(self._device),
+                        true_params     = self.posterior_train_set['theta'][fig_idx],
+                        limits          = limits,
+                        prior_labels    = config['prior']['prior_labels'],
+                    )
+                    # plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{epoch}.png")
+                    self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
+                    plt.close(fig_x)
+                    del fig_x, _
+                    
+
+                    # plot posterior - val x
+                    fig_x_val, _ = plot_posterior_with_label(
+                        posterior       = posterior, 
+                        sample_num      = config['train']['posterior']['sampling_num'],
+                        x               = self.posterior_val_set['x'][fig_idx].to(self._device),
+                        true_params     = self.posterior_val_set['theta'][fig_idx],
+                        limits          = limits,
+                        prior_labels    = config['prior']['prior_labels'],
+                    )
+                    # plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
+                    self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
+                    plt.close(fig_x_val)
+                    del fig_x_val, _
+                    
+                    
+                    # plot posterior - val x_shuffled
+                    fig_x_val, _ = plot_posterior_with_label(
+                        posterior       = posterior, 
+                        sample_num      = config['train']['posterior']['sampling_num'],
+                        x               = self.posterior_val_set['x_shuffled'][fig_idx].to(self._device),
+                        true_params     = self.posterior_val_set['theta'][fig_idx],
+                        limits          = limits,
+                        prior_labels    = config['prior']['prior_labels'],
+                    )
+                    # plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{epoch}.png")
+                    self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
+                    plt.close(fig_x_val)
+                    del fig_x_val, _
+                
+                del posterior
+                torch.cuda.empty_cache()
+                
+                print(f"posterior check finished in {(time.time()-posterior_start_time)/60:.2f}min")
+    
+    def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
+        """Return whether the training converged yet and save best model state so far.
+
+        Checks for improvement in validation performance over previous epochs.
 
         Args:
-            training_batch_size: Training batch size.
-            learning_rate: Learning rate for Adam optimizer.
-            validation_fraction: The fraction of data to use for validation.
-            stop_after_epochs: The number of epochs to wait for improvement on the
-                validation set before terminating training.
-            max_num_epochs: Maximum number of epochs to run. If reached, we stop
-                training even when the validation loss is still decreasing. Otherwise,
-                we train until validation loss increases (see also `stop_after_epochs`).
-            clip_max_norm: Value at which to clip the total gradient norm in order to
-                prevent exploding gradients. Use None for no clipping.
-            calibration_kernel: A function to calibrate the loss with respect to the
-                simulations `x`. See Lueckmann, Gonçalves et al., NeurIPS 2017.
-            resume_training: Can be used in case training time is limited, e.g. on a
-                cluster. If `True`, the split between train and validation set, the
-                optimizer, the number of epochs, and the best validation log-prob will
-                be restored from the last time `.train()` was called.
-            force_first_round_loss: If `True`, train with maximum likelihood,
-                i.e., potentially ignoring the correction for using a proposal
-                distribution different from the prior.
-            discard_prior_samples: Whether to discard samples simulated in round 1, i.e.
-                from the prior. Training may be sped up by ignoring such less targeted
-                samples.
-            retrain_from_scratch: Whether to retrain the conditional density
-                estimator for the posterior from scratch each round.
-            show_train_summary: Whether to print the number of epochs and validation
-                loss after the training.
-            dataloader_kwargs: Additional or updated kwargs to be passed to the training
-                and validation dataloaders (like, e.g., a collate_fn)
+            epoch: Current epoch in training.
+            stop_after_epochs: How many fruitless epochs to let pass before stopping.
 
         Returns:
-            Density estimator that approximates the distribution $p(\theta|x)$.
+            Whether the training has stopped improving, i.e. has converged.
         """
-        self.log_dir = log_dir
-        
-        # Load data from most recent round.
-        self._round = max(self._data_round_index)
+        converged = False
 
-        if self._round == 0 and self._neural_net is not None:
-            assert force_first_round_loss, (
-                "You have already trained this neural network. After you had trained "
-                "the network, you again appended simulations with `append_simulations"
-                "(theta, x)`, but you did not provide a proposal. If the new "
-                "simulations are sampled from the prior, you can set "
-                "`.train(..., force_first_round_loss=True`). However, if the new "
-                "simulations were not sampled from the prior, you should pass the "
-                "proposal, i.e. `append_simulations(theta, x, proposal)`. If "
-                "your samples are not sampled from the prior and you do not pass a "
-                "proposal and you set `force_first_round_loss=True`, the result of "
-                "SNPE will not be the true posterior. Instead, it will be the proposal "
-                "posterior, which (usually) is more narrow than the true posterior."
-            )
+        assert self._neural_net is not None
+        neural_net = self._neural_net
 
-        # Calibration kernels proposed in Lueckmann, Gonçalves et al., 2017.
-        if calibration_kernel is None:
-            calibration_kernel = lambda x: ones([len(x)], device=self._device)
-
-        # Starting index for the training set (1 = discard round-0 samples).
-        start_idx = int(discard_prior_samples and self._round > 0)
-
-        # For non-atomic loss, we can not reuse samples from previous rounds as of now.
-        # SNPE-A can, by construction of the algorithm, only use samples from the last
-        # round. SNPE-A is the only algorithm that has an attribute `_ran_final_round`,
-        # so this is how we check for whether or not we are using SNPE-A.
-        if self.use_non_atomic_loss or hasattr(self, "_ran_final_round"):
-            start_idx = self._round
-
-        # Set the proposal to the last proposal that was passed by the user. For
-        # atomic SNPE, it does not matter what the proposal is. For non-atomic
-        # SNPE, we only use the latest data that was passed, i.e. the one from the
-        # last proposal.
-        proposal = self._proposal_roundwise[-1]
-
-        self._retrain_from_scratch = retrain_from_scratch
-        
-        time0 = time.time()
-        train_loader, val_loader = self.get_dataloaders(
-            start_idx,
-            training_batch_size,
-            validation_fraction,
-            resume_training,
-            seed=seed,
-            dataset_kwargs=dataset_kwargs,
-            dataloader_kwargs=dataloader_kwargs,
-        )
-        print(f"time for dataloaders: {(time.time() - time0)/60:.2f} min")
-        
-        # Move entire net to device for training.
-        self._neural_net.to(self._device)
-
-        if not resume_training:
-            self.optimizer = optim.Adam(
-                list(self._neural_net.parameters()), lr=learning_rate
-            )
-            self.epoch, self._val_log_prob = 0, float("-Inf")
-
-        while self.epoch <= max_num_epochs and not self._converged(
-            self.epoch, stop_after_epochs
-        ):
-            starting_time = time.time()
-            # Train for a single epoch.
-            self._neural_net.train()
-            train_log_probs_sum = 0
-            epoch_start_time = time.time()
-            train_batch_num = 0
-            batch_timer = time.time()
-            for batch in train_loader:
-                self.optimizer.zero_grad()
-                # Get batches on current device.
-                # theta_batch, x_batch, masks_batch = (
-                #     batch[0].to(self._device),
-                #     batch[1].to(self._device),
-                #     batch[2].to(self._device),
-                # )
-                x_batch, theta_batch = (
-                    batch[0].to(self._device),
-                    batch[1].to(self._device)
-                )
-                masks_batch = torch.ones_like(theta_batch[:, 0])
-
-                train_losses = self._loss(
-                    theta_batch,
-                    x_batch,
-                    masks_batch,
-                    proposal,
-                    calibration_kernel,
-                    force_first_round_loss=force_first_round_loss,
-                )
-                train_loss = torch.mean(train_losses)
-                train_log_probs_sum -= train_losses.sum().item()
-
-                train_loss.backward()
-                if clip_max_norm is not None:
-                    clip_grad_norm_(
-                        self._neural_net.parameters(), max_norm=clip_max_norm
-                    )
-                self.optimizer.step()
-                
-                del x_batch, theta_batch, masks_batch, batch
-                
-                if self.num_train_batches <= 20:
-                    print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
-                elif train_batch_num % (self.num_train_batches//20) == 0: # print every 5% of batches
-                    print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, train_log_probs_sum {train_log_probs_sum:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
-                    # batch_timer = time.time()
-                train_batch_num += 1
-                
-            self.epoch += 1
-
-            train_log_prob_average = train_log_probs_sum / (
-                len(train_loader) * train_loader.batch_size  # type: ignore
-            )
-            self._summary["training_log_probs"].append(train_log_prob_average)
-
-            # Calculate validation performance.
-            self._neural_net.eval()
-            val_log_prob_sum = 0
+        # (Re)-start the epoch count with the first epoch or any improvement.
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob:
             
-            val_batch_num = 0
-            with torch.no_grad():
-                for batch in val_loader:
-                    # theta_batch, x_batch, masks_batch = (
-                    #     batch[0].to(self._device),
-                    #     batch[1].to(self._device),
-                    #     batch[2].to(self._device),
-                    # )
-                    x_batch, theta_batch = (
-                        batch[0].to(self._device),
-                        batch[1].to(self._device)
-                    )
-                    masks_batch = torch.ones_like(theta_batch[:, 0])
-                    # Take negative loss here to get validation log_prob.
-                    val_losses = self._loss(
-                        theta_batch,
-                        x_batch,
-                        masks_batch,
-                        proposal,
-                        calibration_kernel,
-                        force_first_round_loss=force_first_round_loss,
-                    )
-                    val_log_prob_sum -= val_losses.sum().item()
-                    val_batch_num += 1
-                    
-                    del x_batch, theta_batch, masks_batch, batch
-                    
-            # Take mean over all validation samples.
-            self._val_log_prob = val_log_prob_sum / (
-                len(val_loader) * val_loader.batch_size  # type: ignore
-            )
-            print(f'epoch {self.epoch}: val_log_prob_sum {self._val_log_prob:.2f}')
-            # Log validation log prob for every epoch.
-            self._summary["validation_log_probs"].append(self._val_log_prob)
-            self._summary["epoch_durations_sec"].append(time.time() - epoch_start_time)
-
-            self._maybe_show_progress(self._show_progress_bars, self.epoch, starting_time, train_log_prob_average, self._val_log_prob)
-
-            self.check_posterior_behavior(config, limits, log_dir)
-        # self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
-        # self._val_log_prob = self._best_val_log_prob
+            self._epochs_since_last_improvement = 0
+            
+            self._best_val_log_prob     = self._val_log_prob
+            self._best_model_state_dict = deepcopy(neural_net.state_dict())
+            self._best_model_from_epoch = epoch
+            
+            # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
         
-        # Update summary.
-        self._summary["epochs_trained"].append(self.epoch)
-        self._summary["best_validation_log_prob"].append(self._best_val_log_prob)
+        else:
+            self._epochs_since_last_improvement += 1
 
-        # Update tensorboard and summary dict.
-        self._summarize(round_=self._round)
-
-        # Update description for progress bar.
-        if show_train_summary:
-            print(self._describe_round(self._round, self._summary))
-
-        # load best model from state dict
-        self._neural_net.load_state_dict(self._best_model_state_dict)
-        self._val_log_prob = self._best_val_log_prob
-        self._epochs_since_last_improvement = 0
-        
-        # Avoid keeping the gradients in the resulting network, which can
-        # cause memory leakage when benchmarking.
-        self._neural_net.zero_grad(set_to_none=True)
-
-        figure = plt.figure(figsize=(16, 10))
-        plt.plot(self._summary["training_log_probs"], label="training")
-        plt.plot(self._summary["validation_log_probs"], label="validation")
-        plt.xlabel("Epoch")
-        plt.ylabel("Log prob")
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(os.path.join(log_dir, f"model/round_{self._round}_training_curve.png"))
-        plt.close(figure)
-        
-        return self, deepcopy(self._neural_net)
+        # If no validation improvement over many epochs, stop training.
+        if self._epochs_since_last_improvement > stop_after_epochs - 1:
+            # neural_net.load_state_dict(self._best_model_state_dict)
+            converged = True
+            
+            self._neural_net.load_state_dict(self._best_model_state_dict)
+            self._val_log_prob = self._best_val_log_prob
+            self._epochs_since_last_improvement = 0
+            
+        return converged
     
-    def _describe_round(self, round_: int, summary: Dict[str, list]) -> str:
-        epochs = summary["epochs_trained"][-1]
-        best_validation_log_prob = summary["best_validation_log_prob"][-1]
-
-        description = f"""
+    def _converged_dset(self, stop_after_dsets):
+        
+        converged = False
+        assert self._neural_net is not None
+        
+        if self.dset == 0 or self._val_log_prob_dset > self._best_val_log_prob_dset:
+            
+            self._dset_since_last_improvement = 0
+            
+            self._best_val_log_prob_dset        = self._val_log_prob_dset
+            self._best_model_state_dict_dset    = deepcopy(self._neural_net.state_dict())
+            self._best_model_from_dset          = self.dset - 1
+            
+            torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+        
+        else:
+            self._dset_since_last_improvement += 1
+            
+        if self._dset_since_last_improvement > stop_after_dsets - 1:
+            
+            converged = True
+            
+            self._neural_net.load_state_dict(self._best_model_state_dict_dset)
+            self._val_log_prob_dset = self._best_val_log_prob_dset
+            self._dset_since_last_improvement = 0
+            
+            torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+        
+        return converged
+        
+    
+    @staticmethod
+    def _show_epoch_progress(epoch, starting_time, train_log_prob, val_log_prob):
+        print(f" | Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} | log_prob val: {val_log_prob:.2f}\n")
+    
+    def _describe_dset(self) -> str:
+        
+        return f"""
         -------------------------
-        ||||| ROUND {round_} STATS |||||:
+        ||||| RUN {self.run} dset {self.dset} STATS |||||:
         -------------------------
-        Epochs trained: {epochs}
-        Best validation performance: {best_validation_log_prob:.4f}, from epoch {self._best_model_from_epoch:5}
+        Total epochs trained: {self.epoch_counter}
+        Best validation performance: {self._best_val_log_prob:.4f}, from epoch {self._best_model_from_epoch:5}
         Model from best epoch {self._best_model_from_epoch} is loaded for further training
         -------------------------
         """
-
-        return description
-
-    def append_simulations_for_run(
-        self,
-        theta: Tensor,
-        x: Tensor,
-        current_round: int = 0,
-        exclude_invalid_x: Optional[bool] = None,
-        data_device: Optional[str] = None,
-    ):
-        """ update theta and x for the current round
-        """
-        if exclude_invalid_x is None:
-            if current_round == 0:
-                exclude_invalid_x = True
-            else:
-                exclude_invalid_x = False
-
-        if data_device is None:
-            data_device = self._device
-
-        theta, x = validate_theta_and_x(
-            theta, x, data_device=data_device, training_device=self._device
-        )
-
-        is_valid_x, num_nans, num_infs = handle_invalid_x(
-            x, exclude_invalid_x=exclude_invalid_x
-        )
-
-        x = x[is_valid_x]
-        theta = theta[is_valid_x]
-
-        # Check for problematic z-scoring
-        warn_if_zscoring_changes_data(x)
-        if (
-            type(self).__name__ == "SNPE_C"
-            and current_round > 0
-            and not self.use_non_atomic_loss
-        ):
-            nle_nre_apt_msg_on_invalid_x(
-                num_nans, num_infs, exclude_invalid_x, "Multiround SNPE-C (atomic)"
-            )
-        else:
-            npe_msg_on_invalid_x(
-                num_nans, num_infs, exclude_invalid_x, "Single-round NPE"
-            )
-
-        prior_masks = mask_sims_from_prior(int(current_round > 0), theta.size(0))
-
-        old_theta   = self._theta_roundwise[current_round]
-        old_x       = self._x_roundwise[current_round]
-        old_masks   = self._prior_masks[current_round]
-        
-        self._theta_roundwise[current_round] = torch.cat((old_theta, theta), dim=0)
-        self._x_roundwise[current_round]     = torch.cat((old_x, x), dim=0)
-        self._prior_masks[current_round]     = torch.cat((old_masks, prior_masks), dim=0)
-        
-        return self
     
-
+    
 class MySNPE_C(SNPE_C, MyPosteriorEstimator):
     def __init__(
         self,
@@ -664,26 +716,15 @@ class MySNPE_C(SNPE_C, MyPosteriorEstimator):
     
     def train(
         self,
-        num_atoms: int = 10,
-        training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
-        stop_after_epochs: int = 20,
-        max_num_epochs: int = 2**31 - 1,
-        clip_max_norm: Optional[float] = 5.0,
-        calibration_kernel: Optional[Callable] = None,
-        resume_training: bool = False,
-        force_first_round_loss: bool = False,
-        discard_prior_samples: bool = False,
-        use_combined_loss: bool = False,
-        retrain_from_scratch: bool = False,
-        show_train_summary: bool = False,
-        seed: Optional[int] = 100,
-        dataset_kwargs: Optional[Dict] = None,
-        dataloader_kwargs: Optional[Dict] = None,
-        config = None,
-        limits = None,
-        log_dir= None,
+        log_dir,
+        config,
+        
+        seed,
+        prior_limits,
+        
+        dataset_kwargs,
+        dataloader_kwargs,
+        training_kwargs,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -730,8 +771,8 @@ class MySNPE_C(SNPE_C, MyPosteriorEstimator):
         # requiring the signature to have `num_atoms`, save it for use below, and
         # continue. It's sneaky because we are using the object (self) as a namespace
         # to pass arguments between functions, and that's implicit state management.
-        self._num_atoms = num_atoms
-        self._use_combined_loss = use_combined_loss
+        self._num_atoms = training_kwargs["num_atoms"]
+        self._use_combined_loss = training_kwargs["use_combined_loss"]
         kwargs = del_entries(
             locals(), entries=("self", "__class__", "num_atoms", "use_combined_loss")
         )

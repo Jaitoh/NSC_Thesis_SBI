@@ -7,9 +7,9 @@ x_o:
   trial_data_path : '../data/trials.mat'
   subject_id      : 2
   # subject_id_list : [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-
+  
 simulator:
-  model_name: 'B-G-L0S-O-N-'
+  model_name      : 'B-G-L0S-O-N-'
 
 prior:
   num_prior_sample: 5000
