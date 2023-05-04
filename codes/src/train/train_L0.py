@@ -84,7 +84,14 @@ class Solver:
         m = len(self.config['experiment_settings']['chosen_MS_list'])
         s = self.config['experiment_settings']['seqC_sample_per_MS']
         self.dms = d*m*s
-        self.l_x = 15+1
+        if self.config['dataset']['seqC_process'] == 'norm':
+            self.l_x = 15+1
+        if self.config['dataset']['seqC_process'] == 'summary':
+            if self.config['dataset']['summary_type'] == 0:
+                self.l_x = 11+1
+            if self.config['dataset']['summary_type'] == 1:
+                self.l_x = 8+1
+        
         self.l_theta = len(self.config['prior']['prior_min'])
         
         

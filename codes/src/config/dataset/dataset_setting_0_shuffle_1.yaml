@@ -13,7 +13,7 @@ dataset:
   validation_fraction         : 0.1
   
   num_probR_sample            : 25 #25
-  shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
+  shuffling_method            : 1 # 0: complex shuffling, 1: simple shuffling
 
   batch_size                  : 64
   num_workers                 : 8

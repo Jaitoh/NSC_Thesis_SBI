@@ -11,7 +11,7 @@ from simulator.model_sim_pR import (
     DM_sim_for_seqCs_parallel_with_smaller_output,
     get_boxUni_prior,    
 )
-from utils.train import get_args
+from utils.setup import get_args
 from utils.resource import monitor_resources
 from config.load_config import load_config
 from utils.set_seed import setup_seed

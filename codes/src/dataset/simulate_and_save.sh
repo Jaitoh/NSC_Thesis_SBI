@@ -3,7 +3,7 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 
-#SBATCH --array=2-100
+#SBATCH --array=102-500
 
 #SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
@@ -12,8 +12,8 @@
 #SBATCH --cpus-per-task=18
 
 #SBATCH --job-name=dataset
-#SBATCH --output=./cluster/uzh/dataset/other_logs/exp_set_0_%a.out
-#SBATCH --error=./cluster/uzh/dataset/other_logs/exp_set_0_%a.err
+#SBATCH --output=./cluster/uzh/dataset/data_gen/exp_set_0_%a.out
+#SBATCH --error=./cluster/uzh/dataset/data_gen/exp_set_0_%a.err
 
 # SLURM_ARRAY_TASK_ID=$1
 

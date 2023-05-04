@@ -90,7 +90,15 @@ class My_Chosen_Sets(Dataset):
         
         randomly_chosen_theta_idx = np.random.choice(total_theta_in_a_set, num_chosen_theta_each_set, replace=False)
         
-        seqC_all  = np.empty((len(chosen_set_names), DMS, 15))
+        if seqC_process == 'norm':
+            seqC_shape = f[chosen_set_names[0]]['seqC_normed'].shape[1]
+        elif seqC_process == 'summary':
+            if summary_type == 0:
+                seqC_shape = f[chosen_set_names[0]]['seqC_summary_0'].shape[1]
+            elif summary_type == 1:
+                seqC_shape = f[chosen_set_names[0]]['seqC_summary_1'].shape[1]
+                
+        seqC_all  = np.empty((len(chosen_set_names), DMS, seqC_shape))
         theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4))
         probR_all = np.empty((len(chosen_set_names), DMS, num_chosen_theta_each_set))
         
