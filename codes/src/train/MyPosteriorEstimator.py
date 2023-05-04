@@ -221,6 +221,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 torch.cuda.empty_cache()
             
             except KeyboardInterrupt:
+                torch.cuda.empty_cache()
                 print("Interrupted by Ctrl+C. Cleaning up...")
 
                 
