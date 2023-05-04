@@ -183,6 +183,7 @@ class Solver:
             'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
             'validation_fraction'            : self.config['dataset']['validation_fraction'],
             'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
+            'num_chosen_sets'                : self.config['dataset']['num_chosen_sets'],
         }
         
         my_dataloader_kwargs = {

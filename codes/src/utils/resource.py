@@ -46,18 +46,23 @@ import gpustat
 #                 f.write(gpu_message)
 #             f.flush()
 #             time.sleep(interval)
-            
+def print_mem_info(prefix="", do_print=False):
+    
+    if do_print:
+        print_cpu_memory_usage(prefix=prefix)
+        print_gpu_memory_usage()
+    
 def print_cpu_memory_usage(prefix=""):
     
     process = psutil.Process(os.getpid())
     mem_info = process.memory_info()
     
-    print(f"{prefix} - cpu memory usage: {mem_info.rss / (1024 * 1024):.2f} MB")
+    print(f"{prefix} - cpu memory usage: {mem_info.rss / (1024 * 1024):.2f} MB", end=' | ')
             
 def print_gpu_memory_usage():
     try:
         gpu_stats = gpustat.GPUStatCollection.new_query()
         for gpu in gpu_stats:
-            print(f"GPU {gpu.index} - Memory Used: {gpu.memory_used} MB / {gpu.memory_total} MB")
+            print(f"GPU {gpu.index} - Memory Used: {gpu.memory_used} MB / {gpu.memory_total} MB", end=' | ')
     except Exception as e:
         print(f"Error querying GPU memory usage: {e}")

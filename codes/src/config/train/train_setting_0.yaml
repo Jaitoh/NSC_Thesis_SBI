@@ -15,15 +15,22 @@ train:
 
   training:
     
-    stop_after_epochs     : 10
-    stop_after_dsets      : 50
     max_num_epochs        : 2147483647
     max_num_dsets         : 2147483647
 
     print_freq            : 20 # 20 records per epoch
+    learning_rate         : 1e-3
 
-    learning_rate         : 1e-5
-
+    improvement_threshold : 0.005 # improvement bigger than this threshold is considered as an improvement
+    stop_after_epochs     : 12
+    stop_after_dsets      : 5
+    scheduler             : 'ReduceLROnPlateau'
+    scheduler_params      : {'patience': 3, 'factor': 0.5, 'min_lr': 0}
+    # stop_after_epochs     : 21
+    # stop_after_dsets      : 5
+    # scheduler             : 'CosineAnnealingWarmRestarts'
+    # scheduler_params      : {'T_0': 7, 'T_mult': 2}
+    
     clip_max_norm         : 4.0
 
     num_rounds            : 3
