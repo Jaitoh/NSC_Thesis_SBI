@@ -281,8 +281,12 @@ class Solver:
             'improvement_threshold': training_config['improvement_threshold'],
             'stop_after_epochs'    : training_config['stop_after_epochs'],
             'stop_after_dsets'     : training_config['stop_after_dsets'],
+            
+            'min_num_epochs'       : training_config['min_num_epochs'],
             'max_num_epochs'       : training_config['max_num_epochs'],
+            'min_num_dsets'        : training_config['min_num_dsets'],
             'max_num_dsets'        : training_config['max_num_dsets'],
+            
             'print_freq'           : training_config['print_freq'],
             'chosen_dur_trained_in_sequence': self.config['dataset']['chosen_dur_trained_in_sequence'],
             'clip_max_norm'        : training_config['clip_max_norm'],
