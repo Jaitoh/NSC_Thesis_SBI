@@ -21,7 +21,7 @@ train:
     print_freq            : 20 # 20 records per epoch
     learning_rate         : 1e-3
 
-    improvement_threshold : 0.005 # improvement bigger than this threshold is considered as an improvement
+    improvement_threshold : 0.001 # improvement bigger than this threshold is considered as an improvement
     stop_after_epochs     : 12
     stop_after_dsets      : 5
     scheduler             : 'ReduceLROnPlateau'

@@ -114,10 +114,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
             try:
                 if use_data_prefetcher:
                     train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
+                    print('loading one training batch...')
                     x, theta = self._load_one_data(train_prefetcher, use_data_prefetcher)
+                    print('loading one validation batch...')
                     x_val, theta_val = self._load_one_data(val_prefetcher, use_data_prefetcher)
                 else:
+                    print('loading one training batch...')
                     x, theta = self._load_one_data(train_loader, use_data_prefetcher)
+                    print('loading one validation batch...')
                     x_val, theta_val = self._load_one_data(val_loader, use_data_prefetcher)
                 
                 self._collect_posterior_sets(x, theta, x_val, theta_val)
@@ -204,9 +208,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         train_loader = self._get_train_loader(val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
                         if use_data_prefetcher:
                             train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
-                            x, theta = self._load_one_data(train_prefetcher, val_prefetcher, use_data_prefetcher)
+                            print('loading one training batch...')
+                            x, theta = self._load_one_data(train_prefetcher, use_data_prefetcher)
                         else:
-                            x, theta = self._load_one_data(train_loader, val_loader, use_data_prefetcher)
+                            print('loading one training batch...')
+                            x, theta = self._load_one_data(train_loader, use_data_prefetcher)
                 
                 if use_data_prefetcher:
                     del train_prefetcher, val_prefetcher, train_loader, x, theta
@@ -260,7 +266,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
     def _get_val_loader(self, val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur):
         """ the val loader keeps the same for each dset, and each run
         """
-        
         self.val_dataset = My_Chosen_Sets(
             data_path   = dataset_kwargs['data_path'],
             config      = dataset_kwargs['config'],
@@ -281,8 +286,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         }
         if dataloader_kwargs is not None:
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
-
-        print(f'\n--- data loader ---')
+        # print(f'\n--- data loader ---')
         print(f'val_loader_kwargs: \n{val_loader_kwargs}')
         
         g = torch.Generator()
@@ -323,7 +327,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
 
-        print(f'\n--- data loader ---\ntrain_loader_kwargs: \n{train_loader_kwargs}')
+        print(f'train_loader_kwargs: \n{train_loader_kwargs}')
         
         g = torch.Generator()
         g.manual_seed(seed+self.dset)
@@ -438,7 +442,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
     
     def _load_one_data(self, train_prefetcher_or_loader, use_data_prefetcher):
         
-        print(f'\nloading 1 / {self.num_train_batches} batch of the training dataset...')
+        print(f'\nloading 1 / {self.num_train_batches} batch of the dataset...')
         start_time = time.time()
         
         if use_data_prefetcher:
@@ -446,8 +450,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         else:
             x, theta = next(iter(train_prefetcher_or_loader))
         
-        print(f'loading one batch of the training dataset takes {time.time() - start_time:.2f} seconds = {(time.time() - start_time) / 60:.2f} minutes')
-        print(f'\none batch of the training dataset:',
+        print(f'loading one batch of the dataset takes {time.time() - start_time:.2f} seconds = {(time.time() - start_time) / 60:.2f} minutes')
+        print(f'\none batch of the dataset:',
                 f'\n| x info:', f'shape {x.shape}, dtype: {x.dtype}, device: {x.device}',
                 f'\n| theta info:', f'shape {theta.shape}, dtype: {theta.dtype}, device: {theta.device}',
                 )
