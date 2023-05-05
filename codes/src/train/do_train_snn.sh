@@ -15,7 +15,7 @@
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=snn
-RUN_ID=exp_b0
+RUN_ID=exp_b0_
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml

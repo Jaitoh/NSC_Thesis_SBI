@@ -73,7 +73,7 @@ class My_Chosen_Sets(Dataset):
         from data_path
         """
         
-        print('Loading dataset into memory...')
+        print('\nLoading dataset into memory...')
         start_loading_time = time.time()
         num_chosen_theta_each_set = config['dataset']['num_chosen_theta_each_set']
         self.num_chosen_theta_each_set = num_chosen_theta_each_set

@@ -331,27 +331,33 @@ def main():  # sourcery skip: extract-method
     # monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
     # monitor_process.start()
     
-    # try:
+    try:
             
-    config = load_config(
-        config_simulator_path=args.config_simulator_path,
-        config_dataset_path=args.config_dataset_path,
-        config_train_path=args.config_train_path,
-    )
+        config = load_config(
+            config_simulator_path=args.config_simulator_path,
+            config_dataset_path=args.config_dataset_path,
+            config_train_path=args.config_train_path,
+        )
 
-    print(f'\n--- args ---')
-    for arg, value in vars(args).items():
-        print(f'{arg}: {value}')
+        print(f'\n--- args ---')
+        for arg, value in vars(args).items():
+            print(f'{arg}: {value}')
 
-    print('\n--- config keys ---')
-    print(config.keys())
+        print('\n--- config keys ---')
+        print(config.keys())
 
-    solver = Solver(args, config)
-    solver.sbi_train()
+        solver = Solver(args, config)
+        solver.sbi_train()
     
-    # finally:
-    #     monitor_process.terminate()
-
+    except Exception as e:
+            print(f"An error occurred: {e}")
+    finally:
+        
+        torch.cuda.empty_cache()
+        print('cuda cache emptied')
+        del solver
+        print('solver deleted')
+        
 
 
 if __name__ == '__main__':
