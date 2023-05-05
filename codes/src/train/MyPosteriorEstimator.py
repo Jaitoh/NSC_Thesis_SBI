@@ -97,8 +97,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.batch_counter = 0
         self.epoch_counter = 0
         self.dset_counter  = 0
-        self.dset          = 0
-        self.epoch         = 0
         
         self.train_data_set_name_list = []
         self.val_data_set_name_list   = []
@@ -111,6 +109,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 # init log prob
                 self.dset  = 0
                 self.epoch = 0
+                self._epoch_of_last_dset = 0
                 self._val_log_prob, self._val_log_prob_dset = float("-Inf"), float("-Inf")
                 self._best_val_log_prob, self._best_val_log_prob_dset = float("-Inf"), float("-Inf")
                 
@@ -195,6 +194,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     # log info for this dset
                     self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_of_dset", self._best_model_from_epoch, self.dset_counter)
                     self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_of_dset", self._best_val_log_prob, self.dset_counter)
+                    self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.dset_counter)
 
                     # update dset info
                     self._val_log_prob_dset = self._best_val_log_prob
@@ -862,13 +862,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._epochs_since_last_improvement += 1
 
         # If no validation improvement over many epochs, stop training.
-        if self._epochs_since_last_improvement > stop_after_epochs - 1 and epoch > min_num_epochs*(self.dset+1):
+        if self._epochs_since_last_improvement > stop_after_epochs - 1 and epoch > self._epoch_of_last_dset+min_num_epochs:
             # neural_net.load_state_dict(self._best_model_state_dict)
             converged = True
             
             self._neural_net.load_state_dict(self._best_model_state_dict)
             self._val_log_prob = self._best_val_log_prob
             self._epochs_since_last_improvement = 0
+            self._epoch_of_last_dset = epoch
             
         return converged
     

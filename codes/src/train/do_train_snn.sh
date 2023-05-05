@@ -15,14 +15,14 @@
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=snn
-RUN_ID=exp_b0_
+RUN_ID=exp_b0_1
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
 # CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
 
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
-CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_1.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
