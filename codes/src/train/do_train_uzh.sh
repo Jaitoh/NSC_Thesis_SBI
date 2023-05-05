@@ -9,18 +9,25 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="GPUMEM32GB"
 
-#SBATCH --mem 200G
+#SBATCH --mem 220G
 #SBATCH --cpus-per-task=10
 
 #SBATCH --job-name=train_L0
-#SBATCH --output=./cluster/uzh/train_L0/other_logs/output_b2.out
-#SBATCH --error=./cluster/uzh/train_L0/other_logs/error_b2.err
+#SBATCH --output=./cluster/uzh/train_L0/other_logs/output_b3_2_.out
+#SBATCH --error=./cluster/uzh/train_L0/other_logs/error_b3_2_.err
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=uzh
 # RUN_ID=exp_b1
-RUN_ID=exp_b2
-# RUN_ID=exp_b3
+# RUN_ID=exp_b2_0
+# RUN_ID=exp_b3_0
+# RUN_ID=exp_b0_2
+# RUN_ID=exp_b2_1_
+# RUN_ID=exp_b2_2_
+# RUN_ID=exp_b3_1_
+RUN_ID=exp_b3_2_
+# RUN_ID=exp_b0_3_
+
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
@@ -28,8 +35,15 @@ RUN_ID=exp_b2
 
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_shuffle_1.yaml
-CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_0.yaml
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_1.yaml
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_2.yaml # b0_2
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_0_1_.yaml # b2_1
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_0_2_.yaml # b2_2
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_1_1_.yaml # b3_1
+CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_summary_1_2_.yaml # b3_2
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_3_.yaml # b0_3
+
 CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
