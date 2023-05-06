@@ -1,4 +1,3 @@
-sbi
 torch
 jupyter
 pyyaml
@@ -10,3 +9,5 @@ cython
 tqdm
 matplotlib
 gpustat
+tensorboardX
+sbi

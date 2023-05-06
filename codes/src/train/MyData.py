@@ -73,7 +73,7 @@ class My_Chosen_Sets(Dataset):
         from data_path
         """
         
-        print('\nLoading dataset into memory...')
+        print('\nLoading dataset into memory...', end=' ')
         start_loading_time = time.time()
         num_chosen_theta_each_set = config['dataset']['num_chosen_theta_each_set']
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
@@ -126,11 +126,11 @@ class My_Chosen_Sets(Dataset):
         self.theta_all = theta_all
         self.probR_all = probR_all
         
-        print(f"dur of {list(chosen_dur)} are chosen, others are set to 0")
-        print(f"finished loading data into memory, time used: {time.time()-start_loading_time:.2f}s")
-        print(f"dataset seqC shape: {self.seqC_all.shape}")
-        print(f"dataset theta shape: {self.theta_all.shape}")
-        print(f"dataset probR shape: {self.probR_all.shape}")
+        print(f"dur of {list(chosen_dur)} are chosen, others are set to 0", end=' ')
+        print(f"finished in: {time.time()-start_loading_time:.2f}s")
+        print(f"[seqC] shape: {self.seqC_all.shape}")
+        print(f"[theta] shape: {self.theta_all.shape}")
+        print(f"[probR] shape: {self.probR_all.shape}")
 
         f.close()
         del f, seqC_all, theta_all, probR_all

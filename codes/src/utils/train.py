@@ -29,6 +29,9 @@ def plot_posterior_with_label(posterior, sample_num, x, true_params, limits, pri
         diag=["kde"],
     )
     
+    del samples, x, posterior
+    torch.cuda.empty_cache()
+    
     return fig, axes
 
 def plot_posterior_unseen(posterior, sample_num, x, limits, prior_labels):
@@ -45,6 +48,9 @@ def plot_posterior_unseen(posterior, sample_num, x, limits, prior_labels):
         upper=["kde"],
         diag=["kde"],
     )
+    
+    del samples
+    torch.cuda.empty_cache()
     
     return fig, axes
     

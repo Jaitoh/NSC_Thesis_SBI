@@ -295,6 +295,7 @@ class Solver:
             'use_combined_loss'    : True,
             'scheduler'            : training_config['scheduler'],
             'scheduler_params'     : training_config['scheduler_params'],
+            
         }
         
         # run training with current run updated dataset
@@ -308,6 +309,8 @@ class Solver:
             dataset_kwargs          = my_dataset_kwargs,
             dataloader_kwargs       = my_dataloader_kwargs,
             training_kwargs         = my_training_kwargs,
+            
+            continue_from_checkpoint= self.args.continue_from_checkpoint,
         )  # density estimator
 
             

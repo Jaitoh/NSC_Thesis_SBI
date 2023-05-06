@@ -12,7 +12,7 @@ dataset:
   num_chosen_theta_each_set   : 500 #5000 in total
   validation_fraction         : 0.1
   
-  num_probR_sample            : 5 #25
+  num_probR_sample            : 5 #25 
   shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
   batch_size                  : 64

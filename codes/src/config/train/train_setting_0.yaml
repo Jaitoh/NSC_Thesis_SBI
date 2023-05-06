@@ -31,7 +31,7 @@ train:
     # scheduler             : 'CosineAnnealingWarmRestarts'
     # scheduler_params      : {'T_0': 7, 'T_mult': 2}
     
-    print_freq            : 20 # 20 records per epoch
+    print_freq            : 2 # 20 records per epoch
     num_atoms             : 10
     num_rounds            : 3
     num_runs              : 10

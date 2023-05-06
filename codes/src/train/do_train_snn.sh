@@ -15,7 +15,7 @@
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=snn
-RUN_ID=exp_b0_1
+RUN_ID=exp_b0_1_continue
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
@@ -24,6 +24,8 @@ RUN_ID=exp_b0_1
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_1.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
+
+CHECK_POINT_PATH='./src/train/logs/train_L0/exp_b0_1/model/best_model_state_dict_run0.pt'
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -51,6 +53,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --data_path ${DATA_PATH} \
 --log_dir ${LOG_DIR} \
 --gpu \
+--continue_from_checkpoint ${CHECK_POINT_PATH} \
 -y &> ${PRINT_LOG}
 
 echo 'finished simulation'
