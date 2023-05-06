@@ -50,6 +50,7 @@ from utils.resource import(
 
 
 do_print_mem = 0
+# os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:2048'
 
 def signal_handler(sig, frame):
     sys.exit(0)
@@ -197,6 +198,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_of_dset", self._best_model_from_epoch, self.dset_counter)
                     self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_of_dset", self._best_val_log_prob, self.dset_counter)
                     self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.dset_counter)
+                    self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset", self.num_chosen_sets, self.dset_counter)
+                    
 
                     # update dset info
                     self._val_log_prob_dset = self._best_val_log_prob
@@ -342,7 +345,12 @@ class MyPosteriorEstimator(PosteriorEstimator):
         all_set_names = self._get_all_set_names(dataset_kwargs)
         all_train_set_names = list(set(all_set_names) - set(val_set_names))
         
+        # first dset is trained with first element of the num_chosen_set list, 2nd -> 2nd ...
         num_chosen_sets = dataset_kwargs['num_chosen_sets'][self.dset%len(dataset_kwargs['num_chosen_sets'])]
+        if self.dset>len(dataset_kwargs['num_chosen_sets'])-1:
+            num_chosen_sets = dataset_kwargs['num_chosen_sets'][-1]
+        self.num_chosen_sets = num_chosen_sets
+        print(f'train_loader - num_chosen_sets: {num_chosen_sets}')
         assert num_chosen_sets <= len(all_train_set_names), 'not enough training sets'
         chosen_train_set_names = np.random.choice(all_train_set_names, num_chosen_sets, replace=False)
         
@@ -485,7 +493,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         start_time = time.time()
         
         if use_data_prefetcher:
-            x, theta = train_prefetcher_or_loader.next()
+            with torch.no_grad():
+                x, theta = train_prefetcher_or_loader.next()
         else:
             x, theta = next(iter(train_prefetcher_or_loader))
         
@@ -614,7 +623,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 # get next batch
                 train_batch_num += 1
                 self.batch_counter += 1
-                x, theta = train_prefetcher_or_loader.next()
+                with torch.no_grad():
+                    x, theta = train_prefetcher_or_loader.next()
         else:
             del x, theta
             for x, theta in train_prefetcher_or_loader:
@@ -643,9 +653,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
     
     def _train_one_batch(self, x, theta, clip_max_norm, train_log_probs_sum):
         
-        x     = x.to(self._device)
-        theta = theta.to(self._device)
-        masks_batch = torch.ones_like(theta[:, 0]).to(self._device)
+        with torch.no_grad():
+            x     = x.to(self._device)
+            theta = theta.to(self._device)
+            masks_batch = torch.ones_like(theta[:, 0]).to(self._device)
 
         # del x, theta
         self.train_data_size += len(x)

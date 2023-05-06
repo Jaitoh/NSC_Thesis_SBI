@@ -1,10 +1,10 @@
 dataset:
 
 # ========== parameter settings for the seqC ==========
-  # seqC_process: 'norm'
+  seqC_process: 'norm'
   nan2num: -1
-  seqC_process: 'summary'
-  summary_type: 1
+  # seqC_process: 'summary'
+  summary_type: 0
   # summary_type: 1  # 0: detailed information, 1: brief information
 
 # # ========== parameter settings for the probR ==========
@@ -15,7 +15,7 @@ dataset:
   num_probR_sample            : 50 #25
   shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
-  batch_size                  : 64
+  batch_size                  : 50
   num_workers                 : 8
   chosen_dur_trained_in_sequence: 
     - [3, 5, 7, 9, 11, 13, 15]
@@ -23,4 +23,4 @@ dataset:
     - [3, 5, 7, 9, 11, 13, 15]
     - [3, 9, 15]
     - [3, 5, 7, 9, 11, 13, 15]
-  use_data_prefetcher         : True
+  use_data_prefetcher         : False
