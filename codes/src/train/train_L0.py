@@ -352,14 +352,14 @@ def main():  # sourcery skip: extract-method
         solver = Solver(args, config)
         solver.sbi_train()
     
-    except Exception as e:
-            print(f"An error occurred: {e}")
+    # except Exception as e:
+    #         print(f"An error occurred: {e}")
     finally:
         
         torch.cuda.empty_cache()
         print('cuda cache emptied')
-        del solver
-        print('solver deleted')
+        # del solver
+        # print('solver deleted')
         
 
 
