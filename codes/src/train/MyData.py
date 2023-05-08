@@ -5,69 +5,8 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 # from dataset.data_process import process_x_seqC_part
 
-class MyDataset(Dataset):
-    """MyDataset class
-
-    Returns:
-        seqC :             -> (DMS, 15 or L_x)
-        theta: (5000, 4)   -> (4,)
-        probR: (DMS, 5000) -> (DMS, )
-        
-    """
-    def __init__(self, 
-                 data_path, 
-                 
-                 num_sets=None,
-                 num_theta_each_set=5000, 
-                 
-                 seqC_process='norm',
-                 nan2num=-1,
-                 summary_type=0,
-                 ):
-        
-        self.data_path = data_path
-
-        # with h5py.File(self.data_path, 'r') as f:
-        self.f = h5py.File(self.data_path, 'r', libver='latest', swmr=True)
-            
-        self.total_sets = len(self.f.keys()) if num_sets is None else num_sets
-        self.total_samples = num_theta_each_set*self.total_sets
-        self.num_theta_each_set = num_theta_each_set
-        
-        self.seqC_process = seqC_process
-        self.nan2num = nan2num
-        self.summary_type = summary_type
-
-    def __len__(self):
-        return self.total_samples
-
-    def __getitem__(self, idx):
-        # Calculate set index and theta index within the set
-        set_idx, theta_idx = divmod(idx, self.num_theta_each_set)
-
-        # Load seqC, theta, and probR for the given idx
-        f = self.f
-        
-        if self.seqC_process == 'norm':
-            seqC = f[f'set_{set_idx}']['seqC_normed'][:]
-        elif self.seqC_process == 'summary':
-            if self.summary_type == 0:
-                seqC = f[f'set_{set_idx}']['seqC_summary_0'][:]
-            elif self.summary_type == 1:
-                seqC = f[f'set_{set_idx}']['seqC_summary_1'][:]
-        else:
-            raise ValueError(f"seqC_process {self.seqC_process} not supported")
-        # print(f"seqC shape: {seqC.shape}")
-
-        theta = f[f'set_{set_idx}']['theta'][theta_idx,:]
-        probR = f[f'set_{set_idx}']['probR'][:, theta_idx][:, np.newaxis]
-
-        # print(f"theta shape: {theta.shape}")
-
-        return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
-
 class My_Chosen_Sets(Dataset):
-    def __init__(self, data_path, config, chosen_set_names, chosen_dur=[3,5,7,9,11,13,15]):
+    def __init__(self, data_path, config, chosen_set_names, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
         """Loading num_chosen_theta_each_set 
         from the chosen sets into memory
         from data_path
@@ -79,7 +18,8 @@ class My_Chosen_Sets(Dataset):
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
         
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
-        total_theta_in_a_set = f[chosen_set_names[0]]['theta'].shape[0]
+        # total_theta_in_a_set = f[chosen_set_names[0]]['theta'].shape[0]
+        total_theta_in_a_set = config['dataset']['num_max_theta_each_set']
         self.total_samples = num_chosen_theta_each_set*len(chosen_set_names)
         
         seqC_process    = config['dataset']['seqC_process']
@@ -116,17 +56,23 @@ class My_Chosen_Sets(Dataset):
             theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
             probR_all[set_idx] = f[set_name]['probR'][:][:, randomly_chosen_theta_idx]
         
-        # set the values that are not chosen in DMS to 0
+        # set the values that are not chosen in DMS to 0, or remove them
         idx_not_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
-        
-        seqC_all[:, idx_not_chosen, :] = 0
-        probR_all[:, idx_not_chosen, :] = 0
-        
+        if not crop_dur: # set not chosen to 0
+            seqC_all[:, idx_not_chosen, :] = 0
+            probR_all[:, idx_not_chosen, :] = 0
+        else: # remove the not chosen idx
+            seqC_all = np.delete(seqC_all, idx_not_chosen, axis=1)
+            probR_all = np.delete(probR_all, idx_not_chosen, axis=1)            
+            
         self.seqC_all = seqC_all
         self.theta_all = theta_all
         self.probR_all = probR_all
         
-        print(f"dur of {list(chosen_dur)} are chosen, others are set to 0", end=' ')
+        if crop_dur:
+            print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ", end=' ')
+        else:
+            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] ", end=' ')
         print(f"finished in: {time.time()-start_loading_time:.2f}s")
         print(f"[seqC] shape: {self.seqC_all.shape}")
         print(f"[theta] shape: {self.theta_all.shape}")
@@ -274,7 +220,68 @@ class My_Dataset_Mem(Dataset):
         probR = self.probR_all[set_idx, :, theta_idx][:, np.newaxis]
         
         return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
-   
+
+class MyDataset(Dataset):
+    """MyDataset class
+
+    Returns:
+        seqC :             -> (DMS, 15 or L_x)
+        theta: (5000, 4)   -> (4,)
+        probR: (DMS, 5000) -> (DMS, )
+        
+    """
+    def __init__(self, 
+                 data_path, 
+                 
+                 num_sets=None,
+                 num_theta_each_set=5000, 
+                 
+                 seqC_process='norm',
+                 nan2num=-1,
+                 summary_type=0,
+                 ):
+        
+        self.data_path = data_path
+
+        # with h5py.File(self.data_path, 'r') as f:
+        self.f = h5py.File(self.data_path, 'r', libver='latest', swmr=True)
+            
+        self.total_sets = len(self.f.keys()) if num_sets is None else num_sets
+        self.total_samples = num_theta_each_set*self.total_sets
+        self.num_theta_each_set = num_theta_each_set
+        
+        self.seqC_process = seqC_process
+        self.nan2num = nan2num
+        self.summary_type = summary_type
+
+    def __len__(self):
+        return self.total_samples
+
+    def __getitem__(self, idx):
+        # Calculate set index and theta index within the set
+        set_idx, theta_idx = divmod(idx, self.num_theta_each_set)
+
+        # Load seqC, theta, and probR for the given idx
+        f = self.f
+        
+        if self.seqC_process == 'norm':
+            seqC = f[f'set_{set_idx}']['seqC_normed'][:]
+        elif self.seqC_process == 'summary':
+            if self.summary_type == 0:
+                seqC = f[f'set_{set_idx}']['seqC_summary_0'][:]
+            elif self.summary_type == 1:
+                seqC = f[f'set_{set_idx}']['seqC_summary_1'][:]
+        else:
+            raise ValueError(f"seqC_process {self.seqC_process} not supported")
+        # print(f"seqC shape: {seqC.shape}")
+
+        theta = f[f'set_{set_idx}']['theta'][theta_idx,:]
+        probR = f[f'set_{set_idx}']['probR'][:, theta_idx][:, np.newaxis]
+
+        # print(f"theta shape: {theta.shape}")
+
+        return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
+    
 class Data_Prefetcher():
     
     def __init__(self, loader):

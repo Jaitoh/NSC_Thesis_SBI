@@ -1,0 +1,27 @@
+dataset:
+
+# ========== parameter settings for the seqC ==========
+  seqC_process: 'norm'
+  nan2num: -1
+  # seqC_process: 'summary'
+  summary_type: 0
+  # summary_type: 1  # 0: detailed information, 1: brief information
+
+# # ========== parameter settings for the probR ==========
+  num_chosen_sets             : [10, 20, 30, 40, 50] #101 in total
+  num_max_sets                : 50 #101 in total
+  num_max_theta_each_set      : 5000 #5000 in total
+  num_chosen_theta_each_set   : 500 #5000 in total
+  # validation_fraction         : 0.1
+  validation_fraction         : [5, 10, 20]
+  
+  num_probR_sample            : 10 #25
+  shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
+
+  chosen_dur_trained_in_sequence: 
+    - [3, 9, 15]
+  crop_dur                    : True
+
+  batch_size                  : 64
+  num_workers                 : 8
+  use_data_prefetcher         : True

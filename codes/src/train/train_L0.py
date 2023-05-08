@@ -50,7 +50,7 @@ from utils.train import (
     train_inference_helper,
 )
 from utils.setup import(
-    check_path, get_args
+    check_path, get_args, get_args_run_from_code
 )
 # from utils.resource import monitor_resources
 from train.MyData import collate_fn_vec
@@ -80,7 +80,9 @@ class Solver:
         # check_path(self.log_dir, self.data_path, args)
         
         # get dataset size
-        d = len(self.config['experiment_settings']['chosen_dur_list'])
+        # d = len(self.config['experiment_settings']['chosen_dur_list'])
+        dur_lens = [len(dur) for dur in self.config['dataset']['chosen_dur_trained_in_sequence']]
+        d = max(dur_lens)
         m = len(self.config['experiment_settings']['chosen_MS_list'])
         s = self.config['experiment_settings']['seqC_sample_per_MS']
         self.dms = d*m*s
@@ -191,6 +193,8 @@ class Solver:
             'validation_fraction'            : self.config['dataset']['validation_fraction'],
             'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
             'num_chosen_sets'                : self.config['dataset']['num_chosen_sets'],
+            'crop_dur'                       : self.config['dataset']['crop_dur'],
+            'num_max_sets'                   : self.config['dataset']['num_max_sets'],
         }
         
         my_dataloader_kwargs = {

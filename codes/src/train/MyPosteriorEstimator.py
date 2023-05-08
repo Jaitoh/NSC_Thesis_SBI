@@ -49,7 +49,7 @@ from utils.resource import(
 )
 
 
-do_print_mem = 0
+do_print_mem = 1
 # os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:2048'
 
 def signal_handler(sig, frame):
@@ -91,6 +91,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         """
         self.log_dir = log_dir
+        self.config  = config
+        self.prior_limits = prior_limits
         
         chosen_dur_trained_in_sequence  = dataset_kwargs['chosen_dur_trained_in_sequence']
         clip_max_norm                   = training_kwargs['clip_max_norm']
@@ -169,7 +171,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                                 
                             # check posterior behavior after each epoch
                             self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
-                            self._posterior_behavior_log(config, prior_limits, log_dir)
+                            # self._posterior_behavior_log(config, prior_limits, log_dir)
                             print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", do_print_memory_usage)
                             
                             # fetcher same dataset for next epoch
@@ -246,8 +248,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
             return self, deepcopy(self._neural_net)
 
-        except Exception as e:
-                print(f"An error occurred: {e}")
+        # except Exception as e:
+        #         print(f"An error occurred: {e}")
         finally:
             # Release GPU resources
             train_loader        = None
@@ -288,19 +290,30 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         all_set_names = self._get_all_set_names(dataset_kwargs)
         
-        num_val_sets   = int(dataset_kwargs['validation_fraction']*len(all_set_names))
-        val_set_names  = np.random.choice(all_set_names, num_val_sets, replace=False)
-        
+        # check if validation set is float number 
+        if isinstance(dataset_kwargs['validation_fraction'], float):
+            num_val_sets   = int(dataset_kwargs['validation_fraction']*len(all_set_names))
+            val_set_names  = np.random.choice(all_set_names, num_val_sets, replace=False)
+        if isinstance(dataset_kwargs['validation_fraction'], list):
+            val_set_names  = [f'set_{i}' for i in dataset_kwargs['validation_fraction']]
         # train_set_names   = list(set(all_set_names) - set(val_set_names))
         
         return val_set_names
 
     def _get_all_set_names(self, dataset_kwargs):
         
+        # get all available set names
         data_path = dataset_kwargs['data_path']
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
         all_set_names = list(f.keys())
+        num_total_sets = len(all_set_names)
         f.close()
+        
+        # select a subset of sets
+        num_max_sets = dataset_kwargs['num_max_sets']
+        num_max_sets = min(num_max_sets, num_total_sets)
+        all_set_names = all_set_names[:num_max_sets]
+        print(f'\n === chosen {len(all_set_names)} sets from {num_total_sets} sets === \n')
         
         return all_set_names
         
@@ -312,6 +325,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             config      = dataset_kwargs['config'],
             chosen_set_names = val_set_names,
             chosen_dur  = chosen_dur,
+            crop_dur    = dataset_kwargs['crop_dur'],
         )
         
         batch_size = dataloader_kwargs['batch_size']
@@ -359,6 +373,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             config      = dataset_kwargs['config'],
             chosen_set_names = chosen_train_set_names,
             chosen_dur  = chosen_dur,
+            crop_dur    = dataset_kwargs['crop_dur'],
         )
         
         batch_size = dataloader_kwargs['batch_size']
@@ -584,7 +599,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 x.to("cpu"),
             )
             
-            if continue_from_checkpoint!=None or continue_from_checkpoint!='':
+            if continue_from_checkpoint!=None and continue_from_checkpoint!='':
                 print(f"loading neural net from '{continue_from_checkpoint}'")
                 # load network from state dict 
                 self._neural_net.load_state_dict(torch.load(continue_from_checkpoint))
@@ -693,11 +708,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         elif self.num_train_batches <= print_freq:
             print_mem_info('memory usage after batch', do_print_memory_usage)
-            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
+            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min', end=' ')
 
         elif train_batch_num % (self.num_train_batches//print_freq) == 0: # print every 5% of batches
             print_mem_info('memory usage after batch', do_print_memory_usage)
-            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
+            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min', end=' ')
 
         # self._summary_writer.add_scalar("train_loss_batch", train_loss, self.batch_counter)
     
@@ -767,87 +782,86 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary["validation_log_probs"].append(self._val_log_prob)
         self._summary["epoch_durations_sec"].append(time.time() - epoch_start_time)
     
-    def _posterior_behavior_log(self, config, limits, log_dir):
+    def _posterior_behavior_log(self, config, limits):
         
         with torch.no_grad():
             
             epoch = self.epoch
             current_net = deepcopy(self._neural_net)
 
-            if epoch%config['train']['posterior']['step'] == 0:
-                
-                posterior_start_time = time.time()
-                print("--> Plotting posterior...", end=" ")
+            # if epoch%config['train']['posterior']['step'] == 0:
+            posterior_start_time = time.time()
+            print("--> Plotting posterior...", end=" ")
 
-                posterior = self.build_posterior(current_net)
-                self._model_bank = []
+            posterior = self.build_posterior(current_net)
+            self._model_bank = [] # clear model bank to avoid memory leak
+            
+            for fig_idx in range(len(self.posterior_train_set['x'])):
                 
-                for fig_idx in range(len(self.posterior_train_set['x'])):
-                    
-                    # plot posterior - train x
-                    fig_x, _ = plot_posterior_with_label(
-                        posterior       = posterior, 
-                        sample_num      = config['train']['posterior']['sampling_num'],
-                        x               = self.posterior_train_set['x'][fig_idx].to(self._device),
-                        true_params     = self.posterior_train_set['theta'][fig_idx],
-                        limits          = limits,
-                        prior_labels    = config['prior']['prior_labels'],
-                    )
-                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}.png")
-                    self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
-                    plt.close(fig_x)
-                    del fig_x, _
-                    torch.cuda.empty_cache()
-                    
-                    # plot posterior - train x_shuffled
-                    fig_x, _ = plot_posterior_with_label(
-                        posterior       = posterior, 
-                        sample_num      = config['train']['posterior']['sampling_num'],
-                        x               = self.posterior_train_set['x_shuffled'][fig_idx].to(self._device),
-                        true_params     = self.posterior_train_set['theta'][fig_idx],
-                        limits          = limits,
-                        prior_labels    = config['prior']['prior_labels'],
-                    )
-                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}.png")
-                    self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}_shuffled", fig_x, self.epoch_counter)
-                    plt.close(fig_x)
-                    del fig_x, _
-                    torch.cuda.empty_cache()
-                    
-                    # plot posterior - val x
-                    fig_x_val, _ = plot_posterior_with_label(
-                        posterior       = posterior, 
-                        sample_num      = config['train']['posterior']['sampling_num'],
-                        x               = self.posterior_val_set['x'][fig_idx].to(self._device),
-                        true_params     = self.posterior_val_set['theta'][fig_idx],
-                        limits          = limits,
-                        prior_labels    = config['prior']['prior_labels'],
-                    )
-                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}.png")
-                    self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
-                    plt.close(fig_x_val)
-                    del fig_x_val, _
-                    torch.cuda.empty_cache()
-                    
-                    # plot posterior - val x_shuffled
-                    fig_x_val, _ = plot_posterior_with_label(
-                        posterior       = posterior, 
-                        sample_num      = config['train']['posterior']['sampling_num'],
-                        x               = self.posterior_val_set['x_shuffled'][fig_idx].to(self._device),
-                        true_params     = self.posterior_val_set['theta'][fig_idx],
-                        limits          = limits,
-                        prior_labels    = config['prior']['prior_labels'],
-                    )
-                    plt.savefig(f"{log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}.png")
-                    self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}_shuffled", fig_x_val, self.epoch_counter)
-                    plt.close(fig_x_val)
-                    del fig_x_val, _
-                    torch.cuda.empty_cache()
-                    
-                del posterior, current_net
+                # plot posterior - train x
+                fig_x, _ = plot_posterior_with_label(
+                    posterior       = posterior, 
+                    sample_num      = config['train']['posterior']['sampling_num'],
+                    x               = self.posterior_train_set['x'][fig_idx].to(self._device),
+                    true_params     = self.posterior_train_set['theta'][fig_idx],
+                    limits          = limits,
+                    prior_labels    = config['prior']['prior_labels'],
+                )
+                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}.png")
+                self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
+                plt.close(fig_x)
+                del fig_x, _
                 torch.cuda.empty_cache()
                 
-                print(f"posterior check finished in {(time.time()-posterior_start_time)/60:.2f}min")
+                # plot posterior - train x_shuffled
+                fig_x, _ = plot_posterior_with_label(
+                    posterior       = posterior, 
+                    sample_num      = config['train']['posterior']['sampling_num'],
+                    x               = self.posterior_train_set['x_shuffled'][fig_idx].to(self._device),
+                    true_params     = self.posterior_train_set['theta'][fig_idx],
+                    limits          = limits,
+                    prior_labels    = config['prior']['prior_labels'],
+                )
+                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}.png")
+                self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}_shuffled", fig_x, self.epoch_counter)
+                plt.close(fig_x)
+                del fig_x, _
+                torch.cuda.empty_cache()
+                
+                # plot posterior - val x
+                fig_x_val, _ = plot_posterior_with_label(
+                    posterior       = posterior, 
+                    sample_num      = config['train']['posterior']['sampling_num'],
+                    x               = self.posterior_val_set['x'][fig_idx].to(self._device),
+                    true_params     = self.posterior_val_set['theta'][fig_idx],
+                    limits          = limits,
+                    prior_labels    = config['prior']['prior_labels'],
+                )
+                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}.png")
+                self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
+                plt.close(fig_x_val)
+                del fig_x_val, _
+                torch.cuda.empty_cache()
+                
+                # plot posterior - val x_shuffled
+                fig_x_val, _ = plot_posterior_with_label(
+                    posterior       = posterior, 
+                    sample_num      = config['train']['posterior']['sampling_num'],
+                    x               = self.posterior_val_set['x_shuffled'][fig_idx].to(self._device),
+                    true_params     = self.posterior_val_set['theta'][fig_idx],
+                    limits          = limits,
+                    prior_labels    = config['prior']['prior_labels'],
+                )
+                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}.png")
+                self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}_shuffled", fig_x_val, self.epoch_counter)
+                plt.close(fig_x_val)
+                del fig_x_val, _
+                torch.cuda.empty_cache()
+                
+            del posterior, current_net
+            torch.cuda.empty_cache()
+                
+            print(f"posterior check finished in {(time.time()-posterior_start_time)/60:.2f}min")
     
     def _converged(self, epoch: int, stop_after_epochs: int, improvement_threshold: float, min_num_epochs: int) -> bool:
         """Return whether the training converged yet and save best model state so far.
@@ -866,9 +880,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         assert self._neural_net is not None
         neural_net = self._neural_net
 
-        improvement = self._val_log_prob - self._best_val_log_prob
+        # improvement = self._val_log_prob - self._best_val_log_prob
         # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob > self._best_val_log_prob or improvement > improvement_threshold:
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob: # or improvement > improvement_threshold:
             
             self._epochs_since_last_improvement = 0
             
@@ -876,6 +890,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._best_model_state_dict = deepcopy(neural_net.state_dict())
             self._best_model_from_epoch = epoch
             
+            self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
             # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
         
         else:
@@ -898,8 +913,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         converged = False
         assert self._neural_net is not None
         
-        improvement = self._val_log_prob - self._best_val_log_prob
-        if self.dset == 0 or self._val_log_prob_dset > self._best_val_log_prob_dset or improvement > improvement_threshold:
+        # improvement = self._val_log_prob - self._best_val_log_prob
+        if self.dset == 0 or self._val_log_prob_dset > self._best_val_log_prob_dset: # or improvement > improvement_threshold:
             
             self._dset_since_last_improvement = 0
             
