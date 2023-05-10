@@ -882,7 +882,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         # improvement = self._val_log_prob - self._best_val_log_prob
         # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob > self._best_val_log_prob: # or improvement > improvement_threshold:
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob: # and improvement > improvement_threshold:
             
             self._epochs_since_last_improvement = 0
             
@@ -890,7 +890,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._best_model_state_dict = deepcopy(neural_net.state_dict())
             self._best_model_from_epoch = epoch
             
-            self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
+            if epoch != 0:
+                self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
             # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
         
         else:
