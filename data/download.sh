@@ -23,8 +23,9 @@
 
 ./gdrive files download 1CVyuUxRY_0RetrwVRTn46iu7uaC4c3m7 --destination ./tmp/NSC/codes/src/dataset
 
-# dataset_L0_exp_set_0.h5 new
-./gdrive files download 1bcv3Nxh7nFBMbD5_6lThYQcFdFQlg0zV --destination ./tmp/NSC/data/dataset/
+# dataset_L0_exp_set_0.h5 updated-May12
+./gdrive files download 1vxaNvjlejlkfvZKt_erGmqP0VlG97eLk --destination ./tmp/NSC/data/dataset/
+
 # dataset_L0_exp_set_0_test.h5 new
 ./gdrive files download 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf --destination ./tmp/NSC/data/dataset/
 

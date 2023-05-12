@@ -13,22 +13,43 @@
 #SBATCH --output=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.out
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
+export CUDA_VISIBLE_DEVICES=0
+cd ~/tmp/NSC/codes
+source activate sbi
+
 TRAIN_FILE_NAME=train_L0
 CLUSTER=test
-RUN_ID=exp_b0_test_2
 
-CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
-CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
-CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
+# CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
+# CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
+# CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
+
+CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
+
+# RUN_ID=exp-d0-net0
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
+
+RUN_ID=exp-d0-net1
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-2.yaml
+
+# RUN_ID=exp-d0-net2
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
+
+
+# CHECK_POINT_PATH='./src/train/logs/train_L0/exp_b0_1/model/best_model_state_dict_run0.pt'
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
-    DATA_PATH="../data/dataset/dataset_L0_exp_set_0_test.h5"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
     module load anaconda3
     source activate sbi
 else
     LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
-    DATA_PATH="../data/dataset/dataset_L0_exp_set_0_test.h5"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 fi
 
 PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs/${RUN_ID}.log"
@@ -48,6 +69,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --log_dir ${LOG_DIR} \
 --gpu \
 -y &> ${PRINT_LOG}
+# --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
 echo 'finished simulation'
 
@@ -63,4 +85,4 @@ echo 'finished simulation'
 
 # cd ~/tmp/NSC/codes/
 # conda activate sbi
-# ./src/train/do_train_test.sh
+# ./src/train/do_train_snn.sh
