@@ -54,3 +54,5 @@ codes/src/simulator/DM_compute.c
 
 codes/src/train/logs/*
 
+*.key
+*.gz
