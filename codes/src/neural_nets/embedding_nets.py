@@ -53,18 +53,18 @@ class LSTM_Embedding(nn.Module):
                  output_size=20,
             ):
         super(LSTM_Embedding, self).__init__()
-        self.rnn1 = nn.LSTM(input_size=dms, hidden_size=hidden_size*8, num_layers=4, batch_first=True)
+        self.rnn1 = nn.LSTM(input_size=dms, hidden_size=hidden_size*8, num_layers=1, batch_first=True)
         # self.dropout1 = nn.Dropout(p=0.05)
-        self.rnn2 = nn.LSTM(input_size=hidden_size*8, hidden_size=hidden_size*4, num_layers=2, batch_first=True)
+        self.rnn2 = nn.LSTM(input_size=hidden_size*8, hidden_size=hidden_size*4, num_layers=1, batch_first=True)
         # self.dropout2 = nn.Dropout(p=0.05)
-        self.rnn3 = nn.LSTM(input_size=hidden_size*4, hidden_size=hidden_size*2, num_layers=2, batch_first=True)
+        self.rnn3 = nn.LSTM(input_size=hidden_size*4, hidden_size=hidden_size*2, num_layers=1, batch_first=True)
         # self.dropout3 = nn.Dropout(p=0.05)
         self.rnn4 = nn.LSTM(input_size=hidden_size*2, hidden_size=hidden_size, num_layers=1, batch_first=True)
         # self.dropout4 = nn.Dropout(p=0.05)
-        self.fc1 = nn.Linear(l*hidden_size, 2*hidden_size)
+        self.fc1 = nn.Linear(l*hidden_size, 4*hidden_size)
         # self.bn1 = nn.BatchNorm1d(2*hidden_size)
-        self.bn1 = nn.LayerNorm(2*hidden_size)
-        self.fc2 = nn.Linear(2*hidden_size, output_size)
+        self.bn1 = nn.LayerNorm(4*hidden_size)
+        self.fc2 = nn.Linear(4*hidden_size, output_size)
 
     def forward(self, x):
         # x has shape (B, DMS, L)
