@@ -559,7 +559,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
             figure = plt.figure()
             plt.imshow(self.posterior_train_set['x_shuffled'][fig_idx][:150, :].cpu())
-            plt.savefig(f'{self.log_dir}/posterior/figures/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
+            plt.savefig(f'{self.log_dir}/posterior/figures/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
             self._summary_writer.add_figure(f"data_run{self.run}/x_train_{fig_idx}_shuffled", figure, self.dset)
             plt.close(figure)
         
@@ -572,7 +572,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
             figure = plt.figure()
             plt.imshow(self.posterior_val_set['x_shuffled'][fig_idx][:150, :].cpu())
-            plt.savefig(f'{self.log_dir}/posterior/figures/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
+            plt.savefig(f'{self.log_dir}/posterior/figures/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
             self._summary_writer.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
             plt.close(figure)
 
@@ -822,7 +822,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     limits          = limits,
                     prior_labels    = config['prior']['prior_labels'],
                 )
-                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}.png")
+                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}_shuffled.png")
                 self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}_shuffled", fig_x, self.epoch_counter)
                 plt.close(fig_x)
                 del fig_x, _
@@ -852,7 +852,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     limits          = limits,
                     prior_labels    = config['prior']['prior_labels'],
                 )
-                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}.png")
+                plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}_shuffled.png")
                 self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}_shuffled", fig_x_val, self.epoch_counter)
                 plt.close(fig_x_val)
                 del fig_x_val, _
@@ -882,7 +882,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         # improvement = self._val_log_prob - self._best_val_log_prob
         # (Re)-start the epoch count with the first epoch or any improvement.
-        if epoch == 0 or self._val_log_prob > self._best_val_log_prob: # or improvement > improvement_threshold:
+        if epoch == 0 or self._val_log_prob > self._best_val_log_prob: # and improvement > improvement_threshold:
             
             self._epochs_since_last_improvement = 0
             
@@ -890,7 +890,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._best_model_state_dict = deepcopy(neural_net.state_dict())
             self._best_model_from_epoch = epoch
             
-            self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
+            if epoch != 0:
+                self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
             # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
         
         else:
