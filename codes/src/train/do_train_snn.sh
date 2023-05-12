@@ -18,7 +18,7 @@ cd ~/tmp/NSC/codes
 source activate sbi
 
 TRAIN_FILE_NAME=train_L0
-CLUSTER=snn
+CLUSTER=test
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml

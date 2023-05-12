@@ -168,17 +168,17 @@ class MyPosteriorEstimator(PosteriorEstimator):
                             val = val_prefetcher if use_data_prefetcher else val_loader
                             self._val_log_prob = self._val_one_epoch(val)
                             self._val_one_epoch_log(epoch_start_time)
-                            print_mem_info(f"\n{'gpu memory usage after validation':46}", do_print_memory_usage)
+                            print_mem_info(f"{'gpu memory usage after validation':46}", do_print_memory_usage)
                                 
                             # check posterior behavior after each epoch
                             self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
                             # self._posterior_behavior_log(config, prior_limits, log_dir)
-                            print_mem_info(f"\n{'gpu memory usage after posterior behavior log':46}", do_print_memory_usage)
+                            print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", do_print_memory_usage)
                             
                             # fetcher same dataset for next epoch
                             if self.use_data_prefetcher:
                                 train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
-                            print_mem_info(f"\n{'gpu memory usage after prefetcher':46}", do_print_memory_usage)
+                            print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_memory_usage)
                             
                             self.epoch += 1
                             self.epoch_counter += 1
