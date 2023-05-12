@@ -13,7 +13,7 @@ print(sys.path)
 from data_process import process_x_seqC_part
 
 args = argparse.ArgumentParser()
-args.add_argument('--data_path', type=str, default='../data/dataset/dataset_L0_exp_set_0.h5')
+args.add_argument('--data_path', type=str, default='../data/dataset/dataset-L0-exp-set-0-500sets.h5')
 args = args.parse_args()
 
 data_path = args.data_path
@@ -88,7 +88,7 @@ with h5py.File(dataset_path, 'r+') as f:
     print(f['data'].keys())
     seqC_ref = f['data']['seqC'][:]
 
-dataset_path = '/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5'
+dataset_path = args.data_path
 # process and write the dataset
 with h5py.File(dataset_path, 'r+') as f:
     seqC_0 = f['set_0']['seqC'][:]

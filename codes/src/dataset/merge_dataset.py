@@ -7,6 +7,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser(description='pipeline for sbi')
 parser.add_argument('--data_dir', type=str, default="/home/wehe/scratch/data/dataset",
                     help="simulated data store/load dir")
+parser.add_argument('--merged_data_path', type=str, default="/home/wehe/scratch/data/dataset_L0_exp_set_0_500.h5")
 args = parser.parse_args()
 
 # list the files in the data directory using python
@@ -27,7 +28,8 @@ for data_file in files:
 sorted_indices = sorted(range(len(data_file_idxs)), key=lambda i: data_file_idxs[i])
 
 # create a new h5 file to store the combined dataset
-merged_data_path = Path(data_dir) / 'dataset_L0_exp_set_0.h5'
+# merged_data_path = Path(data_dir) / 'dataset_L0_exp_set_0_500.h5'
+merged_data_path = args.merged_data_path
 
 print(f'merged data_path {merged_data_path}')
 with h5py.File(merged_data_path, 'w') as merged_data_file:
@@ -48,5 +50,3 @@ with h5py.File(merged_data_path, 'w') as merged_data_file:
     print(f"seqC has a shape of: {merged_data_file['set_0']['seqC'].shape}")
     print(f"theta has a shape of: {merged_data_file['set_0']['theta'].shape}")
     print(f"probR has a shape of: {merged_data_file['set_0']['probR'].shape}")
-
-# merged_data_file.close()

@@ -31,3 +31,5 @@
 
 ./gdrive files upload "/home/wehe/data/NSC/codes/src/dataset/probR_set_0.npy" # 1CVyuUxRY_0RetrwVRTn46iu7uaC4c3m7
 ./gdrive files upload "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_set_0_test.h5" # 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf
+
+./gdrive files upload "/home/wehe/data/NSC/data/dataset/dataset_L0_exp_set_0.h5" # 1vxaNvjlejlkfvZKt_erGmqP0VlG97eLk

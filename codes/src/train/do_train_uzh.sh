@@ -9,7 +9,6 @@
 #SBATCH --ntasks=1
 
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="GPUMEM32GB"
 
 #SBATCH --mem 100G
 #SBATCH --cpus-per-task=5
@@ -24,25 +23,26 @@ CLUSTER=uzh
 CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 
-SLURM_ARRAY_TASK_ID=$1
+# SLURM_ARRAY_TASK_ID=$1
+echo "task ID: ${SLURM_ARRAY_TASK_ID}"
 
 # ---
-if SLURM_ARRAY_TASK_ID=0; then
+if [ ${SLURM_ARRAY_TASK_ID} -eq 0 ]; then
     RUN_ID=exp-c0-sub0
     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
-elif SLURM_ARRAY_TASK_ID=1; then
+elif [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]; then
     RUN_ID=exp-c0-sub1
     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub1.yaml
-elif SLURM_ARRAY_TASK_ID=2; then
+elif [ ${SLURM_ARRAY_TASK_ID} -eq 2 ]; then
     RUN_ID=exp-c0-sub2
     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub2.yaml
-elif SLURM_ARRAY_TASK_ID=3; then
+elif [ ${SLURM_ARRAY_TASK_ID} -eq 3 ]; then
     RUN_ID=exp-c0-sub3
     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub3.yaml
-elif SLURM_ARRAY_TASK_ID=4; then
+elif [ ${SLURM_ARRAY_TASK_ID} -eq 4 ]; then
     RUN_ID=exp-c0-sub4
     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub4.yaml
-elif SLURM_ARRAY_TASK_ID=5; then
+elif [ ${SLURM_ARRAY_TASK_ID} -eq 5 ]; then
     RUN_ID=exp-c0-sub5
     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub5.yaml
 fi
@@ -79,7 +79,7 @@ echo "log_dir: ${LOG_DIR}"
 echo "print_log: ${PRINT_LOG}"
 
 # --run ${SLURM_ARRAY_TASK_ID} \
-echo "python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
+python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --seed 100 \
 --config_simulator_path ${CONFIG_SIMULATOR_PATH} \
 --config_dataset_path ${CONFIG_DATASET_PATH} \
@@ -87,7 +87,7 @@ echo "python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --data_path ${DATA_PATH} \
 --log_dir ${LOG_DIR} \
 --gpu \
--y &> ${PRINT_LOG}"
+-y &> ${PRINT_LOG}
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
 

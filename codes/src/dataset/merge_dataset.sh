@@ -19,10 +19,11 @@ CLUSTER=uzh
 
 if [ "${CLUSTER}" == "uzh" ]; then
     DATA_DIR=/home/wehe/scratch/data/dataset/
+    MERGED_DATA_path=/home/wehe/scratch/data/dataset-L0-exp-set-0-500sets.h5
     # module load anaconda3
     # source activate sbi
 else
-    DATA_DIR=../data/dataset/
+    DATA_DIR=../data/dataset/dataset-L0-exp-set-0-500sets.h5
 fi
 
 PRINT_DIR="./cluster/${CLUSTER}/dataset/process"
@@ -33,8 +34,9 @@ echo "print_log: ${PRINT_LOG}"
 # mkdir -p $DATA_DIR
 # mkdir -p $PRINT_DIR
 
-python3 -u ./src/dataset/merge_dataset.py \
---data_dir ${DATA_DIR} &> ${PRINT_LOG}
+/data/wehe/conda/envs/sbi/bin/python3 -u ./src/dataset/merge_dataset.py \
+--data_dir ${DATA_DIR} \
+--merged_data_path ${MERGED_DATA_path} &> ${PRINT_LOG}
 
 echo 'finished dataset merge'
 
