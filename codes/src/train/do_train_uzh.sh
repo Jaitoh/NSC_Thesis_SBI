@@ -3,7 +3,7 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 
-#SBATCH --array=0-5
+#SBATCH --array=1,3,4,2,5
 
 #SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
@@ -15,8 +15,8 @@
 #SBATCH --cpus-per-task=5
 
 #SBATCH --job-name=train_L0
-#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-c0-sub5.out
-#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-c0-sub5.err
+#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-c0-sub%a.out
+#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-c0-sub%a.err
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=uzh
