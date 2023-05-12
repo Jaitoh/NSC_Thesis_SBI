@@ -16,7 +16,7 @@
 export CUDA_VISIBLE_DEVICES=1
 CLUSTER=snn
 TRAIN_FILE_NAME=train_L0
-RUN_ID=exp-c0-sub0
+RUN_ID=exp-c0-sub5
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}

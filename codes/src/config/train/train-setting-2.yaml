@@ -9,8 +9,8 @@ train:
       output_size: 32
     posterior_nn:
       model: maf
-      hidden_features: 128
-      num_transforms: 5
+      hidden_features: 64
+      num_transforms: 2
     
 
   training:
@@ -37,6 +37,6 @@ train:
     num_runs              : 10
     
   posterior:
-    step          : 2     # the epoch steps to check posterior during training
-    sampling_num  : 5000
+    sampling_num  : 2000
     val_set_size  : 1
+    # step          : 2     # the epoch steps to check posterior during training

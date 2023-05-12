@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 # from dataset.data_process import process_x_seqC_part
 
 class My_Chosen_Sets(Dataset):
-    def __init__(self, data_path, config, chosen_set_names, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
+    def __init__(self, data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
         """Loading num_chosen_theta_each_set 
         from the chosen sets into memory
         from data_path
@@ -14,7 +14,6 @@ class My_Chosen_Sets(Dataset):
         
         print('\nLoading dataset into memory...', end=' ')
         start_loading_time = time.time()
-        num_chosen_theta_each_set = config['dataset']['num_chosen_theta_each_set']
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
         
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)

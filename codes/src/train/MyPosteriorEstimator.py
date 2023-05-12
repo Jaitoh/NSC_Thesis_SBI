@@ -49,7 +49,7 @@ from utils.resource import(
 )
 
 
-do_print_mem = 1
+do_print_mem = 0
 # os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:2048'
 
 def signal_handler(sig, frame):
@@ -102,6 +102,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.batch_counter = 0
         self.epoch_counter = 0
         self.dset_counter  = 0
+        self.train_start_time = time.time()
         
         self.train_data_set_name_list = []
         self.val_data_set_name_list   = []
@@ -167,18 +168,17 @@ class MyPosteriorEstimator(PosteriorEstimator):
                             val = val_prefetcher if use_data_prefetcher else val_loader
                             self._val_log_prob = self._val_one_epoch(val)
                             self._val_one_epoch_log(epoch_start_time)
-                            print_mem_info(f"{'gpu memory usage after validation':46}", do_print_memory_usage)
+                            print_mem_info(f"\n{'gpu memory usage after validation':46}", do_print_memory_usage)
                                 
                             # check posterior behavior after each epoch
                             self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
                             # self._posterior_behavior_log(config, prior_limits, log_dir)
-                            print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", do_print_memory_usage)
+                            print_mem_info(f"\n{'gpu memory usage after posterior behavior log':46}", do_print_memory_usage)
                             
                             # fetcher same dataset for next epoch
                             if self.use_data_prefetcher:
                                 train_prefetcher, val_prefetcher = self._get_data_prefetcher(train_loader, val_loader)
-                            print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_memory_usage)
-                            print()
+                            print_mem_info(f"\n{'gpu memory usage after prefetcher':46}", do_print_memory_usage)
                             
                             self.epoch += 1
                             self.epoch_counter += 1
@@ -321,11 +321,12 @@ class MyPosteriorEstimator(PosteriorEstimator):
         """ the val loader keeps the same for each dset, and each run
         """
         self.val_dataset = My_Chosen_Sets(
-            data_path   = dataset_kwargs['data_path'],
-            config      = dataset_kwargs['config'],
-            chosen_set_names = val_set_names,
-            chosen_dur  = chosen_dur,
-            crop_dur    = dataset_kwargs['crop_dur'],
+            data_path           = dataset_kwargs['data_path'],
+            config              = self.config, 
+            chosen_set_names    = val_set_names,
+            num_chosen_theta_each_set = self.config['dataset']['validation_num_theta'],
+            chosen_dur          = chosen_dur,
+            crop_dur            = self.config['dataset']['crop_dur'],
         )
         
         batch_size = dataloader_kwargs['batch_size']
@@ -372,6 +373,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             data_path   = dataset_kwargs['data_path'],
             config      = dataset_kwargs['config'],
             chosen_set_names = chosen_train_set_names,
+            num_chosen_theta_each_set=self.config['dataset']['num_chosen_theta_each_set'],
             chosen_dur  = chosen_dur,
             crop_dur    = dataset_kwargs['crop_dur'],
         )
@@ -539,7 +541,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             'theta'     : [],
         }
         
-        for i in range(4):
+        for i in range(self.config['train']['posterior']['val_set_size']):
             self.posterior_train_set['x'].append(x[i, ...])
             self.posterior_train_set['x_shuffled'].append(x[i, ...][torch.randperm(x.shape[1])])
             self.posterior_train_set['theta'].append(theta[i, ...])
@@ -708,11 +710,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         elif self.num_train_batches <= print_freq:
             print_mem_info('memory usage after batch', do_print_memory_usage)
-            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min', end=' ')
+            print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
 
         elif train_batch_num % (self.num_train_batches//print_freq) == 0: # print every 5% of batches
             print_mem_info('memory usage after batch', do_print_memory_usage)
-            print(f'epoch {self.epoch}: batch {train_batch_num} train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min', end=' ')
+            print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
 
         # self._summary_writer.add_scalar("train_loss_batch", train_loss, self.batch_counter)
     
@@ -861,7 +863,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             del posterior, current_net
             torch.cuda.empty_cache()
                 
-            print(f"posterior check finished in {(time.time()-posterior_start_time)/60:.2f}min")
+            print(f"finished in {(time.time()-posterior_start_time)/60:.2f}min\n")
     
     def _converged(self, epoch: int, stop_after_epochs: int, improvement_threshold: float, min_num_epochs: int) -> bool:
         """Return whether the training converged yet and save best model state so far.
@@ -940,9 +942,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         return converged
     
-    @staticmethod
-    def _show_epoch_progress(epoch, starting_time, train_log_prob, val_log_prob):
-        print(f"\n| Epochs trained: {epoch:5}. Time elapsed {(time.time()-starting_time)/ 60:6.2f}min ||  log_prob train: {train_log_prob:.2f} | log_prob val: {val_log_prob:.2f}")
+    def _show_epoch_progress(self, epoch, starting_time, train_log_prob, val_log_prob):
+        print(f"| Epochs trained: {epoch:4} | log_prob train: {train_log_prob:.2f} | log_prob val: {val_log_prob:.2f} | . Time elapsed {(time.time()-starting_time)/ 60:6.2f}min, trained for {(time.time() - self.train_start_time)/60:6.2f}min")
     
     def _describe_dset(self) -> str:
         

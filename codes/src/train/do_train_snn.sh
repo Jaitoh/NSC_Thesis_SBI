@@ -13,7 +13,7 @@
 #SBATCH --output=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.out
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
 source activate sbi
 
@@ -25,7 +25,7 @@ CLUSTER=snn
 # CONFIG_TRAIN_PATH=./src/config/test/test_train.yaml
 
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
 
 # RUN_ID=exp_b0_1_continue
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset_setting_0_1.yaml
@@ -40,9 +40,20 @@ CONFIG_TRAIN_PATH=./src/config/train/train_setting_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub3.yaml
 # RUN_ID=exp-c0-sub4
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub4.yaml
-RUN_ID=exp-c0-sub5
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub5.yaml
+# RUN_ID=exp-c0-sub5
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub5.yaml
 
+# RUN_ID=exp-d0-net0
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
+
+# RUN_ID=exp-d0-net1
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-2.yaml
+
+RUN_ID=exp-d0-net2
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
 
 
 # CHECK_POINT_PATH='./src/train/logs/train_L0/exp_b0_1/model/best_model_state_dict_run0.pt'

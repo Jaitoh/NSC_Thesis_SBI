@@ -14,6 +14,7 @@ dataset:
   num_chosen_theta_each_set   : 500 #5000 in total
   # validation_fraction         : 0.1
   validation_fraction         : [5, 10, 20]
+  validation_num_theta        : 500
   
   num_probR_sample            : 25 #25
   shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
@@ -23,5 +24,5 @@ dataset:
   crop_dur                    : True
 
   batch_size                  : 64
-  num_workers                 : 8
+  num_workers                 : 4
   use_data_prefetcher         : True
