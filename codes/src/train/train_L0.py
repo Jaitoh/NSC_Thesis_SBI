@@ -40,7 +40,7 @@ from dataset.dataset import training_dataset
 from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
 from train.MyPosteriorEstimator import MySNPE_C
-from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small
+from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
@@ -144,6 +144,14 @@ class Solver:
                 hidden_size = config_density['embedding_net']['hidden_size'],
                 output_size = config_density['embedding_net']['output_size'],
             )
+        
+        if net_type == 'rnn_small':
+            embedding_net = RNN_Embedding_Small(
+                dms         = dms,
+                l           = l_x,
+                hidden_size = config_density['embedding_net']['hidden_size'],
+                output_size = config_density['embedding_net']['output_size'],
+            )
 
         neural_posterior = posterior_nn(
             model           = config_density['posterior_nn']['model'],
@@ -207,13 +215,22 @@ class Solver:
             'num_max_sets'                   : self.config['dataset']['num_max_sets'],
         }
         
-        my_dataloader_kwargs = {
-            'num_workers'   :  self.config['dataset']['num_workers'],
-            'batch_size'    :  self.config['dataset']['batch_size'],
+        if self.config['batch_process_method'] == 'collate_fn':
             
-            'worker_init_fn':  seed_worker,
-            'collate_fn'    :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
-        } 
+            my_dataloader_kwargs = {
+                'num_workers'   :  self.config['dataset']['num_workers'],
+                # 'batch_size'    :  self.config['dataset']['batch_size'],
+                'worker_init_fn':  seed_worker,
+                'collate_fn'    :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
+            } 
+        
+        else: # batch_process_method == 'in_dataset'
+            
+            my_dataloader_kwargs = {
+                'num_workers'   :  self.config['dataset']['num_workers'],
+                # 'batch_size'    :  self.config['dataset']['batch_size'],
+                'worker_init_fn':  seed_worker,
+            } 
             
         return my_dataloader_kwargs, my_dataset_kwargs
     

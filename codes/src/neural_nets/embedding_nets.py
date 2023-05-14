@@ -44,6 +44,48 @@ class LSTM_Embedding_Small(nn.Module):
         # out = F.relu(self.fc2(out))
         out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
         return out
+
+class RNN_Embedding_Small(nn.Module):
+    def __init__(self, 
+                 dms, 
+                 l, 
+                 hidden_size=64,
+                 output_size=20,
+            ):
+        super(RNN_Embedding_Small, self).__init__()
+        self.rnn1 = nn.RNN(input_size=dms, hidden_size=hidden_size*8, batch_first=True)
+        # self.dropout1 = nn.Dropout(p=0.05)
+        self.rnn2 = nn.RNN(input_size=hidden_size*8, hidden_size=hidden_size*2, batch_first=True)
+        # self.dropout2 = nn.Dropout(p=0.05)
+        self.rnn3 = nn.RNN(input_size=hidden_size*2, hidden_size=hidden_size, batch_first=True)
+        # self.dropout3 = nn.Dropout(p=0.05)
+        # self.rnn4 = nn.LSTM(input_size=hidden_size*2, hidden_size=hidden_size, num_layers=1, batch_first=True)
+        # self.dropout4 = nn.Dropout(p=0.05)
+        self.fc1 = nn.Linear(l*hidden_size, 4*hidden_size)
+        # self.bn1 = nn.BatchNorm1d(2*hidden_size)
+        self.bn1 = nn.LayerNorm(4*hidden_size)
+        self.fc2 = nn.Linear(4*hidden_size, output_size)
+
+    def forward(self, x):
+        # x has shape (B, DMS, L)
+        x = x.permute(0, 2, 1) # (B, L, DMS) - (batch_size, seq_len, input_size)
+        # Pass the first part (x1) through the RNN
+        out, _ = self.rnn1(x)  
+        # out    = self.dropout1(out)
+        out, _ = self.rnn2(out)
+        # out    = self.dropout2(ou1t)
+        out, _ = self.rnn3(out)
+        # out    = self.dropout3(out)
+        # out, _ = self.rnn4(out)
+        # Flatten the RNN output and pass it through the first FC layer
+        out = out.reshape(out.shape[0], -1)
+        # out = F.relu(self.fc1(out))
+        out = F.leaky_relu(self.fc1(out), negative_slope=0.01)
+        out = self.bn1(out)
+        # out = self.dropout4(out)
+        # out = F.relu(self.fc2(out))
+        out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
+        return out
     
 class LSTM_Embedding(nn.Module):
     def __init__(self, 

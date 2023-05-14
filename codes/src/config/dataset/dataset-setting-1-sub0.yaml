@@ -26,3 +26,5 @@ dataset:
   batch_size                  : 64
   num_workers                 : 4
   use_data_prefetcher         : True
+  batch_process_method        : 'collate_fn'
+  # batch_process_method        : 'in_dataset'

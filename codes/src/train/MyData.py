@@ -5,6 +5,30 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 # from dataset.data_process import process_x_seqC_part
 
+def generate_permutations(N, K):
+    """
+    Generate random permutations.
+
+    Args:
+        N (int): The number of permutations to generate.
+        K (int): The length of each permutation.
+
+    Returns:
+        torch.Tensor: A tensor of shape (N, K) containing random permutations.
+
+    """
+    time_ = time.time()
+    print(f'generate permutations of size {N, K}...', end = ' ')
+    
+    # Generate random values between 0 and 1
+    # Sort the random values along the last dimension to obtain permutations
+    permutations = torch.rand(N, K).argsort(dim=-1)
+
+    # faster than:  permutations = torch.stack([torch.randperm(K) for _ in range(N)], dim=0)
+    print(f'in {(time.time() - time_)/60:.2f} min, MEM size {permutations.element_size() * permutations.nelement() / 1024**3:.2f} GB')
+    return permutations.cpu().numpy()
+
+
 class My_Chosen_Sets(Dataset):
     def __init__(self, data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
         """Loading num_chosen_theta_each_set 
@@ -37,9 +61,9 @@ class My_Chosen_Sets(Dataset):
             elif summary_type == 1:
                 seqC_shape = f[chosen_set_names[0]]['seqC_summary_1'].shape[1]
                 
-        seqC_all  = np.empty((len(chosen_set_names), DMS, seqC_shape))
-        theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4))
-        probR_all = np.empty((len(chosen_set_names), DMS, num_chosen_theta_each_set))
+        seqC_all  = np.empty((len(chosen_set_names), DMS, seqC_shape)) # shape (num_chosen_sets, DMS, seqC_shape)
+        theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4)) # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
+        probR_all = np.empty((len(chosen_set_names), DMS, num_chosen_theta_each_set)) # shape (num_chosen_sets, DMS, num_chosen_theta_each_set)
         
         for set_idx, set_name in enumerate(chosen_set_names):
             if seqC_process == 'norm':
@@ -62,7 +86,7 @@ class My_Chosen_Sets(Dataset):
             probR_all[:, idx_not_chosen, :] = 0
         else: # remove the not chosen idx
             seqC_all = np.delete(seqC_all, idx_not_chosen, axis=1)
-            probR_all = np.delete(probR_all, idx_not_chosen, axis=1)            
+            probR_all = np.delete(probR_all, idx_not_chosen, axis=1)
             
         self.seqC_all = seqC_all
         self.theta_all = theta_all
@@ -72,11 +96,11 @@ class My_Chosen_Sets(Dataset):
             print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ", end=' ')
         else:
             print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] ", end=' ')
-        print(f"finished in: {time.time()-start_loading_time:.2f}s")
+        print(f"loading finished in: {time.time()-start_loading_time:.2f}s")
         print(f"[seqC] shape: {self.seqC_all.shape}")
         print(f"[theta] shape: {self.theta_all.shape}")
         print(f"[probR] shape: {self.probR_all.shape}")
-
+        
         f.close()
         del f, seqC_all, theta_all, probR_all
     
@@ -106,180 +130,55 @@ class My_Chosen_Sets(Dataset):
         
         return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
         
+class My_Processed_Dataset(My_Chosen_Sets):
+    def __init__(self, data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
+        """My_Dataset:  load data into memory and finish the preprocessing before training
 
-class My_Dataset_Mem(Dataset):
-    
-    """My_Dataset_Mem:  load data into memory
-
-    Returns:
-        __getitem__:
-        seqC :             -> (DMS, 15 or L_x)
-        theta: (5000, 4)   -> (4,)
-        probR: (DMS, 5000) -> (DMS, )
-        
-        all data:
-        seqC_all:          (num_chosen_sets, DMS, 15 or L_x)
-        theta_all:         (num_chosen_sets, num_chosen_theta_each_set, 4)
-        probR_all:         (num_chosen_sets, DMS, num_chosen_theta_each_set)
-        
-    """
-    def __init__(self, data_path, config, chosen_dur=[3,5,7,9,11,13,15]):
-        
-        num_chosen_sets = config['dataset']['num_chosen_sets']
-        num_chosen_theta_each_set = config['dataset']['num_chosen_theta_each_set']
-        
-        print('Loading data into memory...')
-        print(f"num_chosen_sets (randomly choose dataset from total 101 sets): {num_chosen_sets}")
-        print(f"num_chosen_theta_each_set: {num_chosen_theta_each_set}")
-        start_loading_time = time.time()
-        self.data_path = data_path
-
-        # with h5py.File(self.data_path, 'r') as f:
-        f = h5py.File(self.data_path, 'r', libver='latest', swmr=True)
-
-        self.total_sets             = len(f.keys())
-        self.all_set_names          = list(f.keys())
-        self.total_theta_in_a_set   = f[self.all_set_names[0]]['theta'].shape[0]
-        
-        num_chosen_sets = self.total_sets if num_chosen_sets is None else num_chosen_sets
-        self.total_samples              = num_chosen_theta_each_set*num_chosen_sets
-        self.num_chosen_theta_each_set  = num_chosen_theta_each_set
-
-        seqC_process    = config['dataset']['seqC_process']
-        nan2num         = config['dataset']['nan2num']
-        summary_type    = config['dataset']['summary_type']
-        DMS             = f[self.all_set_names[0]]['seqC_normed'].shape[0]
-        D, M, S         = f[self.all_set_names[0]]['seqC'].shape[:-1]
-        
-        
-        # Randomly choose sets and theta
-        randomly_chosen_set_idx   = np.random.choice(self.all_set_names, num_chosen_sets, replace=False)
-        randomly_chosen_theta_idx = np.random.choice(self.total_theta_in_a_set, num_chosen_theta_each_set, replace=False)
-        
-        # Load data into memory seqC_all, theta_all, probR_all
-        seqC_all  = np.empty((num_chosen_sets, DMS, 15))
-        theta_all = np.empty((num_chosen_sets, num_chosen_theta_each_set, 4))
-        probR_all = np.empty((num_chosen_sets, DMS, num_chosen_theta_each_set))
-        
-        for set_idx, set_name in enumerate(randomly_chosen_set_idx):
-            if seqC_process == 'norm':
-                seqC_all[set_idx] = f[set_name]['seqC_normed'][:]
-            elif seqC_process == 'summary':
-                if summary_type == 0:
-                    seqC_all[set_idx] = f[set_name]['seqC_summary_0'][:]
-                elif summary_type == 1:
-                    seqC_all[set_idx] = f[set_name]['seqC_summary_1'][:]
-            else:
-                raise ValueError(f"seqC_process {seqC_process} not supported")
-
-            theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
-            probR_all[set_idx] = f[set_name]['probR'][:][:, randomly_chosen_theta_idx]
-        
-        # set the values that are not chosen in DMS to 0
-        idx_not_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
-        
-        seqC_all[:, idx_not_chosen, :] = 0
-        probR_all[:, idx_not_chosen, :] = 0
-        
-        self.seqC_all = seqC_all
-        self.theta_all = theta_all
-        self.probR_all = probR_all
-        
-        print(f"dur of {list(chosen_dur)} are chosen, others are set to 0")
-        print(f"finished loading data into memory, time used: {time.time()-start_loading_time:.2f}s")
-        print(f"current dataset seqC of shape: {self.seqC_all.shape}")
-        print(f"current dataset theta of shape: {self.theta_all.shape}")
-        print(f"current dataset probR of shape: {self.probR_all.shape}")
-
-        f.close()
-    
-    
-    def _get_idx_not_chosen(self, chosen_dur, D, M, S):
-        """ return the idx where the corresponding value is not chosen by the given chosen_idx
-        dur_list start from 3, end at 15 with step 2
-        """
-        chosen_dur = np.array(chosen_dur)
-        starting_idxs, ending_idxs = ((chosen_dur-3)/2)*M*S, ((chosen_dur-3)/2+1)*M*S
-        
-        idx_not_chosen = np.array(range(int(D*M*S)))
-        for start, end in zip(starting_idxs, ending_idxs):
-            idx_not_chosen = np.setdiff1d(idx_not_chosen, range(int(start), int(end)))
-
-        return idx_not_chosen
-
-    def __len__(self):
-        return self.total_samples
-
-    def __getitem__(self, idx):
-        # Calculate set index and theta index within the set
-        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set)
-
-        seqC  = self.seqC_all[set_idx]
-        theta = self.theta_all[set_idx, theta_idx]
-        probR = self.probR_all[set_idx, :, theta_idx][:, np.newaxis]
-        
-        return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
-
-class MyDataset(Dataset):
-    """MyDataset class
-
-    Returns:
-        seqC :             -> (DMS, 15 or L_x)
-        theta: (5000, 4)   -> (4,)
-        probR: (DMS, 5000) -> (DMS, )
-        
-    """
-    def __init__(self, 
-                 data_path, 
-                 
-                 num_sets=None,
-                 num_theta_each_set=5000, 
-                 
-                 seqC_process='norm',
-                 nan2num=-1,
-                 summary_type=0,
-                 ):
-        
-        self.data_path = data_path
-
-        # with h5py.File(self.data_path, 'r') as f:
-        self.f = h5py.File(self.data_path, 'r', libver='latest', swmr=True)
+        Returns:
+            __getitem__:
+            seqC :             -> (DMS, 15 or L_x)
+            theta: (5000, 4)   -> (4,)
+            probR: (DMS, 5000) -> (DMS, )
             
-        self.total_sets = len(self.f.keys()) if num_sets is None else num_sets
-        self.total_samples = num_theta_each_set*self.total_sets
-        self.num_theta_each_set = num_theta_each_set
+            all data:
+            seqC_all:          (num_chosen_sets, DMS, 15 or L_x)
+            theta_all:         (num_chosen_sets, num_chosen_theta_each_set, 4)
+            probR_all:         (num_chosen_sets, DMS, num_chosen_theta_each_set)
+            
+        """
         
-        self.seqC_process = seqC_process
-        self.nan2num = nan2num
-        self.summary_type = summary_type
+        super().__init__(data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur, crop_dur)
+        # self.seqC_all = seqC_all  # shape (num_chosen_sets, D_MS, 15 or L_x)
+        # self.theta_all = theta_all # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
+        # self.probR_all = probR_all # shape (num_chosen_sets, D_MS, num_chosen_theta_each_set)
+        
+        # Repeat probR C times along a new dimension and sample from Bernoulli distribution
+        self.C = config['dataset']['num_probR_sample']
+        self.DMS = self.seqC_all.shape[1]
+        self.probR_all = self.probR_all.repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, D_*M*S, num_chosen_theta_each_set*C)
+        self.probR_all = torch.bernoulli(self.probR_all)  # (num_chosen_sets, D*M*S, num_chosen_theta_each_set*C)
+        
+        self.total_samples = len(chosen_set_names) * self.num_chosen_theta_each_set * self.C
+        self.permutations = generate_permutations(self.total_samples, self.DMS) # (CTSet, D_MS)
+        
 
     def __len__(self):
         return self.total_samples
 
     def __getitem__(self, idx):
-        # Calculate set index and theta index within the set
-        set_idx, theta_idx = divmod(idx, self.num_theta_each_set)
-
-        # Load seqC, theta, and probR for the given idx
-        f = self.f
         
-        if self.seqC_process == 'norm':
-            seqC = f[f'set_{set_idx}']['seqC_normed'][:]
-        elif self.seqC_process == 'summary':
-            if self.summary_type == 0:
-                seqC = f[f'set_{set_idx}']['seqC_summary_0'][:]
-            elif self.summary_type == 1:
-                seqC = f[f'set_{set_idx}']['seqC_summary_1'][:]
-        else:
-            raise ValueError(f"seqC_process {self.seqC_process} not supported")
-        # print(f"seqC shape: {seqC.shape}")
+        # Calculate set index and theta index within the set
+        set_idx, theta_idx, probR_sample_idx = np.unravel_index(idx, (len(self.chosen_set_names), self.num_chosen_theta_each_set, self.C))
 
-        theta = f[f'set_{set_idx}']['theta'][theta_idx,:]
-        probR = f[f'set_{set_idx}']['probR'][:, theta_idx][:, np.newaxis]
-
-        # print(f"theta shape: {theta.shape}")
-
-        return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
+        permutation = self.permutations[idx]
+        seqC  = self.seqC_all[set_idx][permutation,:] # (D_MS, 15 or L_x)
+        theta = self.theta_all[set_idx, theta_idx] # (4,)
+        probR = self.probR_all[set_idx, :, theta_idx * self.C + probR_sample_idx][permutation,:][:, np.newaxis] # (D_MS, 1)
+        
+        x = torch.cat((seqC, probR), dim=-1) # (D_MS, 16 or L_x+1)
+        
+        return x, torch.from_numpy(theta)
+        # return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
     
 class Data_Prefetcher():
     
@@ -367,8 +266,8 @@ def collate_fn(batch, config, debug=False):
     
     return x_batch.to(torch.float32), theta_batch.to(torch.float32)
 
-
-def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
+    
+def collate_fn_vec(batch, config, shuffling_method=0, debug=True):
     """
     batch: [
             (seqC, theta, probR),
@@ -428,8 +327,15 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # x_batch = torch.stack([x_batch[i,:,:][torch.randperm(x_batch.shape[1]),:] for i in range(x_batch.shape[0])])
         DMS = x_batch.shape[1]
         x_batch_shuffled = torch.empty_like(x_batch)
+        # permutations = generate_permutations(B*C, DMS)
+        
+        # if debug:
+        #     print(f"\ncollate_fn_vec: generate permutations {(time.time() - start_time)*1000:.2f} ms")
+        #     start_time = time.time()
+            
         for i in range(B*C):
             x_batch_shuffled[i] = x_batch[i][torch.randperm(DMS)]
+            # x_batch_shuffled[i] = x_batch[i][permutations[i,:]]
         
         del x_batch
         
