@@ -14,9 +14,9 @@
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
 export CUDA_VISIBLE_DEVICES=1
-CLUSTER=t4
+CLUSTER=sensors
 TRAIN_FILE_NAME=train_L0
-RUN_ID=exp-d0-net1
+RUN_ID=exp-c0-sub3
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -34,6 +34,13 @@ fi
 
 if [ "${CLUSTER}" == "t4" ]; then
     LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
+    cd ~/tmp/NSC/codes
+    source activate sbi 
+fi
+
+if [ "${CLUSTER}" == "sensors" ]; then
+    LOG_DIR="/home/wenjie/NSC/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
     DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
     cd ~/tmp/NSC/codes
     source activate sbi 
