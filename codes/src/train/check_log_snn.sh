@@ -35,7 +35,10 @@ echo "log_dir: ${LOG_DIR}"
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/check_log.py \
 --log_dir ${LOG_DIR} \
+--num_rows 1 \
+--plot_posterior \
 --exact_epoch
+
 
 echo 'finished check log events'
 

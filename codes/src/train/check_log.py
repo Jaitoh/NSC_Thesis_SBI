@@ -98,13 +98,13 @@ def plot_lr_log_probs(val_time, val_step, val_log_probs, train_step, train_log_p
     plt.close()
 
 # plot the posterior samples
-def plot_posterior_samples(log_dir, best_epochs_epoch, exact_epoch=True):
+def plot_posterior_samples(log_dir, best_epochs_epoch, num_rows, exact_epoch=True):
     for case in ['train', 'val']:
         print(f'plotting posterior samples for {case}...', end=' ')
-        fig, axs = plt.subplots(4, len(best_epochs_epoch), figsize=(len(best_epochs_epoch)*2, 4*2))
+        fig, axs = plt.subplots(num_rows, len(best_epochs_epoch), figsize=(len(best_epochs_epoch)*2, num_rows*2))
         # fig.subplots_adjust(hspace=0.1, wspace=0.1)
 
-        for i in range(4):
+        for i in range(num_rows):
             for j in range(len(best_epochs_epoch)):
                 
                 epoch = best_epochs_epoch[j] if exact_epoch else best_epochs_epoch[j] + 1
@@ -117,7 +117,7 @@ def plot_posterior_samples(log_dir, best_epochs_epoch, exact_epoch=True):
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                     # Plot the image on the subplot
-                    ax0 = axs[i, j]
+                    ax0 = axs[j] if num_rows == 1 else axs[i, j]
                     ax0.imshow(img)
                     ax0.axis('off')
                     ax0.set_title(f'x_{case}_{i}\nepoch {epoch}')
@@ -136,6 +136,8 @@ if __name__ == '__main__':
     log_dir_sample = '/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp_b2_2_'
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--log_dir', type=str, default=log_dir_sample)
+    argparser.add_argument('--num_rows', type=int, default=1)
+    argparser.add_argument('--plot_posterior', action='store_true')
     argparser.add_argument('--exact_epoch', action='store_true')
     args = argparser.parse_args()
 
@@ -150,4 +152,5 @@ if __name__ == '__main__':
     plot_lr_log_probs(val_time, val_step, val_log_probs, train_step, train_log_probs, lr_step, lr_lr, best_epochs_epoch)
     
     # plot the posterior samples
-    plot_posterior_samples(log_dir, best_epochs_epoch, exact_epoch=args.exact_epoch)
+    if args.plot_posterior:
+        plot_posterior_samples(log_dir, best_epochs_epoch, num_rows=args.num_rows, exact_epoch=args.exact_epoch)
