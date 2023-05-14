@@ -14,17 +14,26 @@
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
 export CUDA_VISIBLE_DEVICES=1
-CLUSTER=snn
+CLUSTER=t4
 TRAIN_FILE_NAME=train_L0
-RUN_ID=exp-c0-sub5
+RUN_ID=exp-d0-net1
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
     DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
     module load anaconda3
     source activate sbi
-else
+fi
+
+if [ "${CLUSTER}" == "snn" ]; then
     LOG_DIR="/home/wehe/tmp/NSC/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
+    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
+    cd ~/tmp/NSC/codes
+    source activate sbi 
+fi
+
+if [ "${CLUSTER}" == "t4" ]; then
+    LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
     DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
     cd ~/tmp/NSC/codes
     source activate sbi 
