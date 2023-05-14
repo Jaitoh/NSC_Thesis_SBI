@@ -31,3 +31,6 @@
 
 # trial.mat
 ./gdrive files download 188QshxMlik3JW6Z_GM8lj1erx5xtT2cO --destination ./tmp/NSC/data/
+
+# dataset-L0-exp-set-0-500sets.h5
+./gdrive files download 1QNWoJvrHv4kKX9bvICe24KovtTFC12Kk --destination ./tmp/NSC/data/

@@ -3,7 +3,7 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 
-#SBATCH --array=1,3,4,2,5
+#SBATCH --array=4,5,2
 
 #SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
