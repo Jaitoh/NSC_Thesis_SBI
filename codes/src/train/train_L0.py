@@ -215,13 +215,13 @@ class Solver:
             'num_max_sets'                   : self.config['dataset']['num_max_sets'],
         }
         
-        if self.config['batch_process_method'] == 'collate_fn':
+        if self.config['dataset']['batch_process_method'] == 'collate_fn':
             
             my_dataloader_kwargs = {
-                'num_workers'   :  self.config['dataset']['num_workers'],
-                # 'batch_size'    :  self.config['dataset']['batch_size'],
-                'worker_init_fn':  seed_worker,
-                'collate_fn'    :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
+                'num_workers'       :  self.config['dataset']['num_workers'],
+                'worker_init_fn'    :  seed_worker,
+                'collate_fn'        :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
+                'prefetch_factor'   :  self.config['dataset']['prefetch_factor'],
             } 
         
         else: # batch_process_method == 'in_dataset'

@@ -83,7 +83,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         dataloader_kwargs,
         training_kwargs,
         
-        do_print_memory_usage=do_print_mem,
+        do_print_mem=do_print_mem,
         continue_from_checkpoint=None,
         
     ):
@@ -112,7 +112,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         try:
             for self.run, chosen_dur in enumerate(chosen_dur_trained_in_sequence):
                 
-                self._initialization(self, val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur, use_data_prefetcher, continue_from_checkpoint)
+                train_loader, train_prefetcher, val_loader, val_prefetcher, x, theta, x_val, theta_val = self._initialization(val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur, use_data_prefetcher, continue_from_checkpoint)
                 
                 # train until loading new training dataset won't improve validation performance
                 while self.dset <= training_kwargs['max_num_dsets'] and not self._converged_dset(training_kwargs['stop_after_dsets'], training_kwargs['improvement_threshold'], training_kwargs['min_num_dsets']):
@@ -121,19 +121,19 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     self._init_optimizer(training_kwargs)
                     
                     print(f'\n\n=== run {self.run}, chosen_dur {chosen_dur}, dset {self.dset} ===')
-                    print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", do_print_memory_usage)
+                    print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", do_print_mem)
                     
                     # train and validate until no validation performance improvement
                     while self.epoch <= training_kwargs['max_num_epochs'] and not self._converged(self.epoch, training_kwargs['stop_after_epochs'], training_kwargs['improvement_threshold'], training_kwargs['min_num_epochs']):
                         
                         # train and validate for one epoch
-                        epoch_start_time, train_log_prob_average = self._1epoch_train_val(self, train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_memory_usage)
+                        epoch_start_time, train_log_prob_average = self._1epoch_train_val(train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_mem)
                         
                         # fetcher same dataset for next epoch
                         with torch.no_grad():
                             if self.use_data_prefetcher:
                                 train_prefetcher, val_prefetcher = self._loader2prefetcher(train_loader), self._loader2prefetcher(val_loader)
-                                print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_memory_usage)
+                                print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_mem)
                         
                         # update epoch info and counter
                         with torch.no_grad():
@@ -149,7 +149,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     self._describe_log_update_dset() # describe, log, update info of the training on the current dset
                     with torch.no_grad():
                         train_loader = self._get_train_loader(val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
-                        train_prefetcher, x, theta = self._get_fetcher_n1batch_data(use_data_prefetcher, train_loader)
+                        train_prefetcher, x, theta = self._get_fetcher_n1batch_data(use_data_prefetcher, train_loader, len(train_loader))
                 
                 if use_data_prefetcher:
                     del train_prefetcher, val_prefetcher
@@ -190,12 +190,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._best_val_log_prob, self._best_val_log_prob_dset = float("-Inf"), float("-Inf")
         
         # prepare validation data
+        print('\npreparing [validation] data ...')
         val_loader = self._get_val_loader(val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
-        val_prefetcher, x_val, theta_val = self._get_fetcher_n1batch_data(use_data_prefetcher, val_loader)
+        val_prefetcher, x_val, theta_val = self._get_fetcher_n1batch_data(use_data_prefetcher, val_loader, len(val_loader))
         
         # prepare training data
+        print('\npreparing [training] data ...')
         train_loader = self._get_train_loader(val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
-        train_prefetcher, x, theta = self._get_fetcher_n1batch_data(use_data_prefetcher, train_loader)
+        train_prefetcher, x, theta = self._get_fetcher_n1batch_data(use_data_prefetcher, train_loader, len(train_loader))
         
         # collect posterior sets before training
         self._collect_posterior_sets(x, theta, x_val, theta_val)
@@ -203,8 +205,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # initialize neural net, move to device only once
         if self.run == 0 and self.dset_counter == 0:
             self._init_neural_net(x, theta, continue_from_checkpoint=continue_from_checkpoint)
+            
+        return train_loader, train_prefetcher, val_loader, val_prefetcher, x, theta, x_val, theta_val
     
-    def _1epoch_train_val(self, train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_memory_usage):
+    def _1epoch_train_val(self, train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_mem):
         # train and log one epoch
         self._neural_net.train()
         epoch_start_time, train_log_probs_sum = self._train_one_epoch(clip_max_norm, print_freq, train_prefetcher if use_data_prefetcher else train_loader, x, theta)
@@ -215,7 +219,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         with torch.no_grad():
             self._val_log_prob = self._val_one_epoch(val_prefetcher if use_data_prefetcher else val_loader)
             self._val_one_epoch_log(epoch_start_time)
-            print_mem_info(f"{'gpu memory usage after validation':46}", do_print_memory_usage)
+            print_mem_info(f"{'gpu memory usage after validation':46}", do_print_mem)
         return epoch_start_time, train_log_prob_average
         
     def _plot_training_curve(self, log_dir):
@@ -245,14 +249,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
         else:
             self.scheduler.step()
 
-    def _get_fetcher_n1batch_data(self, use_data_prefetcher, loader):
+    def _get_fetcher_n1batch_data(self, use_data_prefetcher, loader, num_batches):
         
         if use_data_prefetcher:
             prefetcher = self._loader2prefetcher(loader)
-            x, theta = self._load_one_batch_data(prefetcher, use_data_prefetcher)
+            x, theta = self._load_one_batch_data(prefetcher, use_data_prefetcher, num_batches)
         else:
             prefetcher = None
-            x, theta = self._load_one_batch_data(loader, use_data_prefetcher)
+            x, theta = self._load_one_batch_data(loader, use_data_prefetcher, num_batches)
             
         return prefetcher, x, theta
         
@@ -305,7 +309,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         num_max_sets = dataset_kwargs['num_max_sets']
         num_max_sets = min(num_max_sets, num_total_sets)
         all_set_names = all_set_names[:num_max_sets]
-        print(f'\n === chosen {len(all_set_names)} sets from {num_total_sets} sets === \n')
+        print(f'=== chosen {len(all_set_names)} sets from {num_total_sets} sets ===')
         
         return all_set_names
         
@@ -313,7 +317,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         """ the val loader keeps the same for each dset, and each run
         """
         
-        if self.config['batch_process_method'] == 'collate_fn':
+        if self.config['dataset']['batch_process_method'] == 'collate_fn':
             
             self.val_dataset = My_Chosen_Sets(
                 data_path           = dataset_kwargs['data_path'],
@@ -342,7 +346,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             "shuffle"   : False,
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(val_indices.tolist()),
-            "pin_memory": True,
+            "pin_memory": self.config['dataset']['pin_memory'],
         }
         if dataloader_kwargs is not None:
             val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
@@ -372,13 +376,13 @@ class MyPosteriorEstimator(PosteriorEstimator):
         if self.dset>len(dataset_kwargs['num_chosen_sets'])-1:
             num_chosen_sets = dataset_kwargs['num_chosen_sets'][-1]
         self.num_chosen_sets = num_chosen_sets
-        print(f'train_loader - num_chosen_sets: {num_chosen_sets}', end='')
+        print(f'train_loader - num_chosen_sets: {num_chosen_sets}')
         
         assert num_chosen_sets <= len(all_train_set_names), 'not enough training sets'
         chosen_train_set_names = np.random.choice(all_train_set_names, num_chosen_sets, replace=False)
-        print(f', contains: {chosen_train_set_names}')
+        print(f'containing: {chosen_train_set_names}')
         
-        if self.config['batch_process_method'] == 'collate_fn':
+        if self.config['dataset']['batch_process_method'] == 'collate_fn':
             self.train_dataset = My_Chosen_Sets( #TODO del self.train_dataset
                 data_path   = dataset_kwargs['data_path'],
                 config      = dataset_kwargs['config'],
@@ -406,7 +410,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             "batch_size": min(batch_size, num_train_examples),
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(train_indices.tolist()),
-            "pin_memory": True,
+            "pin_memory": self.config['dataset']['pin_memory'],
         }
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
@@ -417,33 +421,33 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         train_loader = data.DataLoader(self.train_dataset, generator=g, **train_loader_kwargs)
         
-        self.num_train_batches = len(train_loader)
-        print(f'number of batches in the training dataset: {self.num_train_batches}')
+        # self.num_train_batches = len(train_loader)
+        print(f'number of batches in the training dataset: {len(train_loader)}')
         
         return train_loader
     
-    def _prepare_data_loader(self, dataset_kwargs, dataloader_kwargs, seed, chosen_dur):
+    # def _prepare_data_loader(self, dataset_kwargs, dataloader_kwargs, seed, chosen_dur):
         
-        self.dataset = My_Dataset_Mem(
-            data_path           = dataset_kwargs['data_path'],
-            config              = dataset_kwargs['config'],
-            chosen_dur          = chosen_dur, 
-        )
+    #     self.dataset = My_Dataset_Mem(
+    #         data_path           = dataset_kwargs['data_path'],
+    #         config              = dataset_kwargs['config'],
+    #         chosen_dur          = chosen_dur, 
+    #     )
         
-        train_loader, val_loader = self._get_dataloaders(
-            dataset = self.dataset,
-            seed    = seed,
-            dataloader_kwargs=dataloader_kwargs,
-            dataset_kwargs=dataset_kwargs,
-        )
+    #     train_loader, val_loader = self._get_dataloaders(
+    #         dataset = self.dataset,
+    #         seed    = seed,
+    #         dataloader_kwargs=dataloader_kwargs,
+    #         dataset_kwargs=dataset_kwargs,
+    #     )
         
-        self.num_train_batches = len(train_loader)
-        self.num_val_batches   = len(val_loader)
+    #     self.num_train_batches = len(train_loader)
+    #     self.num_val_batches   = len(val_loader)
         
-        print(f'\nnumber of batches in the training dataset: {self.num_train_batches}')
-        print(f'number of batches in the validation dataset: {self.num_val_batches}')
+    #     print(f'\nnumber of batches in the training dataset: {self.num_train_batches}')
+    #     print(f'number of batches in the validation dataset: {self.num_val_batches}')
         
-        return train_loader, val_loader
+    #     return train_loader, val_loader
     
     def _get_dataloaders(
         self,
@@ -490,14 +494,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
             "batch_size": min(training_batch_size, num_training_examples),
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.train_indices.tolist()),
-            "pin_memory": True,
+            "pin_memory": self.config['dataset']['pin_memory'],
         }
         val_loader_kwargs = {
             "batch_size": min(training_batch_size, num_validation_examples),
             "shuffle"   : False,
             "drop_last" : True,
             "sampler"   : SubsetRandomSampler(self.val_indices.tolist()),
-            "pin_memory": True,
+            "pin_memory": self.config['dataset']['pin_memory'],
         }
         if dataloader_kwargs is not None:
             train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
@@ -516,15 +520,15 @@ class MyPosteriorEstimator(PosteriorEstimator):
     
     def _loader2prefetcher(self, loader):
         
-        prefetcher   = Data_Prefetcher(loader)
+        prefetcher   = Data_Prefetcher(loader, prefetch_factor=self.config['dataset']['prefetch_factor'])
         
         # del loader
         # torch.cuda.empty_cache()
         return prefetcher
     
-    def _load_one_batch_data(self, train_prefetcher_or_loader, use_data_prefetcher):
+    def _load_one_batch_data(self, train_prefetcher_or_loader, use_data_prefetcher, num_batches):
         
-        print(f'loading 1 / {self.num_train_batches} batch of the dataset...', end=' ')
+        print(f'loading 1 / {num_batches} batch of the dataset...', end=' ')
         start_time = time.time()
         
         if use_data_prefetcher:
@@ -637,45 +641,66 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # if training_kwargs['scheduler'] == 'CosineAnnealingLR':
         #     self.scheduler = CosineAnnealingLR(self.optimizer, *training_kwargs['scheduler_params'])
     
-    def _train_one_epoch(self, clip_max_norm, print_freq, train_prefetcher_or_loader, x, theta):
+    def _train_one_epoch(self, clip_max_norm, print_freq, train_prefetcher_or_loader, x, theta, do_train=True):
         epoch_start_time = time.time()
         batch_timer      = time.time()
                     
         self.train_data_size    = 0
         train_log_probs_sum     = 0
         train_batch_num         = 0
-                    
+        
+        do_train = True
         # === train network === 
+        if not do_train:
+            train_loss = 0
+            self.train_data_size = 1
+            print('!! no training performed !!')
+            
         if self.use_data_prefetcher:
             while x is not None:
                 self.optimizer.zero_grad()
-                
                 # train one batch and log progress
-                # train_loss, train_log_probs_sum = self._train_one_batch(x, theta, clip_max_norm, train_log_probs_sum)
-                train_loss = 0
+                # time_start = time.time()
+                if do_train:
+                    train_loss, train_log_probs_sum = self._train_one_batch(x, theta, clip_max_norm, train_log_probs_sum)
+                # print(f'train time: {(time.time() - time_start)*1000:.2f} ms')
+                
+                # time_start = time.time()
                 self.optimizer.step()
-                print('no training performed')
-                self._train_one_batch_log(print_freq, batch_timer, train_batch_num, train_loss)
-                            
+                # print(f'optimizer time: {(time.time() - time_start)*1000:.2f} ms')
+                
+                # time_start = time.time()
+                self._train_one_batch_log(train_prefetcher_or_loader, print_freq, batch_timer, train_batch_num, train_loss)
+                # print(f'log time: {(time.time() - time_start)*1000:.2f} ms')
+                
                 # get next batch
                 train_batch_num += 1
                 self.batch_counter += 1
+                
+                # time_start = time.time()
                 with torch.no_grad():
                     x, theta = train_prefetcher_or_loader.next()
+                # print(f'prefetcher time: {(time.time() - time_start)*1000:.2f} ms')
         else:
             del x, theta
+            # time_start = time.time()
             for x, theta in train_prefetcher_or_loader:
                 self.optimizer.zero_grad()
-                
+                # print(f'loading time: {(time.time() - time_start)*1000:.2f} ms')    
+                # time_start = time.time()
                 # train one batch and log progress
-                # train_loss, train_log_probs_sum = self._train_one_batch(x, theta, clip_max_norm, train_log_probs_sum)
+                if do_train:
+                    train_loss, train_log_probs_sum = self._train_one_batch(x, theta, clip_max_norm, train_log_probs_sum)
                 self.optimizer.step()
-                train_loss = 0
-                self._train_one_batch_log(print_freq, batch_timer, train_batch_num, train_loss)
-                            
+                # print(f'training time: {(time.time() - time_start)*1000:.2f} ms')
+                # time_start = time.time()
+                self._train_one_batch_log(train_prefetcher_or_loader, print_freq, batch_timer, train_batch_num, train_loss)
+                # print(f'loggin time: {(time.time() - time_start)*1000:.2f} ms')
+                
                 # get next batch
                 train_batch_num += 1
                 self.batch_counter += 1
+                # time_start = time.time()
         
         return epoch_start_time,train_log_probs_sum
 
@@ -724,17 +749,18 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         return train_loss, train_log_probs_sum 
     
-    def _train_one_batch_log(self, print_freq, batch_timer, train_batch_num, train_loss, do_print_memory_usage=do_print_mem):
+    def _train_one_batch_log(self, train_prefetcher_or_loader, print_freq, batch_timer, train_batch_num, train_loss, do_print_mem=do_print_mem):
         
+        # print(len(train_prefetcher_or_loader), print_freq, len(train_prefetcher_or_loader)//print_freq, train_batch_num % (len(train_prefetcher_or_loader)//print_freq))
         if print_freq == 0: # do nothing
             pass
 
-        elif self.num_train_batches <= print_freq:
-            print_mem_info('memory usage after batch', do_print_memory_usage)
+        elif len(train_prefetcher_or_loader) <= print_freq:
+            print_mem_info('memory usage after batch', do_print_mem)
             print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
 
-        elif train_batch_num % (self.num_train_batches//print_freq) == 0: # print every 5% of batches
-            print_mem_info('memory usage after batch', do_print_memory_usage)
+        elif train_batch_num % (len(train_prefetcher_or_loader)//print_freq) == 0: # print every 5% of batches
+            print_mem_info('memory usage after batch', do_print_mem)
             print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
 
         # self._summary_writer.add_scalar("train_loss_batch", train_loss, self.batch_counter)
@@ -915,7 +941,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             
             if epoch != 0:
                 self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
-                print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", do_print_memory_usage)
+                print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", do_print_mem)
             # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
         
         else:

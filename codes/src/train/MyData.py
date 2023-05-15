@@ -3,6 +3,7 @@ import h5py
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+from copy import deepcopy
 # from dataset.data_process import process_x_seqC_part
 
 def generate_permutations(N, K):
@@ -23,11 +24,26 @@ def generate_permutations(N, K):
     # Generate random values between 0 and 1
     # Sort the random values along the last dimension to obtain permutations
     permutations = torch.rand(N, K).argsort(dim=-1)
-
     # faster than:  permutations = torch.stack([torch.randperm(K) for _ in range(N)], dim=0)
-    print(f'in {(time.time() - time_)/60:.2f} min, MEM size {permutations.element_size() * permutations.nelement() / 1024**3:.2f} GB')
-    return permutations.cpu().numpy()
+    print(f'in {(time.time() - time_)/60:.2f} min, MEM size {permutations.element_size() * permutations.nelement() / 1024**3:.2f} GB\n')
+    
+    return permutations
 
+def unravel_index(index, shape):
+    out = []
+    for dim in reversed(shape):
+        out.append(index % dim)
+        index = index // dim
+    return tuple(reversed(out))
+
+# def apply_advanced_indexing_along_dim1(tensor, indices):
+#     idx0 = torch.arange(tensor.size(0))[:, None].expand_as(indices)
+#     idx2 = torch.arange(tensor.size(2))[None, :].expand_as(indices)
+#     return tensor[idx0, indices, idx2]
+
+def apply_advanced_indexing_along_dim1(tensor, indices):
+    idx0 = torch.arange(tensor.size(0))[:, None].expand(indices.size(0), indices.size(1))
+    return tensor[idx0, indices]
 
 class My_Chosen_Sets(Dataset):
     def __init__(self, data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
@@ -36,9 +52,10 @@ class My_Chosen_Sets(Dataset):
         from data_path
         """
         
-        print('\nLoading dataset into memory...', end=' ')
+        print('Loading dataset into memory...', end=' ')
         start_loading_time = time.time()
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
+        self.chosen_set_names = chosen_set_names
         
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
         # total_theta_in_a_set = f[chosen_set_names[0]]['theta'].shape[0]
@@ -92,11 +109,11 @@ class My_Chosen_Sets(Dataset):
         self.theta_all = theta_all
         self.probR_all = probR_all
         
-        if crop_dur:
-            print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ", end=' ')
-        else:
-            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] ", end=' ')
         print(f"loading finished in: {time.time()-start_loading_time:.2f}s")
+        if crop_dur:
+            print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ")
+        else:
+            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] ")
         print(f"[seqC] shape: {self.seqC_all.shape}")
         print(f"[theta] shape: {self.theta_all.shape}")
         print(f"[probR] shape: {self.probR_all.shape}")
@@ -154,70 +171,86 @@ class My_Processed_Dataset(My_Chosen_Sets):
         
         # Repeat probR C times along a new dimension and sample from Bernoulli distribution
         self.C = config['dataset']['num_probR_sample']
+        print(f"\nSampling {self.C} times from probR ... ", end="")
+        time_start = time.time()
         self.DMS = self.seqC_all.shape[1]
-        self.probR_all = self.probR_all.repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, D_*M*S, num_chosen_theta_each_set*C)
-        self.probR_all = torch.bernoulli(self.probR_all)  # (num_chosen_sets, D*M*S, num_chosen_theta_each_set*C)
+        self.probR_all = torch.from_numpy(self.probR_all).repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, D_*M*S, num_chosen_theta_each_set*C)
+        self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).to(torch.float32).contiguous()  # (num_chosen_sets, D*M*S, num_chosen_theta_each_set*C)
+        print(f"in {(time.time()-time_start)/60:.2f}min")
         
         self.total_samples = len(chosen_set_names) * self.num_chosen_theta_each_set * self.C
-        self.permutations = generate_permutations(self.total_samples, self.DMS) # (CTSet, D_MS)
+        print(f"sampled probR shape {self.probR_all.shape} MEM size {self.probR_all.element_size()*self.probR_all.nelement()/1024**3:.2f}GB, Total samples: {self.total_samples} ") 
+        self.permutations = generate_permutations(self.total_samples, self.DMS).contiguous() # (CTSet, D_MS)
         
-
+        self.seqC_all = torch.from_numpy(self.seqC_all).to(torch.float32).contiguous()
+        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32)
+        
+        indices = torch.arange(self.total_samples)
+        self.set_idxs, self.theta_idxs, self.probR_sample_idxs = unravel_index(indices, (len(self.chosen_set_names), self.num_chosen_theta_each_set, self.C))
+        
+        
     def __len__(self):
         return self.total_samples
 
+    
     def __getitem__(self, idx):
         
+        # time_start = time.time()
         # Calculate set index and theta index within the set
-        set_idx, theta_idx, probR_sample_idx = np.unravel_index(idx, (len(self.chosen_set_names), self.num_chosen_theta_each_set, self.C))
-
         permutation = self.permutations[idx]
-        seqC  = self.seqC_all[set_idx][permutation,:] # (D_MS, 15 or L_x)
+        set_idx, theta_idx, probR_sample_idx = self.set_idxs[idx], self.theta_idxs[idx], self.probR_sample_idxs[idx]
+
+        x = torch.empty((self.DMS, self.seqC_all.shape[2]+1), dtype=torch.float32)
+        x[:, :self.seqC_all.shape[2]] = self.seqC_all[set_idx, permutation, :] # (D_MS, 15 or L_x)
+        # print(f"getitem seqC: {(time.time()-time_start)*1000:.2f}ms")
+        # time_start = time.time()
+        x[:, self.seqC_all.shape[2]:] = self.probR_all[set_idx, permutation, theta_idx * self.C + probR_sample_idx] # (D_MS, 1)
+        # print(f"getitem probR_all: {(time.time()-time_start)*1000:.2f}ms")
+        
         theta = self.theta_all[set_idx, theta_idx] # (4,)
-        probR = self.probR_all[set_idx, :, theta_idx * self.C + probR_sample_idx][permutation,:][:, np.newaxis] # (D_MS, 1)
         
-        x = torch.cat((seqC, probR), dim=-1) # (D_MS, 16 or L_x+1)
-        
-        return x, torch.from_numpy(theta)
-        # return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
+        return x, theta
     
 class Data_Prefetcher():
     
-    def __init__(self, loader):
+    def __init__(self, loader, prefetch_factor=3):
         self.loader = iter(loader)
         self.stream = torch.cuda.Stream()
+        self.prefetch_factor = prefetch_factor
+        self.prefetched_data = []
         self.preload()
 
+    def __len__(self):
+        return len(self.loader)
+    
     def preload(self):
         try:
-            self.next_input, self.next_target = next(self.loader)
+            for _ in range(self.prefetch_factor):
+                input, target = next(self.loader)
+                with torch.cuda.stream(self.stream):
+                    input = input.cuda(non_blocking=True)
+                    target = target.cuda(non_blocking=True)
+                self.prefetched_data.append((input, target))
+                # print(f'prefetcher preloaded {len(self.prefetched_data)}')
+                
         except StopIteration:
-            self.next_input = None
-            self.next_target = None
-            return
-        
-        with torch.cuda.stream(self.stream):
-            self.next_input = self.next_input.cuda(non_blocking=True)
-            self.next_target = self.next_target.cuda(non_blocking=True)
-            
-            # shuffle the data along the DMS dimension
-            # input of shape e.g. [1000, 14700, 16]
-            # target of shape e.g. [1000, 4]
-            # BC  = self.next_input.shape[0]
-            # DMS = self.next_input.shape[1]
-            # for i in range(BC):
-            #     self.next_input[i] = self.next_input[i][torch.randperm(DMS)]
-            
-            # # shuffle the data along the BC dimension
-            # indices             = torch.randperm(BC)
-            # self.next_input     = self.next_input[indices]
-            # self.next_target    = self.next_target[indices]
-        
+            self.prefetched_data.append((None, None))
+
     def next(self):
         torch.cuda.current_stream().wait_stream(self.stream)
-        input_ = self.next_input
-        target = self.next_target
-        self.preload()
+        if len(self.prefetched_data) == 0:
+            return None, None
+
+        input_, target = self.prefetched_data.pop(0)
+        # print(f'prefetcher next called: prefetcher {len(self.prefetched_data)}')
+        self.preload()  # start preloading next batches
         return input_, target
+    
+        # torch.cuda.current_stream().wait_stream(self.stream)
+        # input_ = self.next_input
+        # target = self.next_target
+        # self.preload()
+        # return input_, target
             
     
 def collate_fn(batch, config, debug=False):
@@ -267,7 +300,7 @@ def collate_fn(batch, config, debug=False):
     return x_batch.to(torch.float32), theta_batch.to(torch.float32)
 
     
-def collate_fn_vec(batch, config, shuffling_method=0, debug=True):
+def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
     """
     batch: [
             (seqC, theta, probR),

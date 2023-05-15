@@ -59,10 +59,13 @@ CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 
 # CHECK_POINT_PATH='./src/train/logs/train_L0/exp_b0_1/model/best_model_state_dict_run0.pt'
 
+# RUN_ID=exp-d0-net4
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-4.yaml
 
-RUN_ID=exp-d0-net4
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-setting-4.yaml
+RUN_ID=exp-dur3-e0
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -80,6 +83,10 @@ mkdir -p ./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs
 echo "file name: ${TRAIN_FILE_NAME}"
 echo "log_dir: ${LOG_DIR}"
 echo "print_log: ${PRINT_LOG}"
+echo "data_path: ${DATA_PATH}"
+echo "config_simulator_path: ${CONFIG_SIMULATOR_PATH}"
+echo "config_dataset_path: ${CONFIG_DATASET_PATH}"
+echo "config_train_path: ${CONFIG_TRAIN_PATH}"
 
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
@@ -92,7 +99,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --gpu \
 -y &> ${PRINT_LOG}
 
-echo "finished sub2"
+echo "finished simulation"
 
 # sbatch ./cluster/dataset_gen.sh
 # squeue -u $USER
