@@ -18,7 +18,7 @@ cd ~/tmp/NSC/codes
 source activate sbi
 
 TRAIN_FILE_NAME=train_L0
-CLUSTER=test
+CLUSTER=t4
 
 # CONFIG_SIMULATOR_PATH=./src/config/test/test_simulator.yaml
 # CONFIG_DATASET_PATH=./src/config/test/test_dataset.yaml
@@ -31,14 +31,17 @@ CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 
-RUN_ID=exp-d0-net1
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-setting-2.yaml
+# RUN_ID=exp-d0-net1
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-2.yaml
 
 # RUN_ID=exp-d0-net2
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
 
+RUN_ID=exp-dur3-e1
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-4.yaml
 
 # CHECK_POINT_PATH='./src/train/logs/train_L0/exp_b0_1/model/best_model_state_dict_run0.pt'
 
@@ -58,7 +61,10 @@ mkdir -p ./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs
 echo "file name: ${TRAIN_FILE_NAME}"
 echo "log_dir: ${LOG_DIR}"
 echo "print_log: ${PRINT_LOG}"
-
+echo "data_path: ${DATA_PATH}"
+echo "config_simulator_path: ${CONFIG_SIMULATOR_PATH}"
+echo "config_dataset_path: ${CONFIG_DATASET_PATH}"
+echo "config_train_path: ${CONFIG_TRAIN_PATH}"
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --seed 100 \

@@ -38,5 +38,5 @@ train:
     
   posterior:
     sampling_num  : 2000
-    val_set_size  : 1
+    val_set_size  : 2
     # step          : 2     # the epoch steps to check posterior during training

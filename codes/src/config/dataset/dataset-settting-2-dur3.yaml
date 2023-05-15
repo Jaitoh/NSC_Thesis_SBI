@@ -16,7 +16,7 @@ dataset:
   validation_fraction         : [10, 20, 30, 40, 50]
   validation_num_theta        : 500
   
-  num_probR_sample            : 25 #25
+  num_probR_sample            : 50 #25
   shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
   chosen_dur_trained_in_sequence: 
