@@ -21,9 +21,9 @@ train:
     stop_after_dsets      : 5
     clip_max_norm         : 4.0
 
-    min_num_epochs        : 30
+    min_num_epochs        : 40
     max_num_epochs        : 2147483647
-    min_num_dsets         : 10
+    min_num_dsets         : 15
     max_num_dsets         : 2147483647
 
     scheduler             : 'ReduceLROnPlateau'

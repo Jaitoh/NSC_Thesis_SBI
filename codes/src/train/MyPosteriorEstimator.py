@@ -943,7 +943,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 self._posterior_behavior_log(self.config, self.prior_limits) # plot posterior behavior when best model is updated
                 print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", do_print_mem)
             # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
-        
+            
         else:
             self._epochs_since_last_improvement += 1
 
@@ -956,7 +956,12 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._val_log_prob = self._best_val_log_prob
             self._epochs_since_last_improvement = 0
             self._epoch_of_last_dset = epoch
-            
+        
+        # log info for this dset
+        self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch", self._best_model_from_epoch, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob", self._best_val_log_prob, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset", self.num_chosen_sets, self.epoch_counter)
         return converged
     
     def _converged_dset(self, stop_after_dsets, improvement_threshold, min_num_dsets):
@@ -1006,12 +1011,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         """
         print(info)
         
-        # log info for this dset
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch", self._best_model_from_epoch, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob", self._best_val_log_prob, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset", self.num_chosen_sets, self.epoch_counter)
-
         # update dset info
         self._val_log_prob_dset = self._best_val_log_prob
         
