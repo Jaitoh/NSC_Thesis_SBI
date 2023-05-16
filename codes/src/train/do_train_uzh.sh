@@ -3,49 +3,50 @@
 ### Slurm option lines start with #SBATCH 
 ### Here are the SBATCH parameters that you should always consider: 
 
-#SBATCH --array=4,5,2
+
 
 #SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
 
 #SBATCH --gres=gpu:1
+#SBATCH --constraint="GPUMEM32GB"
 
 #SBATCH --mem 100G
 #SBATCH --cpus-per-task=5
 
 #SBATCH --job-name=train_L0
-#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-c0-sub%a.out
-#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-c0-sub%a.err
+#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-dur3-e4.out
+#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-dur3-e4.err
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=uzh
 
-CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
-CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
+# CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 
 # SLURM_ARRAY_TASK_ID=$1
-echo "task ID: ${SLURM_ARRAY_TASK_ID}"
+# echo "task ID: ${SLURM_ARRAY_TASK_ID}"
 
 # ---
-if [ ${SLURM_ARRAY_TASK_ID} -eq 0 ]; then
-    RUN_ID=exp-c0-sub0
-    CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
-elif [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]; then
-    RUN_ID=exp-c0-sub1
-    CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub1.yaml
-elif [ ${SLURM_ARRAY_TASK_ID} -eq 2 ]; then
-    RUN_ID=exp-c0-sub2
-    CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub2.yaml
-elif [ ${SLURM_ARRAY_TASK_ID} -eq 3 ]; then
-    RUN_ID=exp-c0-sub3
-    CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub3.yaml
-elif [ ${SLURM_ARRAY_TASK_ID} -eq 4 ]; then
-    RUN_ID=exp-c0-sub4
-    CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub4.yaml
-elif [ ${SLURM_ARRAY_TASK_ID} -eq 5 ]; then
-    RUN_ID=exp-c0-sub5
-    CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub5.yaml
-fi
+# if [ ${SLURM_ARRAY_TASK_ID} -eq 0 ]; then
+#     RUN_ID=exp-c0-sub0
+#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
+# elif [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]; then
+#     RUN_ID=exp-c0-sub1
+#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub1.yaml
+# elif [ ${SLURM_ARRAY_TASK_ID} -eq 2 ]; then
+#     RUN_ID=exp-c0-sub2
+#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub2.yaml
+# elif [ ${SLURM_ARRAY_TASK_ID} -eq 3 ]; then
+#     RUN_ID=exp-c0-sub3
+#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub3.yaml
+# elif [ ${SLURM_ARRAY_TASK_ID} -eq 4 ]; then
+#     RUN_ID=exp-c0-sub4
+#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub4.yaml
+# elif [ ${SLURM_ARRAY_TASK_ID} -eq 5 ]; then
+#     RUN_ID=exp-c0-sub5
+#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub5.yaml
+# fi
 
 # RUN_ID=exp-b0-2-contd0
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-0-2.yaml # RUN_ID=exp-b0-2-contd0
@@ -59,6 +60,9 @@ fi
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-0-summary-0-2.yaml # RUN_ID=exp-b2-2-contd0
 # CHECK_POINT_PATH='/home/wehe/scratch/train/logs/train_L0/exp_b2_2/model/best_model_state_dict_run0.pt'
 
+RUN_ID=exp-dur3-e3
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -77,6 +81,10 @@ mkdir -p ./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/other_logs
 echo "file name: ${TRAIN_FILE_NAME}"
 echo "log_dir: ${LOG_DIR}"
 echo "print_log: ${PRINT_LOG}"
+echo "data_path: ${DATA_PATH}"
+echo "config_simulator_path: ${CONFIG_SIMULATOR_PATH}"
+echo "config_dataset_path: ${CONFIG_DATASET_PATH}"
+echo "config_train_path: ${CONFIG_TRAIN_PATH}"
 
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
@@ -114,3 +122,5 @@ echo 'finished simulation'
 
 # ./src/train/do_train_uzh.sh 
 # SBATCH --constraint="GPUMEM16GB|GPUMEM32GB"
+
+# SBATCH --array=4,5,2
