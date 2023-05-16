@@ -6,7 +6,7 @@
 #SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
 #SBATCH --ntasks=1
 
-#SBATCH --mem 96G
+#SBATCH --mem 16G
 #SBATCH --cpus-per-task=18
 
 #SBATCH --job-name=sim_data_for_round_0
@@ -14,9 +14,9 @@
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
 export CUDA_VISIBLE_DEVICES=1
-CLUSTER=sensors
+CLUSTER=uzh
 TRAIN_FILE_NAME=train_L0
-RUN_ID=exp-c0-sub3
+RUN_ID=exp-b0-2-contd0
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}

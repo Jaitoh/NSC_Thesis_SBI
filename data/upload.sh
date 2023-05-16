@@ -33,3 +33,7 @@
 ./gdrive files upload "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_set_0_test.h5" # 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf
 
 ./gdrive files upload "/home/wehe/data/NSC/data/dataset/dataset_L0_exp_set_0.h5" # 1vxaNvjlejlkfvZKt_erGmqP0VlG97eLk
+
+./gdrive files upload /home/wehe/scratch/exp-b0-2-contd0.tar.gz # 1uPv2D85kgPNRSJi6KxGP2n2CK3TI9__6
+./gdrive files upload /home/wehe/scratch/exp-b2-2-contd0.tar.gz # 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9
+./gdrive files upload /home/wehe/scratch/exp-b3-2-contd0.tar.gz # 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV
