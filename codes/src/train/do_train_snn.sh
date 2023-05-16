@@ -13,7 +13,7 @@
 #SBATCH --output=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.out
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 cd ~/tmp/NSC/codes
 source activate sbi
 
@@ -66,6 +66,10 @@ CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 RUN_ID=exp-dur3-e0
 CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
+
+RUN_ID=exp-dur3-e2
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3-2.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
