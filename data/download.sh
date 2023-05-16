@@ -34,3 +34,13 @@
 
 # dataset-L0-exp-set-0-500sets.h5
 ./gdrive files download 1QNWoJvrHv4kKX9bvICe24KovtTFC12Kk --destination ./tmp/NSC/data/
+
+
+./gdrive files upload /home/wehe/scratch/exp-b0-2-contd0.tar.gz # 1uPv2D85kgPNRSJi6KxGP2n2CK3TI9__6
+./gdrive files upload /home/wehe/scratch/exp-b2-2-contd0.tar.gz # 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9
+./gdrive files upload /home/wehe/scratch/exp-b3-2-contd0.tar.gz # 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV
+
+./gdrive files download 1uPv2D85kgPNRSJi6KxGP2n2CK3TI9__6 --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
+./gdrive files download 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9 --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
+./gdrive files download 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
+

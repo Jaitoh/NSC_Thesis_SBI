@@ -64,12 +64,16 @@ CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-4.yaml
 
 RUN_ID=exp-dur3-e0
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
 
 RUN_ID=exp-dur3-e2
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3-2.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-2.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
+
+RUN_ID=exp-dur3-e3
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}

@@ -14,9 +14,11 @@
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
 export CUDA_VISIBLE_DEVICES=1
-CLUSTER=uzh
+CLUSTER=snn
 TRAIN_FILE_NAME=train_L0
-RUN_ID=exp-b0-2-contd0
+# RUN_ID=exp-b2-2-contd0
+# RUN_ID=exp-d0-net3
+RUN_ID=exp-dur3-e2
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
