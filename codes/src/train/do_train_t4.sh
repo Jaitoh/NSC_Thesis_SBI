@@ -39,9 +39,13 @@ CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
 
-RUN_ID=exp-dur3-e1
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-setting-4.yaml
+# RUN_ID=exp-dur3-e1
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3-.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-4.yaml
+
+RUN_ID=exp-dur3-e4
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-settting-2-dur3-4.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-setting-3.yaml
 
 # CHECK_POINT_PATH='./src/train/logs/train_L0/exp_b0_1/model/best_model_state_dict_run0.pt'
 
