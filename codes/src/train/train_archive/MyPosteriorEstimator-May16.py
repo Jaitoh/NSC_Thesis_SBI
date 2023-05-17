@@ -958,10 +958,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._epoch_of_last_dset = epoch
         
         # log info for this dset
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_board", self._best_model_from_epoch, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_board", self._best_val_log_prob, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/current_dset_board", self.dset_counter, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset_board", self.num_chosen_sets, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch", self._best_model_from_epoch, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob", self._best_val_log_prob, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.epoch_counter)
+        self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset", self.num_chosen_sets, self.epoch_counter)
         return converged
     
     def _converged_dset(self, stop_after_dsets, improvement_threshold, min_num_dsets):
@@ -1010,11 +1010,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         -------------------------
         """
         print(info)
-        # log info for this dset
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch", self._best_model_from_epoch, self.epoch_counter)
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob", self._best_val_log_prob, self.epoch_counter)
-        # self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.epoch_counter)
-        # self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset", self.num_chosen_sets, self.epoch_counter)
         
         # update dset info
         self._val_log_prob_dset = self._best_val_log_prob
