@@ -77,7 +77,7 @@ CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 
 RUN_ID=exp-a0-3dur
 CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-0.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-setting-0.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-config-0.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
