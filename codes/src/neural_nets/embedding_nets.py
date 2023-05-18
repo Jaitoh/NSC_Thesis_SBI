@@ -37,12 +37,12 @@ class LSTM_Embedding_Small(nn.Module):
         # out, _ = self.rnn4(out)
         # Flatten the RNN output and pass it through the first FC layer
         out = out.reshape(out.shape[0], -1)
-        # out = F.relu(self.fc1(out))
-        out = F.leaky_relu(self.fc1(out), negative_slope=0.01)
-        out = self.bn1(out)
+        out = F.relu(self.fc1(out))
+        # out = F.leaky_relu(self.fc1(out), negative_slope=0.01)
+        # out = self.bn1(out)
         # out = self.dropout4(out)
-        # out = F.relu(self.fc2(out))
-        out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
+        out = F.relu(self.fc2(out))
+        # out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
         return out
 
 class RNN_Embedding_Small(nn.Module):
@@ -105,7 +105,7 @@ class LSTM_Embedding(nn.Module):
         # self.dropout4 = nn.Dropout(p=0.05)
         self.fc1 = nn.Linear(l*hidden_size, 4*hidden_size)
         # self.bn1 = nn.BatchNorm1d(2*hidden_size)
-        self.bn1 = nn.LayerNorm(4*hidden_size)
+        # self.bn1 = nn.LayerNorm(4*hidden_size)
         self.fc2 = nn.Linear(4*hidden_size, output_size)
 
     def forward(self, x):
@@ -121,12 +121,12 @@ class LSTM_Embedding(nn.Module):
         out, _ = self.rnn4(out)
         # Flatten the RNN output and pass it through the first FC layer
         out = out.reshape(out.shape[0], -1)
-        # out = F.relu(self.fc1(out))
-        out = F.leaky_relu(self.fc1(out), negative_slope=0.01)
-        out = self.bn1(out)
+        out = F.relu(self.fc1(out))
+        # out = F.leaky_relu(self.fc1(out), negative_slope=0.01)
+        # out = self.bn1(out)
         # out = self.dropout4(out)
-        # out = F.relu(self.fc2(out))
-        out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
+        out = F.relu(self.fc2(out))
+        # out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
         return out
     
 class Mixed_LSTM_Embedding(nn.Module):

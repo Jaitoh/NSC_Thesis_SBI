@@ -42,7 +42,7 @@ def load_configs_dataset(
 
 def load_1config(config_path):
     with open(config_path, 'r') as f:
-        config = yaml.safe_load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f, Loader=yaml.FullLoader)  # type: ignore
     return config
 
 def load_config(config_simulator_path=None,

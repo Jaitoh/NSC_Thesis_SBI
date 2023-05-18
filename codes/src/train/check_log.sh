@@ -18,7 +18,7 @@ CLUSTER=snn
 TRAIN_FILE_NAME=train_L0
 # RUN_ID=exp-b2-2-contd0
 # RUN_ID=exp-d0-net3
-RUN_ID=exp-dur3-e0
+RUN_ID=exp-dur3-e3
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
