@@ -6,7 +6,7 @@ import itertools
 import pickle
 import yaml
 # import dill
-
+import gc
 # import h5py
 # import yaml
 # import glob
@@ -28,7 +28,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExec
 from sbi import analysis
 from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import SummaryWriter
 
 import sys
 
@@ -36,18 +36,20 @@ sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
 from config.load_config import load_config
-from dataset.dataset import training_dataset
-from dataset.simulate_for_sbi import simulate_for_sbi
-from simulator.seqC_generator import seqC_generator
+# from dataset.dataset import training_dataset
+# from dataset.simulate_for_sbi import simulate_for_sbi
+# from simulator.seqC_generator import seqC_generator
 from train.MyPosteriorEstimator import MySNPE_C
 from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
 from utils.train import (
-    print_cuda_info, choose_cat_validation_set, 
-    plot_posterior_with_label, plot_posterior_unseen,
-    train_inference_helper,
+    print_cuda_info, 
+    # choose_cat_validation_set, 
+    # plot_posterior_with_label, 
+    # plot_posterior_unseen,
+    # train_inference_helper,
 )
 from utils.setup import(
     check_path, get_args, # get_args_run_from_code
@@ -119,6 +121,8 @@ class Solver:
 
 
     def _get_limits(self):
+        if self.prior_min is None or self.prior_max is None:
+            return []
         return [[x, y] for x, y in zip(self.prior_min, self.prior_max)]
     
     
@@ -155,7 +159,7 @@ class Solver:
 
         neural_posterior = posterior_nn(
             model           = config_density['posterior_nn']['model'],
-            embedding_net   = embedding_net,
+            embedding_net   = embedding_net, # type: ignore
             hidden_features = config_density['posterior_nn']['hidden_features'],
             num_transforms  = config_density['posterior_nn']['num_transforms'],
         )
@@ -210,7 +214,7 @@ class Solver:
             'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
             'validation_fraction'            : self.config['dataset']['validation_fraction'],
             'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
-            'num_chosen_sets'                : self.config['dataset']['num_chosen_sets'],
+            'num_train_sets'                 : self.config['dataset']['num_train_sets'],
             'crop_dur'                       : self.config['dataset']['crop_dur'],
             'num_max_sets'                   : self.config['dataset']['num_max_sets'],
         }
@@ -235,7 +239,7 @@ class Solver:
         return my_dataloader_kwargs, my_dataset_kwargs
     
     
-    def sbi_train(self):
+    def sbi_train(self, debug=False):
         # sourcery skip: boolean-if-exp-identity, remove-unnecessary-cast
         """
         train the sbi model
@@ -265,7 +269,7 @@ class Solver:
         self.prior_min = self.config['prior']['prior_min']
         self.prior_max = self.config['prior']['prior_max']
 
-        prior = utils.torchutils.BoxUniform(
+        prior = utils.torchutils.BoxUniform( # type: ignore
             low     = np.array(self.prior_min, dtype=np.float32),
             high    = np.array(self.prior_max, dtype=np.float32),
             device  = self.device,
@@ -330,7 +334,7 @@ class Solver:
         }
         
         # run training with current run updated dataset
-        self.inference, density_estimator = self.inference.train(
+        self.inference, density_estimator = self.inference.train( # type: ignore
             log_dir                 = self.log_dir,
             config                  = self.config,
             
@@ -342,6 +346,7 @@ class Solver:
             training_kwargs         = my_training_kwargs,
             
             continue_from_checkpoint= self.args.continue_from_checkpoint,
+            debug                   = debug,
         )  # density estimator
 
             
@@ -381,12 +386,15 @@ def main():  # sourcery skip: extract-method
         print(config.keys())
 
         solver = Solver(args, config)
-        solver.sbi_train()
+        solver.sbi_train(debug=args.debug)
     
     # except Exception as e:
     #         print(f"An error occurred: {e}")
     finally:
         
+        del solver
+        gc.collect()
+        print('solver deleted')
         torch.cuda.empty_cache()
         print('cuda cache emptied')
         # del solver

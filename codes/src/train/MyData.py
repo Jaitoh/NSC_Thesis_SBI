@@ -52,7 +52,7 @@ class My_Chosen_Sets(Dataset):
         from data_path
         """
         
-        print('Loading dataset into memory...', end=' ')
+        print(f'Loading {len(chosen_set_names)} dataset into memory...', end=' ')
         start_loading_time = time.time()
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
         self.chosen_set_names = chosen_set_names
@@ -77,49 +77,92 @@ class My_Chosen_Sets(Dataset):
                 seqC_shape = f[chosen_set_names[0]]['seqC_summary_0'].shape[1]
             elif summary_type == 1:
                 seqC_shape = f[chosen_set_names[0]]['seqC_summary_1'].shape[1]
-                
-        seqC_all  = np.empty((len(chosen_set_names), DMS, seqC_shape)) # shape (num_chosen_sets, DMS, seqC_shape)
-        theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4)) # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
-        probR_all = np.empty((len(chosen_set_names), DMS, num_chosen_theta_each_set)) # shape (num_chosen_sets, DMS, num_chosen_theta_each_set)
-        
-        for set_idx, set_name in enumerate(chosen_set_names):
-            if seqC_process == 'norm':
-                seqC_all[set_idx] = f[set_name]['seqC_normed'][:]
-            elif seqC_process == 'summary':
-                if summary_type == 0:
-                    seqC_all[set_idx] = f[set_name]['seqC_summary_0'][:]
-                elif summary_type == 1:
-                    seqC_all[set_idx] = f[set_name]['seqC_summary_1'][:]
-            else:
-                raise ValueError(f"seqC_process {seqC_process} not supported")
-
-            theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
-            probR_all[set_idx] = f[set_name]['probR'][:][:, randomly_chosen_theta_idx]
         
         # set the values that are not chosen in DMS to 0, or remove them
-        idx_not_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
-        if not crop_dur: # set not chosen to 0
-            seqC_all[:, idx_not_chosen, :] = 0
-            probR_all[:, idx_not_chosen, :] = 0
-        else: # remove the not chosen idx
-            seqC_all = np.delete(seqC_all, idx_not_chosen, axis=1)
-            probR_all = np.delete(probR_all, idx_not_chosen, axis=1)
-            
-        self.seqC_all = seqC_all
-        self.theta_all = theta_all
-        self.probR_all = probR_all
+        DMS_idx_not_chosen, DMS_idx_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
+        num_chosen_DMS = len(DMS_idx_chosen) if crop_dur else DMS
+        self.seqC_all  = np.empty((len(chosen_set_names), num_chosen_DMS, seqC_shape), dtype=np.float32) # shape (num_chosen_sets, DMS, seqC_shape)
+        self.theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4), dtype=np.float32) # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
+        self.probR_all = np.empty((len(chosen_set_names), num_chosen_DMS, num_chosen_theta_each_set), dtype=np.float32) # shape (num_chosen_sets, DMS, num_chosen_theta_each_set)
         
-        print(f"loading finished in: {time.time()-start_loading_time:.2f}s")
+        counter = 0
+        for set_idx, set_name in enumerate(chosen_set_names):
+            if counter % 10 == 0:
+                print(counter, end=' ')
+            seqC_data = self._get_seqC_data(crop_dur, f, seqC_process, summary_type, DMS_idx_chosen, set_name)
+            probR_data = f[set_name]['probR'][DMS_idx_chosen, :][:, randomly_chosen_theta_idx] if crop_dur else f[set_name]['probR'][:, randomly_chosen_theta_idx]
+            
+            self.theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
+            self.seqC_all[set_idx]  = seqC_data
+            self.probR_all[set_idx] = probR_data
+            del seqC_data, probR_data
+            counter += 1
+            
+        # set the values that are not chosen in DMS to 0, or remove them
+        if not crop_dur: # set not chosen to 0
+            self.seqC_all[:, DMS_idx_not_chosen, :] = 0
+            self.probR_all[:, DMS_idx_not_chosen, :] = 0
+            
+        # seqC_all  = np.empty((len(chosen_set_names), DMS, seqC_shape), dtype=np.float32) # shape (num_chosen_sets, DMS, seqC_shape)
+        # theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4), dtype=np.float32) # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
+        # probR_all = np.empty((len(chosen_set_names), DMS, num_chosen_theta_each_set), dtype=np.float32) # shape (num_chosen_sets, DMS, num_chosen_theta_each_set)
+        
+        # for set_idx, set_name in enumerate(chosen_set_names):
+        #     if seqC_process == 'norm':
+        #         seqC_all[set_idx] = f[set_name]['seqC_normed'][:]
+        #     elif seqC_process == 'summary':
+        #         if summary_type == 0:
+        #             seqC_all[set_idx] = f[set_name]['seqC_summary_0'][:]
+        #         elif summary_type == 1:
+        #             seqC_all[set_idx] = f[set_name]['seqC_summary_1'][:]
+        #     else:
+        #         raise ValueError(f"seqC_process {seqC_process} not supported")
+
+        #     theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
+        #     probR_all[set_idx] = f[set_name]['probR'][:][:, randomly_chosen_theta_idx]
+        
+        # # set the values that are not chosen in DMS to 0, or remove them
+        # idx_not_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
+        # if not crop_dur: # set not chosen to 0
+        #     seqC_all[:, idx_not_chosen, :] = 0
+        #     probR_all[:, idx_not_chosen, :] = 0
+        # else: # remove the not chosen idx
+        #     seqC_all = np.delete(seqC_all, idx_not_chosen, axis=1)
+        #     probR_all = np.delete(probR_all, idx_not_chosen, axis=1)
+            
+        # self.seqC_all = seqC_all
+        # self.theta_all = theta_all
+        # self.probR_all = probR_all
+        
+        print(f" finished in: {time.time()-start_loading_time:.2f}s")
         if crop_dur:
             print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ")
         else:
-            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] ")
+            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] (crop_dur is suggested to be set as True)")
         print(f"[seqC] shape: {self.seqC_all.shape}")
         print(f"[theta] shape: {self.theta_all.shape}")
         print(f"[probR] shape: {self.probR_all.shape}")
         
         f.close()
-        del f, seqC_all, theta_all, probR_all
+        del f
+
+    def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, DMS_idx_chosen, set_name):
+        
+        if seqC_process == 'norm':
+            seqC_data = f[set_name]['seqC_normed'][DMS_idx_chosen, :] if crop_dur else f[set_name]['seqC_normed'][:]
+        
+        elif seqC_process == 'summary':
+        
+            if summary_type == 0:
+                seqC_data = f[set_name]['seqC_summary_0'][DMS_idx_chosen, :] if crop_dur else f[set_name]['seqC_normed'][:]
+        
+            elif summary_type == 1:
+                seqC_data = f[set_name]['seqC_summary_1'][DMS_idx_chosen, :] if crop_dur else f[set_name]['seqC_normed'][:]
+        
+        else:
+            raise ValueError(f"seqC_process {seqC_process} not supported")
+        
+        return seqC_data
     
     def _get_idx_not_chosen(self, chosen_dur, D, M, S):
         """ return the idx where the corresponding value is not chosen by the given chosen_idx
@@ -128,11 +171,13 @@ class My_Chosen_Sets(Dataset):
         chosen_dur = np.array(chosen_dur)
         starting_idxs, ending_idxs = ((chosen_dur-3)/2)*M*S, ((chosen_dur-3)/2+1)*M*S
         
-        idx_not_chosen = np.array(range(int(D*M*S)))
+        idx_chosen = np.array([], dtype=np.int32)
+        idx_not_chosen = np.array(range(int(D*M*S)), dtype=np.int32)
         for start, end in zip(starting_idxs, ending_idxs):
-            idx_not_chosen = np.setdiff1d(idx_not_chosen, range(int(start), int(end)))
-
-        return idx_not_chosen
+            idx_not_chosen  = np.setdiff1d(idx_not_chosen, range(int(start), int(end)))
+            idx_chosen      = np.append(idx_chosen, range(int(start), int(end)))
+        
+        return idx_not_chosen, idx_chosen
 
     def __len__(self):
         return self.total_samples

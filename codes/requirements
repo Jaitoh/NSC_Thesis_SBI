@@ -12,3 +12,4 @@ gpustat
 tensorboardX
 sbi
 opencv-python
+snakeviz

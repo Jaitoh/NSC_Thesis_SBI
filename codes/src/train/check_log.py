@@ -50,7 +50,8 @@ def get_event_data(ea_post, ea_val, ea_train):
     lr_ = np.array([[e.wall_time, e.step, e.value] for e in ea_post.Scalars('learning rate')])
     lr_time, lr_step, lr_lr = lr_[:,0], lr_[:,1], lr_[:,2]
 
-    best_epochs = np.array([[e.wall_time, e.step, e.value] for e in ea_post.Scalars('run0/best_val_epoch_of_dset')])
+    # best_epochs = np.array([[e.wall_time, e.step, e.value] for e in ea_post.Scalars('run0/best_val_epoch_of_dset')])
+    best_epochs = np.array([[e.wall_time, e.step, e.value] for e in ea_post.Scalars('run0/best_val_epoch')])
     best_epochs_time, best_epochs_step, best_epochs_epoch = best_epochs[:,0], best_epochs[:,1], best_epochs[:,2]
     best_epochs_epoch = np.unique(best_epochs_epoch).astype(int)
     print(f'data: best epochs during training: {best_epochs_epoch}')
