@@ -15,8 +15,8 @@
 #SBATCH --cpus-per-task=9
 
 #SBATCH --job-name=train_L0
-#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-3dur-a1.out
-#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-3dur-a1.err
+#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-3dur-a2.out
+#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-3dur-a2.err
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=uzh
@@ -64,8 +64,8 @@ CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
 
-RUN_ID=exp-3dur-a1
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-1.yaml
+RUN_ID=exp-3dur-a2
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-a2.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train-config-0.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
