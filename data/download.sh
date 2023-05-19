@@ -34,3 +34,5 @@
 
 # dataset-L0-exp-set-0-500sets.h5
 ./gdrive files download 1QNWoJvrHv4kKX9bvICe24KovtTFC12Kk --destination ./tmp/NSC/data/
+https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
+./gdrive files download 1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3 --destination ~/scratch --recursive
