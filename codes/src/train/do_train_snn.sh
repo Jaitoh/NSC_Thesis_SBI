@@ -13,7 +13,7 @@
 #SBATCH --output=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.out
 #SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 cd ~/tmp/NSC/codes
 source activate sbi
 
@@ -75,9 +75,15 @@ CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
 
-RUN_ID=exp-a0-3dur
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-0.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-config-0.yaml
+# RUN_ID=exp-3dur-a1-ctd
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-a1.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-config-0.yaml
+# CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1/model/best_model_state_dict_run0.pt'
+
+RUN_ID=exp-3dur-a1-1
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-a1.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-config-1.yaml
+# CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1/model/best_model_state_dict_run0.pt'
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -107,7 +113,8 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --config_dataset_path ${CONFIG_DATASET_PATH} \
 --config_train_path ${CONFIG_TRAIN_PATH} \
 --data_path ${DATA_PATH} \
---log_dir ${LOG_DIR} &> ${PRINT_LOG}
+--log_dir ${LOG_DIR} > ${PRINT_LOG} 2>&1
+# --continue_from_checkpoint ${CHECK_POINT_PATH} 
 # --gpu \
 # -y &> ${PRINT_LOG}
 

@@ -11,7 +11,7 @@ dataset:
   num_max_sets                : 101 #101 in total
   num_max_theta_each_set      : 5000 #5000 in total
   
-  one_dataset                 : False
+  one_dataset                 : False # True: Train only one dataset, define/choose train dataset only once
   num_train_sets              : [96] #96 in total
   # num_train_sets              : [10] #101 in total
   num_chosen_theta_each_set   : 500 #5000 in total
