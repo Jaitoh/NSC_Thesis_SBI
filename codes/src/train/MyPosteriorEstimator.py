@@ -11,7 +11,8 @@ from torch import Tensor, nn, ones, optim
 from torch.distributions import Distribution, MultivariateNormal, Uniform
 from torch.utils import data
 from torch.utils.data.sampler import SubsetRandomSampler
-from torch.utils.tensorboard.writer import SummaryWriter
+# from torch.utils.tensorboard.writer import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from torch.nn.utils.clip_grad import clip_grad_norm_
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, ReduceLROnPlateau, CosineAnnealingLR
 from pyknos.mdn.mdn import MultivariateGaussianMDN as mdn
