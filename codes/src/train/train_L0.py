@@ -28,7 +28,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExec
 from sbi import analysis
 from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
-from torch.utils.tensorboard.writer import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 import sys
 
