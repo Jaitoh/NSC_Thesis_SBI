@@ -154,18 +154,18 @@ class MyPosteriorEstimator(PosteriorEstimator):
                             
                         # train and validate for one epoch
                         epoch_start_time, train_log_prob_average = self._train_val_1epoch(train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_mem, train_start_time)
-                        
+                        print('getting next dataset ...', end=' ')
+                        start_time = time.time()
                         # fetcher same dataset for next epoch
-                        with torch.no_grad():
-                            if self.use_data_prefetcher:
-                                train_prefetcher, val_prefetcher = self._loader2prefetcher(train_loader), self._loader2prefetcher(val_loader)
-                                print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_mem)
+                        if self.use_data_prefetcher:
+                            train_prefetcher, val_prefetcher = self._loader2prefetcher(train_loader), self._loader2prefetcher(val_loader)
+                            print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_mem)
+                        print(f'done in {time.time()-start_time:.2f} sec')
                         
                         # update epoch info and counter
-                        with torch.no_grad():
-                            self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
-                            self.epoch += 1
-                            self.epoch_counter += 1
+                        self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
+                        self.epoch += 1
+                        self.epoch_counter += 1
                         
                         # update scheduler
                         self._update_scheduler(training_kwargs)
@@ -252,6 +252,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         # collect posterior sets before training
         self._collect_posterior_sets(x, theta, x_val, theta_val)
+        
+        # reset the validation prefetcher
+        if use_data_prefetcher:
+            val_prefetcher = self._loader2prefetcher(val_loader)
         
         # initialize neural net, move to device only once
         if self.run == 0 and self.dset_counter == 0:
@@ -927,6 +931,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 )
                 val_log_prob_sum -= val_losses.sum().item()
                 val_data_size    += len(x_val)
+                # print(f'{self.use_data_prefetcher} val_data_size {val_data_size}', end=' ')
                 
                 del x_val, theta_val, masks_batch
                 gc.collect()
@@ -934,6 +939,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 
                 # get next batch
                 x_val, theta_val = val_prefetcher_or_loader.next()
+                print('next batch')
                 
         else: # use data loader
             for x_val, theta_val in val_prefetcher_or_loader:
@@ -968,6 +974,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         self._summary["validation_log_probs"].append(self._val_log_prob)
         self._summary["epoch_durations_sec"].append(time.time() - train_start_time)
+        print('val logged')
     
     def _posterior_behavior_log(self, config, limits):
         
