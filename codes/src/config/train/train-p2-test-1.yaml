@@ -21,7 +21,7 @@ train:
     
     improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
     stop_after_epochs     : 50
-    stop_after_dsets      : 5trtr
+    stop_after_dsets      : 5
 
     min_num_epochs        : 50
     max_num_epochs        : 2147483647
