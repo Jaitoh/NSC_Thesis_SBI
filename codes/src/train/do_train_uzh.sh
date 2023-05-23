@@ -11,18 +11,18 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="GPUMEM32GB"
 
-#SBATCH --mem 100G
-#SBATCH --cpus-per-task=5
+#SBATCH --mem 200G
+#SBATCH --cpus-per-task=9
 
 #SBATCH --job-name=train_L0
-#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-dur3-e4.out
-#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-dur3-e4.err
+#SBATCH --output=./cluster/uzh/train_L0/other_logs/output-3dur-a2.out
+#SBATCH --error=./cluster/uzh/train_L0/other_logs/error-3dur-a2.err
 
 TRAIN_FILE_NAME=train_L0
 CLUSTER=uzh
 
 # CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
-# CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
+CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 
 # SLURM_ARRAY_TASK_ID=$1
 # echo "task ID: ${SLURM_ARRAY_TASK_ID}"
@@ -60,9 +60,13 @@ CLUSTER=uzh
 # CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-0-summary-0-2.yaml # RUN_ID=exp-b2-2-contd0
 # CHECK_POINT_PATH='/home/wehe/scratch/train/logs/train_L0/exp_b2_2/model/best_model_state_dict_run0.pt'
 
-RUN_ID=exp-dur3-e3
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
+# RUN_ID=exp-dur3-e3
+# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
+# CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
+
+RUN_ID=exp-3dur-a2
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-a2.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-config-0.yaml
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -93,9 +97,11 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --config_dataset_path ${CONFIG_DATASET_PATH} \
 --config_train_path ${CONFIG_TRAIN_PATH} \
 --data_path ${DATA_PATH} \
---log_dir ${LOG_DIR} \
---gpu \
--y &> ${PRINT_LOG}
+--log_dir ${LOG_DIR} &> ${PRINT_LOG}
+
+# \
+# --gpu \
+# -y &> ${PRINT_LOG}
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
 

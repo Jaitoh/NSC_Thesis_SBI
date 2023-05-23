@@ -1,0 +1,48 @@
+dataset:
+
+# ========== parameter settings for the seqC ==========
+  seqC_process: 'norm'
+  nan2num: -1
+  # seqC_process: 'summary'
+  summary_type: 0
+  # summary_type: 1  # 0: detailed information, 1: brief information
+
+# # ========== parameter settings for the probR ==========
+  num_max_sets                : 101 #101 in total
+  num_max_theta_each_set      : 5000 #5000 in total
+  
+  dataset_chosen_mode         : 'fixed' # determine how to choose all the dsets, theta
+    # 'random': randomly choose the dsets, theta
+    # 'fixed': choose the dsets, theta in a fixed order
+
+  test_fraction               : [10, 20, 30, 40, 50]
+  test_num_theta              : 500
+
+  train_dataset_mode          : 'increment' # determine how to choose the training dataset
+    # 'whole': use all the data as one dataset, training once for all dsets
+    # 'increment': append one more dataset at a time, training for each increased sized dset
+    # 'limited_increment': append one more dataset at a time, training for each increased sized dset, but limited to the last 10 dsets
+  increment_params            : {'increment_step': 1, 'increment_limit': 100, 'increment_loop': False, 'increment_max_size': -1}
+    # increment_step: the dset for the increment
+    # increment_limit: the max dset size for the increment, -1 means no limit
+    # increment_loop: whether to loop over the dsets
+  train_num_theta             : 500
+  validation_fraction         : 0.1
+  
+  chosen_dur_trained_in_sequence: 
+    - [3, 9, 15]
+  crop_dur                    : True
+
+  batch_process_method        : 'collate_fn'
+  batch_size                  : 64
+  # batch_process_method        : 'in_dataset'
+  # batch_size                  : 1600
+  num_probR_sample            : 50 #25
+  shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
+  
+  
+  num_workers                 : 8
+  pin_memory                  : True
+  
+  use_data_prefetcher         : True
+  prefetch_factor             : 1

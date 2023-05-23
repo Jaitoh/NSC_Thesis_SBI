@@ -40,7 +40,12 @@ import argparse
 #     return args
 
 
-def get_args():
+def get_args(
+    config_simulator_path = "./src/config/test/test_simulator.yaml", 
+    config_dataset_path = "./src/config/test/test_dataset.yaml",
+    config_train_path = "./src/config/test/test_train.yaml",
+    data_path = "../data/dataset/dataset_L0_exp_set_0_test.h5"
+):
     """
     Returns:
         args: Arguments
@@ -48,22 +53,23 @@ def get_args():
     parser = argparse.ArgumentParser(description='pipeline for sbi')
     # parser.add_argument('--run_test', action='store_true', help="")
     parser.add_argument('--seed', type=int, default=0, help="")
-    parser.add_argument('--config_simulator_path', type=str, default="./src/config/test/test_simulator.yaml",
+    parser.add_argument('--config_simulator_path', type=str, default=config_simulator_path,
                         help="Path to config_simulator file")
-    parser.add_argument('--config_dataset_path', type=str, default="./src/config/test/test_dataset.yaml",
+    parser.add_argument('--config_dataset_path', type=str, default=config_dataset_path,
                         help="Path to config_train file")
-    parser.add_argument('--config_train_path', type=str, default="./src/config/test/test_train.yaml",
+    parser.add_argument('--config_train_path', type=str, default=config_train_path,
                         help="Path to config_train file")
-    parser.add_argument('--data_path', type=str, default="../data/dataset/dataset_L0_exp_set_0_test.h5",
+    parser.add_argument('--data_path', type=str, default=data_path,
                         help="simulated data store/load dir")
     parser.add_argument('--log_dir', type=str, default="./src/train/logs/log_test", help="training log dir")
-    parser.add_argument('--gpu', action='store_true', help='Use GPU.')
+    parser.add_argument('--gpu', action='store_false', help='Use GPU by default.')
     # parser.add_argument('--finetune', type=str, default=None, help='Load model from this job for finetuning.')
     parser.add_argument('--eval', action='store_true', help='Evaluation mode.')
-    parser.add_argument('-y', '--overwrite', action='store_true', help='Overwrite log dir.')
+    parser.add_argument('-y', '--overwrite', action='store_false', help='Overwrite log dir by default.')
     parser.add_argument('--continue_from_checkpoint', type=str, default="", help='continue the training from checkpoint')
     
     parser.add_argument('--run', type=int, default=0, help='run of Round0')
+    parser.add_argument('--debug', action='store_true', help='Debug mode.')
     args = parser.parse_args()
 
     return args
@@ -73,7 +79,8 @@ def remove_files_except_resource_log(path):
     for root, dirs, files in os.walk(path):
         for name in files:
             # if not (name.startswith('training_dataset') or name.startswith('x') or name.startswith('theta') or name.startswith('resource_usage')):
-            if not name.startswith('resource_usage'):
+            # if not name.startswith('resource_usage') and not name.endswith('log'):
+            if not name.endswith('log'):
                 file_path = os.path.join(root, name)
                 os.remove(file_path)
                 
@@ -94,9 +101,11 @@ def check_path(log_dir, data_path, args):
     if not log_dir.exists():
         os.makedirs(str(log_dir))
         os.makedirs(f'{str(log_dir)}/model/')
-        os.makedirs(f'{str(log_dir)}/training_dataset/')
+        # os.makedirs(f'{str(log_dir)}/training_dataset/')
         os.makedirs(f'{str(log_dir)}/posterior/')
         os.makedirs(f'{str(log_dir)}/posterior/figures/')
+        os.makedirs(f'{str(log_dir)}/event_hist/')
+        os.makedirs(f'{str(log_dir)}/event_fig/')
 
     elif log_dir.exists() and not args.eval:
         if args.overwrite:

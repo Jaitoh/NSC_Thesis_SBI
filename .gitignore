@@ -56,3 +56,5 @@ codes/src/train/logs/*
 
 *.key
 *.gz
+codes/output.dat
+*.dat

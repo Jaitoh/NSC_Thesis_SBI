@@ -76,9 +76,9 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --config_dataset_path ${CONFIG_DATASET_PATH} \
 --config_train_path ${CONFIG_TRAIN_PATH} \
 --data_path ${DATA_PATH} \
---log_dir ${LOG_DIR} \
---gpu \
--y &> ${PRINT_LOG}
+--log_dir ${LOG_DIR} &> ${PRINT_LOG}
+# --gpu \
+# -y &> ${PRINT_LOG}
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
 echo 'finished simulation'

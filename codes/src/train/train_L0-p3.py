@@ -208,16 +208,16 @@ class Solver:
 
     def get_my_data_kwargs(self):
         
-        my_dataset_kwargs = {
-            'data_path'                      : self.args.data_path,
-            'config'                         : self.config,
-            'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
-            'validation_fraction'            : self.config['dataset']['validation_fraction'],
-            'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
-            'num_train_sets'                 : self.config['dataset']['num_train_sets'],
-            'crop_dur'                       : self.config['dataset']['crop_dur'],
-            'num_max_sets'                   : self.config['dataset']['num_max_sets'],
-        }
+        # my_dataset_kwargs = {
+        #     'data_path'                      : self.args.data_path,
+        #     'config'                         : self.config,
+        #     'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
+        #     'validation_fraction'            : self.config['dataset']['validation_fraction'],
+        #     'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
+        #     'num_train_sets'                 : self.config['dataset']['num_train_sets'],
+        #     'crop_dur'                       : self.config['dataset']['crop_dur'],
+        #     'num_max_sets'                   : self.config['dataset']['num_max_sets'],
+        # }
         
         if self.config['dataset']['batch_process_method'] == 'collate_fn':
             
@@ -236,7 +236,7 @@ class Solver:
                 'worker_init_fn':  seed_worker,
             } 
             
-        return my_dataloader_kwargs, my_dataset_kwargs
+        return my_dataloader_kwargs
     
     
     def sbi_train(self, debug=False):
@@ -310,28 +310,28 @@ class Solver:
         # start training
         print(f"\n======\nstart of training\n======")
 
-        my_training_kwargs = {
-            'learning_rate'        : eval(training_config['learning_rate']),
+        # my_training_kwargs = {
+        #     'learning_rate'        : eval(training_config['learning_rate']),
             
-            'improvement_threshold': training_config['improvement_threshold'],
-            'stop_after_epochs'    : training_config['stop_after_epochs'],
-            'stop_after_dsets'     : training_config['stop_after_dsets'],
+        #     'improvement_threshold': training_config['improvement_threshold'],
+        #     'stop_after_epochs'    : training_config['stop_after_epochs'],
+        #     'stop_after_dsets'     : training_config['stop_after_dsets'],
             
-            'min_num_epochs'       : training_config['min_num_epochs'],
-            'max_num_epochs'       : training_config['max_num_epochs'],
-            'min_num_dsets'        : training_config['min_num_dsets'],
-            'max_num_dsets'        : training_config['max_num_dsets'],
+        #     'min_num_epochs'       : training_config['min_num_epochs'],
+        #     'max_num_epochs'       : training_config['max_num_epochs'],
+        #     'min_num_dsets'        : training_config['min_num_dsets'],
+        #     'max_num_dsets'        : training_config['max_num_dsets'],
             
-            'print_freq'           : training_config['print_freq'],
-            'chosen_dur_trained_in_sequence': self.config['dataset']['chosen_dur_trained_in_sequence'],
-            'clip_max_norm'        : eval(training_config['clip_max_norm']) if isinstance(training_config['clip_max_norm'], str) else training_config['clip_max_norm'],
+        #     'print_freq'           : training_config['print_freq'],
+        #     'chosen_dur_trained_in_sequence': self.config['dataset']['chosen_dur_trained_in_sequence'],
+        #     'clip_max_norm'        : training_config['clip_max_norm'],
             
-            'num_atoms'            : training_config['num_atoms'],
-            'use_combined_loss'    : True,
-            'scheduler'            : training_config['scheduler'],
-            'scheduler_params'     : training_config['scheduler_params'],
+        #     'num_atoms'            : training_config['num_atoms'],
+        #     'use_combined_loss'    : True,
+        #     'scheduler'            : training_config['scheduler'],
+        #     'scheduler_params'     : training_config['scheduler_params'],
             
-        }
+        # }
         
         # run training with current run updated dataset
         self.inference, density_estimator = self.inference.train( # type: ignore
@@ -341,9 +341,9 @@ class Solver:
             seed                    = self.args.seed,
             prior_limits            = self._get_limits(),
             
-            dataset_kwargs          = my_dataset_kwargs,
+            dataset_path            = self.args.data_path,
             dataloader_kwargs       = my_dataloader_kwargs,
-            training_kwargs         = my_training_kwargs,
+            use_combined_loss       = True,
             
             continue_from_checkpoint= self.args.continue_from_checkpoint,
             debug                   = debug,

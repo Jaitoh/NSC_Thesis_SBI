@@ -10,6 +10,18 @@ import os
 def train_inference_helper(inference, **kwargs):
     return inference.train(**kwargs)
 
+class WarmupScheduler(torch.optim.lr_scheduler._LRScheduler):
+    def __init__(self, optimizer, warmup_epochs, init_lr, target_lr, last_epoch=-1):
+        self.warmup_epochs = warmup_epochs
+        self.init_lr = init_lr
+        self.target_lr = target_lr
+        super().__init__(optimizer, last_epoch)
+        
+    def get_lr(self):
+        if self.last_epoch < self.warmup_epochs:
+            return [self.init_lr + (self.target_lr - self.init_lr) * (self.last_epoch / self.warmup_epochs) for _ in self.base_lrs]
+        else:
+            return self.base_lrs
         
 def plot_posterior_with_label(posterior, sample_num, x, true_params, limits, prior_labels):
     """ plot the posterior distribution of the seen data """

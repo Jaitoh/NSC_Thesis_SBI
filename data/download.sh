@@ -44,3 +44,6 @@
 ./gdrive files download 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9 --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
 ./gdrive files download 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
 
+
+https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
+./gdrive files download 1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3 --destination ~/scratch --recursive
