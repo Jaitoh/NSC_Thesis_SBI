@@ -1,3 +1,5 @@
+# TODO replacing the dataset kwargs 
+
 import os
 import time
 import h5py
@@ -11,10 +13,10 @@ from torch import Tensor, nn, ones, optim
 from torch.distributions import Distribution, MultivariateNormal, Uniform
 from torch.utils import data
 from torch.utils.data.sampler import SubsetRandomSampler
-# from torch.utils.tensorboard.writer import SummaryWriter
 from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 from torch.nn.utils.clip_grad import clip_grad_norm_
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, ReduceLROnPlateau, CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, ReduceLROnPlateau, CosineAnnealingLR, ConstantLR
 from pyknos.mdn.mdn import MultivariateGaussianMDN as mdn
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 import matplotlib.pyplot as plt
@@ -133,9 +135,20 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     print(f'\n\n=== run {self.run}, chosen_dur {chosen_dur}, dset {self.dset} ===')
                     print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", do_print_mem)
                     
+                    # with torch.profiler.profile(
+                    #         schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=2),
+                    #         on_trace_ready=torch.profiler.tensorboard_trace_handler(self.log_dir),
+                    #         record_shapes=True,
+                    #         profile_memory=True,
+                    #         with_stack=True
+                    # ) as prof:
+                        
                     # train and validate until no validation performance improvement
                     while self.epoch <= training_kwargs['max_num_epochs'] and not self._converged(self.epoch, training_kwargs['stop_after_epochs'], training_kwargs['improvement_threshold'], training_kwargs['min_num_epochs']):
                         
+                        if self.epoch > 0:
+                            self._plot_training_curve(log_dir) # plot the training curve
+                            
                         # train and validate for one epoch
                         epoch_start_time, train_log_prob_average = self._train_val_1epoch(train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_mem, train_start_time)
                         
@@ -153,10 +166,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         
                         # update scheduler
                         self._update_scheduler(training_kwargs)
-                        if self.epoch > 0:
-                            self._plot_training_curve(log_dir) # plot the training curve
+                        
                         if debug:
                             break
+                            
+                            # prof.step()
                     
                     # load new training dataset for the next dset
                     self._clear_loaders(train_loader, train_prefetcher) # clear train loader, prefetcher, and val_prefetcher
@@ -320,8 +334,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self.scheduler_warmup.step()
         elif training_kwargs['scheduler'] == 'ReduceLROnPlateau':
             self.scheduler.step(self._val_log_prob)
-        elif training_kwargs['scheduler'] == 'None':
-            pass
+        # elif training_kwargs['scheduler'] == 'None':
+        #     pass
         else:
             self.scheduler.step() # type: ignore
 
@@ -669,6 +683,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
             self._summary_writer.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
             plt.close(figure)
+            
+            # self._summary_writer.flush()
 
         print(f'takes {time.time() - start_time:.2f} seconds = {(time.time() - start_time) / 60:.2f} minutes')
     
@@ -704,7 +720,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
         warmup_epochs = self.config['train']['training']['warmup_epochs']
         initial_lr    = eval(self.config['train']['training']['initial_lr'])
         
-        self.optimizer = optim.Adam(list(self._neural_net.parameters()), lr=training_kwargs['learning_rate'])
+        self.optimizer = optim.Adam(
+                            list(self._neural_net.parameters()), 
+                            lr=training_kwargs['learning_rate'], 
+                            weight_decay=eval(self.config['train']['training']['weight_decay']) if isinstance(self.config['train']['training']['weight_decay'], str) else self.config['train']['training']['weight_decay']
+                            )
         
         # warmup scheduler
         self.scheduler_warmup = WarmupScheduler(self.optimizer, warmup_epochs=warmup_epochs, init_lr=initial_lr, target_lr=training_kwargs['learning_rate'])
@@ -714,8 +734,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self.scheduler = ReduceLROnPlateau(self.optimizer, **training_kwargs['scheduler_params'])
         if training_kwargs['scheduler'] == 'CosineAnnealingWarmRestarts':
             self.scheduler = CosineAnnealingWarmRestarts(self.optimizer, **training_kwargs['scheduler_params'])
-        if training_kwargs['scheduler'] == 'None':
-            self.scheduler = None
+        if training_kwargs['scheduler'] == 'None': # constant lr
+            self.scheduler = ConstantLR(self.optimizer, factor=1.0)
         # if training_kwargs['scheduler'] == 'CosineAnnealingLR':
         #     self.scheduler = CosineAnnealingLR(self.optimizer, *training_kwargs['scheduler_params'])
     
@@ -793,14 +813,23 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # get current learning rate
         if self.epoch < self.config['train']['training']['warmup_epochs']:
             current_learning_rate  = self.scheduler_warmup.optimizer.param_groups[0]['lr']
-        elif self.config['train']['training']['scheduler'] != 'None':
-            current_learning_rate  = self.scheduler.optimizer.param_groups[0]['lr']
+        # elif self.config['train']['training']['scheduler'] != 'None':
         else:
-            current_learning_rate  = self.config['train']['training']['learning_rate']
+            current_learning_rate  = self.scheduler.optimizer.param_groups[0]['lr']
+            # current_learning_rate  = self.config['train']['training']['learning_rate']
         
         # train_log_prob_average = train_log_probs_sum / (self.num_train_batches * dataset_kwargs['batch_size'] * dataset_kwargs['num_probR_sample'])
-        self._summary_writer.add_scalars("log_probs", {'training': train_log_prob_average}, self.epoch_counter)
         self._summary_writer.add_scalar("learning_rates", current_learning_rate, self.epoch_counter)
+        self._summary_writer.add_scalars("log_probs", {'training': train_log_prob_average}, self.epoch_counter)
+        
+        # log the graident after each epoch
+        # if self.config['train']['training']['log_gradients']:
+        for name, param in self._neural_net.named_parameters():
+            if param.requires_grad:
+                self._summary_writer.add_histogram(f'Gradients/{name}', param.grad, self.epoch_counter)
+        
+        # self._summary_writer.flush()
+        
         self._summary["training_log_probs"].append(train_log_prob_average)
         self._summary["learning_rates"].append(current_learning_rate)
         
@@ -856,8 +885,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
         elif train_batch_num % (len(train_prefetcher_or_loader)//print_freq) == 0: # print every 5% of batches
             print_mem_info('memory usage after batch', do_print_mem)
             print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
-
-        # self._summary_writer.add_scalar("train_loss_batch", train_loss, self.batch_counter)
+        
+        
+        self._summary_writer.add_scalar("train_loss_batch", train_loss, self.batch_counter)
+        # self._summary_writer.flush()
     
     def _val_one_epoch(self, val_prefetcher_or_loader):
         
@@ -923,6 +954,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         # print(f'epoch {self.epoch}: val_log_prob {self._val_log_prob:.2f}')
         self._summary_writer.add_scalars("log_probs", {'validation': self._val_log_prob}, self.epoch_counter)
+        # self._summary_writer.flush()
         
         self._summary["validation_log_probs"].append(self._val_log_prob)
         self._summary["epoch_durations_sec"].append(time.time() - train_start_time)
@@ -1006,6 +1038,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 del fig_x_val, _
                 gc.collect()
                 torch.cuda.empty_cache()
+                # self._summary_writer.flush()
                 
             del posterior, current_net
             gc.collect()
@@ -1063,6 +1096,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_board", self._best_val_log_prob, self.epoch_counter)
         self._summary_writer.add_scalar(f"run{self.run}/current_dset_board", self.dset_counter, self.epoch_counter)
         self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset_board", self.num_train_sets, self.epoch_counter)
+        self._summary_writer.flush()
         return converged
     
     def _converged_dset(self, stop_after_dsets, improvement_threshold, min_num_dsets):
@@ -1118,6 +1152,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # log info for this dset
         self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_of_dset", self._best_model_from_epoch, self.epoch_counter)
         self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob", self._best_val_log_prob, self.epoch_counter)
+        # self._summary_writer.flush()
         # self._summary_writer.add_scalar(f"run{self.run}/current_dset", self.dset_counter, self.epoch_counter)
         # self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset", self.num_train_sets, self.epoch_counter)
         

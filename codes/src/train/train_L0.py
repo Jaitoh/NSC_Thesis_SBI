@@ -324,7 +324,7 @@ class Solver:
             
             'print_freq'           : training_config['print_freq'],
             'chosen_dur_trained_in_sequence': self.config['dataset']['chosen_dur_trained_in_sequence'],
-            'clip_max_norm'        : training_config['clip_max_norm'],
+            'clip_max_norm'        : eval(training_config['clip_max_norm']) if isinstance(training_config['clip_max_norm'], str) else training_config['clip_max_norm'],
             
             'num_atoms'            : training_config['num_atoms'],
             'use_combined_loss'    : True,

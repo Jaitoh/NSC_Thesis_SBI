@@ -79,7 +79,8 @@ def remove_files_except_resource_log(path):
     for root, dirs, files in os.walk(path):
         for name in files:
             # if not (name.startswith('training_dataset') or name.startswith('x') or name.startswith('theta') or name.startswith('resource_usage')):
-            if not name.startswith('resource_usage'):
+            # if not name.startswith('resource_usage') and not name.endswith('log'):
+            if not name.endswith('log'):
                 file_path = os.path.join(root, name)
                 os.remove(file_path)
                 
@@ -100,7 +101,7 @@ def check_path(log_dir, data_path, args):
     if not log_dir.exists():
         os.makedirs(str(log_dir))
         os.makedirs(f'{str(log_dir)}/model/')
-        os.makedirs(f'{str(log_dir)}/training_dataset/')
+        # os.makedirs(f'{str(log_dir)}/training_dataset/')
         os.makedirs(f'{str(log_dir)}/posterior/')
         os.makedirs(f'{str(log_dir)}/posterior/figures/')
 
