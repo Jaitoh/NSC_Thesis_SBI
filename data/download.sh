@@ -25,7 +25,7 @@
 
 # dataset_L0_exp_set_0.h5 updated-May12
 ./gdrive files download 1vxaNvjlejlkfvZKt_erGmqP0VlG97eLk --destination ./tmp/NSC/data/dataset/
-
+./gdrive files download 1vxaNvjlejlkfvZKt_erGmqP0VlG97eLk --destination /mnt/data
 # dataset_L0_exp_set_0_test.h5 new
 ./gdrive files download 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf --destination ./tmp/NSC/data/dataset/
 
