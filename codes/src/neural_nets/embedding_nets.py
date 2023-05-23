@@ -17,8 +17,10 @@ class LSTM_Embedding(nn.Module):
         self.rnn2 = nn.LSTM(input_size=hidden_size*8, hidden_size=hidden_size*4, num_layers=1, batch_first=True)
         # self.norm2 = nn.LayerNorm(hidden_size*4)
         # self.dropout2 = nn.Dropout(p=0.05)
-        self.rnn3 = nn.LSTM(input_size=hidden_size*4, hidden_size=hidden_size, num_layers=1, batch_first=True)
+        self.rnn3 = nn.LSTM(input_size=hidden_size*4, hidden_size=hidden_size*2, num_layers=1, batch_first=True)
         # self.norm3 = nn.LayerNorm(hidden_size)
+        self.rnn4 = nn.LSTM(input_size=hidden_size*2, hidden_size=hidden_size  , num_layers=1, batch_first=True)
+        
         self.fc1 = nn.Linear(l*hidden_size, 4*hidden_size)
         # self.dropout3 = nn.Dropout(p=0.05)
         # self.bn1 = nn.BatchNorm1d(4*hidden_size)
@@ -48,6 +50,7 @@ class LSTM_Embedding(nn.Module):
         out, _ = self.rnn3(out)
         # out = self.norm3(out)
         # out    = self.dropout3(out)
+        out, _ = self.rnn4(out)
         # Flatten the RNN output and pass it through the first FC layer
         out = out.reshape(out.shape[0], -1)
         # out = F.relu(self.fc1(out))

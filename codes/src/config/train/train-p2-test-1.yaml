@@ -15,13 +15,13 @@ train:
 
   training:
     
-    learning_rate         : 5e-4
-    clip_max_norm         : 1e-4
+    learning_rate         : 5e-5
+    clip_max_norm         : 1e-5
     weight_decay          : 1e-6
     
     improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
-    stop_after_epochs     : 12
-    stop_after_dsets      : 5
+    stop_after_epochs     : 50
+    stop_after_dsets      : 5trtr
 
     min_num_epochs        : 50
     max_num_epochs        : 2147483647
