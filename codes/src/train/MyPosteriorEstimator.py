@@ -1,5 +1,5 @@
 # TODO replacing the dataset kwargs 
-
+from pathlib import Path
 import os
 import time
 import h5py
@@ -97,6 +97,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         """ train base model (first round for SNPE)
         
         """
+        self._writer_hist = SummaryWriter(log_dir=f'{str(log_dir)}/event_hist')
+        self._writer_fig  = SummaryWriter(log_dir=f'{str(log_dir)}/event_fig')
+        
         self.log_dir = log_dir
         self.config  = config
         self.prior_limits = prior_limits
@@ -291,7 +294,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # plot learning rate
         ax0 = axes[0]
         ax0.plot(learning_rates, '-', label='lr', lw=2)
-        ax0.plot(best_val_log_prob_epoch, learning_rates[best_val_log_prob_epoch], 'v', color='tab:red', lw=2) # type: ignore
+        # ax0.plot(best_val_log_prob_epoch, learning_rates[best_val_log_prob_epoch-1], 'v', color='tab:red', lw=2) # type: ignore
 
         ax0.set_xlabel('epochs')
         ax0.set_ylabel('learning rate')
@@ -301,8 +304,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         ax1 = axes[1]
         ax1.plot(train_log_probs, '.-', label='training', alpha=0.8, lw=2, color='tab:blue', ms=0.1)
         ax1.plot(val_log_probs, '.-', label='validation', alpha=0.8, lw=2, color='tab:orange', ms=0.1)
-        ax1.plot(best_val_log_prob_epoch, best_val_log_prob, 'v', color='red', lw=2)
-        ax1.text(best_val_log_prob_epoch, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
+        ax1.plot(best_val_log_prob_epoch-1, best_val_log_prob, 'v', color='red', lw=2)
+        ax1.text(best_val_log_prob_epoch-1, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
         # ax1.set_ylim(log_probs_lower_bound, max(val_log_probs)+0.2)
         
         ax1.legend()
@@ -662,26 +665,26 @@ class MyPosteriorEstimator(PosteriorEstimator):
             figure = plt.figure()
             plt.imshow(self.posterior_train_set['x'][fig_idx][:150, :].cpu())
             plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
-            self._summary_writer.add_figure(f"data_run{self.run}/x_train_{fig_idx}", figure, self.dset)
+            self._writer_fig.add_figure(f"data_run{self.run}/x_train_{fig_idx}", figure, self.dset)
             plt.close(figure)
             
             figure = plt.figure()
             plt.imshow(self.posterior_train_set['x_shuffled'][fig_idx][:150, :].cpu())
             plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
-            self._summary_writer.add_figure(f"data_run{self.run}/x_train_{fig_idx}_shuffled", figure, self.dset)
+            self._writer_fig.add_figure(f"data_run{self.run}/x_train_{fig_idx}_shuffled", figure, self.dset)
             plt.close(figure)
         
         
             figure = plt.figure()
             plt.imshow(self.posterior_val_set['x'][fig_idx][:150, :].cpu())
             plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
-            self._summary_writer.add_figure(f"data_run{self.run}/x_val_{fig_idx}", figure, self.dset)
+            self._writer_fig.add_figure(f"data_run{self.run}/x_val_{fig_idx}", figure, self.dset)
             plt.close(figure)
             
             figure = plt.figure()
             plt.imshow(self.posterior_val_set['x_shuffled'][fig_idx][:150, :].cpu())
             plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
-            self._summary_writer.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
+            self._writer_fig.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
             plt.close(figure)
             
             # self._summary_writer.flush()
@@ -826,7 +829,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # if self.config['train']['training']['log_gradients']:
         for name, param in self._neural_net.named_parameters():
             if param.requires_grad:
-                self._summary_writer.add_histogram(f'Gradients/{name}', param.grad, self.epoch_counter)
+                self._writer_hist.add_histogram(f'Gradients/{name}', param.grad, self.epoch_counter)
+        
+        # log the bias, activations, layer, weights after each epoch
+        # without loging the batch norm parameters
+        # if self.config['train']['training']['log_weights']:
+        for name, param in self._neural_net.named_parameters():
+            if param.requires_grad:
+                self._writer_hist.add_histogram(f'Weights/{name}', param, self.epoch_counter)
         
         # self._summary_writer.flush()
         
@@ -985,7 +995,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     prior_labels    = config['prior']['prior_labels'],
                 )
                 plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}.png")
-                self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
+                self._writer_fig.add_figure(f"posterior/x_train_{fig_idx}", fig_x, self.epoch_counter)
                 plt.close(fig_x)
                 del fig_x, _
                 gc.collect()
@@ -1001,7 +1011,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     prior_labels    = config['prior']['prior_labels'],
                 )
                 plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_train_{fig_idx}_epoch_{self.epoch_counter}_shuffled.png")
-                self._summary_writer.add_figure(f"posterior/x_train_{fig_idx}_shuffled", fig_x, self.epoch_counter)
+                self._writer_fig.add_figure(f"posterior/x_train_{fig_idx}_shuffled", fig_x, self.epoch_counter)
                 plt.close(fig_x)
                 del fig_x, _
                 gc.collect()
@@ -1017,7 +1027,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     prior_labels    = config['prior']['prior_labels'],
                 )
                 plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}.png")
-                self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
+                self._writer_fig.add_figure(f"posterior/x_val_{fig_idx}", fig_x_val, self.epoch_counter)
                 plt.close(fig_x_val)
                 del fig_x_val, _
                 gc.collect()
@@ -1033,7 +1043,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     prior_labels    = config['prior']['prior_labels'],
                 )
                 plt.savefig(f"{self.log_dir}/posterior/figures/posterior_x_val_{fig_idx}_epoch_{self.epoch_counter}_shuffled.png")
-                self._summary_writer.add_figure(f"posterior/x_val_{fig_idx}_shuffled", fig_x_val, self.epoch_counter)
+                self._writer_fig.add_figure(f"posterior/x_val_{fig_idx}_shuffled", fig_x_val, self.epoch_counter)
                 plt.close(fig_x_val)
                 del fig_x_val, _
                 gc.collect()

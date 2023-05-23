@@ -9,7 +9,7 @@ CLUSTER=snn
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
 PORT=9906
 
-RUN_ID=exp-p2-3dur-test-1
+RUN_ID=exp-p2-3dur-test-2
 CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-test.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train-p2-test-1.yaml
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
@@ -27,6 +27,7 @@ fi
 # PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs/${RUN_ID}.log"
 PRINT_LOG="${LOG_DIR}/${CLUSTER}-${RUN_ID}.log"
 # mkdir -p ./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs
+rm -r ${LOG_DIR}
 mkdir -p ${LOG_DIR}
 
 echo "file name: ${TRAIN_FILE_NAME}"

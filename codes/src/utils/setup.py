@@ -104,6 +104,8 @@ def check_path(log_dir, data_path, args):
         # os.makedirs(f'{str(log_dir)}/training_dataset/')
         os.makedirs(f'{str(log_dir)}/posterior/')
         os.makedirs(f'{str(log_dir)}/posterior/figures/')
+        os.makedirs(f'{str(log_dir)}/event_hist/')
+        os.makedirs(f'{str(log_dir)}/event_fig/')
 
     elif log_dir.exists() and not args.eval:
         if args.overwrite:
