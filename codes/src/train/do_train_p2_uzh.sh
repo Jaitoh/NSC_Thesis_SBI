@@ -11,76 +11,32 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="GPUMEM32GB"
 
-#SBATCH --mem 200G
+#SBATCH --mem 250G
 #SBATCH --cpus-per-task=9
 
 #SBATCH --job-name=train_L0
 #SBATCH --output=./cluster/uzh/train_L0/other_logs/output-3dur-a2.out
 #SBATCH --error=./cluster/uzh/train_L0/other_logs/error-3dur-a2.err
 
-TRAIN_FILE_NAME=train_L0
 CLUSTER=uzh
+PORT=6007
 
-# CONFIG_TRAIN_PATH=./src/config/train/train-setting-1.yaml
+RUN_ID=exp-p2-3dur-a1
+TRAIN_FILE_NAME=train_L0
+
+DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
+# DATA_PATH=/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-0.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-p2-1.yaml
 
-# SLURM_ARRAY_TASK_ID=$1
-# echo "task ID: ${SLURM_ARRAY_TASK_ID}"
+LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
+PRINT_LOG="${LOG_DIR}/${CLUSTER}-${RUN_ID}.log"
+rm -r ${LOG_DIR}
+mkdir -p ${LOG_DIR}
 
-# ---
-# if [ ${SLURM_ARRAY_TASK_ID} -eq 0 ]; then
-#     RUN_ID=exp-c0-sub0
-#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub0.yaml
-# elif [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]; then
-#     RUN_ID=exp-c0-sub1
-#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub1.yaml
-# elif [ ${SLURM_ARRAY_TASK_ID} -eq 2 ]; then
-#     RUN_ID=exp-c0-sub2
-#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub2.yaml
-# elif [ ${SLURM_ARRAY_TASK_ID} -eq 3 ]; then
-#     RUN_ID=exp-c0-sub3
-#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub3.yaml
-# elif [ ${SLURM_ARRAY_TASK_ID} -eq 4 ]; then
-#     RUN_ID=exp-c0-sub4
-#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub4.yaml
-# elif [ ${SLURM_ARRAY_TASK_ID} -eq 5 ]; then
-#     RUN_ID=exp-c0-sub5
-#     CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-1-sub5.yaml
-# fi
-
-# RUN_ID=exp-b0-2-contd0
-# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-0-2.yaml # RUN_ID=exp-b0-2-contd0
-# CHECK_POINT_PATH='/home/wehe/scratch/train/logs/train_L0/exp_b0_2/model/best_model_state_dict_run0.pt'
-
-# RUN_ID=exp-b2-1-contd0
-# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-0-summary-0-1.yaml # RUN_ID=exp-b2-1-contd0
-# CHECK_POINT_PATH='/home/wehe/scratch/train/logs/train_L0/exp_b2_1/model/best_model_state_dict_run0.pt'
-
-# RUN_ID=exp-b2-2-contd0
-# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-0-summary-0-2.yaml # RUN_ID=exp-b2-2-contd0
-# CHECK_POINT_PATH='/home/wehe/scratch/train/logs/train_L0/exp_b2_2/model/best_model_state_dict_run0.pt'
-
-# RUN_ID=exp-dur3-e3
-# CONFIG_DATASET_PATH=./src/config/dataset/dataset-setting-2-dur3-3.yaml
-# CONFIG_TRAIN_PATH=./src/config/train/train-setting-5.yaml
-
-RUN_ID=exp-3dur-a2
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-config-a2.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-config-0.yaml
-
-if [ "${CLUSTER}" == "uzh" ]; then
-    LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
-    # DATA_PATH=/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5
-    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-    module load anaconda3
-    source activate sbi
-else
-    LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
-    DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-fi
-
-PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/${RUN_ID}.log"
-mkdir -p ./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/other_logs
+module load anaconda3
+source activate sbi
 
 echo "file name: ${TRAIN_FILE_NAME}"
 echo "log_dir: ${LOG_DIR}"
@@ -97,15 +53,21 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --config_dataset_path ${CONFIG_DATASET_PATH} \
 --config_train_path ${CONFIG_TRAIN_PATH} \
 --data_path ${DATA_PATH} \
---log_dir ${LOG_DIR} &> ${PRINT_LOG}
-
-# \
-# --gpu \
-# -y &> ${PRINT_LOG}
+--log_dir ${LOG_DIR} > ${PRINT_LOG} 2>&1
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
-
 echo 'finished simulation'
+
+# check behavior output
+python3 -u ./src/train/check_log/check_log.py \
+--log_dir ${LOG_DIR} \
+--exp_name ${RUN_ID} \
+--num_frames 5 \
+--duration 1000
+
+echo "finished check log events"
+
+# code ${LOG_DIR}/posterior-${RUN_ID}.gif
 
 # sbatch ./cluster/dataset_gen.sh
 # squeue -u $USER
