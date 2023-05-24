@@ -11,7 +11,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="GPUMEM32GB"
 
-#SBATCH --mem 250G
+#SBATCH --mem 200G
 #SBATCH --cpus-per-task=9
 
 #SBATCH --job-name=train_L0
