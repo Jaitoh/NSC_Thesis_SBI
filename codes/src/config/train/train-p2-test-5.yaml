@@ -28,12 +28,12 @@ train:
     min_num_dsets         : 10
     max_num_dsets         : 2147483647
 
-    scheduler             : 'ReduceLROnPlateau'
-    scheduler_params      : {'patience': 20, 'factor': 0.3, 'min_lr': 0}
+    # scheduler             : 'ReduceLROnPlateau'
+    # scheduler_params      : {'patience': 20, 'factor': 0.3, 'min_lr': 0}
     # scheduler             : 'CosineAnnealingWarmRestarts'
     # scheduler_params      : {'T_0': 7, 'T_mult': 2}
-    # scheduler             : 'None'
-    # scheduler_params      : {}
+    scheduler             : 'None'
+    scheduler_params      : {}
     
     warmup_epochs         : 5
     initial_lr            : 1e-8

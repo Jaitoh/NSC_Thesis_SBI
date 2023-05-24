@@ -275,7 +275,7 @@ class Data_Prefetcher():
         # target = self.next_target
         # self.preload()
         # return input_, target
-                
+
 def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
     """
     batch: [
@@ -339,7 +339,7 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # Shuffle x along the 2nd axis
         # x_batch = torch.stack([x_batch[i,:,:][torch.randperm(x_batch.shape[1]),:] for i in range(x_batch.shape[0])])
         DMS = x_batch.shape[1]
-        x_batch_shuffled = torch.empty_like(x_batch)
+        # x_batch_shuffled = torch.empty_like(x_batch)
         
         # permutations = generate_permutations(B*C, DMS)
         # permutations = list(map(lambda _: torch.randperm(DMS), range(B*C)))
@@ -374,7 +374,8 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
             # start_time = time.time()
         
         # Shuffle the batched dataset
-        indices             = torch.randperm(x_batch_shuffled.shape[0])
+        # indices             = torch.randperm(x_batch_shuffled.shape[0])
+        indices             = torch.randperm(x_batch.shape[0])
         # x_batch_shuffled    = x_batch_shuffled[indices]
         # theta_batch         = theta_batch[indices]
         
@@ -384,7 +385,8 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         
         # return x_batch_shuffled[indices], theta_batch[indices]
         # shuffle along the 1st axis individually and then shuffle the batch
-        return x_batch[torch.arange(B * C)[:, None], permutations][indices], theta_batch[indices]
+        # return x_batch[torch.arange(B * C)[:, None], permutations][indices], theta_batch[indices]
+        return x_batch[indices[:, None], permutations], theta_batch[indices]
     
     elif shuffling_method == 1:
         
