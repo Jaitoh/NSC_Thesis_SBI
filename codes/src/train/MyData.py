@@ -342,18 +342,25 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         x_batch_shuffled = torch.empty_like(x_batch)
         
         # permutations = generate_permutations(B*C, DMS)
-        permutations = [torch.randperm(DMS) for _ in range(B*C)]
         # permutations = list(map(lambda _: torch.randperm(DMS), range(B*C)))
+        
+        # permutations = [torch.randperm(DMS) for _ in range(B*C)]
+        permutations = torch.stack([torch.randperm(DMS) for _ in range(B*C)])
         
         # if debug:
         #     print(f"\ncollate_fn_vec: generate permutations {(time.time() - start_time)*1000:.2f} ms")
         #     start_time = time.time()
         # start_time = time.time()
-        for i in range(B*C):
-            # x_batch_shuffled[i] = x_batch[i][torch.randperm(DMS)]
-            x_batch_shuffled[i] = x_batch[i][permutations[i]]
         
-        del x_batch
+        # for i in range(B*C):
+            # x_batch_shuffled[i] = x_batch[i][permutations[i]]
+            # x_batch_shuffled[i] = x_batch[i][torch.randperm(DMS)]
+        
+        # gathering method
+        # indices = torch.argsort(torch.rand(*x_batch.shape[:2]), dim=1)
+        # x_batch_shuffled = torch.gather(x_batch, dim=1, index=indices.unsqueeze(-1).repeat(1, 1, x_batch.shape[-1]))
+        
+        # del x_batch
         
         if debug:
             print(f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
@@ -361,21 +368,23 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
             
             # permutations = torch.stack([torch.randperm(DMS) for _ in range(B*C)])
             # x_batch_shuffled = x_batch[torch.arange(B * C)[:, None], permutations]
-            # # x_batch_shuffled_2 = x_batch[torch.arange(B * C)[:, None], permutations]
+            # x_batch_shuffled_2 = x_batch[torch.arange(B * C)[:, None], permutations]
             # print(f"collate_fn_vec: shuffle x_batch_2 {(time.time() - start_time)*1000:.2f} ms")
             # # print(f'same? {torch.all(torch.eq(x_batch_shuffled, x_batch_shuffled_2))}')
             # start_time = time.time()
         
         # Shuffle the batched dataset
         indices             = torch.randperm(x_batch_shuffled.shape[0])
-        x_batch_shuffled    = x_batch_shuffled[indices]
-        theta_batch         = theta_batch[indices]
+        # x_batch_shuffled    = x_batch_shuffled[indices]
+        # theta_batch         = theta_batch[indices]
         
-        if debug:
-            print(f"collate_fn_vec: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
-            print(f"collate_fn_vec: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
-
-        return x_batch_shuffled, theta_batch
+        # if debug:
+        #     print(f"collate_fn_vec: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
+        #     print(f"collate_fn_vec: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
+        
+        # return x_batch_shuffled[indices], theta_batch[indices]
+        # shuffle along the 1st axis individually and then shuffle the batch
+        return x_batch[torch.arange(B * C)[:, None], permutations][indices], theta_batch[indices]
     
     elif shuffling_method == 1:
         
@@ -395,7 +404,6 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         del seqC_batch, probR_batch
         
         return x_batch, theta_batch
-        
         
 def collate_fn(batch, config, debug=False):
     

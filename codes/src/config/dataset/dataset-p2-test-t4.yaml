@@ -38,5 +38,5 @@ dataset:
   num_workers                 : 8
   pin_memory                  : True
   
-  use_data_prefetcher         : False
+  use_data_prefetcher         : True
   prefetch_factor             : 1
