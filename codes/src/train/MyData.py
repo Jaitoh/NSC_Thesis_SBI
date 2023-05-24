@@ -4,6 +4,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from copy import deepcopy
+import gc
 # from dataset.data_process import process_x_seqC_part
 
 def generate_permutations(N, K):
@@ -18,14 +19,14 @@ def generate_permutations(N, K):
         torch.Tensor: A tensor of shape (N, K) containing random permutations.
 
     """
-    time_ = time.time()
-    print(f'generate permutations of size {N, K}...', end = ' ')
+    # time_ = time.time()
+    # print(f'generate permutations of size {N, K}...', end = ' ')
     
     # Generate random values between 0 and 1
     # Sort the random values along the last dimension to obtain permutations
     permutations = torch.rand(N, K).argsort(dim=-1)
     # faster than:  permutations = torch.stack([torch.randperm(K) for _ in range(N)], dim=0)
-    print(f'in {(time.time() - time_)/60:.2f} min, MEM size {permutations.element_size() * permutations.nelement() / 1024**3:.2f} GB\n')
+    # print(f'in {(time.time() - time_)/60:.2f} min, MEM size {permutations.element_size() * permutations.nelement() / 1024**3:.2f} GB\n')
     
     return permutations
 
@@ -326,11 +327,12 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # Repeat probR C times along a new dimension and sample from Bernoulli distribution
         probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 1)
         # probR_batch = torch.bernoulli(probR_batch)  # (C*B, D*M*S, 1)
-        probR_batch.bernoulli_() # (C*B, D*M*S, 1)
+        # probR_batch.bernoulli_() # (C*B, D*M*S, 1)
         
         # Concatenate x_seqC and x_choice
-        x_batch = torch.cat([seqC_batch, probR_batch], dim=-1)  # (C*B, D*M*S, 16)
+        x_batch = torch.cat([seqC_batch, probR_batch.bernoulli_()], dim=-1)  # (C*B, D*M*S, 16)
         del probR_batch, seqC_batch
+        gc.collect()
         
         if debug:
             print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
@@ -346,6 +348,7 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         
         # permutations = [torch.randperm(DMS) for _ in range(B*C)]
         permutations = torch.stack([torch.randperm(DMS) for _ in range(B*C)])
+        # permutations = torch.rand(B*C, DMS).argsort(dim=-1)
         
         # if debug:
         #     print(f"\ncollate_fn_vec: generate permutations {(time.time() - start_time)*1000:.2f} ms")
