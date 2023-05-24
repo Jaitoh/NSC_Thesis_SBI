@@ -107,7 +107,7 @@ def plot_lr_log_probs_(val_time, val_step, val_log_probs, train_step, train_log_
     ax1.plot(best_epochs_epoch, val_log_probs[list(best_epochs_epoch)], 'v', color='red', lw=2)
     for i in range(len(best_epochs_epoch)):
         ax1.text(best_epochs_epoch[i], val_log_probs[best_epochs_epoch[i]]+0.02, f'{val_log_probs[best_epochs_epoch[i]]:.2f}', color='red', fontsize=10, ha='center', va='bottom')
-    ax1.legend(loc='upper left')
+    ax1.legend()
     ax1.set_xlabel('epochs')
     ax1.set_ylabel('log_prob')
     ax1.grid(alpha=0.2)
@@ -121,7 +121,7 @@ def plot_lr_log_probs_(val_time, val_step, val_log_probs, train_step, train_log_
     print(f'saved training curve to {log_dir}/training_curve.png')
     plt.close()
 
-def plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir):
+def plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir, exp_name):
     
     val_time, val_step, val_log_probs = val_perf['time'], val_perf['step'], val_perf['log_probs']
     train_step, train_log_probs = train_perf['step'], train_perf['log_probs']
@@ -147,7 +147,7 @@ def plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir):
     ax0.set_xlabel('epochs')
     ax0.set_ylabel('learning rate')
     ax0.grid(alpha=0.2)
-    ax0.set_title('training curve')
+    ax0.set_title(exp_name)
 
     plot_log_prob(ax1, val_perf, train_perf, lr, best, plot_time=True)
 
@@ -172,7 +172,7 @@ def plot_log_prob(ax1, val_perf, train_perf, lr, best, plot_time=True):
         for i in range(len(best_epochs_epoch)):
             ax1.text(best_epochs_epoch[i], val_log_probs[best_epochs_epoch[i]]+0.02, f'{val_log_probs[best_epochs_epoch[i]]:.2f}', color='red', fontsize=10, ha='center', va='bottom')
         
-    ax1.legend(loc='best')
+    ax1.legend()
     ax1.set_xlabel('epochs')
     ax1.set_ylabel('log_prob')
     ax1.grid(alpha=0.2)
@@ -216,70 +216,118 @@ def plot_posterior_samples(log_dir, best_epochs_epoch, num_rows, exact_epoch=Tru
         print(f'saved posterior samples to {log_dir}/posterior_samples_{case}.png')
         plt.close()
 
+def load_img(img_path, ax, title):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    ax.imshow(img)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title(title)
+        
 def plot_one_img(chosen_plot_idx, plt_idx, plot_shuffled,
                  log_dir, val_perf, train_perf, lr, best, exp_name):
     
-    if plot_shuffled:
-        train_figure_names_0 = [f'posterior_x_train_0_epoch_{idx}_shuffled.png' for idx in chosen_plot_idx]
-        train_figure_names_1 = [f'posterior_x_train_1_epoch_{idx}_shuffled.png' for idx in chosen_plot_idx]
-        val_figure_names_0   = [f'posterior_x_val_0_epoch_{idx}_shuffled.png'   for idx in chosen_plot_idx]
-        val_figure_names_1   = [f'posterior_x_val_1_epoch_{idx}_shuffled.png'   for idx in chosen_plot_idx]
-    else:
-        train_figure_names_0 = [f'posterior_x_train_0_epoch_{idx}.png' for idx in chosen_plot_idx]
-        train_figure_names_1 = [f'posterior_x_train_1_epoch_{idx}.png' for idx in chosen_plot_idx]
-        val_figure_names_0   = [f'posterior_x_val_0_epoch_{idx}.png'   for idx in chosen_plot_idx]
-        val_figure_names_1   = [f'posterior_x_val_1_epoch_{idx}.png'   for idx in chosen_plot_idx]
+    train_figure_names_0_s = [f'posterior_x_train_0_epoch_{idx}_shuffled.png' for idx in chosen_plot_idx]
+    train_figure_names_1_s = [f'posterior_x_train_1_epoch_{idx}_shuffled.png' for idx in chosen_plot_idx]
+    val_figure_names_0_s   = [f'posterior_x_val_0_epoch_{idx}_shuffled.png'   for idx in chosen_plot_idx]
+    val_figure_names_1_s   = [f'posterior_x_val_1_epoch_{idx}_shuffled.png'   for idx in chosen_plot_idx]
 
-    fig = plt.figure(figsize=(3*2, 2*4))
-
-    ax = plt.subplot(3,2,3)
-    img = cv2.imread(str(log_dir/'posterior'/'figures'/train_figure_names_0[plt_idx]))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    ax.imshow(img)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    title = 'train x_0 shuffled' if plot_shuffled else 'train x_0' 
-    ax.set_title(title)
-
-    ax = plt.subplot(3,2,4)
-    img = cv2.imread(str(log_dir/'posterior'/'figures'/train_figure_names_1[plt_idx]))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    ax.imshow(img)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    title = 'train x_1 shuffled' if plot_shuffled else 'train x_1' 
-    ax.set_title(title)
-
-    ax = plt.subplot(3,2,5)
-    img = cv2.imread(str(log_dir/'posterior'/'figures'/val_figure_names_0[plt_idx]))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    ax.imshow(img)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    title = 'val x_0 shuffled' if plot_shuffled else 'val x_0' 
-    ax.set_title(title)
-
-    ax = plt.subplot(3,2,6)
-    img = cv2.imread(str(log_dir/'posterior'/'figures'/val_figure_names_1[plt_idx]))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    ax.imshow(img)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    title = 'val x_1 shuffled' if plot_shuffled else 'val x_1' 
-    ax.set_title(title)
-
-    epoch_idx = chosen_plot_idx[plt_idx]
+    train_figure_names_0 = [f'posterior_x_train_0_epoch_{idx}.png' for idx in chosen_plot_idx]
+    train_figure_names_1 = [f'posterior_x_train_1_epoch_{idx}.png' for idx in chosen_plot_idx]
+    val_figure_names_0   = [f'posterior_x_val_0_epoch_{idx}.png'   for idx in chosen_plot_idx]
+    val_figure_names_1   = [f'posterior_x_val_1_epoch_{idx}.png'   for idx in chosen_plot_idx]
     
-    ax = plt.subplot(3,1,1) # plot the training curve
+    fig_dir = log_dir/'posterior'/'figures'
+    
+    if plot_shuffled:
+        
+        fig = plt.figure(figsize=(3*4, 3*4))
+
+        ax = plt.subplot(3,4,5)
+        title = 'train x_0' 
+        img_path = str(fig_dir / train_figure_names_0[plt_idx])
+        load_img(img_path, ax, title)
+        
+        ax = plt.subplot(3,4,6)
+        title = 'train x_1' 
+        img_path = str(fig_dir / train_figure_names_1[plt_idx])
+        load_img(img_path, ax, title)
+        
+        ax = plt.subplot(3,4,7)
+        title = 'shuffled train x_0' 
+        img_path = str(fig_dir / train_figure_names_0_s[plt_idx])
+        load_img(img_path, ax, title)
+        
+        ax = plt.subplot(3,4,8)
+        title = 'shuffled train x_1' 
+        img_path = str(fig_dir / train_figure_names_1_s[plt_idx])
+        load_img(img_path, ax, title)
+
+        ax = plt.subplot(3,4,9)
+        title = 'val x_0' 
+        img_path = str(fig_dir / val_figure_names_0[plt_idx])
+        load_img(img_path, ax, title)
+
+        ax = plt.subplot(3,4,10)
+        title = 'val x_1' 
+        img_path = str(fig_dir / val_figure_names_1[plt_idx])
+        load_img(img_path, ax, title)
+        
+        ax = plt.subplot(3,4,11)
+        title = 'shuffled val x_0' 
+        img_path = str(fig_dir / val_figure_names_0_s[plt_idx])
+        load_img(img_path, ax, title)
+
+        ax = plt.subplot(3,4,12)
+        title = 'shuffled val x_1' 
+        img_path = str(fig_dir / val_figure_names_1_s[plt_idx])
+        load_img(img_path, ax, title)
+        
+    else:    
+        fig = plt.figure(figsize=(3*2, 2*4))
+
+        ax = plt.subplot(3,2,3)
+        img_path = str(fig_dir / train_figure_names_0[plt_idx])
+        title = 'train x_0 shuffled' if plot_shuffled else 'train x_0' 
+        ax.set_title(title)
+        load_img(img_path, ax, title)
+
+        ax = plt.subplot(3,2,4)
+        img_path = str(fig_dir / train_figure_names_1[plt_idx])
+        title = 'train x_1 shuffled' if plot_shuffled else 'train x_1' 
+        ax.set_title(title)
+        load_img(img_path, ax, title)
+
+        ax = plt.subplot(3,2,5)
+        img_path = str(fig_dir / val_figure_names_0[plt_idx])
+        title = 'val x_0 shuffled' if plot_shuffled else 'val x_0' 
+        ax.set_title(title)
+        load_img(img_path, ax, title)
+
+        ax = plt.subplot(3,2,6)
+        img_path = str(fig_dir / val_figure_names_1[plt_idx])
+        title = 'val x_1 shuffled' if plot_shuffled else 'val x_1' 
+        ax.set_title(title)
+        load_img(img_path, ax, title)
+        
+    ax = plt.subplot(3,1,1) 
+    epoch_idx = chosen_plot_idx[plt_idx]
+    # plot the training curve
     ax = plot_log_prob(ax, val_perf, train_perf, lr, best, plot_time=True)
-    ax.plot(chosen_plot_idx, train_perf['log_probs'][chosen_plot_idx], 'v', color='grey', alpha=0.2)
+    ax.plot(chosen_plot_idx, train_perf['log_probs'][chosen_plot_idx], 'v', color='k', alpha=0.1)
     ax.plot(epoch_idx, train_perf['log_probs'][epoch_idx], 'v', color='green')
     ax.text(epoch_idx, min(train_perf['log_probs']), f"{epoch_idx}", color='green', fontsize=8, ha='center', va='top')
     
-    ax.plot(chosen_plot_idx, val_perf['log_probs'][chosen_plot_idx], 'v', color='grey', alpha=0.2)
+    ax.plot(chosen_plot_idx, val_perf['log_probs'][chosen_plot_idx], 'v', color='k', alpha=0.1)
     ax.plot(epoch_idx, val_perf['log_probs'][epoch_idx], 'v', color='green')
     ax.text(epoch_idx, val_perf['log_probs'][epoch_idx]-0.2, f"{val_perf['log_probs'][epoch_idx]:.2f}", color='orange', fontsize=8, ha='center', va='top')
     ax.set_title(exp_name)
+    
+    # plot the learning rate
+    ax0 = ax.twinx()
+    lr_step, lr_lr = lr['step'], lr['lr'] 
+    ax0.plot(lr_step, lr_lr, '--', label='lr', lw=0.5, alpha=0.5, color='k')
+    ax0.set_ylabel('learning rate')
     
     return fig
 
@@ -320,7 +368,7 @@ def animate_posterior(log_dir, num_frames, plot_shuffled,
         images.append(image)
         plt.close(fig)
 
-    fig_name = 'posterior_shuffled.gif' if plot_shuffled else 'posterior.gif'
+    fig_name = f'posterior-{exp_name}.gif'
     imageio.mimsave(log_dir/fig_name, images, duration=duration, loop=0)
     print('saved animation to ', log_dir/fig_name)
     print()
@@ -335,7 +383,6 @@ if __name__ == '__main__':
     argparser.add_argument('--num_frames', type=int, default=5)
     argparser.add_argument('--duration', type=int, default=1000)
     
-    
     args = argparser.parse_args()
 
     log_dir     = Path(args.log_dir)
@@ -343,20 +390,28 @@ if __name__ == '__main__':
     duration    = args.duration
     exp_name    = args.exp_name
     
+    
+    os.system(f'rm {log_dir}/training_curve_.png')
+    os.system(f'rm {log_dir}/posterior_shuffled.gif')
+    os.system(f'rm {log_dir}/posterior.gif')
+    
     ea_post, ea_val, ea_train = get_events(log_dir)
     
     # extract data from event files
     val_perf, train_perf, lr, best = get_event_data(ea_post, ea_val, ea_train)
 
     # plot training curves including the learning rate and log_probs
-    plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir)
+    # plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir, exp_name)
 
     # animate posterior plots
     plot_shuffled = True
     animate_posterior(log_dir, num_frames, plot_shuffled, 
                     val_perf, train_perf, lr, best, duration, exp_name)
 
-    # animate posterior plots
-    plot_shuffled = False
-    animate_posterior(log_dir, num_frames, plot_shuffled, 
-                    val_perf, train_perf, lr, best, duration, exp_name)
+    # plot_shuffled = False
+    # animate_posterior(log_dir, num_frames, plot_shuffled, 
+    #                 val_perf, train_perf, lr, best, duration, exp_name)
+    
+    # remove event_fig files
+    os.system(f'rm -r {log_dir}/event_fig/')
+    print('removed event_fig files')

@@ -50,3 +50,7 @@ python3 -u ./src/train/check_log/check_log.py \
 --exp_name ${RUN_ID} \
 --num_frames 10 \
 --duration 1000
+
+code ${LOG_DIR}/training_curve_.png
+code ${LOG_DIR}/posterior_shuffled.gif
+code ${LOG_DIR}/posterior.gif

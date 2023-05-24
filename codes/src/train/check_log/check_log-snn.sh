@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 CLUSTER=snn
-RUN_ID=exp-p2-3dur-test-3
+RUN_ID=exp-p2-3dur-test-$1
 TRAIN_FILE_NAME=train_L0
 
 if [ "${CLUSTER}" == "uzh" ]; then
@@ -38,12 +38,11 @@ echo "log_dir: ${LOG_DIR}"
 python3 -u ./src/train/check_log/check_log.py \
 --log_dir ${LOG_DIR} \
 --exp_name ${RUN_ID} \
---num_frames 10 \
+--num_frames 5 \
 --duration 1000
 
 # open files
-code ${LOG_DIR}/training_curve_.png
-code ${LOG_DIR}/posterior_shuffled.gif
-code ${LOG_DIR}/posterior.gif
+# code ${LOG_DIR}/training_curve_.png
+code ${LOG_DIR}/posterior-${RUN_ID}.gif
 
 echo 'finished check log events'

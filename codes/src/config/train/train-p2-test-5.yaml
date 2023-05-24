@@ -15,12 +15,12 @@ train:
 
   training:
     
-    learning_rate         : 5e-4
-    clip_max_norm         : 5
-    weight_decay          : 0
+    learning_rate         : 1e-4
+    clip_max_norm         : 1e-4
+    weight_decay          : 1e-6
     
     improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
-    stop_after_epochs     : 50
+    stop_after_epochs     : 250
     stop_after_dsets      : 5
 
     min_num_epochs        : 50
@@ -28,12 +28,12 @@ train:
     min_num_dsets         : 10
     max_num_dsets         : 2147483647
 
-    # scheduler             : 'ReduceLROnPlateau'
-    # scheduler_params      : {'patience': 3, 'factor': 0.5, 'min_lr': 0}
+    scheduler             : 'ReduceLROnPlateau'
+    scheduler_params      : {'patience': 20, 'factor': 0.3, 'min_lr': 0}
     # scheduler             : 'CosineAnnealingWarmRestarts'
     # scheduler_params      : {'T_0': 7, 'T_mult': 2}
-    scheduler             : 'None'
-    scheduler_params      : {}
+    # scheduler             : 'None'
+    # scheduler_params      : {}
     
     warmup_epochs         : 5
     initial_lr            : 1e-8

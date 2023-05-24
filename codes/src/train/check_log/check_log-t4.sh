@@ -38,7 +38,7 @@ echo "log_dir: ${LOG_DIR}"
 python3 -u ./src/train/check_log/check_log.py \
 --log_dir ${LOG_DIR} \
 --exp_name ${RUN_ID} \
---num_frames 10 \
+--num_frames 5 \
 --duration 1000
 
 # open files
