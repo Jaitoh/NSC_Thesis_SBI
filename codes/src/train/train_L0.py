@@ -3,6 +3,7 @@
 - training: one round training
 """
 import itertools
+import datetime
 import pickle
 import yaml
 # import dill
@@ -75,6 +76,8 @@ class Solver:
         # self.device = torch.device('cuda') if self.gpu else torch.device('cpu')
         self.device = 'cuda' if self.gpu else 'cpu'
         print(f'using device: {self.device}')
+        print(f"starting time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
         print_cuda_info(self.device)
 
         self.log_dir = Path(self.args.log_dir)
@@ -221,11 +224,13 @@ class Solver:
         
         if self.config['dataset']['batch_process_method'] == 'collate_fn':
             
+            use_data_prefetcher = self.config['dataset']['use_data_prefetcher']
+            prefetch_factor     = self.config['dataset']['prefetch_factor']
             my_dataloader_kwargs = {
                 'num_workers'       :  self.config['dataset']['num_workers'],
                 'worker_init_fn'    :  seed_worker,
                 'collate_fn'        :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
-                'prefetch_factor'   :  self.config['dataset']['prefetch_factor'],
+                'prefetch_factor'   :  prefetch_factor if use_data_prefetcher else 2+prefetch_factor,
             } 
         
         else: # batch_process_method == 'in_dataset'

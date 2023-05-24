@@ -103,37 +103,6 @@ class My_Chosen_Sets(Dataset):
             self.seqC_all[:, DMS_idx_not_chosen, :] = 0
             self.probR_all[:, DMS_idx_not_chosen, :] = 0
             
-        # seqC_all  = np.empty((len(chosen_set_names), DMS, seqC_shape), dtype=np.float32) # shape (num_chosen_sets, DMS, seqC_shape)
-        # theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4), dtype=np.float32) # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
-        # probR_all = np.empty((len(chosen_set_names), DMS, num_chosen_theta_each_set), dtype=np.float32) # shape (num_chosen_sets, DMS, num_chosen_theta_each_set)
-        
-        # for set_idx, set_name in enumerate(chosen_set_names):
-        #     if seqC_process == 'norm':
-        #         seqC_all[set_idx] = f[set_name]['seqC_normed'][:]
-        #     elif seqC_process == 'summary':
-        #         if summary_type == 0:
-        #             seqC_all[set_idx] = f[set_name]['seqC_summary_0'][:]
-        #         elif summary_type == 1:
-        #             seqC_all[set_idx] = f[set_name]['seqC_summary_1'][:]
-        #     else:
-        #         raise ValueError(f"seqC_process {seqC_process} not supported")
-
-        #     theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
-        #     probR_all[set_idx] = f[set_name]['probR'][:][:, randomly_chosen_theta_idx]
-        
-        # # set the values that are not chosen in DMS to 0, or remove them
-        # idx_not_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
-        # if not crop_dur: # set not chosen to 0
-        #     seqC_all[:, idx_not_chosen, :] = 0
-        #     probR_all[:, idx_not_chosen, :] = 0
-        # else: # remove the not chosen idx
-        #     seqC_all = np.delete(seqC_all, idx_not_chosen, axis=1)
-        #     probR_all = np.delete(probR_all, idx_not_chosen, axis=1)
-            
-        # self.seqC_all = seqC_all
-        # self.theta_all = theta_all
-        # self.probR_all = probR_all
-        
         print(f" finished in: {time.time()-start_loading_time:.2f}s")
         if crop_dur:
             print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ")
@@ -145,7 +114,12 @@ class My_Chosen_Sets(Dataset):
         
         f.close()
         del f
-
+        
+        # convert to tensor
+        self.seqC_all  = torch.from_numpy(self.seqC_all).to(torch.float32).contiguous()
+        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
+        self.probR_all = torch.from_numpy(self.probR_all).to(torch.float32).contiguous()
+        
     def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, DMS_idx_chosen, set_name):
         
         if seqC_process == 'norm':
@@ -184,13 +158,18 @@ class My_Chosen_Sets(Dataset):
 
     def __getitem__(self, idx):
         # Calculate set index and theta index within the set
-        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set)
+        # tic = time.time()
+        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set) # faset than unravel_index indexing
+        
+        # set_idx, theta_idx = self.set_idxs[idx], self.theta_idxs[idx]
 
         seqC  = self.seqC_all[set_idx]
         theta = self.theta_all[set_idx, theta_idx]
         probR = self.probR_all[set_idx, :, theta_idx][:, np.newaxis]
         
-        return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
+        # print(f"get item time: {(time.time()-tic)*1000:.2f} ms")
+        return seqC, theta, probR
+        # return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
         
 class My_Processed_Dataset(My_Chosen_Sets):
     def __init__(self, data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
@@ -219,16 +198,16 @@ class My_Processed_Dataset(My_Chosen_Sets):
         print(f"\nSampling {self.C} times from probR ... ", end="")
         time_start = time.time()
         self.DMS = self.seqC_all.shape[1]
-        self.probR_all = torch.from_numpy(self.probR_all).repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, D_*M*S, num_chosen_theta_each_set*C)
-        self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).to(torch.float32).contiguous()  # (num_chosen_sets, D*M*S, num_chosen_theta_each_set*C)
+        self.probR_all = self.probR_all.repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, D_*M*S, num_chosen_theta_each_set*C)
+        self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).contiguous()  # (num_chosen_sets, D*M*S, num_chosen_theta_each_set*C)
         print(f"in {(time.time()-time_start)/60:.2f}min")
         
         self.total_samples = len(chosen_set_names) * self.num_chosen_theta_each_set * self.C
         print(f"sampled probR shape {self.probR_all.shape} MEM size {self.probR_all.element_size()*self.probR_all.nelement()/1024**3:.2f}GB, Total samples: {self.total_samples} ") 
         self.permutations = generate_permutations(self.total_samples, self.DMS).contiguous() # (CTSet, D_MS)
         
-        self.seqC_all = torch.from_numpy(self.seqC_all).to(torch.float32).contiguous()
-        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32)
+        self.seqC_all = self.seqC_all.contiguous()
+        self.theta_all = self.theta_all
         
         indices = torch.arange(self.total_samples)
         self.set_idxs, self.theta_idxs, self.probR_sample_idxs = unravel_index(indices, (len(self.chosen_set_names), self.num_chosen_theta_each_set, self.C))
@@ -296,8 +275,128 @@ class Data_Prefetcher():
         # target = self.next_target
         # self.preload()
         # return input_, target
+                
+def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
+    """
+    batch: [
+            (seqC, theta, probR),
+            (seqC, theta, probR),
+            ...
+            (seqC, theta, probR),
+            ]
+            seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
             
+            shuffling_method: 0: complex shuffle - expand x from (B, D*M*S, 16) to (B*C, D*M*S, 16) then shuffle along the 2nd axis, then shuffle the batch BC
+                              1: simple shuffle - shuffle x (B, D*M*S, 16) along the 2nd axis, then expand x to (B*C, D*M*S, 16)
+    """
     
+    C = config['dataset']['num_probR_sample']
+    B = len(batch)
+    
+    if debug:
+        start_time_0 = time.time()
+    
+    # Preallocate tensors
+    seqC_batch = torch.empty((B, *batch[0][0].shape))
+    theta_batch = torch.empty((B, *batch[0][1].shape))
+    probR_batch = torch.empty((B, *batch[0][2].shape))
+    
+    # Fill tensors with data from the batch
+    for i, (seqC, theta, probR) in enumerate(batch):
+        seqC_batch[i] = seqC
+        theta_batch[i] = theta
+        probR_batch[i] = probR
+        
+    # seqC, theta, probR = zip(*batch)
+    
+    # seqC_batch = torch.stack(seqC)
+    # theta_batch = torch.stack(theta)
+    # probR_batch = torch.stack(probR)
+    
+    if debug:
+        print(f"collate_fn_vec: dataloading {(time.time() - start_time_0)*1000:.2f} ms")
+    
+    del batch, seqC, theta, probR
+    
+    if shuffling_method == 0:
+        # Repeat seqC and theta C times along a new dimension
+        seqC_batch = seqC_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 15) first C samples are the same, from the first batch
+        theta_batch = theta_batch.repeat_interleave(C, dim=0)  # (C*B, 4)
+        
+        # Repeat probR C times along a new dimension and sample from Bernoulli distribution
+        probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 1)
+        # probR_batch = torch.bernoulli(probR_batch)  # (C*B, D*M*S, 1)
+        probR_batch.bernoulli_() # (C*B, D*M*S, 1)
+        
+        # Concatenate x_seqC and x_choice
+        x_batch = torch.cat([seqC_batch, probR_batch], dim=-1)  # (C*B, D*M*S, 16)
+        del probR_batch, seqC_batch
+        
+        if debug:
+            print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
+            start_time = time.time()
+            
+        # Shuffle x along the 2nd axis
+        # x_batch = torch.stack([x_batch[i,:,:][torch.randperm(x_batch.shape[1]),:] for i in range(x_batch.shape[0])])
+        DMS = x_batch.shape[1]
+        x_batch_shuffled = torch.empty_like(x_batch)
+        
+        # permutations = generate_permutations(B*C, DMS)
+        permutations = [torch.randperm(DMS) for _ in range(B*C)]
+        # permutations = list(map(lambda _: torch.randperm(DMS), range(B*C)))
+        
+        # if debug:
+        #     print(f"\ncollate_fn_vec: generate permutations {(time.time() - start_time)*1000:.2f} ms")
+        #     start_time = time.time()
+        # start_time = time.time()
+        for i in range(B*C):
+            # x_batch_shuffled[i] = x_batch[i][torch.randperm(DMS)]
+            x_batch_shuffled[i] = x_batch[i][permutations[i]]
+        
+        del x_batch
+        
+        if debug:
+            print(f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
+            start_time = time.time()
+            
+            # permutations = torch.stack([torch.randperm(DMS) for _ in range(B*C)])
+            # x_batch_shuffled = x_batch[torch.arange(B * C)[:, None], permutations]
+            # # x_batch_shuffled_2 = x_batch[torch.arange(B * C)[:, None], permutations]
+            # print(f"collate_fn_vec: shuffle x_batch_2 {(time.time() - start_time)*1000:.2f} ms")
+            # # print(f'same? {torch.all(torch.eq(x_batch_shuffled, x_batch_shuffled_2))}')
+            # start_time = time.time()
+        
+        # Shuffle the batched dataset
+        indices             = torch.randperm(x_batch_shuffled.shape[0])
+        x_batch_shuffled    = x_batch_shuffled[indices]
+        theta_batch         = theta_batch[indices]
+        
+        if debug:
+            print(f"collate_fn_vec: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
+            print(f"collate_fn_vec: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
+
+        return x_batch_shuffled, theta_batch
+    
+    elif shuffling_method == 1:
+        
+        # shuffle seqC_batch and theta_batch along the 2nd axis
+        DMS         = seqC_batch.shape[1]
+        for i in range(B):
+            indices     = torch.randperm(DMS)
+            seqC_batch[i]  = seqC_batch[i][indices]
+            probR_batch[i] = probR_batch[i][indices]
+        
+        theta_batch = theta_batch.repeat_interleave(C, dim=0)  # (C*B, 4)
+        seqC_batch  = seqC_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 15)
+        probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 1)
+        probR_batch = torch.bernoulli(probR_batch)  # (C*B, D*M*S, 1)
+        
+        x_batch = torch.cat([seqC_batch, probR_batch], dim=-1)  # (C*B, D*M*S, 16)
+        del seqC_batch, probR_batch
+        
+        return x_batch, theta_batch
+        
+        
 def collate_fn(batch, config, debug=False):
     
     C = config['dataset']['num_probR_sample']
@@ -343,115 +442,6 @@ def collate_fn(batch, config, debug=False):
         print(f"collate_fn: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
     
     return x_batch.to(torch.float32), theta_batch.to(torch.float32)
-
-    
-def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
-    """
-    batch: [
-            (seqC, theta, probR),
-            (seqC, theta, probR),
-            ...
-            (seqC, theta, probR),
-            ]
-            seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
-            
-            shuffling_method: 0: complex shuffle - expand x from (B, D*M*S, 16) to (B*C, D*M*S, 16) then shuffle along the 2nd axis, then shuffle the batch BC
-                              1: simple shuffle - shuffle x (B, D*M*S, 16) along the 2nd axis, then expand x to (B*C, D*M*S, 16)
-    """
-    
-    C = config['dataset']['num_probR_sample']
-    B = len(batch)
-    
-    if debug:
-        start_time_0 = time.time()
-    
-    seqC_shape = batch[0][0].shape
-    theta_shape = batch[0][1].shape
-    probR_shape = batch[0][2].shape
-    
-    # Preallocate tensors
-    seqC_batch = torch.empty((B, *seqC_shape))
-    theta_batch = torch.empty((B, *theta_shape))
-    probR_batch = torch.empty((B, *probR_shape))
-    
-    # Fill tensors with data from the batch
-    for i, (seqC, theta, probR) in enumerate(batch):
-        seqC_batch[i] = seqC
-        theta_batch[i] = theta
-        probR_batch[i] = probR
-    if debug:
-        print(f"collate_fn_vec: dataloading {(time.time() - start_time_0)*1000:.2f} ms")
-    
-    del batch, seqC, theta, probR
-    
-    if shuffling_method == 0:
-        # Repeat seqC and theta C times along a new dimension
-        seqC_batch = seqC_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 15) first C samples are the same, from the first batch
-        theta_batch = theta_batch.repeat_interleave(C, dim=0)  # (C*B, 4)
-        
-        # Repeat probR C times along a new dimension and sample from Bernoulli distribution
-        probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 1)
-        probR_batch = torch.bernoulli(probR_batch)  # (C*B, D*M*S, 1)
-        
-        # Concatenate x_seqC and x_choice
-        x_batch = torch.cat([seqC_batch, probR_batch], dim=-1)  # (C*B, D*M*S, 16)
-        del probR_batch, seqC_batch
-        
-        if debug:
-            print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
-            start_time = time.time()
-            
-        # Shuffle x along the 2nd axis
-        # x_batch = torch.stack([x_batch[i,:,:][torch.randperm(x_batch.shape[1]),:] for i in range(x_batch.shape[0])])
-        DMS = x_batch.shape[1]
-        x_batch_shuffled = torch.empty_like(x_batch)
-        # permutations = generate_permutations(B*C, DMS)
-        
-        # if debug:
-        #     print(f"\ncollate_fn_vec: generate permutations {(time.time() - start_time)*1000:.2f} ms")
-        #     start_time = time.time()
-            
-        for i in range(B*C):
-            x_batch_shuffled[i] = x_batch[i][torch.randperm(DMS)]
-            # x_batch_shuffled[i] = x_batch[i][permutations[i,:]]
-        
-        del x_batch
-        
-        if debug:
-            print(f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
-            start_time = time.time()
-        
-        # Shuffle the batched dataset
-        indices             = torch.randperm(x_batch_shuffled.shape[0])
-        x_batch_shuffled    = x_batch_shuffled[indices]
-        theta_batch         = theta_batch[indices]
-        if debug:
-            print(f"collate_fn_vec: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
-            print(f"collate_fn_vec: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
-
-        return x_batch_shuffled.to(torch.float32), theta_batch.to(torch.float32)
-    
-    elif shuffling_method == 1:
-        
-        # shuffle seqC_batch and theta_batch along the 2nd axis
-        DMS         = seqC_batch.shape[1]
-        for i in range(B):
-            indices     = torch.randperm(DMS)
-            seqC_batch[i]  = seqC_batch[i][indices]
-            probR_batch[i] = probR_batch[i][indices]
-        
-        theta_batch = theta_batch.repeat_interleave(C, dim=0)  # (C*B, 4)
-        seqC_batch  = seqC_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 15)
-        probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, D*M*S, 1)
-        probR_batch = torch.bernoulli(probR_batch)  # (C*B, D*M*S, 1)
-        
-        x_batch = torch.cat([seqC_batch, probR_batch], dim=-1)  # (C*B, D*M*S, 16)
-        del seqC_batch, probR_batch
-        
-        return x_batch.to(torch.float32), theta_batch.to(torch.float32)
-        
-        
-    
 
 
 def collate_fn_probR(batch, Rchoice_method='probR_sampling', num_probR_sample=10):

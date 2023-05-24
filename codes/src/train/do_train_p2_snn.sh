@@ -19,7 +19,6 @@ CONFIG_TRAIN_PATH=./src/config/train/train-p2-test-3.yaml
 # PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs/${RUN_ID}.log"
 LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${CLUSTER}-${RUN_ID}.log"
-# mkdir -p ./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs
 rm -r ${LOG_DIR}
 mkdir -p ${LOG_DIR}
 
@@ -30,6 +29,8 @@ echo "data_path: ${DATA_PATH}"
 echo "config_simulator_path: ${CONFIG_SIMULATOR_PATH}"
 echo "config_dataset_path: ${CONFIG_DATASET_PATH}"
 echo "config_train_path: ${CONFIG_TRAIN_PATH}"
+
+code ${PRINT_LOG}
 
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
@@ -42,3 +43,10 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
 echo "finished simulation"
+
+# check behavior output
+python3 -u ./src/train/check_log/check_log.py \
+--log_dir ${LOG_DIR} \
+--exp_name ${RUN_ID} \
+--num_frames 10 \
+--duration 1000

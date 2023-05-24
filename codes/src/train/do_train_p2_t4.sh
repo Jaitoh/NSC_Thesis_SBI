@@ -7,13 +7,13 @@ source activate sbi
 CLUSTER=t4
 PORT=9906
 
-RUN_ID=exp-p2-3dur-test-2
+RUN_ID=exp-p2-3dur-test-4
 TRAIN_FILE_NAME=train_L0
 
-DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/dataset_L0_exp_set_0.h5"
+DATA_PATH="/mnt/data/dataset_L0_exp_set_0.h5"
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-test.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-p2-test-1.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-test-t4.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-p2-test-3.yaml
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 
 # PRINT_LOG="./cluster/${CLUSTER}/${TRAIN_FILE_NAME}/output_logs/${RUN_ID}.log"
@@ -30,6 +30,8 @@ echo "config_simulator_path: ${CONFIG_SIMULATOR_PATH}"
 echo "config_dataset_path: ${CONFIG_DATASET_PATH}"
 echo "config_train_path: ${CONFIG_TRAIN_PATH}"
 
+code ${PRINT_LOG}
+
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 --seed 100 \
@@ -41,3 +43,10 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
 echo "finished simulation"
+
+# check behavior output
+python3 -u ./src/train/check_log/check_log.py \
+--log_dir ${LOG_DIR} \
+--exp_name ${RUN_ID} \
+--num_frames 10 \
+--duration 1000

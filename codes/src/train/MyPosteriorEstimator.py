@@ -1,4 +1,5 @@
 # TODO replacing the dataset kwargs 
+import datetime
 from pathlib import Path
 import os
 import time
@@ -136,6 +137,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     self._init_optimizer(training_kwargs)
                     
                     print(f'\n\n=== run {self.run}, chosen_dur {chosen_dur}, dset {self.dset} ===')
+                    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", do_print_mem)
                     
                     # with torch.profiler.profile(
@@ -154,15 +156,15 @@ class MyPosteriorEstimator(PosteriorEstimator):
                             
                         # train and validate for one epoch
                         epoch_start_time, train_log_prob_average = self._train_val_1epoch(train_loader, val_loader, train_prefetcher, val_prefetcher, x, theta, use_data_prefetcher, clip_max_norm, print_freq, do_print_mem, train_start_time)
-                        print('getting next dataset ...', end=' ')
                         start_time = time.time()
                         
                         # fetcher same dataset for next epoch
                         with torch.no_grad():
                             if self.use_data_prefetcher:
+                                print('getting next dataset ...', end=' ')
                                 train_prefetcher, val_prefetcher = self._loader2prefetcher(train_loader), self._loader2prefetcher(val_loader)
                                 print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", do_print_mem)
-                            print(f'done in {(time.time()-start_time)/60:.2f} min')
+                                print(f'done in {(time.time()-start_time)/60:.2f} min')
                         
                         # update epoch info and counter
                         with torch.no_grad():
@@ -244,7 +246,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._best_val_log_prob, self._best_val_log_prob_dset = float("-Inf"), float("-Inf")
         
         # prepare validation data
-        print('\npreparing [validation] data ...')
+        print('\npreparing [validation] data ...') 
         val_loader = self._get_val_loader(val_set_names, dataset_kwargs, dataloader_kwargs, seed, chosen_dur)
         val_prefetcher, x_val, theta_val = self._get_fetcher_n1batch_data(use_data_prefetcher, val_loader, len(val_loader))
         
