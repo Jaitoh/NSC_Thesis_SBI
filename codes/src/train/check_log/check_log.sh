@@ -1,24 +1,8 @@
 #!/bin/bash 
-### Comment lines start with ## or #+space 
-### Slurm option lines start with #SBATCH 
-### Here are the SBATCH parameters that you should always consider: 
 
-#SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
-#SBATCH --ntasks=1
-
-#SBATCH --mem 16G
-#SBATCH --cpus-per-task=18
-
-#SBATCH --job-name=sim_data_for_round_0
-#SBATCH --output=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.out
-#SBATCH --error=./cluster/uzh/sim_data_for_round_0/other_logs/a0_%a.err
-
-export CUDA_VISIBLE_DEVICES=1
 CLUSTER=snn
+RUN_ID=exp-p2-3dur-test-3
 TRAIN_FILE_NAME=train_L0
-# RUN_ID=exp-b2-2-contd0
-# RUN_ID=exp-d0-net3
-RUN_ID=exp-dur3-e3
 
 if [ "${CLUSTER}" == "uzh" ]; then
     LOG_DIR=/home/wehe/scratch/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
@@ -51,25 +35,13 @@ fi
 echo "log_dir: ${LOG_DIR}"
 
 # --run ${SLURM_ARRAY_TASK_ID} \
-python3 -u ./src/train/check_log.py \
+python3 -u ./src/train/check_log/check_log.py \
 --log_dir ${LOG_DIR} \
---num_rows 1 \
---plot_posterior \
---exact_epoch
+--num_frames 10
 
+# open files
+code ${LOG_DIR}/training_curve_.png
+code ${LOG_DIR}/posterior_shuffled.gif
+code ${LOG_DIR}/posterior.gif
 
 echo 'finished check log events'
-
-# sbatch ./cluster/dataset_gen.sh
-# squeue -u $USER
-# scancel 466952
-# sacct -j 466952
-
-# SBATCH --gres=gpu:T4:1
-# SBATCH --gres=gpu:V100:1
-# SBATCH --gres=gpu:A100:1
-# SBATCH --array=0-49
-
-# cd ~/tmp/NSC/codes/
-# conda activate sbi
-# ./src/train/do_train_snn.sh
