@@ -37,7 +37,9 @@ echo "log_dir: ${LOG_DIR}"
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/check_log/check_log.py \
 --log_dir ${LOG_DIR} \
---num_frames 10
+--exp_name ${RUN_ID} \
+--num_frames 10 \
+--duration 1000
 
 # open files
 code ${LOG_DIR}/training_curve_.png

@@ -217,7 +217,7 @@ def plot_posterior_samples(log_dir, best_epochs_epoch, num_rows, exact_epoch=Tru
         plt.close()
 
 def plot_one_img(chosen_plot_idx, plt_idx, plot_shuffled,
-                 log_dir, val_perf, train_perf, lr, best):
+                 log_dir, val_perf, train_perf, lr, best, exp_name):
     
     if plot_shuffled:
         train_figure_names_0 = [f'posterior_x_train_0_epoch_{idx}_shuffled.png' for idx in chosen_plot_idx]
@@ -271,7 +271,7 @@ def plot_one_img(chosen_plot_idx, plt_idx, plot_shuffled,
     epoch_idx = chosen_plot_idx[plt_idx]
     
     ax = plt.subplot(3,1,1) # plot the training curve
-    ax = plot_log_prob(ax, val_perf, train_perf, lr, best, plot_time=False)
+    ax = plot_log_prob(ax, val_perf, train_perf, lr, best, plot_time=True)
     ax.plot(chosen_plot_idx, train_perf['log_probs'][chosen_plot_idx], 'v', color='grey', alpha=0.2)
     ax.plot(epoch_idx, train_perf['log_probs'][epoch_idx], 'v', color='green')
     ax.text(epoch_idx, min(train_perf['log_probs']), f"{epoch_idx}", color='green', fontsize=8, ha='center', va='top')
@@ -279,6 +279,7 @@ def plot_one_img(chosen_plot_idx, plt_idx, plot_shuffled,
     ax.plot(chosen_plot_idx, val_perf['log_probs'][chosen_plot_idx], 'v', color='grey', alpha=0.2)
     ax.plot(epoch_idx, val_perf['log_probs'][epoch_idx], 'v', color='green')
     ax.text(epoch_idx, val_perf['log_probs'][epoch_idx]-0.2, f"{val_perf['log_probs'][epoch_idx]:.2f}", color='orange', fontsize=8, ha='center', va='top')
+    ax.set_title(exp_name)
     
     return fig
 
@@ -292,7 +293,7 @@ def get_plot_idx(figures_all):
     return plot_idx
 
 def animate_posterior(log_dir, num_frames, plot_shuffled, 
-                      val_perf, train_perf, lr, best):
+                      val_perf, train_perf, lr, best, duration=1000, exp_name=''):
     # extract figure information
     figures_all = os.listdir(log_dir/'posterior/figures')
     unique_val = np.unique([fig.split('x_val_')[1].split('_epoch')[0] for fig in figures_all if fig.startswith('posterior_x_val')])
@@ -312,7 +313,7 @@ def animate_posterior(log_dir, num_frames, plot_shuffled,
 
     for plt_idx in tqdm(range(len(chosen_plot_idx))):
         fig = plot_one_img(chosen_plot_idx, plt_idx, plot_shuffled,
-                        log_dir, val_perf, train_perf, lr, best)
+                        log_dir, val_perf, train_perf, lr, best, exp_name)
         fig.canvas.draw()       # draw the canvas, cache the renderer
         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
@@ -320,7 +321,7 @@ def animate_posterior(log_dir, num_frames, plot_shuffled,
         plt.close(fig)
 
     fig_name = 'posterior_shuffled.gif' if plot_shuffled else 'posterior.gif'
-    imageio.mimsave(log_dir/fig_name, images, duration=700, loop=0)
+    imageio.mimsave(log_dir/fig_name, images, duration=duration, loop=0)
     print('saved animation to ', log_dir/fig_name)
     print()
 
@@ -330,12 +331,17 @@ if __name__ == '__main__':
     log_dir_sample = '/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-p2-3dur-test-0'
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--log_dir', type=str, default=log_dir_sample)
+    argparser.add_argument('--exp_name', type=str, default='exp-p2-3dur-test-0')
     argparser.add_argument('--num_frames', type=int, default=5)
+    argparser.add_argument('--duration', type=int, default=1000)
+    
     
     args = argparser.parse_args()
 
-    log_dir = Path(args.log_dir)
-    num_frames = args.num_frames
+    log_dir     = Path(args.log_dir)
+    num_frames  = args.num_frames
+    duration    = args.duration
+    exp_name    = args.exp_name
     
     ea_post, ea_val, ea_train = get_events(log_dir)
     
@@ -348,9 +354,9 @@ if __name__ == '__main__':
     # animate posterior plots
     plot_shuffled = True
     animate_posterior(log_dir, num_frames, plot_shuffled, 
-                    val_perf, train_perf, lr, best)
+                    val_perf, train_perf, lr, best, duration, exp_name)
 
     # animate posterior plots
     plot_shuffled = False
     animate_posterior(log_dir, num_frames, plot_shuffled, 
-                    val_perf, train_perf, lr, best)
+                    val_perf, train_perf, lr, best, duration, exp_name)
