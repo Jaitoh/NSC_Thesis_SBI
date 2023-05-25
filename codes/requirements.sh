@@ -22,5 +22,7 @@ conda activate sbi
 conda clean --all
 pip cache purge
 
+# /home/wehe/data/conda/envs/sbi/bin/pip install opencv-python imageio
+
 # pip install tensorboard
 # pip install memory_profiler
