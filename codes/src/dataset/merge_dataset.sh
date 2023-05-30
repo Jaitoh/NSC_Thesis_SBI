@@ -19,7 +19,8 @@ CLUSTER=uzh
 
 if [ "${CLUSTER}" == "uzh" ]; then
     DATA_DIR=/home/wehe/scratch/data/dataset/
-    MERGED_DATA_path=/home/wehe/scratch/data/dataset-L0-exp-set-0-500sets.h5
+    # MERGED_DATA_path=/home/wehe/scratch/data/dataset-L0-exp-set-0-500sets.h5
+    MERGED_DATA_path=/home/wehe/scratch/data/dataset_L0_exp_set_0.h5
     # module load anaconda3
     # source activate sbi
 else
@@ -30,7 +31,7 @@ PRINT_DIR="./cluster/${CLUSTER}/dataset/process"
 PRINT_LOG="./cluster/${CLUSTER}/dataset/process/merge_dataset_exp_set_0.log"
 
 echo "print_log: ${PRINT_LOG}"
-
+code ${PRINT_LOG}
 # mkdir -p $DATA_DIR
 # mkdir -p $PRINT_DIR
 
