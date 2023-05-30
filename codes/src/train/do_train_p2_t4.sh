@@ -7,14 +7,14 @@ source activate sbi
 CLUSTER=t4
 PORT=9906
 
-RUN_ID=exp-p2-3dur-a5
+RUN_ID=exp-p2-3dur-a7
 TRAIN_FILE_NAME=train_L0
 
 DATA_PATH="/mnt/data/dataset_L0_exp_set_0.h5"
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-2.yaml
-CONFIG_TRAIN_PATH=./src/config/train/train-p2-2.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-test-t4.yaml
+CONFIG_TRAIN_PATH=./src/config/train/train-p2-3.yaml
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 

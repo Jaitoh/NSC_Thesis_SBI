@@ -1,8 +1,13 @@
 import sys
 sys.path.append('./src')
-from nerual_nets import *
+from neural_nets.embedding_nets import RNN_Multi_Head
 from torchsummary import summary
 
 # test network with summary
-net = RNN_Multi_Head(700, 16, 16)
-summary(net, (700, 16, 16))
+DM = 21
+S = 700
+L = 16
+net = RNN_Multi_Head(DM, S, L).cuda()
+summary(net, (DM, S, L))
+
+print(net)

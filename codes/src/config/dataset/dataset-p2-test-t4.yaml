@@ -8,12 +8,13 @@ dataset:
   # summary_type: 1  # 0: detailed information, 1: brief information
 
 # # ========== parameter settings for the probR ==========
-  num_max_sets                : 101 #101 in total
-  num_max_theta_each_set      : 5000 #5000 in total
+  num_max_sets                : 100 #100 in total
+  num_max_theta_each_set      : 500 #5000 in total
   
+  dataset_dim                 : 'high_dim'
   one_dataset                 : True
   # num_train_sets              : [96] #96 in total
-  num_train_sets              : [10] #101 in total
+  num_train_sets              : [10] #100 in total
   # num_chosen_theta_each_set   : 500 #5000 in total
   num_chosen_theta_each_set   : 50 #5000 in total
   # validation_fraction         : 0.1
@@ -30,7 +31,7 @@ dataset:
   batch_process_method        : 'collate_fn'
   batch_size                  : 64
   # batch_process_method        : 'in_dataset'
-  # batch_size                  : 1280 # 64*num_probR_sample
+  # batch_size                  : 1600
   num_probR_sample            : 20 #25
   shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
   

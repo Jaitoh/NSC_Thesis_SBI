@@ -41,7 +41,7 @@ from config.load_config import load_config
 # from dataset.simulate_for_sbi import simulate_for_sbi
 # from simulator.seqC_generator import seqC_generator
 from train.MyPosteriorEstimator import MySNPE_C
-from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small, Conv1D_RNN
+from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small, Conv1D_RNN, RNN_Multi_Head
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
@@ -161,8 +161,15 @@ class Solver:
             )
         
         # if net_type == 'conv1d_rnn':
-        if self.config['dataset']['dataset_dim'] == 'high_dim': #TODO check condition for using conv1d_rnn
-            embedding_net = Conv1D_RNN(
+        if self.config['dataset']['dataset_dim'] == 'high_dim' and net_type == 'conv1d_rnn': #TODO check condition for using conv1d_rnn
+            embedding_net = Conv1D_RNN, RNN_Multi_Head(
+                DM = self.d*self.m,
+                S  = self.s,
+                L  = self.l_x,
+            )
+
+        if self.config['dataset']['dataset_dim'] == 'high_dim' and net_type == 'rnn_multi_head':
+            embedding_net = RNN_Multi_Head(
                 DM = self.d*self.m,
                 S  = self.s,
                 L  = self.l_x,
