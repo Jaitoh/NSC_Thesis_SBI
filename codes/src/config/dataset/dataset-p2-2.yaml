@@ -11,7 +11,7 @@ dataset:
   num_max_sets                : 100 #100 in total
   num_max_theta_each_set      : 500 #5000 in total
   
-  dataset_dim                 : '2_dim'
+  dataset_dim                 : 'high_dim'
   one_dataset                 : True
   # num_train_sets              : [96] #96 in total
   num_train_sets              : [95] #100 in total

@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 CLUSTER=snn
-RUN_ID=exp-p2-3dur-test-$1
+RUN_ID=exp-p2-3dur-a3
 TRAIN_FILE_NAME=train_L0
 
 if [ "${CLUSTER}" == "uzh" ]; then

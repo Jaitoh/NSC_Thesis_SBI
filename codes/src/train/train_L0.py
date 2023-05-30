@@ -41,7 +41,7 @@ from config.load_config import load_config
 # from dataset.simulate_for_sbi import simulate_for_sbi
 # from simulator.seqC_generator import seqC_generator
 from train.MyPosteriorEstimator import MySNPE_C
-from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small
+from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small, Conv1D_RNN
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
@@ -56,7 +56,7 @@ from utils.setup import(
     check_path, get_args, # get_args_run_from_code
 )
 # from utils.resource import monitor_resources
-from train.MyData import collate_fn_vec
+from train.MyData import collate_fn_vec, collate_fn_vec_high_dim
 
 # Set the start method to 'spawn' before creating the ProcessPoolExecutor instance
 # mp.set_start_method('spawn', force=True)
@@ -90,7 +90,7 @@ class Solver:
         d = max(dur_lens)
         m = len(self.config['experiment_settings']['chosen_MS_list'])
         s = self.config['experiment_settings']['seqC_sample_per_MS']
-        self.dms = d*m*s
+        self.dms, self.d, self.m, self.s = d*m*s, d, m, s
         if self.config['dataset']['seqC_process'] == 'norm':
             self.l_x = 15+1
         if self.config['dataset']['seqC_process'] == 'summary':
@@ -159,6 +159,14 @@ class Solver:
                 hidden_size = config_density['embedding_net']['hidden_size'],
                 output_size = config_density['embedding_net']['output_size'],
             )
+        
+        # if net_type == 'conv1d_rnn':
+        if self.config['dataset']['dataset_dim'] == 'high_dim': #TODO check condition for using conv1d_rnn
+            embedding_net = Conv1D_RNN(
+                DM = self.d*self.m,
+                S  = self.s,
+                L  = self.l_x,
+            )
 
         neural_posterior = posterior_nn(
             model           = config_density['posterior_nn']['model'],
@@ -226,16 +234,27 @@ class Solver:
             
             use_data_prefetcher = self.config['dataset']['use_data_prefetcher']
             prefetch_factor     = self.config['dataset']['prefetch_factor']
-            my_dataloader_kwargs = {
-                'num_workers'       :  self.config['dataset']['num_workers'],
-                'worker_init_fn'    :  seed_worker,
-                'collate_fn'        :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
-                'prefetch_factor'   :  prefetch_factor if use_data_prefetcher else 2+prefetch_factor,
-            } 
-        
+            
+            if self.config['dataset']['dataset_dim'] == 'high_dim':
+                my_dataloader_kwargs = {
+                    'num_workers'       :  self.config['dataset']['num_workers'],
+                    'worker_init_fn'    :  seed_worker,
+                    'collate_fn'        :  lambda batch: collate_fn_vec_high_dim(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
+                    'prefetch_factor'   :  prefetch_factor if use_data_prefetcher else 2+prefetch_factor,
+                } 
+            
+            if self.config['dataset']['dataset_dim'] == '2_dim':
+                my_dataloader_kwargs = {
+                    'num_workers'       :  self.config['dataset']['num_workers'],
+                    'worker_init_fn'    :  seed_worker,
+                    'collate_fn'        :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
+                    'prefetch_factor'   :  prefetch_factor if use_data_prefetcher else 2+prefetch_factor,
+                } 
+
+            
         else: # batch_process_method == 'in_dataset'
             
-            my_dataloader_kwargs = {
+            my_dataloader_kwargs = {  #TODO check and modify in_dataset processing login, of high_dim
                 'num_workers'   :  self.config['dataset']['num_workers'],
                 # 'batch_size'    :  self.config['dataset']['batch_size'],
                 'worker_init_fn':  seed_worker,

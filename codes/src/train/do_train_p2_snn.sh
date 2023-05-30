@@ -5,14 +5,14 @@ cd ~/tmp/NSC/codes
 source activate sbi
 
 CLUSTER=snn
-PORT=6007
+PORT=6006
 
-RUN_ID=exp-p2-3dur-a2
+RUN_ID=exp-p2-3dur-a5
 TRAIN_FILE_NAME=train_L0
 
 DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
-CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-0.yaml
+CONFIG_DATASET_PATH=./src/config/dataset/dataset-p2-2.yaml
 CONFIG_TRAIN_PATH=./src/config/train/train-p2-2.yaml
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 

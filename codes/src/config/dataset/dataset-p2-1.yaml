@@ -8,22 +8,23 @@ dataset:
   # summary_type: 1  # 0: detailed information, 1: brief information
 
 # # ========== parameter settings for the probR ==========
-  num_max_sets                : 101 #101 in total
-  num_max_theta_each_set      : 5000 #5000 in total
+  num_max_sets                : 100 #101 in total
+  num_max_theta_each_set      : 500 #5000 in total
   
+  dataset_dim                 : '2_dim'
   one_dataset                 : True
   # num_train_sets              : [96] #96 in total
-  num_train_sets              : [96] #101 in total
+  num_train_sets              : [95] #101 in total
   # num_chosen_theta_each_set   : 500 #5000 in total
-  num_chosen_theta_each_set   : 5000 #5000 in total
+  num_chosen_theta_each_set   : 500 #5000 in total
   # validation_fraction         : 0.1
   validation_fraction         : [10, 20, 30, 40, 50]
   # validation_num_theta        : 500
-  validation_num_theta        : 5000
+  validation_num_theta        : 500
   
 
   chosen_dur_trained_in_sequence: 
-    - [3, 9, 15]
+    - [9]
   crop_dur                    : True
 
 

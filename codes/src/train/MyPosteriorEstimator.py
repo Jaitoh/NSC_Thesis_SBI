@@ -45,7 +45,7 @@ import signal
 import sys
 sys.path.append('./src')
 
-from train.MyData import Data_Prefetcher, My_Chosen_Sets, My_Processed_Dataset
+from train.MyData import Data_Prefetcher, My_Chosen_Sets, My_Processed_Dataset, My_HighD_Sets
 from utils.train import (
     plot_posterior_with_label,
     WarmupScheduler,
@@ -417,15 +417,27 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         if self.config['dataset']['batch_process_method'] == 'collate_fn':
             
-            self.val_dataset = My_Chosen_Sets(
-                data_path           = dataset_kwargs['data_path'],
-                config              = self.config, 
-                chosen_set_names    = val_set_names,
-                num_chosen_theta_each_set = self.config['dataset']['validation_num_theta'],
-                chosen_dur          = chosen_dur,
-                crop_dur            = self.config['dataset']['crop_dur'],
-            )
-        else:
+            if self.config['dataset']['dataset_dim'] == '2_dim':
+                self.val_dataset = My_Chosen_Sets(
+                    data_path           = dataset_kwargs['data_path'],
+                    config              = self.config, 
+                    chosen_set_names    = val_set_names,
+                    num_chosen_theta_each_set = self.config['dataset']['validation_num_theta'],
+                    chosen_dur          = chosen_dur,
+                    crop_dur            = self.config['dataset']['crop_dur'],
+                )
+            
+            if self.config['dataset']['dataset_dim'] == 'high_dim':
+                self.val_dataset = My_HighD_Sets(
+                    data_path           = dataset_kwargs['data_path'],
+                    config              = self.config, 
+                    chosen_set_names    = val_set_names,
+                    num_chosen_theta_each_set = self.config['dataset']['validation_num_theta'],
+                    chosen_dur          = chosen_dur,
+                    crop_dur            = self.config['dataset']['crop_dur'],
+                )
+        
+        else: #TODO high dim init process
             self.val_dataset = My_Processed_Dataset(
                 data_path           = dataset_kwargs['data_path'],
                 config              = self.config, 
@@ -481,15 +493,28 @@ class MyPosteriorEstimator(PosteriorEstimator):
         print(f'containing: \n{chosen_train_set_names}')
         
         if self.config['dataset']['batch_process_method'] == 'collate_fn':
-            self.train_dataset = My_Chosen_Sets( #TODO del self.train_dataset
-                data_path   = dataset_kwargs['data_path'],
-                config      = dataset_kwargs['config'],
-                chosen_set_names = chosen_train_set_names,
-                num_chosen_theta_each_set=self.config['dataset']['num_chosen_theta_each_set'],
-                chosen_dur  = chosen_dur,
-                crop_dur    = dataset_kwargs['crop_dur'],
-            )
-        else: 
+            
+            if self.config['dataset']['dataset_dim'] == '2_dim':
+                self.train_dataset = My_Chosen_Sets(
+                    data_path   = dataset_kwargs['data_path'],
+                    config      = dataset_kwargs['config'],
+                    chosen_set_names = chosen_train_set_names,
+                    num_chosen_theta_each_set=self.config['dataset']['num_chosen_theta_each_set'],
+                    chosen_dur  = chosen_dur,
+                    crop_dur    = dataset_kwargs['crop_dur'],
+                )
+            
+            if self.config['dataset']['dataset_dim'] == 'high_dim':
+                self.train_dataset = My_HighD_Sets(
+                    data_path   = dataset_kwargs['data_path'],
+                    config      = dataset_kwargs['config'],
+                    chosen_set_names = chosen_train_set_names,
+                    num_chosen_theta_each_set=self.config['dataset']['num_chosen_theta_each_set'],
+                    chosen_dur  = chosen_dur,
+                    crop_dur    = dataset_kwargs['crop_dur'],
+                )
+            
+        else: #TODO high dim init process
             self.train_dataset = My_Processed_Dataset(
                 data_path   = dataset_kwargs['data_path'],
                 config      = dataset_kwargs['config'],
