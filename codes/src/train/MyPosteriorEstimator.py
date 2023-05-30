@@ -694,34 +694,34 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self.posterior_val_set['x'].append(x_val[i, ...])
             self.posterior_val_set['x_shuffled'].append(x_val[i, ...][torch.randperm(x_val.shape[1])])
             self.posterior_val_set['theta'].append(theta_val[i, ...])
-        print(f'plotting ...', end=' ')
-        # collect of the dataset
-        for fig_idx in range(len(self.posterior_train_set['x'])):
+        # print(f'plotting ...', end=' ')
+        # # collect of the dataset
+        # for fig_idx in range(len(self.posterior_train_set['x'])):
             
-            figure = plt.figure()
-            plt.imshow(self.posterior_train_set['x'][fig_idx][:150, :].cpu())
-            plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
-            self._writer_fig.add_figure(f"data_run{self.run}/x_train_{fig_idx}", figure, self.dset)
-            plt.close(figure)
+        #     figure = plt.figure()
+        #     plt.imshow(self.posterior_train_set['x'][fig_idx][:150, :].cpu())
+        #     plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
+        #     self._writer_fig.add_figure(f"data_run{self.run}/x_train_{fig_idx}", figure, self.dset)
+        #     plt.close(figure)
             
-            figure = plt.figure()
-            plt.imshow(self.posterior_train_set['x_shuffled'][fig_idx][:150, :].cpu())
-            plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
-            self._writer_fig.add_figure(f"data_run{self.run}/x_train_{fig_idx}_shuffled", figure, self.dset)
-            plt.close(figure)
+        #     figure = plt.figure()
+        #     plt.imshow(self.posterior_train_set['x_shuffled'][fig_idx][:150, :].cpu())
+        #     plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
+        #     self._writer_fig.add_figure(f"data_run{self.run}/x_train_{fig_idx}_shuffled", figure, self.dset)
+        #     plt.close(figure)
         
         
-            figure = plt.figure()
-            plt.imshow(self.posterior_val_set['x'][fig_idx][:150, :].cpu())
-            plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
-            self._writer_fig.add_figure(f"data_run{self.run}/x_val_{fig_idx}", figure, self.dset)
-            plt.close(figure)
+        #     figure = plt.figure()
+        #     plt.imshow(self.posterior_val_set['x'][fig_idx][:150, :].cpu())
+        #     plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}.png')
+        #     self._writer_fig.add_figure(f"data_run{self.run}/x_val_{fig_idx}", figure, self.dset)
+        #     plt.close(figure)
             
-            figure = plt.figure()
-            plt.imshow(self.posterior_val_set['x_shuffled'][fig_idx][:150, :].cpu())
-            plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
-            self._writer_fig.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
-            plt.close(figure)
+        #     figure = plt.figure()
+        #     plt.imshow(self.posterior_val_set['x_shuffled'][fig_idx][:150, :].cpu())
+        #     plt.savefig(f'{self.log_dir}/posterior/x_train_{fig_idx}_run{self.run}_dset{self.dset}_shuffled.png')
+        #     self._writer_fig.add_figure(f"data_run{self.run}/x_val_{fig_idx}_shuffled", figure, self.dset)
+        #     plt.close(figure)
             
             # self._summary_writer.flush()
 

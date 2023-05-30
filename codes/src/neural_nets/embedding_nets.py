@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchsummary import summary
+# from torchsummary import summary
 
 def kaiming_weight_initialization(named_parameters):
     for name, param in named_parameters:
