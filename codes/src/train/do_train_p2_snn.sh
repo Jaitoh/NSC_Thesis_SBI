@@ -7,7 +7,7 @@ source activate sbi
 CLUSTER=snn
 PORT=6006
 
-RUN_ID=exp-p2-3dur-a5
+RUN_ID=exp-p2-3dur-a6
 TRAIN_FILE_NAME=train_L0
 
 DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"

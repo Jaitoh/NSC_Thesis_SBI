@@ -8,7 +8,7 @@ train:
       hidden_size: 64
       output_size: 20
     posterior_nn:
-      model: mdn
+      model: maf
       hidden_features: 64
       num_transforms: 2
     
