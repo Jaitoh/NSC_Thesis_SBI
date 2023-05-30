@@ -1,0 +1,49 @@
+train:
+  inference:
+    method: 'snpe'
+
+  density_estimator:
+    embedding_net: 
+      type: lstm
+      hidden_size: 64
+      output_size: 20
+    posterior_nn:
+      model: mdn
+      hidden_features: 64
+      num_transforms: 2
+    
+
+  training:
+    
+    learning_rate         : 5e-5
+    clip_max_norm         : 1e-5
+    weight_decay          : 1e-9
+    
+    improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
+    stop_after_epochs     : 250
+    stop_after_dsets      : 5
+
+    min_num_epochs        : 100
+    max_num_epochs        : 2147483647
+    min_num_dsets         : 10
+    max_num_dsets         : 2147483647
+
+    # scheduler             : 'ReduceLROnPlateau'
+    # scheduler_params      : {'patience': 3, 'factor': 0.5, 'min_lr': 0}
+    # scheduler             : 'CosineAnnealingWarmRestarts'
+    # scheduler_params      : {'T_0': 7, 'T_mult': 2}
+    scheduler             : 'None'
+    scheduler_params      : {}
+    
+    warmup_epochs         : 5
+    initial_lr            : 1e-8
+    
+    print_freq            : 100 # 2+1 records per epoch
+    num_atoms             : 10
+    # num_runs              : 10
+    # num_rounds            : 3
+    
+  posterior:
+    sampling_num  : 2000
+    val_set_size  : 2
+    step          : 2     # the epoch steps to check posterior during training
