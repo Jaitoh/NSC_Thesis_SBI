@@ -16,8 +16,9 @@
 # SLURM_ARRAY_TASK_ID=$1
 
 CLUSTER=uzh
-DATA_PATH=/home/wehe/scratch/data/dataset-L0-exp-set-0-500sets.h5
+# DATA_PATH=/home/wehe/scratch/data/dataset-L0-exp-set-0-500sets.h5
 # DATA_PATH=../data/dataset/dataset_L0_exp_set_0.h5
+DATA_PATH=/home/wehe/scratch/data/dataset_L0_exp_set_0.h5
 # module load anaconda3
 # source activate sbi
 
@@ -26,13 +27,15 @@ PRINT_LOG="./cluster/${CLUSTER}/dataset/process/process_dataset_x.log"
 
 echo "print_log: ${PRINT_LOG}"
 
-/data/wehe/conda/envs/sbi/bin/python3 -u ./src/dataset/process_dataset_x.py \
---data_path ${DATA_PATH} &> ${PRINT_LOG}
+code ${PRINT_LOG}
 
-echo 'finished dataset x seqC process'
+# /data/wehe/conda/envs/sbi/bin/python3 -u ./src/dataset/process_dataset_x.py \
+# --data_path ${DATA_PATH} &> ${PRINT_LOG}
+# echo 'finished dataset x seqC process'
+
 echo 'start uploading'
-cd "/home/wehe/data"
-./gdrive files upload "${DATA_PATH}"
+# cd "/home/wehe/data"
+/home/wehe/data/gdrive files upload "${DATA_PATH}"
 
 # sbatch ./cluster/dataset_gen.sh
 # squeue -u $USER

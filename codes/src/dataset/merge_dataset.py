@@ -33,7 +33,7 @@ merged_data_path = args.merged_data_path
 
 print(f'merged data_path {merged_data_path}')
 with h5py.File(merged_data_path, 'w') as merged_data_file:
-    for i in tqdm(sorted_indices):
+    for i in tqdm(sorted_indices[:100]):
         data_path, data_file_idx = data_paths[i], data_file_idxs[i]
         print(f'adding {data_path} to [set_{data_file_idx}]')
         data_file = h5py.File(data_path, 'r')

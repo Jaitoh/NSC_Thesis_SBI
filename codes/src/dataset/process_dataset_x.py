@@ -25,7 +25,7 @@ with h5py.File(data_path, 'r+') as f:
     set_list = list(f.keys())
     print("preprocessing the seqC ...")
     
-    for one_set in tqdm(set_list):
+    for one_set in tqdm(set_list[:101]):
         
         # probR = f[one_set].pop('seqC_normed')
         
@@ -75,11 +75,11 @@ with h5py.File(data_path, 'r+') as f:
         
         
         # processing probR
-        probR = f[one_set]['probR'][:] #(7, 3, 700, 5000, 1)
-        if len(probR.shape) >2 :
-            probR = probR.reshape((probR.shape[0]*probR.shape[1]*probR.shape[2], probR.shape[3])) # (14700, 5000)
-            f[one_set].pop('probR')
-            f[one_set].create_dataset('probR', data=probR)
+        # probR = f[one_set]['probR'][:] #(7, 3, 700, 5000, 1)
+        # if len(probR.shape) >2 :
+        #     # probR = probR.reshape((probR.shape[0]*probR.shape[1]*probR.shape[2], probR.shape[3])) # (14700, 5000)
+        #     f[one_set].pop('probR')
+        #     f[one_set].create_dataset('probR', data=probR)
 
 
 # check the merged datasets are the same
