@@ -1,37 +1,39 @@
-train:
-  inference:
-    method: 'snpe'
+# train:
+inference:
+  method: 'snpe'
 
-  density_estimator:
-    embedding_net: 
-      type: lstm
-      hidden_size: 64
-      output_size: 20
-    posterior_nn:
-      model: maf
-      hidden_features: 64
-      num_transforms: 2
-    
-
-  training:
-    num_rounds            : 3
-    num_runs              : 10
-
-    num_atoms             : 10
-    
-    training_batch_size   : 25
-    stop_after_epochs     : 25
-
-    validation_fraction   : 0.2
-    learning_rate         : 5e-4
-
-    max_num_epochs        : 2147483647
-    clip_max_norm         : 5.0
-    
-    # for dataloader:
-    # num_workers           : 4
+density_estimator:
+  embedding_net: 
+    type: lstm
+    hidden_size: 64
+    output_size: 20
+  posterior_nn:
+    model: maf
+    hidden_features: 64
+    num_transforms: 2
   
-  posterior:
-    step        : 5 # the epoch steps to check posterior during training
-    sampling_num: 10000
-    val_set_size: 1
+
+training:
+  num_rounds            : 3
+  num_runs              : 10
+
+  num_atoms             : 10
+  
+  training_batch_size   : 25
+  stop_after_epochs     : 25
+
+  validation_fraction   : 0.2
+  learning_rate         : 5e-4
+
+  max_num_epochs        : 2147483647
+  clip_max_norm         : 5.0
+  
+  # for dataloader:
+  # num_workers           : 4
+  
+  use_combined_loss     : True
+
+posterior:
+  step        : 5 # the epoch steps to check posterior during training
+  sampling_num: 10000
+  val_set_size: 1

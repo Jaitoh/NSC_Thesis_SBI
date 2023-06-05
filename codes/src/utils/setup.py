@@ -80,12 +80,12 @@ def remove_files_except_resource_log(path):
         for name in files:
             # if not (name.startswith('training_dataset') or name.startswith('x') or name.startswith('theta') or name.startswith('resource_usage')):
             # if not name.startswith('resource_usage') and not name.endswith('log'):
-            if not name.endswith('log'):
+            if not name.endswith('log') and not name.endswith('yaml'):
                 file_path = os.path.join(root, name)
                 os.remove(file_path)
                 
                 
-def check_path(log_dir, data_path, args):
+def check_path(log_dir, data_path):
     """
     check the path of log_dir and data_dir
     """
@@ -94,34 +94,33 @@ def check_path(log_dir, data_path, args):
     print(f'data dir: {str(data_path)}')
 
     model_dir = log_dir / 'model'
-    training_dataset_dir = log_dir / 'training_dataset'
     posterior_dir = log_dir / 'posterior'
     posterior_figures_dir = log_dir / 'posterior' / 'figures'
-    # check log path: if not exists, create; if exists, remove or a fatal error
+    event_fig_dir = log_dir / 'event_fig'
+    event_hist_dir = log_dir / 'event_hist'
+    
     if not log_dir.exists():
         os.makedirs(str(log_dir))
-        os.makedirs(f'{str(log_dir)}/model/')
-        # os.makedirs(f'{str(log_dir)}/training_dataset/')
-        os.makedirs(f'{str(log_dir)}/posterior/')
-        os.makedirs(f'{str(log_dir)}/posterior/figures/')
-        os.makedirs(f'{str(log_dir)}/event_hist/')
-        os.makedirs(f'{str(log_dir)}/event_fig/')
+        os.makedirs(str(model_dir))
+        os.makedirs(str(posterior_dir))
+        os.makedirs(str(posterior_figures_dir))
+        os.makedirs(str(event_fig_dir))
+        os.makedirs(str(event_hist_dir))
 
-    elif log_dir.exists() and not args.eval:
-        if args.overwrite:
-            remove_files_except_resource_log(log_dir)
-            if not model_dir.exists():
-                os.makedirs(str(model_dir))
-            if not training_dataset_dir.exists():
-                os.makedirs(str(training_dataset_dir))
-            if not posterior_dir.exists():
-                os.makedirs(str(posterior_dir))
-            if not posterior_figures_dir.exists():
-                os.makedirs(str(posterior_figures_dir))
+    elif log_dir.exists() :
+        
+        remove_files_except_resource_log(log_dir)
+        if not model_dir.exists():
+            os.makedirs(str(model_dir))
+        if not posterior_dir.exists():
+            os.makedirs(str(posterior_dir))
+        if not posterior_figures_dir.exists():
+            os.makedirs(str(posterior_figures_dir))
+        if not event_fig_dir.exists():
+            os.makedirs(str(event_fig_dir))
+        if not event_hist_dir.exists():
+            os.makedirs(str(event_hist_dir))
             
-        else:
-            assert False, f'Run dir {str(log_dir)} already exists.'
-
     # check data path, where to read the data from, exists
     if not Path(data_path).exists():
         assert False, f'Data dir {str(data_path)} does not exist.'

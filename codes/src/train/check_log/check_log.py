@@ -310,7 +310,7 @@ def plot_one_img(chosen_plot_idx, plt_idx, plot_shuffled,
         ax.set_title(title)
         load_img(img_path, ax, title)
         
-    ax = plt.subplot(3,1,1) 
+    ax = plt.subplot(3,1,1)
     epoch_idx = chosen_plot_idx[plt_idx]
     # plot the training curve
     ax = plot_log_prob(ax, val_perf, train_perf, lr, best, plot_time=True)
@@ -350,6 +350,7 @@ def animate_posterior(log_dir, num_frames, plot_shuffled,
     num_val, num_train = len(unique_val), len(unique_train)
     print(f'# validation posterior tests: {num_val}\n# training posterior tests: {num_train}')
 
+    print('best', best)
     best_epoch = int(best['epoch_num'])
     plot_idx = get_plot_idx(figures_all)
     print(f'best epoch: {best_epoch}\nget {len(plot_idx)} figures: {plot_idx}')

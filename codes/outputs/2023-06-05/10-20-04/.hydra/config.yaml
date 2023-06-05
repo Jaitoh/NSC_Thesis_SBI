@@ -1,0 +1,103 @@
+simulator:
+  experiment_settings:
+    chosen_dur_list:
+    - 3
+    - 5
+    - 7
+    - 9
+    - 11
+    - 13
+    - 15
+    chosen_MS_list:
+    - 0.2
+    - 0.4
+    - 0.8
+    seqC_sample_per_MS: 700
+  x_o:
+    trial_data_path: ../data/trials.mat
+    subject_id: 2
+  simulator:
+    model_name: B-G-L0S-O-N-
+  prior:
+    num_prior_sample: 5000
+    prior_min:
+    - -2.5
+    - 0
+    - 0
+    - -11
+    prior_max:
+    - 2.5
+    - 77
+    - 18
+    - 10
+    prior_labels:
+    - bias
+    - sigma2a
+    - sigma2s
+    - L0
+dataset:
+  dataset:
+    seqC_process: norm
+    nan2num: -1
+    summary_type: 0
+    num_max_sets: 100
+    num_max_theta_each_set: 500
+    dataset_dim: high_dim
+    one_dataset: true
+    num_train_sets:
+    - 10
+    num_chosen_theta_each_set: 50
+    validation_fraction:
+    - 10
+    - 20
+    - 30
+    - 40
+    - 50
+    validation_num_theta: 50
+    chosen_dur_trained_in_sequence:
+    - - 3
+      - 9
+      - 15
+    crop_dur: true
+    batch_process_method: collate_fn
+    batch_size: 64
+    num_probR_sample: 20
+    shuffling_method: 0
+    num_workers: 8
+    pin_memory: true
+    use_data_prefetcher: true
+    prefetch_factor: 1
+train:
+  train:
+    inference:
+      method: snpe
+    density_estimator:
+      embedding_net:
+        type: lstm
+        hidden_size: 64
+        output_size: 20
+      posterior_nn:
+        model: maf
+        hidden_features: 64
+        num_transforms: 2
+    training:
+      learning_rate: 0.0005
+      clip_max_norm: 5
+      weight_decay: 0
+      improvement_threshold: 0.0005
+      stop_after_epochs: 50
+      stop_after_dsets: 5
+      min_num_epochs: 50
+      max_num_epochs: 2147483647
+      min_num_dsets: 10
+      max_num_dsets: 2147483647
+      scheduler: None
+      scheduler_params: {}
+      warmup_epochs: 5
+      initial_lr: 1.0e-08
+      print_freq: 100
+      num_atoms: 10
+    posterior:
+      sampling_num: 2000
+      val_set_size: 2
+      step: 2

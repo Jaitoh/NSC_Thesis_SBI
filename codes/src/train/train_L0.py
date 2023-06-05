@@ -6,7 +6,8 @@ import itertools
 import datetime
 import pickle
 import yaml
-# import dill
+import hydra
+from omegaconf import DictConfig, OmegaConf
 import gc
 # import h5py
 # import yaml
@@ -36,7 +37,7 @@ import sys
 sys.path.append('./src')
 # from dataset.dataset_generator import simulate_and_store, prepare_training_data_from_sampled_Rchoices
 # from dataset.seqC_generator import seqC_generator
-from config.load_config import load_config
+# from config.load_config import load_config
 # from dataset.dataset import training_dataset
 # from dataset.simulate_for_sbi import simulate_for_sbi
 # from simulator.seqC_generator import seqC_generator
@@ -66,51 +67,47 @@ class Solver:
         Solver for training sbi
     """
 
-    def __init__(self, args, config):
+    def __init__(self, config):
 
-        self.args = args
         self.config = config
-        # self.test = self.args.run_test
+        # self.test = self.config.run_test
 
-        self.gpu = self.args.gpu and torch.cuda.is_available()
-        # self.device = torch.device('cuda') if self.gpu else torch.device('cpu')
+        self.gpu = self.config.gpu and torch.cuda.is_available()
         self.device = 'cuda' if self.gpu else 'cpu'
         print(f'using device: {self.device}')
         print(f"starting time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        
+
         print_cuda_info(self.device)
 
-        self.log_dir = Path(self.args.log_dir)
-        self.data_path = Path(self.args.data_path)
-        # check_path(self.log_dir, self.data_path, args)
-        
+        self.log_dir = Path(self.config.log_dir)
+        self.data_path = Path(self.config.data_path)
+
         # get dataset size
         # d = len(self.config['experiment_settings']['chosen_dur_list'])
-        dur_lens = [len(dur) for dur in self.config['dataset']['chosen_dur_trained_in_sequence']]
+        dur_lens = [len(dur) for dur in self.config.dataset.chosen_dur_trained_in_sequence]
         d = max(dur_lens)
-        m = len(self.config['experiment_settings']['chosen_MS_list'])
-        s = self.config['experiment_settings']['seqC_sample_per_MS']
+        m = len(self.config.experiment_settings.chosen_MS_list)
+        s = self.config.experiment_settings.seqC_sample_per_MS
         self.dms, self.d, self.m, self.s = d*m*s, d, m, s
-        if self.config['dataset']['seqC_process'] == 'norm':
+        if self.config.dataset.seqC_process == 'norm':
             self.l_x = 15+1
-        if self.config['dataset']['seqC_process'] == 'summary':
-            if self.config['dataset']['summary_type'] == 0:
+        elif self.config.dataset.seqC_process == 'summary':
+            if self.config.dataset.summary_type == 0:
                 self.l_x = 11+1
-            if self.config['dataset']['summary_type'] == 1:
+            elif self.config.dataset.summary_type == 1:
                 self.l_x = 8+1
-        
-        self.l_theta = len(self.config['prior']['prior_min'])
-        
-        
+
+        self.l_theta = len(self.config.prior.prior_min)
+
         # save the config file using yaml
         yaml_path = Path(self.log_dir) / 'config.yaml'
-        with open(yaml_path, 'w') as f:
-            yaml.dump(config, f)
+        with open(yaml_path, "w") as f:
+            f.write(OmegaConf.to_yaml(config))
         print(f'config file saved to: {yaml_path}')
 
         # set seed
-        seed = args.seed
-        setup_seed(seed)
+        self.seed = config.seed
+        setup_seed(self.seed)
         # self.g = torch.Generator()
         # self.g.manual_seed(seed)
 
@@ -161,14 +158,14 @@ class Solver:
             )
         
         # if net_type == 'conv1d_rnn':
-        if self.config['dataset']['dataset_dim'] == 'high_dim' and net_type == 'conv1d_rnn': #TODO check condition for using conv1d_rnn
+        if self.config.dataset.dataset_dim == 'high_dim' and net_type == 'conv1d_rnn': #TODO check condition for using conv1d_rnn
             embedding_net = Conv1D_RNN, RNN_Multi_Head(
                 DM = self.d*self.m,
                 S  = self.s,
                 L  = self.l_x,
             )
 
-        if self.config['dataset']['dataset_dim'] == 'high_dim' and net_type == 'rnn_multi_head':
+        if self.config.dataset.dataset_dim == 'high_dim' and net_type == 'rnn_multi_head':
             embedding_net = RNN_Multi_Head(
                 DM = self.d*self.m,
                 S  = self.s,
@@ -226,48 +223,41 @@ class Solver:
 
     def get_my_data_kwargs(self):
         
-        my_dataset_kwargs = {
-            'data_path'                      : self.args.data_path,
-            'config'                         : self.config,
-            'chosen_dur_trained_in_sequence' : self.config['dataset']['chosen_dur_trained_in_sequence'],
-            'validation_fraction'            : self.config['dataset']['validation_fraction'],
-            'use_data_prefetcher'            : self.config['dataset']['use_data_prefetcher'],
-            'num_train_sets'                 : self.config['dataset']['num_train_sets'],
-            'crop_dur'                       : self.config['dataset']['crop_dur'],
-            'num_max_sets'                   : self.config['dataset']['num_max_sets'],
-        }
-        
-        if self.config['dataset']['batch_process_method'] == 'collate_fn':
-            
-            use_data_prefetcher = self.config['dataset']['use_data_prefetcher']
-            prefetch_factor     = self.config['dataset']['prefetch_factor']
-            
-            if self.config['dataset']['dataset_dim'] == 'high_dim':
-                my_dataloader_kwargs = {
-                    'num_workers'       :  self.config['dataset']['num_workers'],
-                    'worker_init_fn'    :  seed_worker,
-                    'collate_fn'        :  lambda batch: collate_fn_vec_high_dim(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
-                    'prefetch_factor'   :  prefetch_factor if use_data_prefetcher else 2+prefetch_factor,
-                } 
-            
-            if self.config['dataset']['dataset_dim'] == '2_dim':
-                my_dataloader_kwargs = {
-                    'num_workers'       :  self.config['dataset']['num_workers'],
-                    'worker_init_fn'    :  seed_worker,
-                    'collate_fn'        :  lambda batch: collate_fn_vec(batch=batch, config=self.config, shuffling_method=self.config['dataset']['shuffling_method']),
-                    'prefetch_factor'   :  prefetch_factor if use_data_prefetcher else 2+prefetch_factor,
-                } 
+        # my_dataset_kwargs = {
+        #     'data_path'                      : self.config.data_path,
+        #     'config'                         : self.config,
+        #     'chosen_dur_trained_in_sequence' : self.config.dataset.chosen_dur_trained_in_sequence
+        #     'validation_fraction'            : self.config.dataset.validation_fraction
+        #     'use_data_prefetcher'            : self.config.dataset.use_data_prefetcher
+        #     'num_train_sets'                 : self.config.dataset.num_train_sets
+        #     'crop_dur'                       : self.config.dataset.crop_dur
+        #     'num_max_sets'                   : self.config.dataset.num_max_sets
+        # }
 
-            
-        else: # batch_process_method == 'in_dataset'
-            
-            my_dataloader_kwargs = {  #TODO check and modify in_dataset processing login, of high_dim
-                'num_workers'   :  self.config['dataset']['num_workers'],
-                # 'batch_size'    :  self.config['dataset']['batch_size'],
-                'worker_init_fn':  seed_worker,
-            } 
-            
-        return my_dataloader_kwargs, my_dataset_kwargs
+        config_dataset = self.config.dataset
+        if config_dataset.batch_process_method != 'collate_fn':
+            return {  # TODO check and modify in_dataset processing login, of high_dim
+                'num_workers': config_dataset.num_workers,
+                'worker_init_fn': seed_worker,
+                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
+                # 'batch_size'    :  self.config.dataset.batch_size
+            }
+
+        use_data_prefetcher = config_dataset.use_data_prefetcher
+        prefetch_factor     = config_dataset.prefetch_factor
+
+        collate_fn = collate_fn_vec_high_dim if config_dataset.dataset_dim == 'high_dim' else collate_fn_vec
+        
+        return {
+            'num_workers': config_dataset.num_workers,
+            'worker_init_fn': seed_worker,
+            'collate_fn': lambda batch: collate_fn(
+                batch=batch,
+                config=self.config,
+                shuffling_method=config_dataset.shuffling_method,
+            ),
+            'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
+        }
     
     
     def sbi_train(self, debug=False):
@@ -283,22 +273,25 @@ class Solver:
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # observed data from trial experiment
+        config_x_o = self.config.x_o
+        config_exp = self.config.experiment_settings
+        config_dataset = self.config.dataset
         x_o = get_xo(
-            subject_id          = self.config['x_o']['subject_id'],
-            chosen_dur_list     = self.config['experiment_settings']['chosen_dur_list'],
-            chosen_MS_list      = self.config['experiment_settings']['chosen_MS_list'],
-            seqC_sample_per_MS  = self.config['experiment_settings']['seqC_sample_per_MS'],
-            trial_data_path     = self.config['x_o']['trial_data_path'],
+            subject_id          = config_x_o.subject_id,
+            chosen_dur_list     = config_exp.chosen_dur_list,
+            chosen_MS_list      = config_exp.chosen_MS_list,
+            seqC_sample_per_MS  = config_exp.seqC_sample_per_MS,
+            trial_data_path     = config_x_o.trial_data_path,
         
-            seqC_process_method = self.config['dataset']['seqC_process'],
-            nan2num             = self.config['dataset']['nan2num'],
-            summary_type        = self.config['dataset']['summary_type'],
+            seqC_process_method = config_dataset.seqC_process,
+            nan2num             = config_dataset.nan2num,
+            summary_type        = config_dataset.summary_type,
         )
         self.x_o = torch.tensor(x_o, dtype=torch.float32)
 
         # prior
-        self.prior_min = self.config['prior']['prior_min']
-        self.prior_max = self.config['prior']['prior_max']
+        self.prior_min = self.config.prior.prior_min
+        self.prior_max = self.config.prior.prior_max
 
         prior = utils.torchutils.BoxUniform( # type: ignore
             low     = np.array(self.prior_min, dtype=np.float32),
@@ -326,10 +319,10 @@ class Solver:
         self.density_estimator = []
         self.posterior = []
         proposal = prior
-        training_config = self.config['train']['training']
+        training_config = self.config.train.training
 
         # dataloader kwargs
-        my_dataloader_kwargs, my_dataset_kwargs = self.get_my_data_kwargs()
+        my_dataloader_kwargs = self.get_my_data_kwargs()
             
         self.inference.append_simulations(
                 theta         = torch.empty(1),
@@ -340,43 +333,13 @@ class Solver:
         
         # start training
         print(f"\n======\nstart of training\n======")
-
-        my_training_kwargs = {
-            'learning_rate'        : eval(training_config['learning_rate']),
-            
-            'improvement_threshold': training_config['improvement_threshold'],
-            'stop_after_epochs'    : training_config['stop_after_epochs'],
-            'stop_after_dsets'     : training_config['stop_after_dsets'],
-            
-            'min_num_epochs'       : training_config['min_num_epochs'],
-            'max_num_epochs'       : training_config['max_num_epochs'],
-            'min_num_dsets'        : training_config['min_num_dsets'],
-            'max_num_dsets'        : training_config['max_num_dsets'],
-            
-            'print_freq'           : training_config['print_freq'],
-            'chosen_dur_trained_in_sequence': self.config['dataset']['chosen_dur_trained_in_sequence'],
-            'clip_max_norm'        : eval(training_config['clip_max_norm']) if isinstance(training_config['clip_max_norm'], str) else training_config['clip_max_norm'],
-            
-            'num_atoms'            : training_config['num_atoms'],
-            'use_combined_loss'    : True,
-            'scheduler'            : training_config['scheduler'],
-            'scheduler_params'     : training_config['scheduler_params'],
-            
-        }
         
         # run training with current run updated dataset
         self.inference, density_estimator = self.inference.train( # type: ignore
-            log_dir                 = self.log_dir,
             config                  = self.config,
-            
-            seed                    = self.args.seed,
             prior_limits            = self._get_limits(),
-            
-            dataset_kwargs          = my_dataset_kwargs,
             dataloader_kwargs       = my_dataloader_kwargs,
-            training_kwargs         = my_training_kwargs,
-            
-            continue_from_checkpoint= self.args.continue_from_checkpoint,
+            continue_from_checkpoint= self.config.continue_from_checkpoint,
             debug                   = debug,
         )  # density estimator
 
@@ -385,14 +348,10 @@ class Solver:
         
         print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
 
-    
-def main():  # sourcery skip: extract-method
-    args = get_args()
-    print(args.log_dir)
-    
-    log_dir = Path(args.log_dir)
-    data_path = Path(args.data_path)
-    check_path(log_dir, data_path, args)
+@hydra.main(config_path="../config", config_name="config", version_base=None)
+def main(config : DictConfig):
+    # args = get_args()
+    # print(args.log_dir)
     
     # monitor resources usage
     PID = os.getpid()
@@ -402,26 +361,26 @@ def main():  # sourcery skip: extract-method
     # monitor_process.start()
     
     try:
-            
-        config = load_config(
-            config_simulator_path=args.config_simulator_path,
-            config_dataset_path=args.config_dataset_path,
-            config_train_path=args.config_train_path,
-        )
-
-        print(f'\n--- args ---')
-        for arg, value in vars(args).items():
-            print(f'{arg}: {value}')
-
         print('\n--- config keys ---')
-        print(config.keys())
+        print(OmegaConf.to_yaml(config))
+        # config = load_config(
+        #     config_simulator_path=args.config_simulator_path,
+        #     config_dataset_path=args.config_dataset_path,
+        #     config_train_path=args.config_train_path,
+        # )
+        log_dir = Path(config.log_dir)
+        data_path = Path(config.data_path)
+        check_path(log_dir, data_path)
+        
+        solver = Solver(config)
+        solver.sbi_train(debug=config.debug)
 
-        solver = Solver(args, config)
-        solver.sbi_train(debug=args.debug)
-    
+        print(f"finishing time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
     # except Exception as e:
     #         print(f"An error occurred: {e}")
     finally:
+        
         
         del solver
         gc.collect()

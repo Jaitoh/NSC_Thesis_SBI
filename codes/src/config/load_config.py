@@ -1,7 +1,10 @@
 import yaml
 from pathlib import Path
 import warnings
-
+import hydra
+from omegaconf import DictConfig
+import os
+from hydra.utils import get_original_cwd, to_absolute_path
 
 def parse_dataset_path(config_dataset_path):
     """
@@ -95,27 +98,29 @@ def load_config(config_simulator_path=None,
     config = {**config_simulator, **config_data, **config_train}
 
     return config
-
+    
 if __name__ == '__main__':
 
-    config = load_config(
-        config_simulator_path=Path('./src/config') / 'test' / 'test_simulator.yaml',
-        config_dataset_path=Path('./src/config') / 'test' /'test_dataset.yaml',
-        config_train_path=Path('./src/config') / 'test' / 'test_train.yaml',
-    )
-    print(config.keys())
-    print(config)
+    # config = load_config(
+    #     config_simulator_path=Path('./src/config') / 'test' / 'test_simulator.yaml',
+    #     config_dataset_path=Path('./src/config') / 'test' /'test_dataset.yaml',
+    #     config_train_path=Path('./src/config') / 'test' / 'test_train.yaml',
+    # )
+    # print(config.keys())
+    # print(config)
 
-    config = load_config(
-        config_simulator_path=Path('./src/config') / 'simulator' / 'simulator_Ca_Pa_Ma.yaml',
-        config_dataset_path=Path('./src/config') / 'dataset' / 'dataset_Sa0_Ra0_suba0.yaml',
-        config_train_path=Path('./src/config') / 'train' / 'train_Ta0.yaml',
-    )
+    # config = load_config(
+    #     config_simulator_path=Path('./src/config') / 'simulator' / 'exp-set-0.yaml',
+    #     config_dataset_path=Path('./src/config') / 'dataset' / 'dataset-p2-0.yaml',
+    #     config_train_path=Path('./src/config') / 'train' / 'train-p2-test-0.yaml',
+    # )
 
-    print(config.keys())
-    print(config)
+    # print(config.keys())
+    # print(config)
 
     # load and merge yaml files
     config = load_config()
     print(config.keys())
     print(config)
+    
+    

@@ -16,6 +16,7 @@ pip install tqdm matplotlib tensorboard
 pip install gpustat pyyaml memory_profiler
 pip install imageio
 pip install torch_tb_profiler
+pip install hydra-core --upgrade
 conda activate sbi
 
 ####

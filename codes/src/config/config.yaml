@@ -1,0 +1,15 @@
+defaults:
+  - _self_
+  - experiment_settings: exp-set-0
+  - prior: prior-0
+  - x_o: x_o-0
+  - simulator: model-0
+  - dataset: dataset-p2-test-t4
+  - train: train-p2-test-0
+
+log_dir: ./
+data_path: /mnt/data/dataset/dataset_L0_exp_set_0.h5
+seed: 100
+debug: False
+gpu: True
+continue_from_checkpoint: ""

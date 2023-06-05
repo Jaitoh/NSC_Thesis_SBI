@@ -22,16 +22,7 @@ def generate_permutations(N, K):
         torch.Tensor: A tensor of shape (N, K) containing random permutations.
 
     """
-    # time_ = time.time()
-    # print(f'generate permutations of size {N, K}...', end = ' ')
-    
-    # Generate random values between 0 and 1
-    # Sort the random values along the last dimension to obtain permutations
-    permutations = torch.rand(N, K).argsort(dim=-1)
-    # faster than:  permutations = torch.stack([torch.randperm(K) for _ in range(N)], dim=0)
-    # print(f'in {(time.time() - time_)/60:.2f} min, MEM size {permutations.element_size() * permutations.nelement() / 1024**3:.2f} GB\n')
-    
-    return permutations
+    return torch.rand(N, K).argsort(dim=-1)
 
 def unravel_index(index, shape):
     out = []
@@ -64,9 +55,12 @@ def get_L_seqC(seqC_process, summary_type):
 
 
 class My_HighD_Sets(Dataset):
-    def __init__(self, data_path, config,
-                 chosen_set_names, num_chosen_theta_each_set,
-                 chosen_dur=[3,9,15], crop_dur=True, ):
+    def __init__(self, 
+                 config,
+                 chosen_set_names, 
+                 num_chosen_theta_each_set,
+                 chosen_dur=[3,9,15], 
+                 ):
         super().__init__()
         
         """Loading the high-dimensional sets into memory
@@ -88,6 +82,11 @@ class My_HighD_Sets(Dataset):
         theta           of shape (4)                  - (4)
         probR           of shape (DM, S, 1)           - (21, 700, 1)
         """
+        # set seed
+        np.random.seed(config.seed)
+        torch.manual_seed(config.seed)
+        torch.cuda.manual_seed(config.seed)
+        
         dur_list = [3,5,7,9,11,13,15]
         print(f'Loading {len(chosen_set_names)} dataset into memory...', end=' ')
         
@@ -95,13 +94,16 @@ class My_HighD_Sets(Dataset):
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
         self.chosen_set_names = chosen_set_names
         
+        data_path   = config.data_path
+        crop_dur    = config.dataset.crop_dur
+        
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
-        max_theta_in_a_set = config['dataset']['num_max_theta_each_set']
+        max_theta_in_a_set = config.dataset.num_max_theta_each_set
         self.total_samples = num_chosen_theta_each_set*len(chosen_set_names)
         
         # load configurations
-        dataset_config = config['dataset']
-        seqC_process, nan2num, summary_type = dataset_config['seqC_process'], dataset_config['nan2num'], dataset_config['summary_type']
+        dataset_config = config.dataset
+        seqC_process, nan2num, summary_type = dataset_config.seqC_process, dataset_config.nan2num, dataset_config.summary_type
         L_seqC = get_L_seqC(seqC_process, summary_type)
         D, M, S, DMS = (*f[chosen_set_names[0]]['seqC'].shape[:-1], np.prod(f[chosen_set_names[0]]['seqC'].shape[:-1]))
         
@@ -116,7 +118,7 @@ class My_HighD_Sets(Dataset):
         counter = 0
         for set_idx, set_name in enumerate(chosen_set_names):
             
-            if counter % 10 == 0:
+            if counter % 2 == 0:
                 print(counter, end=' ')
                 
             seqC_data = self._get_seqC_data(crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name) # (D, M, S, L)
@@ -156,14 +158,12 @@ class My_HighD_Sets(Dataset):
     def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name):
         
         seqC = f[set_name]['seqC'][chosen_dur_idx, :, :, :] if crop_dur else f[set_name]['seqC'][:] # (D, M, S, L)
-        seqC_data = process_x_seqC_part(
-                seqC                = seqC, 
-                seqC_process        = seqC_process, # 'norm' or 'summary'
-                nan2num             = -1,
-                summary_type        = summary_type, # 0 or 1
-            )
-        
-        return seqC_data # (D, M, S, L)
+        return process_x_seqC_part(
+            seqC=seqC,
+            seqC_process=seqC_process,  # 'norm' or 'summary'
+            nan2num=-1,
+            summary_type=summary_type,  # 0 or 1
+        )
             
     def __len__(self):
         return self.total_samples
@@ -189,9 +189,12 @@ class My_HighD_Sets(Dataset):
 
 
 class My_Chosen_Sets(Dataset):
-    def __init__(self, data_path, config, 
-                 chosen_set_names, num_chosen_theta_each_set, 
-                 chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
+    def __init__(self,
+                 config, 
+                 chosen_set_names, 
+                 num_chosen_theta_each_set, 
+                 chosen_dur=[3,9,15]
+                 ):
         """Loading num_chosen_theta_each_set of 2D sets
         from the chosen sets into memory
         from data_path
@@ -200,12 +203,18 @@ class My_Chosen_Sets(Dataset):
         seqC_summary_0 of shape (num_sets, num_theta_each_set, D, M, S) #TODO
         seqC_summary_1 of shape (num_sets, num_theta_each_set, D, M, S) #TODO
         """
+        np.random.seed(config.seed)
+        torch.manual_seed(config.seed)
+        torch.cuda.manual_seed(config.seed)
+        
         super().__init__()
         print(f'Loading {len(chosen_set_names)} dataset into memory...', end=' ')
         start_loading_time = time.time()
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
         self.chosen_set_names = chosen_set_names
         
+        data_path   = config.data_path
+        crop_dur    = config.dataset.crop_dur
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
         # total_theta_in_a_set = f[chosen_set_names[0]]['theta'].shape[0]
         total_theta_in_a_set = config['dataset']['num_max_theta_each_set']
@@ -322,7 +331,12 @@ class My_Chosen_Sets(Dataset):
         # return torch.from_numpy(seqC), torch.from_numpy(theta), torch.from_numpy(probR)
         
 class My_Processed_Dataset(My_Chosen_Sets):
-    def __init__(self, data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur=[3,5,7,9,11,13,15], crop_dur=False):
+    def __init__(self, 
+                 config, 
+                 chosen_set_names, 
+                 num_chosen_theta_each_set, 
+                 chosen_dur=[3,9,15], 
+                 ):
         """My_Dataset:  load data into memory and finish the preprocessing before training
 
         Returns:
@@ -337,8 +351,7 @@ class My_Processed_Dataset(My_Chosen_Sets):
             probR_all:         (num_chosen_sets, DMS, num_chosen_theta_each_set)
             
         """
-        
-        super().__init__(data_path, config, chosen_set_names, num_chosen_theta_each_set, chosen_dur, crop_dur)
+        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur)
         # self.seqC_all = seqC_all  # shape (num_chosen_sets, D_MS, 15 or L_x)
         # self.theta_all = theta_all # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
         # self.probR_all = probR_all # shape (num_chosen_sets, D_MS, num_chosen_theta_each_set)
@@ -388,6 +401,9 @@ class My_Processed_Dataset(My_Chosen_Sets):
 class Data_Prefetcher():
     
     def __init__(self, loader, prefetch_factor=3):
+        # torch.manual_seed(config.seed)
+        # torch.cuda.manual_seed(config.seed)
+        
         self.loader = iter(loader)
         self.stream = torch.cuda.Stream()
         self.prefetch_factor = prefetch_factor
