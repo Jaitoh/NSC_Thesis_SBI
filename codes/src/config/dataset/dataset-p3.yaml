@@ -20,12 +20,11 @@ test_num_theta              : 500
 
 train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
-  # 'increment': append one more dataset at a time, training for each increased sized dset
-  # 'limited_increment': append one more dataset at a time, training for each increased sized dset, but limited to the last 10 dsets
-increment_params            : {'increment_step': 1, 'increment_limit': 100, 'increment_loop': False, 'increment_max_size': -1}
+  # 'increment': append one more dataset at a time, training for each increased sized dset, limited to the last ndsets
+increment_params            : {'increment_step': 1, 'ndset_limit': 100, 'loop': True}
   # increment_step: the dset for the increment
-  # increment_limit: the max dset size for the increment, -1 means no limit
-  # increment_loop: whether to loop over the dsets
+  # ndset_limit: the max dset size for the increment, -1 means no limit
+  # loop: whether to loop over the dsets
 train_num_theta             : 500
 validation_fraction         : 0.1
 

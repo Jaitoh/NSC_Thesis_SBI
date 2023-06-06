@@ -67,7 +67,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         config,
         prior_limits,
         dataloader_kwargs,
-        do_print_mem=DO_PRINT_MEM,
         continue_from_checkpoint=None,
         debug=False,
     ):
@@ -191,7 +190,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     self._describe_log_update_dset() # describe, log, update info of the training on the current dset
                     with torch.no_grad():
                         train_loader = self._get_train_loader(val_set_names, dataloader_kwargs, chosen_dur)
-                        train_prefetcher, x_train, theta_train = self._get_fetcher_n1batch_data(train_loader, len(train_loader))
+                        train_prefetcher, x_train, theta_train = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
                 
                 print(f"best val_log_prob: {self._best_val_log_prob:.2f}")
                 if use_data_prefetcher:
@@ -223,26 +222,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         finally:
             self.release_resources()
 
-    def release_resources(self):
-        # Release GPU resources
-        train_loader        = None
-        train_prefetcher    = None
-        val_loader          = None
-        val_prefetcher      = None
-        self.empty_mem('cuda cache emptied')
-        # release cpu resources by force
-        self._neural_net.cpu()
-        self._neural_net = None
-        self.empty_mem('cpu cache emptied')
-        # clear self
-        self._do_clear()
-        print('self cleared')
-
-    def empty_mem(self, arg0):
-        gc.collect()
-        torch.cuda.empty_cache()
-        print(arg0)
-
+    # ==================== Initialize functions ==================== #
     def _init_log_prob(self):
         
         # init log prob
@@ -258,7 +238,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         print('\npreparing [validation] data ...')
         val_loader = self._get_val_loader(val_set_names, dataloader_kwargs, chosen_dur)
-        val_prefetcher, x_val, theta_val = self._get_fetcher_n1batch_data(val_loader, len(val_loader))
+        val_prefetcher, x_val, theta_val = self._get_fetcher_1st_batch_data(val_loader, len(val_loader))
         
         # reset the validation prefetcher
         if use_data_prefetcher:
@@ -270,7 +250,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # prepare training data
         print('\npreparing [training] data ...')
         train_loader = self._get_train_loader(val_set_names, dataloader_kwargs, chosen_dur)
-        train_prefetcher, x, theta = self._get_fetcher_n1batch_data(train_loader, len(train_loader))
+        train_prefetcher, x, theta = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
 
         return train_loader, train_prefetcher, x, theta
         
@@ -279,96 +259,59 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # initialize neural net, move to device only once
         if self.run == 0 and self.dset_counter == 0:
             self._init_neural_net(x, theta, continue_from_checkpoint=continue_from_checkpoint)
-                
-    def _plot_training_curve(self, log_dir):
-        duration        = np.array(self._summary["epoch_durations_sec"])
-        train_log_probs = self._summary["training_log_probs"]
-        val_log_probs   = self._summary["validation_log_probs"]
-        learning_rates  = self._summary["learning_rates"]
-        best_val_log_prob = self._best_val_log_prob
-        best_val_log_prob_epoch = self._best_model_from_epoch
+         
+    def _init_neural_net(self, x, theta, continue_from_checkpoint=None):
         
-        plt.tight_layout()
+        if self._neural_net is None:
+            
+            # Use only training data for building the neural net (z-scoring transforms)
+            self._neural_net = self._build_neural_net(
+                theta[:3].to("cpu"),
+                x[:3].to("cpu"),
+            )
+            self._x_shape = x_shape_from_simulation(x.to("cpu"))
+            
+            print('\nfinished build network')
+            
+            print(self._neural_net)
+            
+            test_posterior_net_for_multi_d_x(
+                self._neural_net,
+                theta.to("cpu"),
+                x.to("cpu"),
+            )
+            
+            if continue_from_checkpoint!=None and continue_from_checkpoint!='':
+                print(f"loading neural net from '{continue_from_checkpoint}'")
+                # load network from state dict 
+                self._neural_net.load_state_dict(torch.load(continue_from_checkpoint))
+            
+        self._neural_net.to(self._device)
         
-        fig, axes = plt.subplots(2,1, figsize=(16,10))
-        fig.subplots_adjust(hspace=0.3)
+    def _init_optimizer(self, training_kwargs):
+        warmup_epochs = self.config.train.training.warmup_epochs
+        initial_lr    = self.config.train.training.initial_lr
         
-        # plot learning rate
-        ax0 = axes[0]
-        ax0.plot(learning_rates, '-', label='lr', lw=2)
-        # ax0.plot(best_val_log_prob_epoch, learning_rates[best_val_log_prob_epoch-1], 'v', color='tab:red', lw=2) # type: ignore
-
-        ax0.set_xlabel('epochs')
-        ax0.set_ylabel('learning rate')
-        ax0.grid(alpha=0.2)
-        ax0.set_title('training curve')
-
-        ax1 = axes[1]
-        ax1.plot(train_log_probs, '.-', label='training', alpha=0.8, lw=2, color='tab:blue', ms=0.1)
-        ax1.plot(val_log_probs, '.-', label='validation', alpha=0.8, lw=2, color='tab:orange', ms=0.1)
-        ax1.plot(best_val_log_prob_epoch-1, best_val_log_prob, 'v', color='red', lw=2)
-        ax1.text(best_val_log_prob_epoch-1, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
-        # ax1.set_ylim(log_probs_lower_bound, max(val_log_probs)+0.2)
+        self.optimizer = optim.Adam(
+                            list(self._neural_net.parameters()), 
+                            lr=training_kwargs.learning_rate, 
+                            weight_decay=eval(self.config.train.training.weight_decay) if isinstance(self.config.train.training.weight_decay, str) else self.config.train.training.weight_decay
+                            )
         
-        ax1.legend()
-        ax1.set_xlabel('epochs')
-        ax1.set_ylabel('log_prob')
-        ax1.grid(alpha=0.2)
-
-        ax2 = ax1.twiny()
-        ax2.plot((duration-duration[0])/60/60, max(val_log_probs)*np.ones_like(val_log_probs), '-', alpha=0)
-        ax2.set_xlabel('time (hours)')
-
-        # save the figure
-        plt.savefig(f'{log_dir}/training_curve.png')
-        print('saved training curve')
-        plt.close()
-
-    def _clear_loaders(self, train_loader, train_prefetcher):
+        # warmup scheduler
+        self.scheduler_warmup = WarmupScheduler(self.optimizer, warmup_epochs=warmup_epochs, init_lr=initial_lr, target_lr=training_kwargs['learning_rate'])
         
-        if self.use_data_prefetcher:
-            del train_prefetcher
-        
-        del train_loader, self.train_dataset
-        gc.collect()
-        torch.cuda.empty_cache()
-
-    def _update_scheduler(self, training_kwargs):
-        
-        if self.epoch < self.config['train']['training']['warmup_epochs']:
-            self.scheduler_warmup.step()
-        elif training_kwargs['scheduler'] == 'ReduceLROnPlateau':
-            self.scheduler.step(self._val_log_prob)
-        # elif training_kwargs['scheduler'] == 'None':
-        #     pass
-        else:
-            self.scheduler.step() # type: ignore
-
-    def _get_fetcher_n1batch_data(self, loader, num_batches):
-        
-        if use_data_prefetcher := self.config.dataset.use_data_prefetcher:
-            prefetcher = self._loader2prefetcher(loader)
-            x, theta = self._load_one_batch_data(prefetcher, use_data_prefetcher, num_batches)
-        else:
-            prefetcher = None
-            x, theta = self._load_one_batch_data(loader, use_data_prefetcher, num_batches)
-
-        return prefetcher, x, theta
-        
-    def _do_clear(self):
-        
-        self._neural_net            = None  
-        self._val_log_prob          = None  
-        self._summary               = None  
-        self._summary_writer        = None  
-        self._round                 = None 
-        self.train_dataset          = None
-        self.val_dataset            = None
-        
-        self._best_val_log_prob     = None  
-        self._val_log_prob_dset     = None 
-        self._best_val_log_prob_dset= None
-        
+        # scheduler
+        if training_kwargs['scheduler'] == 'ReduceLROnPlateau':
+            self.scheduler = ReduceLROnPlateau(self.optimizer, **training_kwargs['scheduler_params'])
+        if training_kwargs['scheduler'] == 'CosineAnnealingWarmRestarts':
+            self.scheduler = CosineAnnealingWarmRestarts(self.optimizer, **training_kwargs['scheduler_params'])
+        if training_kwargs['scheduler'] == 'None': # constant lr
+            self.scheduler = ConstantLR(self.optimizer, factor=1.0)
+        # if training_kwargs['scheduler'] == 'CosineAnnealingLR':
+        #     self.scheduler = CosineAnnealingLR(self.optimizer, *training_kwargs['scheduler_params'])       
+    
+    # ==================== dataloader / prefetcher ==================== #
     def _get_val_set_names(self):
         
         dataset_kwargs = self.config.dataset
@@ -460,7 +403,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         return val_loader
         
-    
     def _get_train_loader(self, val_set_names, dataloader_kwargs, chosen_dur):
         """ the train loader updates each dset
         """
@@ -529,10 +471,19 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         return train_loader
     
-    
     def _loader2prefetcher(self, loader):
         return Data_Prefetcher(loader, prefetch_factor=self.config.dataset.prefetch_factor)
     
+    def _get_fetcher_1st_batch_data(self, loader, num_batches):
+        
+        if use_data_prefetcher := self.config.dataset.use_data_prefetcher:
+            prefetcher = self._loader2prefetcher(loader)
+            x, theta = self._load_one_batch_data(prefetcher, use_data_prefetcher, num_batches)
+        else:
+            prefetcher = None
+            x, theta = self._load_one_batch_data(loader, use_data_prefetcher, num_batches)
+
+        return prefetcher, x, theta
     
     def _load_one_batch_data(self, train_prefetcher_or_loader, use_data_prefetcher, num_batches):
         
@@ -612,57 +563,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         print(f'takes {time.time() - start_time:.2f} seconds = {(time.time() - start_time) / 60:.2f} minutes')
     
-    def _init_neural_net(self, x, theta, continue_from_checkpoint=None):
-        
-        if self._neural_net is None:
-            
-            # Use only training data for building the neural net (z-scoring transforms)
-            self._neural_net = self._build_neural_net(
-                theta[:3].to("cpu"),
-                x[:3].to("cpu"),
-            )
-            self._x_shape = x_shape_from_simulation(x.to("cpu"))
-            
-            print('\nfinished build network')
-            
-            print(self._neural_net)
-            
-            test_posterior_net_for_multi_d_x(
-                self._neural_net,
-                theta.to("cpu"),
-                x.to("cpu"),
-            )
-            
-            if continue_from_checkpoint!=None and continue_from_checkpoint!='':
-                print(f"loading neural net from '{continue_from_checkpoint}'")
-                # load network from state dict 
-                self._neural_net.load_state_dict(torch.load(continue_from_checkpoint))
-            
-        self._neural_net.to(self._device)
-        
-    def _init_optimizer(self, training_kwargs):
-        warmup_epochs = self.config.train.training.warmup_epochs
-        initial_lr    = self.config.train.training.initial_lr
-        
-        self.optimizer = optim.Adam(
-                            list(self._neural_net.parameters()), 
-                            lr=training_kwargs.learning_rate, 
-                            weight_decay=eval(self.config.train.training.weight_decay) if isinstance(self.config.train.training.weight_decay, str) else self.config.train.training.weight_decay
-                            )
-        
-        # warmup scheduler
-        self.scheduler_warmup = WarmupScheduler(self.optimizer, warmup_epochs=warmup_epochs, init_lr=initial_lr, target_lr=training_kwargs['learning_rate'])
-        
-        # scheduler
-        if training_kwargs['scheduler'] == 'ReduceLROnPlateau':
-            self.scheduler = ReduceLROnPlateau(self.optimizer, **training_kwargs['scheduler_params'])
-        if training_kwargs['scheduler'] == 'CosineAnnealingWarmRestarts':
-            self.scheduler = CosineAnnealingWarmRestarts(self.optimizer, **training_kwargs['scheduler_params'])
-        if training_kwargs['scheduler'] == 'None': # constant lr
-            self.scheduler = ConstantLR(self.optimizer, factor=1.0)
-        # if training_kwargs['scheduler'] == 'CosineAnnealingLR':
-        #     self.scheduler = CosineAnnealingLR(self.optimizer, *training_kwargs['scheduler_params'])
-    
+    # ==================== train / validation ==================== #
     def _train_one_epoch(self, train_prefetcher_or_loader, x, theta, do_train=True):
         
         print_freq      = self.config.train.training.print_freq
@@ -898,6 +799,18 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary["epoch_durations_sec"].append(time.time() - train_start_time)
         # print('val logged')
     
+    def _update_scheduler(self, training_kwargs):
+        
+        if self.epoch < self.config['train']['training']['warmup_epochs']:
+            self.scheduler_warmup.step()
+        elif training_kwargs['scheduler'] == 'ReduceLROnPlateau':
+            self.scheduler.step(self._val_log_prob)
+        # elif training_kwargs['scheduler'] == 'None':
+        #     pass
+        else:
+            self.scheduler.step() # type: ignore
+    
+    # ==================== behavior plots ==================== #
     def _posterior_behavior_log(self, limits):
         
         config = self.config
@@ -985,7 +898,52 @@ class MyPosteriorEstimator(PosteriorEstimator):
             torch.cuda.empty_cache()
                 
             print(f"finished in {(time.time()-posterior_start_time)/60:.2f}min\n")
-    
+            
+    def _plot_training_curve(self, log_dir):
+        duration        = np.array(self._summary["epoch_durations_sec"])
+        train_log_probs = self._summary["training_log_probs"]
+        val_log_probs   = self._summary["validation_log_probs"]
+        learning_rates  = self._summary["learning_rates"]
+        best_val_log_prob = self._best_val_log_prob
+        best_val_log_prob_epoch = self._best_model_from_epoch
+        
+        plt.tight_layout()
+        
+        fig, axes = plt.subplots(2,1, figsize=(16,10))
+        fig.subplots_adjust(hspace=0.3)
+        
+        # plot learning rate
+        ax0 = axes[0]
+        ax0.plot(learning_rates, '-', label='lr', lw=2)
+        # ax0.plot(best_val_log_prob_epoch, learning_rates[best_val_log_prob_epoch-1], 'v', color='tab:red', lw=2) # type: ignore
+
+        ax0.set_xlabel('epochs')
+        ax0.set_ylabel('learning rate')
+        ax0.grid(alpha=0.2)
+        ax0.set_title('training curve')
+
+        ax1 = axes[1]
+        ax1.plot(train_log_probs, '.-', label='training', alpha=0.8, lw=2, color='tab:blue', ms=0.1)
+        ax1.plot(val_log_probs, '.-', label='validation', alpha=0.8, lw=2, color='tab:orange', ms=0.1)
+        ax1.plot(best_val_log_prob_epoch-1, best_val_log_prob, 'v', color='red', lw=2)
+        ax1.text(best_val_log_prob_epoch-1, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
+        # ax1.set_ylim(log_probs_lower_bound, max(val_log_probs)+0.2)
+        
+        ax1.legend()
+        ax1.set_xlabel('epochs')
+        ax1.set_ylabel('log_prob')
+        ax1.grid(alpha=0.2)
+
+        ax2 = ax1.twiny()
+        ax2.plot((duration-duration[0])/60/60, max(val_log_probs)*np.ones_like(val_log_probs), '-', alpha=0)
+        ax2.set_xlabel('time (hours)')
+
+        # save the figure
+        plt.savefig(f'{log_dir}/training_curve.png')
+        print('saved training curve')
+        plt.close()
+
+    # ==================== converge and log ==================== #
     def _converged(self):
         """Return whether the training converged yet and save best model state so far.
 
@@ -1111,7 +1069,66 @@ class MyPosteriorEstimator(PosteriorEstimator):
         # load data for next dset
         self.dset         += 1
         self.dset_counter += 1
+    
+    # ==================== release resources ==================== #
+    def release_resources(self):
+        # Release GPU resources
+        train_loader        = None
+        train_prefetcher    = None
+        val_loader          = None
+        val_prefetcher      = None
+        self.empty_mem('cuda cache emptied')
+        # release cpu resources by force
+        self._neural_net.cpu()
+        self._neural_net = None
+        self.empty_mem('cpu cache emptied')
+        # clear self
+        self._do_clear()
+        print('self cleared')
+
+    def empty_mem(self, arg0):
+        gc.collect()
+        torch.cuda.empty_cache()
+        print(arg0)
+
+    def _clear_loaders(self, train_loader, train_prefetcher):
         
+        if self.use_data_prefetcher:
+            del train_prefetcher
+        
+        del train_loader, self.train_dataset
+        gc.collect()
+        torch.cuda.empty_cache()
+        
+    def _do_clear(self):
+        
+        self._neural_net            = None  
+        self._val_log_prob          = None  
+        self._summary               = None  
+        self._summary_writer        = None  
+        self._round                 = None 
+        self.train_dataset          = None
+        self.val_dataset            = None
+        
+        self._best_val_log_prob     = None  
+        self._val_log_prob_dset     = None 
+        self._best_val_log_prob_dset= None
+        
+class MyPosteriorEstimator_P3(MyPosteriorEstimator):
+    def __init__(
+        self,
+        prior: Optional[Distribution] = None,
+        density_estimator: Union[str, Callable] = "maf",
+        device: str = "gpu",
+        logging_level: Union[int, str] = "INFO",
+        summary_writer: Optional[SummaryWriter] = None,
+        show_progress_bars: bool = True,    
+    ):
+        kwargs = del_entries(locals(), entries=("self", "__class__"))
+        super().__init__(**kwargs)
+    
+    def train_base():
+        pass
     
 class MySNPE_C(SNPE_C, MyPosteriorEstimator):
     def __init__(
