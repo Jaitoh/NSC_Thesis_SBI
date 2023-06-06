@@ -158,20 +158,20 @@ class Solver:
             )
         
         # if net_type == 'conv1d_rnn':
-        if self.config.dataset.dataset_dim == 'high_dim' and net_type == 'conv1d_rnn': #TODO check condition for using conv1d_rnn
-            embedding_net = Conv1D_RNN, RNN_Multi_Head(
+        if net_type == 'conv1d_rnn':
+            embedding_net = Conv1D_RNN(
                 DM = self.d*self.m,
                 S  = self.s,
                 L  = self.l_x,
             )
 
-        if self.config.dataset.dataset_dim == 'high_dim' and net_type == 'rnn_multi_head':
+        if net_type == 'rnn_multi_head':
             embedding_net = RNN_Multi_Head(
                 DM = self.d*self.m,
                 S  = self.s,
                 L  = self.l_x,
             )
-
+        
         neural_posterior = posterior_nn(
             model           = config_density['posterior_nn']['model'],
             embedding_net   = embedding_net, # type: ignore
@@ -246,7 +246,14 @@ class Solver:
         use_data_prefetcher = config_dataset.use_data_prefetcher
         prefetch_factor     = config_dataset.prefetch_factor
 
-        collate_fn = collate_fn_vec_high_dim if config_dataset.dataset_dim == 'high_dim' else collate_fn_vec
+        is_3_dim_dataset = self.config.train.density_estimator.embedding_net.type in self.config.train.density_estimator.embedding_net.embedding_net_use_3_dim_dataset
+        # OmegaConf.update(self.config, "is_3_dim_dataset", is_3_dim_dataset, merge=True)
+        OmegaConf.set_struct(self.config, False)
+        OmegaConf.update(self.config, "is_3_dim_dataset", is_3_dim_dataset, merge=True)
+        OmegaConf.set_struct(self.config, True)
+
+        # self.config.set('is_3_dim_dataset', is_3_dim_dataset) # add self.config with key 'is_3_dim_dataset' to config
+        collate_fn = collate_fn_vec_high_dim if is_3_dim_dataset else collate_fn_vec
         
         return {
             'num_workers': config_dataset.num_workers,

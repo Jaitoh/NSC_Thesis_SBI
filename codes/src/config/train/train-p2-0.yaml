@@ -7,6 +7,9 @@ density_estimator:
     type: lstm_small
     hidden_size: 64
     output_size: 20
+    embedding_net_use_3_dim_dataset: 
+      - 'rnn_multi_head'
+      - 'conv1d_rnn'
   posterior_nn:
     model: maf
     hidden_features: 64

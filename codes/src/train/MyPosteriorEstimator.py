@@ -139,7 +139,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     while (
                         self.epoch <= training_kwargs.max_num_epochs
                         and not self._converged()
-                        and (not debug or self.epoch <= 3)
+                        and (not debug or self.epoch <= 5)
                     ):
 
                         if self.epoch > 0:
@@ -288,11 +288,6 @@ class MyPosteriorEstimator(PosteriorEstimator):
         best_val_log_prob = self._best_val_log_prob
         best_val_log_prob_epoch = self._best_model_from_epoch
         
-        # z_scores = stats.zscore(np.array(val_log_probs))
-        # filtered_log_probs = val_log_probs[np.abs(z_scores) < 1]
-        # log_probs_lower_bound = min(filtered_log_probs)-0.2 if len(val_log_probs) > 20 else min(val_log_probs)-0.1
-        
-        # plt.legend()
         plt.tight_layout()
         
         fig, axes = plt.subplots(2,1, figsize=(16,10))
@@ -416,16 +411,15 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         if self.config.dataset.batch_process_method == 'collate_fn':
             
-            if self.config.dataset.dataset_dim == '2_dim':
-                self.val_dataset = My_Chosen_Sets(
+            if self.config.is_3_dim_dataset: # load data with 3 dim
+                self.val_dataset = My_HighD_Sets(
                     config              = self.config, 
                     chosen_set_names    = val_set_names,
                     num_chosen_theta_each_set = self.config.dataset.validation_num_theta,
                     chosen_dur          = chosen_dur,
                 )
-            
-            if self.config.dataset.dataset_dim == 'high_dim':
-                self.val_dataset = My_HighD_Sets(
+            else: # load data with 2 dim
+                self.val_dataset = My_Chosen_Sets(
                     config              = self.config, 
                     chosen_set_names    = val_set_names,
                     num_chosen_theta_each_set = self.config.dataset.validation_num_theta,
@@ -488,16 +482,15 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         if self.config.dataset.batch_process_method == 'collate_fn':
             
-            if self.config.dataset.dataset_dim == '2_dim':
-                self.train_dataset = My_Chosen_Sets(
+            if self.config.is_3_dim_dataset: # load data with 3 dim
+                self.train_dataset = My_HighD_Sets(
                     config      = self.config,
                     chosen_set_names = chosen_train_set_names,
                     num_chosen_theta_each_set=self.config.dataset.num_chosen_theta_each_set,
                     chosen_dur  = chosen_dur,
                 )
-            
-            if self.config.dataset.dataset_dim == 'high_dim':
-                self.train_dataset = My_HighD_Sets(
+            else: # load data with 2 dim
+                self.train_dataset = My_Chosen_Sets( 
                     config      = self.config,
                     chosen_set_names = chosen_train_set_names,
                     num_chosen_theta_each_set=self.config.dataset.num_chosen_theta_each_set,
