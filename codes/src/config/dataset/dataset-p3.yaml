@@ -16,7 +16,7 @@ dataset_chosen_mode         : 'fixed' # determine how to choose all the dsets, t
   # 'fixed': choose the dsets, theta in a fixed order
 
 test_fraction               : [10, 20, 30, 40, 50]
-test_num_theta              : 500
+test_num_theta              : 100
 
 train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
@@ -43,5 +43,5 @@ shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 num_workers                 : 1
 pin_memory                  : True
 
-use_data_prefetcher         : True
+use_data_prefetcher         : True # set to false when memory is not enough
 prefetch_factor             : 1

@@ -46,6 +46,7 @@ log_dir=${LOG_DIR} \
 data_path=${DATA_PATH} \
 seed=100 \
 > ${PRINT_LOG} 2>&1 
+# debug=True\
 # & tensorboard --logdir=${LOG_DIR} --port=${PORT}
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
 
