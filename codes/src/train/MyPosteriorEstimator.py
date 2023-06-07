@@ -7,6 +7,7 @@ import h5py
 from copy import deepcopy
 import numpy as np
 from scipy import stats
+from collections import deque
 import gc
 import torch
 from torch import nn, ones, optim
@@ -49,6 +50,17 @@ from utils.resource import(
 
 DO_PRINT_MEM = False
 
+def clean_cache():
+    gc.collect()
+    torch.cuda.empty_cache()
+    
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 class MyPosteriorEstimator(PosteriorEstimator):
     def __init__(
         self,
@@ -84,10 +96,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self.training_kwargs = self.config.train.training
 
         chosen_dur_trained_in_sequence  = self.dataset_kwargs.chosen_dur_trained_in_sequence
-        clip_max_norm                   = self.training_kwargs.clip_max_norm
-        print_freq                      = self.training_kwargs.print_freq
         use_data_prefetcher             = self.dataset_kwargs.use_data_prefetcher
         self.use_data_prefetcher        = use_data_prefetcher
+        
         self.batch_counter = 0
         self.epoch_counter = 0
         self.dset_counter  = 0
@@ -101,21 +112,20 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary["validation_log_probs"] = []
         self._summary["learning_rates"] = []
 
-        val_set_names = self._get_val_set_names()
 
         try:
-            np.random.seed(config.seed)
-            torch.manual_seed(config.seed)
-            torch.cuda.manual_seed(config.seed)
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
+            set_seed(config.seed)
+            
+            validation_fraction = OmegaConf.to_container(self.config.dataset.validation_fraction)
+            val_set_names = self._fraction_2_set_names(validation_fraction)
+            
             for self.run, chosen_dur in enumerate(chosen_dur_trained_in_sequence):
                 
                 # is_last_dset = False
                 # initialization
                 self._init_log_prob()
-                val_loader,   val_prefetcher,   x_val,   theta_val   = self._init_val(val_set_names, dataloader_kwargs, chosen_dur)
-                train_loader, train_prefetcher, x_train, theta_train = self._init_train(val_set_names, dataloader_kwargs, chosen_dur)
+                val_loader,   x_val,   theta_val   = self._init_val(val_set_names, dataloader_kwargs, chosen_dur)
+                train_loader, x_train, theta_train = self._init_train(val_set_names, dataloader_kwargs, chosen_dur)
                 self._init_nn(x_train, theta_train, continue_from_checkpoint)
 
                 self._collect_posterior_sets(x_train, theta_train, x_val, theta_val) # collect posterior sets before training
@@ -140,65 +150,33 @@ class MyPosteriorEstimator(PosteriorEstimator):
                         and not self._converged()
                         and (not debug or self.epoch <= 5)
                     ):
-
-                        if self.epoch > 0:
-                            self._plot_training_curve(self.config.log_dir) # plot the training curve
-
-                        # train and log one epoch
-                        self._neural_net.train()
-                        epoch_start_time, train_log_probs_sum = self._train_one_epoch(
-                            train_prefetcher if use_data_prefetcher else train_loader, 
-                            x_train, 
-                            theta_train
+                        
+                        # train and validate for one epoch
+                        self.train_valid_one_epoch(
+                            val_loader          = val_loader, 
+                            train_loader        = train_loader, 
+                            train_start_time    = train_start_time, 
+                            training_kwargs     = training_kwargs,
                         )
-                        train_log_prob_average = self._train_one_epoch_log(train_log_probs_sum)
-
-                        # validate and log 
-                        self._neural_net.eval()
-                        with torch.no_grad():
-                            val_start_time = time.time()
-                            self._val_log_prob = self._val_one_epoch(
-                                val_prefetcher if use_data_prefetcher else val_loader
-                            )
-                            self._val_one_epoch_log(train_start_time)
-                            print(f"val_log_prob: {self._val_log_prob:.2f} in {(time.time() - val_start_time)/60:.2f} min")
-                            print_mem_info(f"{'gpu memory usage after validation':46}", DO_PRINT_MEM)
-
-                        # fetcher same dataset for next epoch
-                        start_time = time.time()
-                        with torch.no_grad():
-                            if self.use_data_prefetcher:
-                                print('getting next dataset ...', end=' ')
-                                train_prefetcher = self._loader2prefetcher(train_loader) 
-                                val_prefetcher   = self._loader2prefetcher(val_loader)
-                                print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", DO_PRINT_MEM)
-                                print(f'done in {(time.time()-start_time)/60:.2f} min')
-
-                        # update epoch info and counter
-                        with torch.no_grad():
-                            self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
-                            self.epoch += 1
-                            self.epoch_counter += 1
-
-                        # update scheduler
-                        self._update_scheduler(training_kwargs)
+                    
+                    del train_loader, self.train_dataset
+                    clean_cache()
                     
                     if debug:
                         break
+                    
                     # load new training dataset for the next dset
-                    self._clear_loaders(train_loader, train_prefetcher) # clear train loader, prefetcher, and val_prefetcher
                     self._describe_log_update_dset() # describe, log, update info of the training on the current dset
                     with torch.no_grad():
                         train_loader = self._get_train_loader(val_set_names, dataloader_kwargs, chosen_dur)
-                        train_prefetcher, x_train, theta_train = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
+                        _, x_train, theta_train = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
                 
-                print(f"best val_log_prob: {self._best_val_log_prob:.2f}")
+                print(f"best val_log_prob: {self._best_val_log_prob:.2f}\n")
                 if use_data_prefetcher:
                     train_prefetcher    = None
                     val_prefetcher      = None
                     del train_prefetcher, val_prefetcher
-                    gc.collect()
-                    torch.cuda.empty_cache()
+                    clean_cache()
 
                 train_loader        = None
                 val_loader          = None
@@ -207,8 +185,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 x                   = None
                 theta               = None
                 del train_loader, x, theta, self.val_dataset, self.train_dataset
-                gc.collect()
-                torch.cuda.empty_cache()
+                clean_cache()
 
             # Avoid keeping the gradients in the resulting network, which can cause memory leakage when benchmarking. save the network
             self._neural_net.zero_grad(set_to_none=True) # type: ignore
@@ -222,12 +199,57 @@ class MyPosteriorEstimator(PosteriorEstimator):
         finally:
             self.release_resources()
 
+    def train_valid_one_epoch(self, val_loader, train_loader, train_start_time, training_kwargs):
+        
+        with torch.no_grad():
+            # fetcher same dataset for the coming epoch
+            if self.use_data_prefetcher:
+                start_time = time.time()
+                print('getting epoch dataset ...', end=' ')
+                                
+                # reset prefetcher
+                train_prefetcher = self._loader2prefetcher(train_loader)
+                val_prefetcher   = self._loader2prefetcher(val_loader)
+                                
+                print(f'done in {(time.time()-start_time)/60:.2f} min')
+                print_mem_info(f"\n\n{'gpu memory usage after prefetcher':46}", DO_PRINT_MEM)
+                
+            # plot the training curve
+            if self.epoch > 0:
+                self._plot_training_curve(self.config.log_dir)
+
+        # train and log one epoch
+        self._neural_net.train()
+        epoch_start_time, train_log_probs_sum = self._train_one_epoch(train_prefetcher if self.use_data_prefetcher else train_loader)
+        train_log_prob_average = self._train_one_epoch_log(train_log_probs_sum)
+
+        # validate and log 
+        self._neural_net.eval()
+        with torch.no_grad():
+            val_start_time = time.time()
+                            
+            # do validate and log
+            self._val_log_prob = self._val_one_epoch(val_prefetcher if self.use_data_prefetcher else val_loader)
+            self._val_one_epoch_log(train_start_time)
+                            
+            print(f"val_log_prob: {self._val_log_prob:.2f} in {(time.time() - val_start_time)/60:.2f} min")
+            print_mem_info(f"{'gpu memory usage after validation':46}", DO_PRINT_MEM)
+
+            # update epoch info and counter
+            self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
+            self.epoch += 1
+            self.epoch_counter += 1
+
+        # update scheduler
+        self._update_scheduler(training_kwargs)
+        
     # ==================== Initialize functions ==================== #
     def _init_log_prob(self):
         
         # init log prob
-        self.dset  = 0
-        self.epoch = 0
+        self.run    = 0
+        self.dset   = 0
+        self.epoch  = 0
         self._epoch_of_last_dset = 0
         self._val_log_prob, self._val_log_prob_dset = float("-Inf"), float("-Inf")
         self._best_val_log_prob, self._best_val_log_prob_dset = float("-Inf"), float("-Inf")
@@ -238,21 +260,17 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         print('\npreparing [validation] data ...')
         val_loader = self._get_val_loader(val_set_names, dataloader_kwargs, chosen_dur)
-        val_prefetcher, x_val, theta_val = self._get_fetcher_1st_batch_data(val_loader, len(val_loader))
-        
-        # reset the validation prefetcher
-        if use_data_prefetcher:
-            val_prefetcher = self._loader2prefetcher(val_loader)
+        _, x_val, theta_val = self._get_fetcher_1st_batch_data(val_loader, len(val_loader))
 
-        return val_loader, val_prefetcher, x_val, theta_val
+        return val_loader, x_val, theta_val
     
     def _init_train(self, val_set_names, dataloader_kwargs, chosen_dur):
         # prepare training data
         print('\npreparing [training] data ...')
         train_loader = self._get_train_loader(val_set_names, dataloader_kwargs, chosen_dur)
-        train_prefetcher, x, theta = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
+        _, x, theta = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
 
-        return train_loader, train_prefetcher, x, theta
+        return train_loader, x, theta
         
     def _init_nn(self, x, theta, continue_from_checkpoint):
         
@@ -312,24 +330,21 @@ class MyPosteriorEstimator(PosteriorEstimator):
         #     self.scheduler = CosineAnnealingLR(self.optimizer, *training_kwargs['scheduler_params'])       
     
     # ==================== dataloader / prefetcher ==================== #
-    def _get_val_set_names(self):
+    def _fraction_2_set_names(self, fraction):
         
         dataset_kwargs = self.config.dataset
         all_set_names = self._get_max_all_set_names(dataset_kwargs)
         
-        # check if validation set is float number 
-        validation_fraction = OmegaConf.to_container(dataset_kwargs.validation_fraction)
-        
-        if isinstance(validation_fraction, float):
-            num_val_sets   = int(validation_fraction*len(all_set_names))
-            val_set_names  = np.random.choice(all_set_names, num_val_sets, replace=False)
-        elif isinstance(validation_fraction, list):
-            val_set_names  = [f'set_{i}' for i in validation_fraction]
+        # transfer fraction to set names
+        if isinstance(fraction, float):
+            num_sets   = int(fraction*len(all_set_names))
+            set_names  = np.random.choice(all_set_names, num_sets, replace=False)
+        elif isinstance(fraction, list):
+            set_names  = [f'set_{i}' for i in fraction]
         else:
             raise ValueError('validation_fraction must be float or list')
-        # train_set_names   = list(set(all_set_names) - set(val_set_names))
         
-        return val_set_names
+        return set_names
 
     def _get_max_all_set_names(self, dataset_kwargs):
         
@@ -347,59 +362,65 @@ class MyPosteriorEstimator(PosteriorEstimator):
         print(f'=== chosen {len(all_set_names)} sets from {num_total_sets} sets ===')
         
         return all_set_names
+    
+    def _get_dataset(self, set_names, num_chosen_theta_each_set, chosen_dur, theta_chosen_mode='random'):
+        """Create the dataset given the set names"""
         
+        if self.config.dataset.batch_process_method == 'collate_fn':
+            dataset_class = My_HighD_Sets if self.config.is_3_dim_dataset else My_Chosen_Sets
+        else:
+            dataset_class = My_Processed_Dataset #TODO high dim init process
+
+        dataset = dataset_class(
+            config = self.config,
+            chosen_set_names = set_names,
+            num_chosen_theta_each_set = num_chosen_theta_each_set,
+            chosen_dur = chosen_dur,
+            theta_chosen_mode = theta_chosen_mode,
+        )
+        
+        return dataset
+
+    def _get_loader(self, dataset, dataloader_kwargs, seed):
+        """Create the dataloader given the dataset"""
+        batch_size = self.config.dataset.batch_size
+        num_examples = len(dataset)
+        indices = torch.randperm(num_examples)
+        
+        loader_kwargs = {
+            "batch_size": min(batch_size, num_examples),
+            "drop_last" : True,
+            "sampler"   : SubsetRandomSampler(indices.tolist()),
+            "pin_memory": self.config.dataset.pin_memory,
+        }
+        if dataloader_kwargs is not None:
+            loader_kwargs = dict(loader_kwargs, **dataloader_kwargs)
+
+        print(f'\nloader_kwargs: {loader_kwargs}')
+        
+        g = torch.Generator()
+        g.manual_seed(seed)
+        
+        return data.DataLoader(dataset, generator=g, **loader_kwargs)
+    
     def _get_val_loader(self, val_set_names, dataloader_kwargs, chosen_dur):
         """ the val loader keeps the same for each dset, and each run
         """
         
-        if self.config.dataset.batch_process_method == 'collate_fn':
-            
-            if self.config.is_3_dim_dataset: # load data with 3 dim
-                self.val_dataset = My_HighD_Sets(
-                    config              = self.config, 
-                    chosen_set_names    = val_set_names,
-                    num_chosen_theta_each_set = self.config.dataset.validation_num_theta,
-                    chosen_dur          = chosen_dur,
-                )
-            else: # load data with 2 dim
-                self.val_dataset = My_Chosen_Sets(
-                    config              = self.config, 
-                    chosen_set_names    = val_set_names,
-                    num_chosen_theta_each_set = self.config.dataset.validation_num_theta,
-                    chosen_dur          = chosen_dur,
-                )
+        self.val_dataset = self._get_dataset(
+            set_names = val_set_names,
+            num_chosen_theta_each_set=self.config.dataset.validation_num_theta,
+            chosen_dur=chosen_dur,
+        )
         
-        else: #TODO high dim init process
-            self.val_dataset = My_Processed_Dataset(
-                config              = self.config, 
-                chosen_set_names    = val_set_names,
-                num_chosen_theta_each_set = self.config.dataset.validation_num_theta,
-                chosen_dur          = chosen_dur,
-            )
-            
-        batch_size = self.config.dataset.batch_size
-        num_validation_examples = len(self.val_dataset)
-        val_indices = torch.randperm(num_validation_examples)
-        
-        val_loader_kwargs = {
-            "batch_size": min(batch_size, num_validation_examples),
-            "shuffle"   : False,
-            "drop_last" : True,
-            "sampler"   : SubsetRandomSampler(val_indices.tolist()),
-            "pin_memory": self.config.dataset.pin_memory,
-        }
-        if dataloader_kwargs is not None:
-            val_loader_kwargs = dict(val_loader_kwargs, **dataloader_kwargs)
-        # print(f'\n--- data loader ---')
-        print(f'\n--> val_loader_kwargs: {val_loader_kwargs}')
-        
-        g = torch.Generator()
-        g.manual_seed(self.config.seed) # no dset here
-        
-        val_loader   = data.DataLoader(self.val_dataset, generator=g, **val_loader_kwargs)
+        val_loader = self._get_loader(
+            dataset=self.val_dataset,
+            dataloader_kwargs=dataloader_kwargs,
+            seed=self.config.seed, # no dset here
+        )
         
         self.num_val_batches = len(val_loader)
-        print(f'number of batches in the val dataset: {self.num_val_batches}')
+        print(f'number of batches in the [val] dataset: {self.num_val_batches}')
         
         return val_loader
         
@@ -407,8 +428,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         """ the train loader updates each dset
         """
         dataset_kwargs = self.config.dataset
-        # get current all dataset names
-        all_set_names = self._get_max_all_set_names(dataset_kwargs)
+        all_set_names = self._get_max_all_set_names(dataset_kwargs) # get current all dataset names
         all_train_set_names = sorted(list(set(all_set_names) - set(val_set_names)))
         
         # first dset is trained with first element of the num_chosen_set list (e.g. 10 sets), 2nd -> 2nd ...
@@ -422,52 +442,19 @@ class MyPosteriorEstimator(PosteriorEstimator):
         chosen_train_set_names = np.random.choice(all_train_set_names, num_train_sets, replace=False)
         print(f'containing: \n{chosen_train_set_names}')
         
-        if self.config.dataset.batch_process_method == 'collate_fn':
-            
-            if self.config.is_3_dim_dataset: # load data with 3 dim
-                self.train_dataset = My_HighD_Sets(
-                    config      = self.config,
-                    chosen_set_names = chosen_train_set_names,
-                    num_chosen_theta_each_set=self.config.dataset.num_chosen_theta_each_set,
-                    chosen_dur  = chosen_dur,
-                )
-            else: # load data with 2 dim
-                self.train_dataset = My_Chosen_Sets( 
-                    config      = self.config,
-                    chosen_set_names = chosen_train_set_names,
-                    num_chosen_theta_each_set=self.config.dataset.num_chosen_theta_each_set,
-                    chosen_dur  = chosen_dur,
-                )
-            
-        else: #TODO high dim init process
-            self.train_dataset = My_Processed_Dataset(
-                config      = self.config,
-                chosen_set_names = chosen_train_set_names,
-                num_chosen_theta_each_set=self.config.dataset.num_chosen_theta_each_set,
-                chosen_dur  = chosen_dur,
-            )
+        self.train_dataset = self._get_dataset(
+            set_names = chosen_train_set_names,
+            num_chosen_theta_each_set=self.config.dataset.num_chosen_theta_each_set,
+            chosen_dur=chosen_dur,
+        )
         
+        train_loader = self._get_loader(
+            dataset=self.train_dataset,
+            dataloader_kwargs=dataloader_kwargs,
+            seed=self.config.seed+self.dset,
+        )
         
-        batch_size = self.config.dataset.batch_size
-        num_train_examples = len(self.train_dataset)
-        train_indices = torch.randperm(num_train_examples)
-        
-        train_loader_kwargs = {
-            "batch_size": min(batch_size, num_train_examples),
-            "drop_last" : True,
-            "sampler"   : SubsetRandomSampler(train_indices.tolist()),
-            "pin_memory": self.config.dataset.pin_memory,
-        }
-        if dataloader_kwargs is not None:
-            train_loader_kwargs = dict(train_loader_kwargs, **dataloader_kwargs)
-
-        print(f'\n--> train_loader_kwargs: {train_loader_kwargs}')
-        g = torch.Generator()
-        g.manual_seed(self.config.seed+self.dset)
-        
-        train_loader = data.DataLoader(self.train_dataset, generator=g, **train_loader_kwargs)
-        
-        print(f'number of batches in the training dataset: {len(train_loader)}')
+        print(f'number of batches in the [training] dataset: {len(train_loader)}')
         
         return train_loader
     
@@ -564,7 +551,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         print(f'takes {time.time() - start_time:.2f} seconds = {(time.time() - start_time) / 60:.2f} minutes')
     
     # ==================== train / validation ==================== #
-    def _train_one_epoch(self, train_prefetcher_or_loader, x, theta, do_train=True):
+    def _train_one_epoch(self, train_prefetcher_or_loader, do_train=True):
         
         print_freq      = self.config.train.training.print_freq
         # clip_max_norm   = self.config.train.training.clip_max_norm
@@ -584,6 +571,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             print('!! no training performed !!')
             
         if self.use_data_prefetcher:
+            x, theta    = train_prefetcher_or_loader.next()
+            
             while x is not None:
                 self.optimizer.zero_grad()
                 # train one batch and log progress
@@ -611,7 +600,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     x, theta = train_prefetcher_or_loader.next()
                 # print(f'prefetcher time: {(time.time() - time_start)*1000:.2f} ms')
         else:
-            del x, theta
+            # del x, theta
             # time_start = time.time()
             for x, theta in train_prefetcher_or_loader:
                 self.optimizer.zero_grad()
@@ -699,9 +688,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
 
         clip_max_norm = self.config.train.training.clip_max_norm
         if clip_max_norm is not None:
-            clip_grad_norm_(
-                self._neural_net.parameters(), max_norm=clip_max_norm
-            )
+            clip_grad_norm_(self._neural_net.parameters(), max_norm=clip_max_norm)
             
         del x, theta, masks_batch, train_losses
         gc.collect()
@@ -998,7 +985,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_board", self._best_model_from_epoch, self.epoch_counter-1)
         self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_board", self._best_val_log_prob, self.epoch_counter-1)
         self._summary_writer.add_scalar(f"run{self.run}/current_dset_board", self.dset_counter, self.epoch_counter-1)
-        self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset_board", self.num_train_sets, self.epoch_counter-1)
+        # self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset_board", self.num_train_sets, self.epoch_counter-1)
         self._summary_writer.flush()
         return converged
     
@@ -1091,10 +1078,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         torch.cuda.empty_cache()
         print(arg0)
 
-    def _clear_loaders(self, train_loader, train_prefetcher):
-        
-        if self.use_data_prefetcher:
-            del train_prefetcher
+    def _clear_loaders(self, train_loader):
         
         del train_loader, self.train_dataset
         gc.collect()
@@ -1114,6 +1098,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._val_log_prob_dset     = None 
         self._best_val_log_prob_dset= None
         
+
 class MyPosteriorEstimator_P3(MyPosteriorEstimator):
     def __init__(
         self,
@@ -1127,9 +1112,287 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
     
-    def train_base():
-        pass
+    def train_base_p3(
+        self,
+        config,
+        prior_limits,
+        dataloader_kwargs,
+        continue_from_checkpoint=None,
+        debug=False,
+    ):
+        self.config         = config
+        self.log_dir        = config.log_dir
+        self.prior_limits   = prior_limits
+
+        self.dataset_kwargs = self.config.dataset
+        self.training_kwargs = self.config.train.training
+        
+        self._writer_hist = SummaryWriter(log_dir=f'{str(self.log_dir)}/event_hist')
+        self._writer_fig  = SummaryWriter(log_dir=f'{str(self.log_dir)}/event_fig')
+        
+        chosen_dur_trained_in_sequence  = self.dataset_kwargs.chosen_dur_trained_in_sequence
+        use_data_prefetcher             = self.dataset_kwargs.use_data_prefetcher
+        self.use_data_prefetcher        = use_data_prefetcher
+        
+        self.batch_counter = 0
+        self.epoch_counter = 0
+        self.dset_counter  = 0
+        self.train_start_time = time.time()
+
+        self.train_data_set_name_list = []
+        self.val_data_set_name_list   = []
+        
+        self._summary["epoch_durations_sec"] = []
+        self._summary["training_log_probs"] = []
+        self._summary["validation_log_probs"] = []
+        self._summary["test_log_probs"] = []
+        self._summary["learning_rates"] = []
+        
+        set_seed(config.seed)
+        
+        chosen_dur = chosen_dur_trained_in_sequence[0]
+        
+        # ==================== initialize ==================== #
+        # initialize log probs and counters
+        self._init_log_prob()
+        
+        # initialize test dataset and test loader -> self.test_dataset, self.test_loader
+        test_fraction = OmegaConf.to_container(self.config.dataset.test_fraction)
+        test_set_names = self._fraction_2_set_names(test_fraction)
+        x_test, theta_test = self._init_test_set(test_set_names, dataloader_kwargs, chosen_dur)
+        
+        # initialize and build the network
+        self._init_neural_net(x_test, theta_test, continue_from_checkpoint)
+        
+        # collect posterior sets before training
+        x_train, theta_train, _, _ = self._init_train_val_set(test_set_names, dataloader_kwargs, chosen_dur)
+        self._collect_posterior_sets(x_train, theta_train, x_test, theta_test)
+        
+        # set a train set name loader for loading train set names in different dsets
+        train_set_name_loader = self._load_set_names()
+        # ==================== training ==================== #
+        train_start_time = time.time()
+        while (self.dset <= self.training_kwargs.max_num_dsets 
+                and not self._converged_dset_p3() # TODO: check dset condition
+                ):
+            
+            print(f'\n\n=== run {self.run}, chosen_dur {chosen_dur}, dset {self.dset} ===')
+            print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", DO_PRINT_MEM)
+            
+            # load new train set names
+            train_set_names = next(train_set_name_loader)
+            print(f'train_set_names: {train_set_names}')
+            
+            # get train and val loaders for the current dset
+            train_loader, val_loader = self._get_train_val_loaders(
+                train_set_names = train_set_names,
+                dataloader_kwargs = dataloader_kwargs,
+                chosen_dur = chosen_dur,
+            )
+            
+            # init optimizer and scheduler
+            self._init_optimizer(self.training_kwargs)
+            
+            # train and validate until no validation performance improvement
+            while (
+                self.epoch <= self.training_kwargs.max_num_epochs
+                and not self._converged()
+                and (not debug or self.epoch <= 5)
+            ):  
+                
+                # train and validate for one epoch
+                self.train_valid_one_epoch(
+                    val_loader          = val_loader, 
+                    train_loader        = train_loader, 
+                    train_start_time    = train_start_time, 
+                    training_kwargs     = self.training_kwargs,
+                )
+                
+                # test for one epoch
+                if self.use_data_prefetcher:
+                    test_prefetcher = self._loader2prefetcher(self.test_loader)
+                self._test_log_prob = self._val_one_epoch( test_prefetcher if self.use_data_prefetcher else self.test_loader )
+                self._test_one_epoch_log()
+                
+            
+            with torch.no_grad():
+                # clear train loader, prefetcher, and val_prefetcher
+                del train_loader, val_loader
+                clean_cache()
+                
+                # describe, log, update info of the training on the current dset # TODO: log info check
+                self._describe_log_update_dset()
+                
+        # clear
+        print(f"best val_log_prob: {self._best_val_log_prob:.2f}")
+        del x, theta, self.val_dataset, self.train_dataset
+        if use_data_prefetcher:
+            del train_prefetcher, val_prefetcher
+        clean_cache()
+
+        # Avoid keeping the gradients in the resulting network, which can cause memory leakage when benchmarking. save the network
+        self._neural_net.zero_grad(set_to_none=True) # type: ignore
+        torch.save(self._neural_net, os.path.join(self.config.log_dir, f"model/round_{self._round}_model.pt"))
+
+        # save training curve
+        self._plot_training_curve(self.config.log_dir)
+
+        return self, deepcopy(self._neural_net)
+                            
+    def _init_test_set(self, test_set_names, dataloader_kwargs, chosen_dur):
+        """initialize test dataset and loader"""
+        
+        print('\npreparing [test] data ...')
+        # get test dataset
+        self.test_dataset = self._get_dataset(
+            set_names = test_set_names,
+            num_chosen_theta_each_set=self.config.dataset.test_num_theta,
+            chosen_dur=chosen_dur,
+        )
+        
+        # get test loader
+        self.test_loader = self._get_loader(
+            dataset=self.test_dataset,
+            dataloader_kwargs=dataloader_kwargs,
+            seed=self.config.seed
+        )
+        
+        # get 1st batch data
+        _, x_test, theta_test = self._get_fetcher_1st_batch_data(self.test_loader, len(self.test_dataset))
+        
+        return x_test, theta_test
     
+    def _init_train_val_set(self, test_set_names, dataloader_kwargs, chosen_dur):
+        """initialize train dataset and loader"""
+        
+        print('\npreparing [training / validation] data ...')
+        
+        # get all training dataset names
+        self.all_set_names = self._get_max_all_set_names(self.config.dataset) # get current all dataset names
+        self.all_train_set_names = sorted(list(set(self.all_set_names) - set(test_set_names)))
+        
+        # get validation and training fraction
+        self.validation_fraction = int(self.config.dataset.validation_fraction*100)
+        self.train_fraction = int((1-self.config.dataset.validation_fraction)*100)
+        
+        # define train set name (choosen the first set)
+        train_set_name = [self.all_train_set_names[0]]
+        
+        # get train and validation loaders for the first set
+        train_loader, val_loader = self._get_train_val_loaders(train_set_name, dataloader_kwargs, chosen_dur)
+        
+        # get 1st batch data
+        _, x_train, theta_train = self._get_fetcher_1st_batch_data(train_loader, len(self.train_dataset))
+        _, x_val, theta_val = self._get_fetcher_1st_batch_data(val_loader, len(self.val_dataset))
+        
+        return x_train, theta_train, x_val, theta_val
+    
+    def _get_train_val_loaders(self, train_set_names, dataloader_kwargs, chosen_dur):
+        
+        """get the train and validation loaders given the train_set_names"""
+        
+        self.train_dataset = self._get_dataset(
+            set_names = train_set_names,
+            num_chosen_theta_each_set=self.config.dataset.train_num_theta,
+            chosen_dur=chosen_dur,
+            theta_chosen_mode = f'first_{self.train_fraction}', # 'first_90'
+        )
+        
+        print()
+        self.val_dataset = self._get_dataset(
+            set_names = train_set_names,
+            num_chosen_theta_each_set=self.config.dataset.train_num_theta,
+            chosen_dur=chosen_dur,
+            theta_chosen_mode=f'last_{self.validation_fraction}', # 'last_10'
+        )
+        
+        train_loader = self._get_loader(
+            dataset = self.train_dataset,
+            dataloader_kwargs=dataloader_kwargs,
+            seed=self.config.seed+self.dset,
+        )
+        
+        val_loader = self._get_loader(
+            dataset = self.val_dataset,
+            dataloader_kwargs=dataloader_kwargs,
+            seed=self.config.seed+self.dset,
+        )
+        
+        return train_loader, val_loader
+    
+    def _load_set_names(self):
+        """
+        Function to get sets to load given the current step and maximum load size.
+
+        dset (int): Current dataset step.
+        step (int): Increment step for each dset. Default is 2.
+        max_load (int): Maximum number of sets to load. Default is 10.
+        loop (bool): Whether to start over from the beginning when reaching the end of the dataset.
+
+        Returns:
+            list: List of set names to load.
+        """
+        step        = self.dataset_kwargs.increment_params['step']
+        max_load    = self.dataset_kwargs.increment_params['max_load']
+        
+        all_sets = self.all_train_set_names
+        sets_in_queue = all_sets.copy()
+        loaded_sets = deque(maxlen=max_load)
+        
+        while True:
+            for i in range(step):
+                if len(sets_in_queue) == 0:
+                    sets_in_queue = all_sets.copy()
+                    self.run += 1
+                loaded_sets.append(sets_in_queue.pop(0))
+            
+            yield list(loaded_sets)
+            
+    def _test_one_epoch_log(self):
+        
+        self._summary_writer.add_scalars("log_probs", {'test': self._test_log_prob}, self.epoch_counter-1)
+        self._summary["test_log_probs"].append(self._test_log_prob)
+        
+    def _converged_dset_p3(self):
+        
+        improvement_threshold = self.config.train.training.improvement_threshold
+        min_num_dsets         = self.config.train.training.min_num_dsets
+        stop_after_dsets      = self.config.train.training.stop_after_dsets
+        
+        converged = False
+        assert self._neural_net is not None
+        
+        # improvement = self._val_log_prob - self._best_val_log_prob
+        if self.dset == 0 or (self._val_log_prob_dset > self._best_val_log_prob_dset):
+            
+            self._dset_since_last_improvement = 0
+            
+            self._best_val_log_prob_dset        = self._val_log_prob_dset
+            self._best_model_state_dict_dset    = deepcopy(self._neural_net.state_dict())
+            self._best_model_from_dset          = self.dset - 1
+            
+            torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+        
+        else:
+            self._dset_since_last_improvement += 1
+            
+        if self._dset_since_last_improvement > stop_after_dsets - 1 and self.dset > min_num_dsets - 1:
+            
+            converged = True
+            
+            self._neural_net.load_state_dict(self._best_model_state_dict_dset)
+            self._val_log_prob_dset = self._best_val_log_prob_dset
+            self._dset_since_last_improvement = 0
+            
+            torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+        
+        # use only the whole dataset as the training set, would train only once
+        # if self.config.dataset.one_dataset == True and self.dset == 1:
+        #     converged = True
+        
+        return converged
+        
 class MySNPE_C(SNPE_C, MyPosteriorEstimator):
     def __init__(
         self,
@@ -1230,5 +1493,63 @@ class MySNPE_C(SNPE_C, MyPosteriorEstimator):
                 self._set_state_for_mog_proposal()
 
         return super().train_base(**kwargs) # type: ignore
+    
+
+class MySNPE_C_P3(SNPE_C, MyPosteriorEstimator_P3):
+    def __init__(
+        self,
+        prior: Optional[Distribution] = None,
+        density_estimator: Union[str, Callable] = "maf",
+        device: str = "gpu",
+        logging_level: Union[int, str] = "INFO",
+        summary_writer: Optional[SummaryWriter] = None,
+        show_progress_bars: bool = True,    
+    ):
+        kwargs = del_entries(locals(), entries=("self", "__class__"))
+        # print(kwargs)
+        super().__init__(**kwargs)
+    
+    def train(
+        self,
+        config,
+        prior_limits,
+        dataloader_kwargs,
+        continue_from_checkpoint=None,
+        debug=False,
+    ) -> nn.Module:
+        
+        self.config = config
+        self._num_atoms = self.config.train.training.num_atoms
+        self._use_combined_loss = self.config.train.training.use_combined_loss
+        kwargs = del_entries(
+            locals(), entries=("self", "__class__", "num_atoms", "use_combined_loss")
+        )
+
+        self._round = max(self._data_round_index)
+
+        if self._round > 0:
+            # Set the proposal to the last proposal that was passed by the user. For
+            # atomic SNPE, it does not matter what the proposal is. For non-atomic
+            # SNPE, we only use the latest data that was passed, i.e. the one from the
+            # last proposal.
+            proposal = self._proposal_roundwise[-1]
+            self.use_non_atomic_loss = (
+                isinstance(proposal, DirectPosterior)
+                and isinstance(proposal.posterior_estimator._distribution, mdn)
+                and self._neural_net is not None
+                and isinstance(self._neural_net._distribution, mdn)
+                and check_dist_class(
+                    self._prior, class_to_check=(Uniform, MultivariateNormal)
+                )[0]
+            )
+
+            algorithm = "non-atomic" if self.use_non_atomic_loss else "atomic"
+            print(f"Using SNPE-C with {algorithm} loss")
+
+            if self.use_non_atomic_loss:
+                # Take care of z-scoring, pre-compute and store prior terms.
+                self._set_state_for_mog_proposal()
+
+        return super().train_base_p3(**kwargs) # type: ignore
     
 

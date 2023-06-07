@@ -21,7 +21,7 @@ test_num_theta              : 500
 train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
   # 'increment': append one more dataset at a time, training for each increased sized dset, limited to the last ndsets
-increment_params            : {'increment_step': 1, 'ndset_limit': 100, 'loop': True}
+increment_params            : {'step': 1, 'max_load': 21, 'loop': True}
   # increment_step: the dset for the increment
   # ndset_limit: the max dset size for the increment, -1 means no limit
   # loop: whether to loop over the dsets
@@ -40,7 +40,7 @@ num_probR_sample            : 50 #25
 shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
 
-num_workers                 : 8
+num_workers                 : 1
 pin_memory                  : True
 
 use_data_prefetcher         : True

@@ -53,6 +53,30 @@ def get_L_seqC(seqC_process, summary_type):
             L = 8
     return L
 
+def choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mode):
+    """choose theta and return theta idx from the set of theta in the dataset"""
+    
+    assert num_chosen_theta_each_set<=max_theta_in_a_set, f'num_chosen_theta_each_set={num_chosen_theta_each_set} > max_theta_in_a_set={max_theta_in_a_set}'
+
+    # choose randomly num_chosen_theta_each_set from all the theta in the set
+    if theta_chosen_mode == 'random':
+        theta_idx = np.random.choice(max_theta_in_a_set, num_chosen_theta_each_set, replace=False)
+        return theta_idx, len(theta_idx)
+    
+    # choose first 80% as training set from num_chosen_theta_each_set
+    elif theta_chosen_mode.startswith('first'):  # first_80
+        percentage = eval(theta_chosen_mode[-2:])/100
+        theta_idx = np.arange(int(num_chosen_theta_each_set*percentage))
+        return theta_idx, len(theta_idx)
+    
+    # choose last 20% as validation set from num_chosen_theta_each_set
+    elif theta_chosen_mode.startswith('last'):  # last_20
+        percentage = 1 - eval(theta_chosen_mode[-2:])/100
+        theta_idx = np.arange(int(num_chosen_theta_each_set*percentage), num_chosen_theta_each_set)
+        return theta_idx, len(theta_idx)
+    
+    else:
+        raise ValueError(f'Invalid theta_chosen_mode: {theta_chosen_mode}')
 
 class My_HighD_Sets(Dataset):
     def __init__(self, 
@@ -60,6 +84,7 @@ class My_HighD_Sets(Dataset):
                  chosen_set_names, 
                  num_chosen_theta_each_set,
                  chosen_dur=[3,9,15], 
+                 theta_chosen_mode='random',
                  ):
         super().__init__()
         
@@ -81,6 +106,12 @@ class My_HighD_Sets(Dataset):
         seqC_normed     of shape (DM, S, L)           - (21, 700, 15)
         theta           of shape (4)                  - (4)
         probR           of shape (DM, S, 1)           - (21, 700, 1)
+        
+        
+        theta_chosen_mode:
+            'random from all'   - randomly choose 'num_chosen_theta_each_set' theta from all the theta in the set
+            'first 80per from chosen' - choose first 80% from 'num_chosen_theta_each_set' (normally as training set)
+            'last 20per from chosen' - choose first 20% from 'num_chosen_theta_each_set' (normally as validation set)
         """
         # set seed
         np.random.seed(config.seed)
@@ -99,7 +130,6 @@ class My_HighD_Sets(Dataset):
         
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
         max_theta_in_a_set = config.dataset.num_max_theta_each_set
-        self.total_samples = num_chosen_theta_each_set*len(chosen_set_names)
         
         # load configurations
         dataset_config = config.dataset
@@ -108,7 +138,9 @@ class My_HighD_Sets(Dataset):
         D, M, S, DMS = (*f[chosen_set_names[0]]['seqC'].shape[:-1], np.prod(f[chosen_set_names[0]]['seqC'].shape[:-1]))
         
         # define the final shape of the data
-        randomly_chosen_theta_idx = np.random.choice(max_theta_in_a_set, num_chosen_theta_each_set, replace=False)
+        chosen_theta_idx, num_chosen_theta_each_set = choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mode)
+        self.total_samples = num_chosen_theta_each_set*len(chosen_set_names)
+        
         chosen_dur_idx  = [dur_list.index(dur) for dur in chosen_dur] # mapping from [3, 5, 7, 9, 11, 13, 15] to [0, 1, 2, 3, 4, 5, 6]
         chosen_D = len(chosen_dur) if crop_dur else D
         self.seqC_all   = np.empty((len(chosen_set_names), chosen_D, M, S, L_seqC))         # (n_set, D, M, S, L)
@@ -122,8 +154,9 @@ class My_HighD_Sets(Dataset):
                 print(counter, end=' ')
                 
             seqC_data = self._get_seqC_data(crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name) # (D, M, S, L)
-            probR_data = f[set_name]['probR'][chosen_dur_idx, :, :, :][:, :, :, randomly_chosen_theta_idx] if crop_dur else f[set_name]['probR'][:, :, :, randomly_chosen_theta_idx] # (D, M, S, T)
-            self.theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :] # (T, 4)
+            probR_data = f[set_name]['probR'][chosen_dur_idx, :, :, :][:, :, :, chosen_theta_idx] if crop_dur else f[set_name]['probR'][:, :, :, chosen_theta_idx] # (D, M, S, T)
+            
+            self.theta_all[set_idx] = f[set_name]['theta'][:][chosen_theta_idx, :] # (T, 4)
             self.seqC_all[set_idx] = seqC_data
             self.probR_all[set_idx] = probR_data
             del seqC_data, probR_data
@@ -140,9 +173,18 @@ class My_HighD_Sets(Dataset):
         # convert to tensor and reshape
         self.seqC_all  = torch.from_numpy(self.seqC_all).reshape(len(chosen_set_names), chosen_D*M, S, L_seqC).to(torch.float32).contiguous() # (n_set, DM, S, L)
         self.probR_all = torch.from_numpy(self.probR_all).reshape(len(chosen_set_names), chosen_D*M, S, num_chosen_theta_each_set).to(torch.float32).contiguous() # (n_set, DM, S, T)
-        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
+        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()        
         
-
+    def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name):
+        
+        seqC = f[set_name]['seqC'][chosen_dur_idx, :, :, :] if crop_dur else f[set_name]['seqC'][:] # (D, M, S, L)
+        return process_x_seqC_part(
+            seqC=seqC,
+            seqC_process=seqC_process,  # 'norm' or 'summary'
+            nan2num=-1,
+            summary_type=summary_type,  # 0 or 1
+        )
+        
     def _print_info(self, chosen_dur, crop_dur, start_loading_time):
         
         print(f" finished in: {time.time()-start_loading_time:.2f}s")
@@ -154,17 +196,6 @@ class My_HighD_Sets(Dataset):
         print(f"[theta] shape: {self.theta_all.shape}")
         print(f"[probR] shape: {self.probR_all.shape}")
         
-        
-    def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name):
-        
-        seqC = f[set_name]['seqC'][chosen_dur_idx, :, :, :] if crop_dur else f[set_name]['seqC'][:] # (D, M, S, L)
-        return process_x_seqC_part(
-            seqC=seqC,
-            seqC_process=seqC_process,  # 'norm' or 'summary'
-            nan2num=-1,
-            summary_type=summary_type,  # 0 or 1
-        )
-            
     def __len__(self):
         return self.total_samples
     
@@ -193,7 +224,8 @@ class My_Chosen_Sets(Dataset):
                  config, 
                  chosen_set_names, 
                  num_chosen_theta_each_set, 
-                 chosen_dur=[3,9,15]
+                 chosen_dur=[3,9,15],
+                 theta_chosen_mode='random',
                  ):
         """Loading num_chosen_theta_each_set of 2D sets
         from the chosen sets into memory
@@ -216,9 +248,7 @@ class My_Chosen_Sets(Dataset):
         data_path   = config.data_path
         crop_dur    = config.dataset.crop_dur
         f = h5py.File(data_path, 'r', libver='latest', swmr=True)
-        # total_theta_in_a_set = f[chosen_set_names[0]]['theta'].shape[0]
-        total_theta_in_a_set = config['dataset']['num_max_theta_each_set']
-        self.total_samples = num_chosen_theta_each_set*len(chosen_set_names)
+        max_theta_in_a_set = config.dataset.num_max_theta_each_set
         
         seqC_process    = config['dataset']['seqC_process']
         nan2num         = config['dataset']['nan2num']
@@ -226,15 +256,10 @@ class My_Chosen_Sets(Dataset):
         DMS             = f[chosen_set_names[0]]['seqC_normed'].shape[0]
         D, M, S         = f[chosen_set_names[0]]['seqC'].shape[:-1]
         
-        randomly_chosen_theta_idx = np.random.choice(total_theta_in_a_set, num_chosen_theta_each_set, replace=False)
-        
-        if seqC_process == 'norm':
-            seqC_shape = f[chosen_set_names[0]]['seqC_normed'].shape[1]
-        elif seqC_process == 'summary':
-            if summary_type == 0:
-                seqC_shape = f[chosen_set_names[0]]['seqC_summary_0'].shape[1]
-            elif summary_type == 1:
-                seqC_shape = f[chosen_set_names[0]]['seqC_summary_1'].shape[1]
+        # chosen_theta_idx = np.random.choice(total_theta_in_a_set, num_chosen_theta_each_set, replace=False)
+        chosen_theta_idx, num_chosen_theta_each_set = choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mode)
+        seqC_shape = get_L_seqC(seqC_process, summary_type)
+        self.total_samples = num_chosen_theta_each_set*len(chosen_set_names)
         
         # set the values that are not chosen in DMS to 0, or remove them
         DMS_idx_not_chosen, DMS_idx_chosen = self._get_idx_not_chosen(chosen_dur, D, M, S)
@@ -245,12 +270,14 @@ class My_Chosen_Sets(Dataset):
         
         counter = 0
         for set_idx, set_name in enumerate(chosen_set_names):
-            if counter % 10 == 0:
-                print(counter, end=' ')
-            seqC_data = self._get_seqC_data(crop_dur, f, seqC_process, summary_type, DMS_idx_chosen, set_name)
-            probR_data = f[set_name]['probR'][DMS_idx_chosen, :][:, randomly_chosen_theta_idx] if crop_dur else f[set_name]['probR'][:, randomly_chosen_theta_idx]
             
-            self.theta_all[set_idx] = f[set_name]['theta'][:][randomly_chosen_theta_idx, :]
+            if counter % 2 == 0:
+                print(counter, end=' ')
+                
+            seqC_data = self._get_seqC_data(crop_dur, f, seqC_process, summary_type, DMS_idx_chosen, set_name)
+            probR_data = f[set_name]['probR'][DMS_idx_chosen, :][:, chosen_theta_idx] if crop_dur else f[set_name]['probR'][:, chosen_theta_idx]
+            
+            self.theta_all[set_idx] = f[set_name]['theta'][:][chosen_theta_idx, :]
             self.seqC_all[set_idx]  = seqC_data
             self.probR_all[set_idx] = probR_data
             del seqC_data, probR_data
@@ -260,15 +287,8 @@ class My_Chosen_Sets(Dataset):
         if not crop_dur: # set not chosen to 0
             self.seqC_all[:, DMS_idx_not_chosen, :] = 0
             self.probR_all[:, DMS_idx_not_chosen, :] = 0
-            
-        print(f" finished in: {time.time()-start_loading_time:.2f}s")
-        if crop_dur:
-            print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ")
-        else:
-            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] (crop_dur is suggested to be set as True)")
-        print(f"[seqC] shape: {self.seqC_all.shape}")
-        print(f"[theta] shape: {self.theta_all.shape}")
-        print(f"[probR] shape: {self.probR_all.shape}")
+        
+        self._print_info(chosen_dur, crop_dur, start_loading_time)
         
         f.close()
         del f
@@ -311,7 +331,18 @@ class My_Chosen_Sets(Dataset):
             idx_chosen      = np.append(idx_chosen, range(int(start), int(end)))
         
         return idx_not_chosen, idx_chosen
-
+    
+    def _print_info(self, chosen_dur, crop_dur, start_loading_time):
+        
+        print(f" finished in: {time.time()-start_loading_time:.2f}s")
+        if crop_dur:
+            print(f"dur of {list(chosen_dur)} are chosen, others are [removed] ")
+        else:
+            print(f"dur of {list(chosen_dur)} are chosen, others are [set to 0] (crop_dur is suggested to be set as True)")
+        print(f"[seqC] shape: {self.seqC_all.shape}")
+        print(f"[theta] shape: {self.theta_all.shape}")
+        print(f"[probR] shape: {self.probR_all.shape}")
+        
     def __len__(self):
         return self.total_samples
 

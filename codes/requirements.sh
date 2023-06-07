@@ -17,8 +17,9 @@ pip install gpustat pyyaml memory_profiler
 pip install imageio
 pip install torch_tb_profiler
 pip install hydra-core --upgrade
-conda activate sbi
+pip install spyder-kernels
 
+conda activate sbi
 ####
 conda clean --all
 pip cache purge

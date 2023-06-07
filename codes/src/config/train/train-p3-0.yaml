@@ -24,7 +24,7 @@ training:
   
   improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
   stop_after_epochs     : 250
-  stop_after_dsets      : 5
+  stop_after_dsets      : 90
 
   min_num_epochs        : 100
   max_num_epochs        : 2147483647
@@ -49,5 +49,5 @@ training:
   
 posterior:
   sampling_num  : 2000
-  val_set_size  : 2
+  val_set_size  : 1
   step          : 2     # the epoch steps to check posterior during training

@@ -41,7 +41,7 @@ sys.path.append('./src')
 # from dataset.dataset import training_dataset
 # from dataset.simulate_for_sbi import simulate_for_sbi
 # from simulator.seqC_generator import seqC_generator
-from train.MyPosteriorEstimator import MySNPE_C
+from train.MyPosteriorEstimator import MySNPE_C, MySNPE_C_P3
 from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small, Conv1D_RNN, RNN_Multi_Head
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
@@ -289,7 +289,7 @@ class Solver:
             chosen_MS_list      = config_exp.chosen_MS_list,
             seqC_sample_per_MS  = config_exp.seqC_sample_per_MS,
             trial_data_path     = config_x_o.trial_data_path,
-        
+
             seqC_process_method = config_dataset.seqC_process,
             nan2num             = config_dataset.nan2num,
             summary_type        = config_dataset.summary_type,
@@ -310,8 +310,9 @@ class Solver:
         # get neural posterior
         neural_posterior = self.get_neural_posterior()
         print(f'neural_posterior: {neural_posterior}')
-        
-        self.inference = MySNPE_C(
+
+        MySNPE = MySNPE_C_P3 if self.config.pipeline_version == 'p3' else MySNPE_C
+        self.inference = MySNPE(
             prior               = prior,
             density_estimator   = neural_posterior,
             device              = self.device,
@@ -330,17 +331,17 @@ class Solver:
 
         # dataloader kwargs
         my_dataloader_kwargs = self.get_my_data_kwargs()
-            
+
         self.inference.append_simulations(
                 theta         = torch.empty(1),
                 x             = torch.empty(1),
                 proposal      = prior,
                 data_device   = 'cpu',
             )
-        
+
         # start training
         print(f"\n======\nstart of training\n======")
-        
+
         # run training with current run updated dataset
         self.inference, density_estimator = self.inference.train( # type: ignore
             config                  = self.config,
@@ -350,9 +351,9 @@ class Solver:
             debug                   = debug,
         )  # density estimator
 
-            
+
         torch.save(deepcopy(density_estimator.state_dict()), f"{self.log_dir}/model/a_final_best_model_state_dict.pt")
-        
+
         print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
 
 @hydra.main(config_path="../config", config_name="config", version_base=None)
