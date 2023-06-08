@@ -32,10 +32,10 @@ chosen_dur_trained_in_sequence:
   - [3, 9, 15]
 crop_dur                    : True
 
-batch_process_method        : 'collate_fn'
-batch_size                  : 64
-# batch_process_method        : 'in_dataset'
-# batch_size                  : 1600
+# batch_process_method        : 'collate_fn'
+# batch_size                  : 64
+batch_process_method        : 'in_dataset'
+batch_size                  : 1600
 num_probR_sample            : 50 #25
 shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
