@@ -372,14 +372,18 @@ class My_Processed_Dataset(My_Chosen_Sets):
 
         Returns:
             __getitem__:
-            seqC :             -> (DMS, 15 or L_x)
-            theta: (5000, 4)   -> (4,)
-            probR: (DMS, 5000) -> (DMS, )
+                seqC :             -> (DMS, 15 or L_x)
+                theta: (5000, 4)   -> (4,)
+                probR: (DMS, 5000) -> (DMS, )
             
             all data:
-            seqC_all:          (num_chosen_sets, DMS, 15 or L_x)
-            theta_all:         (num_chosen_sets, num_chosen_theta_each_set, 4)
-            probR_all:         (num_chosen_sets, DMS, num_chosen_theta_each_set)
+                seqC_all:          (num_chosen_sets, DMS, 15 or L_x)
+                theta_all:         (num_chosen_sets, num_chosen_theta_each_set, 4)
+                probR_all:         (num_chosen_sets, DMS, num_chosen_theta_each_set)
+            
+            processed data:
+                seqC_all:          (num_chosen_sets, DMS, 15 or L_x)
+                theta_all:         (num_chosen_sets, num_chosen_theta_each_set, 4)
             
         """
         super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur)
@@ -423,6 +427,84 @@ class My_Processed_Dataset(My_Chosen_Sets):
         # print(f"getitem seqC: {(time.time()-time_start)*1000:.2f}ms")
         # time_start = time.time()
         x[:, self.seqC_all.shape[2]:] = self.probR_all[set_idx, permutation, theta_idx * self.C + probR_sample_idx] # (D_MS, 1)
+        # print(f"getitem probR_all: {(time.time()-time_start)*1000:.2f}ms")
+        
+        theta = self.theta_all[set_idx, theta_idx] # (4,)
+        
+        return x, theta
+
+class My_Processed_HighD_Dataset(My_HighD_Sets):
+    """ My_Dataset:  load data into memory and finish the preprocessing before training
+    with My_HighD_Sets 
+    loaded into memory:
+        seqC_normed     of shape (num_sets, DM, S, L) - (7, 21, 700, 15)
+        theta           of shape (num_sets, T, 4)     - (7, 5000, 4)
+        probR           of shape (num_sets, DM, S, T) - (7, 21, 700, 5000) #TODO fixed probR sampling, in init function
+    
+    get item:
+        seqC_normed     of shape (DM, S, L)           - (21, 700, 15)
+        theta           of shape (4)                  - (4)
+        probR           of shape (DM, S, 1)           - (21, 700, 1)
+    
+    Further preprocessing by sampling from probR with C times and repeat probR C times along a new dimension:
+
+    all data:
+        seqC_all:          (num_chosen_sets, DM, S, 15 or L_x)
+        theta_all:         (num_chosen_sets, T, 4)
+        probR_all:         (num_chosen_sets, DM, S, T)
+    
+    __getitem__:
+        seqC :             -> (DMS, 15 or L_x)
+        theta: (5000, 4)   -> (4,)
+        probR: (DMS, 5000) -> (DMS, )    
+    """
+    def __init__(self, 
+                 config, 
+                 chosen_set_names, 
+                 num_chosen_theta_each_set, 
+                 chosen_dur=[3,9,15], 
+                 ):
+        
+        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur)
+        # self.seqC_all = seqC_all  # shape (num_chosen_sets, DM, S, 15 or L_x)
+        # self.theta_all = theta_all # shape (num_chosen_sets, T, 4)
+        # self.probR_all = probR_all # shape (num_chosen_sets, DM, S, T)
+        
+        self.C = config.dataset.num_probR_samples
+        print(f"\nSampling {self.C} times from probR ... ", end="")
+        time_start = time.time()
+        self.DM, self.S = self.seqC_all.shape[1], self.seqC_all.shape[2]
+        self.probR_all = self.probR_all.repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, DM, S, T*C)
+        self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).contiguous()  # (num_chosen_sets, D*M, S, T*C)
+        print(f"in {(time.time()-time_start)/60:.2f}min")
+        
+        self.total_samples = len(chosen_set_names) * self.T * self.C
+        print(f"sampled probR shape {self.probR_all.shape} MEM size {self.probR_all.element_size()*self.probR_all.nelement()/1024**3:.2f}GB, Total samples: {self.total_samples} ") 
+        # self.permutations = generate_permutations(self.C*self.T*len(chosen_set_names)*self.DM, self.S).contiguous() # (C*T*Set*DM, S) #TODO use this way to shuffle
+        self.permutations = generate_permutations(self.total_samples, self.S).contiguous() # (C*T*Set*DM, S)
+        
+        self.seqC_all = self.seqC_all.contiguous()
+        self.theta_all = self.theta_all
+        
+        indices = torch.arange(self.total_samples)
+        self.set_idxs, self.theta_idxs, self.probR_sample_idxs = unravel_index(indices, (len(self.chosen_set_names), self.T, self.C))
+    
+    
+    def __len__(self):
+        return self.total_samples
+
+    def __getitem__(self, idx):
+        
+        # time_start = time.time()
+        # Calculate set index and theta index within the set
+        permutation = self.permutations[idx]
+        set_idx, theta_idx, probR_sample_idx = self.set_idxs[idx], self.theta_idxs[idx], self.probR_sample_idxs[idx]
+
+        x = torch.empty((self.DM, self.S, self.seqC_all.shape[-1]+1), dtype=torch.float32)
+        x[:, :, :self.seqC_all.shape[-1]] = self.seqC_all[set_idx, :, permutation, :] # (DM, S, 15 or L_x) #TODO more complex shuffling methods
+        # print(f"getitem seqC: {(time.time()-time_start)*1000:.2f}ms")
+        # time_start = time.time()
+        x[:, self.seqC_all.shape[-1]:]    = self.probR_all[set_idx, :, permutation, theta_idx * self.C + probR_sample_idx] # (DM, S, 1)
         # print(f"getitem probR_all: {(time.time()-time_start)*1000:.2f}ms")
         
         theta = self.theta_all[set_idx, theta_idx] # (4,)

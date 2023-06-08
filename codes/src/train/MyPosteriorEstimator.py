@@ -39,7 +39,7 @@ import signal
 import sys
 sys.path.append('./src')
 
-from train.MyData import Data_Prefetcher, My_Chosen_Sets, My_Processed_Dataset, My_HighD_Sets
+from train.MyData import Data_Prefetcher, My_Chosen_Sets, My_Processed_Dataset, My_HighD_Sets, My_Processed_HighD_Dataset
 from utils.train import (
     plot_posterior_with_label,
     WarmupScheduler,
@@ -372,8 +372,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         if self.config.dataset.batch_process_method == 'collate_fn':
             dataset_class = My_HighD_Sets if self.config.is_3_dim_dataset else My_Chosen_Sets
-        else:
-            dataset_class = My_Processed_Dataset #TODO high dim init process
+        elif self.config.dataset.batch_process_method == 'in_dataset':
+            dataset_class = My_Processed_Dataset if self.config.is_3_dim_dataset else My_Processed_HighD_Dataset
 
         dataset = dataset_class(
             config = self.config,
