@@ -49,7 +49,7 @@ from utils.resource import(
 )
 
 
-DO_PRINT_MEM = True
+DO_PRINT_MEM = False
 
 def tensor_size(a):
     return a.element_size() * a.nelement() / (1024 ** 3)
@@ -160,7 +160,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     while (
                         self.epoch <= training_kwargs.max_num_epochs
                         and not self._converged()
-                        and (not debug or self.epoch <= 5)
+                        and (not debug or self.epoch <= 2)
                     ):
                         
                         # train and validate for one epoch
@@ -1072,7 +1072,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary_writer.add_scalar(f" (epoch) run{self.run}/best_val_epoch_glob", self._best_model_from_epoch, self.epoch_counter-1)
         self._summary_writer.add_scalar(f" (epoch) run{self.run}/best_val_log_prob_glob", self._best_val_log_prob, self.epoch_counter-1)
         self._summary_writer.add_scalar(f" (epoch) run{self.run}/current_dset_glob", self.dset_counter, self.epoch_counter-1)
-        self._summary_writer.add_scalar(f" (epoch) run{self.run}/num_chosen_dset_glob", self.num_train_sets, self.epoch_counter-1)
+        # self._summary_writer.add_scalar(f" (epoch) run{self.run}/num_chosen_dset_glob", self.num_train_sets, self.epoch_counter-1)
         self._summary_writer.flush()
         return converged
     
@@ -1153,8 +1153,12 @@ class MyPosteriorEstimator(PosteriorEstimator):
             torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
         
         # use only the whole dataset as the training set, would train only once
-        if self.config.dataset.one_dataset == True and self.dset == 1:
-            converged = True
+        # check if one_dataset is in self.config.dataset
+        if hasattr(self.config.dataset, "one_dataset"):
+            if self.config.dataset.one_dataset == True and self.dset == 1:
+                converged = True
+        else:
+            print("no one_dataset in config.dataset")
         
         self._summary_writer.add_scalar(" (dset) num_epochs_of_current_dset", self._epoch_of_last_dset, self.dset_counter-1)
         self._summary_writer.add_scalar(" (dset) best_from_epoch_of_current_dset", self._best_model_from_epoch, self.dset_counter-1)
@@ -1177,8 +1181,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         best_idxs = [starting_epoch_dset[dset] + best_epoch for dset, best_epoch in zip( best_dset_idx, best_epoch)]
         self._summary["best_epoches"] = best_idxs
+        best_idxs = str(list(best_idxs))
+        print("best_epochs so far", best_idxs)
         
-        return np.array2string(best_idxs)
+        return best_idxs
         
         
     def _show_epoch_progress(self, epoch, starting_time, train_log_prob, val_log_prob):
@@ -1334,10 +1340,11 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         # ==================== training ==================== #
         train_start_time = time.time()
         while (self.dset <= self.training_kwargs.max_num_dsets 
-                and not self._converged_dset_p3() # TODO: check dset condition
+                and not self._converged_dset() # TODO: check dset condition
                 ):
             
             print(f'\n\n=== run {self.run}, chosen_dur {chosen_dur}, dset {self.dset} ===')
+            tic = time.time()
             print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", DO_PRINT_MEM)
             
@@ -1356,10 +1363,12 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
             self._init_optimizer(self.training_kwargs)
             self.epoch  = 0
             
+            print(f'\npreparing dataset takes {(time.time()-tic)/60:.2f} min')
+            
             # train and validate until no validation performance improvement
             while (
                 self.epoch <= self.training_kwargs.max_num_epochs
-                and not self._converged_p3()
+                and not self._converged()
                 and (not debug or self.epoch <= 1)
             ):  
                 
@@ -1497,21 +1506,23 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         )
         print_mem_info('after loading val_dataset', DO_PRINT_MEM)
         
-        print('\n=== training loader ===')
+        print('\n=== training loader === ', end='')
         train_loader = self._get_loader(
             dataset = self.train_dataset,
             dataloader_kwargs=dataloader_kwargs,
             seed=self.config.seed+self.dset,
         )
         print_mem_info('after loading training_loader', DO_PRINT_MEM)
+        print(f'{len(train_loader)} batches')
         
-        print('\n=== validation loader ===')
+        print('\n=== validation loader ===', end='')
         val_loader = self._get_loader(
             dataset = self.val_dataset,
             dataloader_kwargs=dataloader_kwargs,
             seed=self.config.seed+self.dset,
         )
         print_mem_info('after loading val_loader', DO_PRINT_MEM)
+        print(f'{len(val_loader)} batches')
         
         return train_loader, val_loader
     

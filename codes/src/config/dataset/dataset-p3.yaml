@@ -15,8 +15,8 @@ dataset_chosen_mode         : 'fixed' # determine how to choose all the dsets, t
   # 'random': randomly choose the dsets, theta
   # 'fixed': choose the dsets, theta in a fixed order
 
-test_fraction               : [10, 20, 30, 40, 50]
-test_num_theta              : 100
+test_fraction               : [10, 20, 30, 40]
+test_num_theta              : 50
 
 train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
