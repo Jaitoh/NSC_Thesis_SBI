@@ -119,7 +119,7 @@ class My_HighD_Sets(Dataset):
         torch.cuda.manual_seed(config.seed)
         
         dur_list = [3,5,7,9,11,13,15]
-        print(f'Loading {len(chosen_set_names)} dataset into memory...', end=' ')
+        print(f'Loading {len(chosen_set_names)} dataset into memory... \n{chosen_set_names} ...', end=' ')
         
         start_loading_time = time.time()
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
@@ -363,10 +363,11 @@ class My_Chosen_Sets(Dataset):
         
 class My_Processed_Dataset(My_Chosen_Sets):
     def __init__(self, 
-                 config, 
+                 config,
                  chosen_set_names, 
-                 num_chosen_theta_each_set, 
+                 num_chosen_theta_each_set,
                  chosen_dur=[3,9,15], 
+                 theta_chosen_mode='random',
                  ):
         """My_Dataset:  load data into memory and finish the preprocessing before training
 
@@ -386,7 +387,7 @@ class My_Processed_Dataset(My_Chosen_Sets):
                 theta_all:         (num_chosen_sets, num_chosen_theta_each_set, 4)
             
         """
-        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur)
+        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur, theta_chosen_mode)
         # self.seqC_all = seqC_all  # shape (num_chosen_sets, D_MS, 15 or L_x)
         # self.theta_all = theta_all # shape (num_chosen_sets, num_chosen_theta_each_set, 4)
         # self.probR_all = probR_all # shape (num_chosen_sets, D_MS, num_chosen_theta_each_set)
@@ -463,17 +464,18 @@ class My_Processed_HighD_Dataset(My_HighD_Sets):
                  chosen_set_names, 
                  num_chosen_theta_each_set, 
                  chosen_dur=[3,9,15], 
+                 theta_chosen_mode='random',
                  ):
         
-        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur)
+        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur, theta_chosen_mode)
         # self.seqC_all = seqC_all  # shape (num_chosen_sets, DM, S, 15 or L_x)
         # self.theta_all = theta_all # shape (num_chosen_sets, T, 4)
         # self.probR_all = probR_all # shape (num_chosen_sets, DM, S, T)
         
-        self.C = config.dataset.num_probR_samples
-        print(f"\nSampling {self.C} times from probR ... ", end="")
+        self.C = config.dataset.num_probR_sample
+        print(f"--> Further Sampling {self.C} times from probR (given 'in_dataset' process setting) ... ", end="")
         time_start = time.time()
-        self.DM, self.S = self.seqC_all.shape[1], self.seqC_all.shape[2]
+        self.DM, self.S, self.T= self.seqC_all.shape[1], self.seqC_all.shape[2], self.theta_all.shape[1]
         self.probR_all = self.probR_all.repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, DM, S, T*C)
         self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).contiguous()  # (num_chosen_sets, D*M, S, T*C)
         print(f"in {(time.time()-time_start)/60:.2f}min")
@@ -504,7 +506,7 @@ class My_Processed_HighD_Dataset(My_HighD_Sets):
         x[:, :, :self.seqC_all.shape[-1]] = self.seqC_all[set_idx, :, permutation, :] # (DM, S, 15 or L_x) #TODO more complex shuffling methods
         # print(f"getitem seqC: {(time.time()-time_start)*1000:.2f}ms")
         # time_start = time.time()
-        x[:, self.seqC_all.shape[-1]:]    = self.probR_all[set_idx, :, permutation, theta_idx * self.C + probR_sample_idx] # (DM, S, 1)
+        x[:, :, self.seqC_all.shape[-1]:] = self.probR_all[set_idx, :, permutation, theta_idx * self.C + probR_sample_idx] # (DM, S, 1)
         # print(f"getitem probR_all: {(time.time()-time_start)*1000:.2f}ms")
         
         theta = self.theta_all[set_idx, theta_idx] # (4,)

@@ -48,6 +48,7 @@ from utils.resource import(
     print_mem_info
 )
 
+
 DO_PRINT_MEM = True
 
 def tensor_size(a):
@@ -114,7 +115,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
         self._summary["training_log_probs"] = []
         self._summary["validation_log_probs"] = []
         self._summary["learning_rates"] = []
-
+        
+        self._summary["best_from_epoch_of_current_dset"] = []
+        self._summary["best_from_dset_of_current_dset"] = []
+        self._summary["num_epochs_of_current_dset"] = []
+        
 
         try:
             set_seed(config.seed)
@@ -127,6 +132,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 # is_last_dset = False
                 # initialization
                 self._init_log_prob()
+                self._best_model_from_epoch = -1
+                
                 val_loader,   x_val,   theta_val   = self._init_val(val_set_names, dataloader_kwargs, chosen_dur)
                 train_loader, x_train, theta_train = self._init_train(val_set_names, dataloader_kwargs, chosen_dur)
                 self._init_nn(x_train, theta_train, continue_from_checkpoint)
@@ -147,6 +154,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                     print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     print_mem_info(f"\n{'gpu memory usage after loading dataset':46}", DO_PRINT_MEM)
 
+                    self.epoch  = 0
+                    
                     # train and validate until no validation performance improvement
                     while (
                         self.epoch <= training_kwargs.max_num_epochs
@@ -236,7 +245,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._val_log_prob = self._val_one_epoch(val_prefetcher if self.use_data_prefetcher else val_loader)
             self._val_one_epoch_log(train_start_time)
                             
-            print(f"val_log_prob: {self._val_log_prob:.2f} in {(time.time() - val_start_time)/60:.2f} min")
+            print(f"\nval_log_prob: {self._val_log_prob:.2f} in {(time.time() - val_start_time)/60:.2f} min")
             print_mem_info(f"{'gpu memory usage after validation':46}", DO_PRINT_MEM)
 
             # update epoch info and counter
@@ -363,7 +372,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         num_max_sets = dataset_kwargs['num_max_sets']
         num_max_sets = min(num_max_sets, num_total_sets)
         all_set_names = all_set_names[:num_max_sets]
-        print(f'=== chosen {len(all_set_names)} sets from {num_total_sets} sets ===')
+        print(f'=== program seen {len(all_set_names)} sets from stored {num_total_sets} sets ===')
         
         return all_set_names
     
@@ -373,7 +382,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         if self.config.dataset.batch_process_method == 'collate_fn':
             dataset_class = My_HighD_Sets if self.config.is_3_dim_dataset else My_Chosen_Sets
         elif self.config.dataset.batch_process_method == 'in_dataset':
-            dataset_class = My_Processed_Dataset if self.config.is_3_dim_dataset else My_Processed_HighD_Dataset
+            dataset_class = My_Processed_HighD_Dataset if self.config.is_3_dim_dataset else My_Processed_Dataset
 
         dataset = dataset_class(
             config = self.config,
@@ -689,7 +698,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             calibration_kernel = lambda x: ones([len(x)], device=self._device),
             force_first_round_loss=True,
         )
-        print_mem_info('\nmemory usage after loss', DO_PRINT_MEM)
+        print_mem_info('memory usage after loss', DO_PRINT_MEM)
         train_loss = torch.mean(train_losses)
         train_loss.backward()
         clean_cache()
@@ -713,11 +722,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
             pass
 
         elif len(train_prefetcher_or_loader) <= print_freq:
-            print_mem_info('memory usage after batch', DO_PRINT_MEM)
+            # print_mem_info('memory usage after batch', DO_PRINT_MEM)
             print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
 
         elif train_batch_num % (len(train_prefetcher_or_loader)//print_freq) == 0: # print every 5% of batches
-            print_mem_info('memory usage after batch', DO_PRINT_MEM)
+            # print_mem_info('memory usage after batch', DO_PRINT_MEM)
             print(f'epoch {self.epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min')
         
         
@@ -759,7 +768,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 
                 # get next batch
                 x_val, theta_val = val_prefetcher_or_loader.next()
-                print_mem_info('\nmemory usage after batch', DO_PRINT_MEM)
+                # print_mem_info('\nmemory usage after batch', DO_PRINT_MEM)
                 
         else: # use data loader
             for x_val, theta_val in val_prefetcher_or_loader:
@@ -889,7 +898,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
             gc.collect()
             torch.cuda.empty_cache()
                 
-            print(f"finished in {(time.time()-posterior_start_time)/60:.2f}min\n")
+            print(f"finished in {(time.time()-posterior_start_time)/60:.2f}min")
             
     def _plot_training_curve(self, log_dir):
         duration        = np.array(self._summary["epoch_durations_sec"])
@@ -919,10 +928,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
         ax1.plot(val_log_probs, '.-', label='validation', alpha=0.8, lw=2, color='tab:orange', ms=0.1)
         if "test_log_probs" in self._summary.keys():
             test_log_probs = self._summary["test_log_probs"]
-            ax1.plot(test_log_probs, '.-', label='validation', alpha=0.8, lw=2, color='tab:brown', ms=0.1)
+            ax1.plot(test_log_probs, '.-', label='test', alpha=0.8, lw=2, color='tab:brown', ms=0.1)
         
-        ax1.plot(best_val_log_prob_epoch-1, best_val_log_prob, 'v', color='red', lw=2)
-        ax1.text(best_val_log_prob_epoch-1, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
+        # find best val log prob, and plot it
+        best_val_log_prob = max(val_log_probs)
+        best_val_log_prob_epoch = np.argmax(val_log_probs)
+        
+        ax1.plot(best_val_log_prob_epoch, best_val_log_prob, 'v', color='red', lw=2)
+        ax1.text(best_val_log_prob_epoch, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
         # ax1.set_ylim(log_probs_lower_bound, max(val_log_probs)+0.2)
         
         ax1.legend()
@@ -940,6 +953,65 @@ class MyPosteriorEstimator(PosteriorEstimator):
         plt.close()
 
     # ==================== converge and log ==================== #
+    # def _converged(self):
+    #     """Return whether the training converged yet and save best model state so far.
+
+    #     Checks for improvement in validation performance over previous epochs.
+
+    #     Args:
+    #         epoch: Current epoch in training.
+    #         stop_after_epochs: How many fruitless epochs to let pass before stopping.
+
+    #     Returns:
+    #         Whether the training has stopped improving, i.e. has converged.
+    #     """
+    #     epoch                   = self.epoch
+    #     improvement_threshold   = self.config.train.training.improvement_threshold
+    #     min_num_epochs          = self.config.train.training.min_num_epochs
+    #     stop_after_epochs       = self.config.train.training.stop_after_epochs
+        
+    #     converged = False
+
+    #     assert self._neural_net is not None
+    #     neural_net = self._neural_net
+
+    #     # (Re)-start the epoch count with the first epoch or any improvement. 
+    #     improvement = self._val_log_prob - self._best_val_log_prob
+    #     if epoch == 0 or ((self._val_log_prob > self._best_val_log_prob) and (improvement >= improvement_threshold)):
+            
+    #         self._epochs_since_last_improvement = 0
+            
+    #         self._best_val_log_prob     = self._val_log_prob
+    #         self._best_model_state_dict = deepcopy(neural_net.state_dict())
+    #         self._best_model_from_epoch = epoch - 1 # TODO update converge conditions
+            
+    #         if epoch != 0: #and epoch%self.config['train']['posterior']['step'] == 0:
+    #             self._posterior_behavior_log(self.prior_limits) # plot posterior behavior when best model is updated
+    #             print_mem_info(f"{'gpu memory usage after posterior behavior log':46}", DO_PRINT_MEM)
+    #         # torch.save(deepcopy(neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+            
+    #     else:
+    #         self._epochs_since_last_improvement += 1
+
+    #     # If no validation improvement over many epochs, stop training.
+    #     if self._epochs_since_last_improvement > stop_after_epochs - 1 and epoch > self._epoch_of_last_dset+min_num_epochs:
+    #         # neural_net.load_state_dict(self._best_model_state_dict)
+    #         converged = True
+            
+    #         self._neural_net.load_state_dict(self._best_model_state_dict)
+    #         self._val_log_prob = self._best_val_log_prob
+    #         self._epochs_since_last_improvement = 0
+    #         # self._epoch_of_last_dset = epoch - 1
+    #         self._epoch_of_last_dset = self.epoch_counter-1
+        
+    #     # log info for this dset
+    #     self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_glob", self._best_model_from_epoch, self.epoch_counter-1)
+    #     self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_glob", self._best_val_log_prob, self.epoch_counter-1)
+    #     self._summary_writer.add_scalar(f"run{self.run}/current_dset_glob", self.dset_counter, self.epoch_counter-1)
+    #     self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset_glob", self.num_train_sets, self.epoch_counter-1)
+    #     self._summary_writer.flush()
+    #     return converged
+    
     def _converged(self):
         """Return whether the training converged yet and save best model state so far.
 
@@ -962,9 +1034,14 @@ class MyPosteriorEstimator(PosteriorEstimator):
         assert self._neural_net is not None
         neural_net = self._neural_net
 
-        # (Re)-start the epoch count with the first epoch or any improvement.
+        # (Re)-start the epoch count with the first epoch or any improvement. 
         improvement = self._val_log_prob - self._best_val_log_prob
-        if epoch == 0 or ((self._val_log_prob > self._best_val_log_prob) and (improvement >= improvement_threshold)):
+        if (epoch == 0 
+            or (
+                (self._val_log_prob > self._best_val_log_prob) 
+                and (improvement >= improvement_threshold)
+                )
+            ):
             
             self._epochs_since_last_improvement = 0
             
@@ -981,22 +1058,62 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._epochs_since_last_improvement += 1
 
         # If no validation improvement over many epochs, stop training.
-        if self._epochs_since_last_improvement > stop_after_epochs - 1 and epoch > self._epoch_of_last_dset+min_num_epochs:
+        if self._epochs_since_last_improvement > stop_after_epochs - 1 and epoch > min_num_epochs:
             # neural_net.load_state_dict(self._best_model_state_dict)
             converged = True
             
             self._neural_net.load_state_dict(self._best_model_state_dict)
             self._val_log_prob = self._best_val_log_prob
             self._epochs_since_last_improvement = 0
-            self._epoch_of_last_dset = epoch - 1
+            # self._epoch_of_last_dset = epoch - 1
+            self._epoch_of_last_dset = self.epoch_counter-1
         
         # log info for this dset
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_epoch_board", self._best_model_from_epoch, self.epoch_counter-1)
-        self._summary_writer.add_scalar(f"run{self.run}/best_val_log_prob_board", self._best_val_log_prob, self.epoch_counter-1)
-        self._summary_writer.add_scalar(f"run{self.run}/current_dset_board", self.dset_counter, self.epoch_counter-1)
-        # self._summary_writer.add_scalar(f"run{self.run}/num_chosen_dset_board", self.num_train_sets, self.epoch_counter-1)
+        self._summary_writer.add_scalar(f" (epoch) run{self.run}/best_val_epoch_glob", self._best_model_from_epoch, self.epoch_counter-1)
+        self._summary_writer.add_scalar(f" (epoch) run{self.run}/best_val_log_prob_glob", self._best_val_log_prob, self.epoch_counter-1)
+        self._summary_writer.add_scalar(f" (epoch) run{self.run}/current_dset_glob", self.dset_counter, self.epoch_counter-1)
+        self._summary_writer.add_scalar(f" (epoch) run{self.run}/num_chosen_dset_glob", self.num_train_sets, self.epoch_counter-1)
         self._summary_writer.flush()
         return converged
+    
+    # def _converged_dset(self):
+        
+    #     improvement_threshold = self.config.train.training.improvement_threshold
+    #     min_num_dsets         = self.config.train.training.min_num_dsets
+    #     stop_after_dsets      = self.config.train.training.stop_after_dsets
+        
+    #     converged = False
+    #     assert self._neural_net is not None
+        
+    #     # improvement = self._val_log_prob - self._best_val_log_prob
+    #     if self.dset == 0 or (self._val_log_prob_dset > self._best_val_log_prob_dset):
+            
+    #         self._dset_since_last_improvement = 0
+            
+    #         self._best_val_log_prob_dset        = self._val_log_prob_dset
+    #         self._best_model_state_dict_dset    = deepcopy(self._neural_net.state_dict())
+    #         self._best_model_from_dset          = self.dset - 1
+            
+    #         torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+        
+    #     else:
+    #         self._dset_since_last_improvement += 1
+            
+    #     if self._dset_since_last_improvement > stop_after_dsets - 1 and self.dset > min_num_dsets - 1:
+            
+    #         converged = True
+            
+    #         self._neural_net.load_state_dict(self._best_model_state_dict_dset)
+    #         self._val_log_prob_dset = self._best_val_log_prob_dset
+    #         self._dset_since_last_improvement = 0
+            
+    #         torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
+        
+    #     # use only the whole dataset as the training set, would train only once
+    #     if self.config.dataset.one_dataset == True and self.dset == 1:
+    #         converged = True
+        
+    #     return converged
     
     def _converged_dset(self):
         
@@ -1008,6 +1125,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         assert self._neural_net is not None
         
         # improvement = self._val_log_prob - self._best_val_log_prob
+        self._summary["num_epochs_of_current_dset"].append(self._epoch_of_last_dset)
         if self.dset == 0 or (self._val_log_prob_dset > self._best_val_log_prob_dset):
             
             self._dset_since_last_improvement = 0
@@ -1017,7 +1135,10 @@ class MyPosteriorEstimator(PosteriorEstimator):
             self._best_model_from_dset          = self.dset - 1
             
             torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
-        
+
+            self._summary["best_from_epoch_of_current_dset"].append(self._best_model_from_epoch)
+            self._summary["best_from_dset_of_current_dset"].append(self._best_model_from_dset)
+            
         else:
             self._dset_since_last_improvement += 1
             
@@ -1035,10 +1156,33 @@ class MyPosteriorEstimator(PosteriorEstimator):
         if self.config.dataset.one_dataset == True and self.dset == 1:
             converged = True
         
+        self._summary_writer.add_scalar(" (dset) num_epochs_of_current_dset", self._epoch_of_last_dset, self.dset_counter-1)
+        self._summary_writer.add_scalar(" (dset) best_from_epoch_of_current_dset", self._best_model_from_epoch, self.dset_counter-1)
+        self._summary_writer.add_scalar(" (dset) best_from_dset_of_current_dset", self._best_model_from_dset, self.dset_counter-1)
+        
+        best_idxs = self._get_best_epoch_idx()
+        self._summary_writer.add_text(" (dset) best_epoches_till_now", best_idxs, self.dset_counter-1)
+        
         return converged
     
+    def _get_best_epoch_idx(self):
+        """compute the best epoch index trace till now
+        check converge_test.py for more details
+        """
+        
+        best_dset_idx = np.array(self._summary["best_from_dset_of_current_dset"][1:], dtype=int)
+        starting_epoch_dset = np.array(self._summary["num_epochs_of_current_dset"][1:-1], dtype=int)+1
+        starting_epoch_dset = np.insert(starting_epoch_dset, 0, 0)
+        best_epoch = np.array(self._summary["best_from_epoch_of_current_dset"][1:], dtype=int)
+        
+        best_idxs = [starting_epoch_dset[dset] + best_epoch for dset, best_epoch in zip( best_dset_idx, best_epoch)]
+        self._summary["best_epoches"] = best_idxs
+        
+        return np.array2string(best_idxs)
+        
+        
     def _show_epoch_progress(self, epoch, starting_time, train_log_prob, val_log_prob):
-        print(f"| Epochs trained: {epoch:4} | log_prob train: {train_log_prob:.2f} | log_prob val: {val_log_prob:.2f} | . Time elapsed {(time.time()-starting_time)/ 60:6.2f}min, trained for {(time.time() - self.train_start_time)/60:6.2f}min")
+        print(f"| Epochs trained: {epoch:4} | log_prob train: {train_log_prob:.2f} | log_prob val: {val_log_prob:.2f} | . Time elapsed {(time.time()-starting_time)/ 60:6.2f}min, trained in total {(time.time() - self.train_start_time)/60:6.2f}min")
     
     def _show_epoch_progress_with_test(self, epoch, starting_time, train_log_prob, val_log_prob, test_log_prob):
         print(f"| Epochs trained: {epoch:4} | log_prob train: {train_log_prob:.2f} | log_prob val: {val_log_prob:.2f} | log_prob test: {test_log_prob:.2f} | . Time elapsed {(time.time()-starting_time)/ 60:6.2f}min, trained for {(time.time() - self.train_start_time)/60:6.2f}min")
@@ -1160,6 +1304,10 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         self._summary["test_log_probs"] = []
         self._summary["learning_rates"] = []
         
+        self._summary["best_from_epoch_of_current_dset"] = []
+        self._summary["best_from_dset_of_current_dset"] = []
+        self._summary["num_epochs_of_current_dset"] = []
+        
         set_seed(config.seed)
         
         chosen_dur = chosen_dur_trained_in_sequence[0]
@@ -1167,6 +1315,7 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         # ==================== initialize ==================== #
         # initialize log probs and counters
         self._init_log_prob()
+        self._best_model_from_epoch = -1
         
         # initialize test dataset and test loader -> self.test_dataset, self.test_loader
         test_fraction = OmegaConf.to_container(self.config.dataset.test_fraction)
@@ -1210,8 +1359,8 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
             # train and validate until no validation performance improvement
             while (
                 self.epoch <= self.training_kwargs.max_num_epochs
-                and not self._converged()
-                and (not debug or self.epoch <= 5)
+                and not self._converged_p3()
+                and (not debug or self.epoch <= 1)
             ):  
                 
                 # train and validate for one epoch
@@ -1257,21 +1406,23 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
     def _init_test_set(self, test_set_names, dataloader_kwargs, chosen_dur):
         """initialize test dataset and loader"""
         
-        print('\npreparing [test] data ...')
+        print('\n=== test dataset ===')
         # get test dataset
         self.test_dataset = self._get_dataset(
             set_names = test_set_names,
             num_chosen_theta_each_set=self.config.dataset.test_num_theta,
             chosen_dur=chosen_dur,
         )
+        print_mem_info('after loading test_dataset', DO_PRINT_MEM)
         
         # get test loader
-        print('test loader')
+        print('\n=== test loader ===')
         self.test_loader = self._get_loader(
             dataset=self.test_dataset,
             dataloader_kwargs=dataloader_kwargs,
             seed=self.config.seed
         )
+        print_mem_info('after loading test_loader', DO_PRINT_MEM)
         
         # get 1st batch data
         x_test, theta_test = next(iter(self.test_loader))
@@ -1301,12 +1452,17 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         train_loader, val_loader = self._get_train_val_loaders(train_set_name, dataloader_kwargs, chosen_dur)
         
         # get 1st batch data
-        print('\ngetting 1st [training] batch data')
+        print('\ngetting 1st [training] batch data ... ', end='')
+        tic = time.time()
         x_train, theta_train = next(iter(train_loader))
         # _, x_train, theta_train = self._get_fetcher_1st_batch_data(train_loader, len(train_loader))
-        print('\ngetting 1st [val] batch data')
+        print(f'in {time.time()-tic:.2f} sec')
+        
+        print('\ngetting 1st [val] batch data ... ', end='')
+        tic = time.time()
         x_val, theta_val = next(iter(val_loader))
         # _, x_val, theta_val = self._get_fetcher_1st_batch_data(val_loader, len(val_loader))
+        print(f'in {time.time()-tic:.2f} sec')
         
         del train_loader, val_loader
         clean_cache()
@@ -1316,36 +1472,46 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         
         """get the train and validation loaders given the train_set_names"""
         
-        print('training dataset')
+        print('=== training dataset ===')
+        # if self.train_dataset exists, delete it
+        if hasattr(self, 'train_dataset'):
+            del self.train_dataset
+            del self.val_dataset
+            clean_cache()
+            
         self.train_dataset = self._get_dataset(
             set_names = train_set_names,
             num_chosen_theta_each_set=self.config.dataset.train_num_theta,
             chosen_dur=chosen_dur,
             theta_chosen_mode = f'first_{self.train_fraction}', # 'first_90'
         )
+        print_mem_info('after loading train_dataset', DO_PRINT_MEM)
         
         print()
-        print('validation dataset')
+        print('=== validation dataset ===')
         self.val_dataset = self._get_dataset(
             set_names = train_set_names,
             num_chosen_theta_each_set=self.config.dataset.train_num_theta,
             chosen_dur=chosen_dur,
             theta_chosen_mode=f'last_{self.validation_fraction}', # 'last_10'
         )
+        print_mem_info('after loading val_dataset', DO_PRINT_MEM)
         
-        print('\ntraining loader')
+        print('\n=== training loader ===')
         train_loader = self._get_loader(
             dataset = self.train_dataset,
             dataloader_kwargs=dataloader_kwargs,
             seed=self.config.seed+self.dset,
         )
+        print_mem_info('after loading training_loader', DO_PRINT_MEM)
         
-        print('\nvalidation loader')
+        print('\n=== validation loader ===')
         val_loader = self._get_loader(
             dataset = self.val_dataset,
             dataloader_kwargs=dataloader_kwargs,
             seed=self.config.seed+self.dset,
         )
+        print_mem_info('after loading val_loader', DO_PRINT_MEM)
         
         return train_loader, val_loader
     
@@ -1381,47 +1547,9 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         
         self._summary_writer.add_scalars("log_probs", {'test': self._test_log_prob}, self.epoch_counter-1)
         self._summary["test_log_probs"].append(self._test_log_prob)
-        print(f"test log prob: {self._test_log_prob:.4f}")
-        
-    def _converged_dset_p3(self):
-        
-        improvement_threshold = self.config.train.training.improvement_threshold
-        min_num_dsets         = self.config.train.training.min_num_dsets
-        stop_after_dsets      = self.config.train.training.stop_after_dsets
-        
-        converged = False
-        assert self._neural_net is not None
-        
-        # improvement = self._val_log_prob - self._best_val_log_prob
-        if self.dset == 0 or (self._val_log_prob_dset > self._best_val_log_prob_dset):
-            
-            self._dset_since_last_improvement = 0
-            
-            self._best_val_log_prob_dset        = self._val_log_prob_dset
-            self._best_model_state_dict_dset    = deepcopy(self._neural_net.state_dict())
-            self._best_model_from_dset          = self.dset - 1
-            
-            torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
-        
-        else:
-            self._dset_since_last_improvement += 1
-            
-        if self._dset_since_last_improvement > stop_after_dsets - 1 and self.dset > min_num_dsets - 1:
-            
-            converged = True
-            
-            self._neural_net.load_state_dict(self._best_model_state_dict_dset)
-            self._val_log_prob_dset = self._best_val_log_prob_dset
-            self._dset_since_last_improvement = 0
-            
-            torch.save(deepcopy(self._neural_net.state_dict()), f"{self.log_dir}/model/best_model_state_dict_run{self.run}.pt")
-        
-        # use only the whole dataset as the training set, would train only once
-        # if self.config.dataset.one_dataset == True and self.dset == 1:
-        #     converged = True
-        
-        return converged
-        
+        print(f"\ntest log prob: {self._test_log_prob:.4f}")
+      
+    
 class MySNPE_C(SNPE_C, MyPosteriorEstimator):
     def __init__(
         self,

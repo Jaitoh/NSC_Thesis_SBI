@@ -233,38 +233,43 @@ class Solver:
         #     'crop_dur'                       : self.config.dataset.crop_dur
         #     'num_max_sets'                   : self.config.dataset.num_max_sets
         # }
-
-        config_dataset = self.config.dataset
-        if config_dataset.batch_process_method != 'collate_fn':
-            return {  # TODO check and modify in_dataset processing login, of high_dim
-                'num_workers': config_dataset.num_workers,
-                'worker_init_fn': seed_worker,
-                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
-                # 'batch_size'    :  self.config.dataset.batch_size
-            }
-
+        config_dataset      = self.config.dataset
         use_data_prefetcher = config_dataset.use_data_prefetcher
         prefetch_factor     = config_dataset.prefetch_factor
-
-        is_3_dim_dataset = self.config.train.density_estimator.embedding_net.type in self.config.train.density_estimator.embedding_net.embedding_net_use_3_dim_dataset
+        
+        # check if dataset is 3 dim and update config
+        is_3_dim_dataset    = self.config.train.density_estimator.embedding_net.type in self.config.train.density_estimator.embedding_net.embedding_net_use_3_dim_dataset
         # OmegaConf.update(self.config, "is_3_dim_dataset", is_3_dim_dataset, merge=True)
         OmegaConf.set_struct(self.config, False)
         OmegaConf.update(self.config, "is_3_dim_dataset", is_3_dim_dataset, merge=True)
         OmegaConf.set_struct(self.config, True)
 
         # self.config.set('is_3_dim_dataset', is_3_dim_dataset) # add self.config with key 'is_3_dim_dataset' to config
-        collate_fn = collate_fn_vec_high_dim if is_3_dim_dataset else collate_fn_vec
+
+
+        if config_dataset.batch_process_method == 'in_dataset':
+            return {  # TODO check and modify in_dataset processing login, of high_dim
+                'num_workers': config_dataset.num_workers,
+                'worker_init_fn': seed_worker,
+                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
+                # 'batch_size'    :  self.config.dataset.batch_size
+            }
         
-        return {
-            'num_workers': config_dataset.num_workers,
-            'worker_init_fn': seed_worker,
-            'collate_fn': lambda batch: collate_fn(
-                batch=batch,
-                config=self.config,
-                shuffling_method=config_dataset.shuffling_method,
-            ),
-            'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
-        }
+        elif config_dataset.batch_process_method == 'collate_fn':
+            collate_fn = collate_fn_vec_high_dim if is_3_dim_dataset else collate_fn_vec
+            
+            return {
+                'num_workers': config_dataset.num_workers,
+                'worker_init_fn': seed_worker,
+                'collate_fn': lambda batch: collate_fn(
+                    batch=batch,
+                    config=self.config,
+                    shuffling_method=config_dataset.shuffling_method,
+                ),
+                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
+            }
+        else:
+            raise NotImplementedError
     
     
     def sbi_train(self, debug=False):

@@ -23,12 +23,12 @@ training:
   weight_decay          : 1e-9
   
   improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
-  stop_after_epochs     : 250
+  stop_after_epochs     : 10
   stop_after_dsets      : 90
 
-  min_num_epochs        : 100
+  min_num_epochs        : 10
   max_num_epochs        : 2147483647
-  min_num_dsets         : 10
+  min_num_dsets         : 15
   max_num_dsets         : 2147483647
 
   # scheduler             : 'ReduceLROnPlateau'

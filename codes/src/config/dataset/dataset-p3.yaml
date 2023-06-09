@@ -21,7 +21,7 @@ test_num_theta              : 100
 train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
   # 'increment': append one more dataset at a time, training for each increased sized dset, limited to the last ndsets
-increment_params            : {'step': 1, 'max_load': 21, 'loop': True}
+increment_params            : {'step': 2, 'max_load': 6, 'loop': True}
   # increment_step: the dset for the increment
   # ndset_limit: the max dset size for the increment, -1 means no limit
   # loop: whether to loop over the dsets
@@ -35,8 +35,8 @@ crop_dur                    : True
 # batch_process_method        : 'collate_fn'
 # batch_size                  : 64
 batch_process_method        : 'in_dataset'
-batch_size                  : 1600
-num_probR_sample            : 50 #25
+batch_size                  : 3200 #=32*100
+num_probR_sample            : 100 #25
 shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
 
