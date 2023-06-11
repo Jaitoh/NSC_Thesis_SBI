@@ -58,3 +58,10 @@ codes/src/train/logs/*
 *.gz
 codes/output.dat
 *.dat
+
+*/.hydra*
+*/.hydra/config.yaml
+codes/outputs/2023-*
+codes/outputs/2024-*
+codes/outputs/2025-*
+codes/outputs/2026-*

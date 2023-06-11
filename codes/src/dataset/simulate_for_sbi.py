@@ -9,15 +9,17 @@ import torch
 from simulator.seqC_generator import seqC_generator
 from simulator.model_sim_pR import get_boxUni_prior, DM_sim_for_seqCs_parallel
 from dataset.dataset import training_dataset
+from utils.set_seed import setup_seed
 
-
-def simulate_for_sbi(proposal, config):
+def simulate_for_sbi(proposal, config, seed=0, debug=False):
+    
+    setup_seed(seed)
     
     tic = time.time()
     seqC = seqC_generator(nan_padding=None).generate(
-        dur_list            = config['x_o']['chosen_dur_list'],
-        MS_list             = config['x_o']['chosen_MS_list'],
-        seqC_sample_per_MS  = config['x_o']['seqC_sample_per_MS'],
+        dur_list            = config['experiment_settings']['chosen_dur_list'],
+        MS_list             = config['experiment_settings']['chosen_MS_list'],
+        seqC_sample_per_MS  = config['experiment_settings']['seqC_sample_per_MS'],
     )
     print(f'seqC generated in {(time.time()-tic)/60:.2f}min')
 
@@ -39,7 +41,9 @@ def simulate_for_sbi(proposal, config):
     #     save_data_path = Path(config['data_dir']) / f"{config['dataset']['save_name']}_run{run}.h5"
     # else:
     #     save_data_path = None
-    
+    if debug:
+        return seqC, theta, probR
+
     tic = time.time()
     dataset = training_dataset(config)
     x, theta = dataset.data_process_pipeline(

@@ -424,12 +424,12 @@ class My_Processed_Dataset(My_Chosen_Sets):
         set_idx, theta_idx, probR_sample_idx = self.set_idxs[idx], self.theta_idxs[idx], self.probR_sample_idxs[idx]
 
         x = torch.empty((self.DMS, self.seqC_all.shape[2]+1), dtype=torch.float32)
-        x[:, :self.seqC_all.shape[2]] = self.seqC_all[set_idx, permutation, :] # (D_MS, 15 or L_x)
+        x[:, :self.seqC_all.shape[2]] = self.seqC_all[set_idx, permutation, :] # (D_MS, 15 or L_x) #TODO 2 permutation operations
         # print(f"getitem seqC: {(time.time()-time_start)*1000:.2f}ms")
         # time_start = time.time()
         x[:, self.seqC_all.shape[2]:] = self.probR_all[set_idx, permutation, theta_idx * self.C + probR_sample_idx] # (D_MS, 1)
         # print(f"getitem probR_all: {(time.time()-time_start)*1000:.2f}ms")
-        
+        x = x[:, ]
         theta = self.theta_all[set_idx, theta_idx] # (4,)
         
         return x, theta

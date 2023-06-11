@@ -1,11 +1,11 @@
 defaults:
   - _self_
-  - experiment_settings: exp-set-0
-  - prior: prior-0
+  - experiment_settings: exp-set-test
+  - prior: prior-test
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p2-test-t4
-  - train: train-p2-test-0
+  - dataset: dataset-p3-test
+  - train: train-p3-0
 
 pipeline_version: p3
 log_dir: ./
