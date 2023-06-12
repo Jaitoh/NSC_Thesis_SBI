@@ -27,7 +27,7 @@ training:
   stop_after_dsets      : 90
 
   min_num_epochs        : 10
-  max_num_epochs        : 200
+  max_num_epochs        : 2147483647
   min_num_dsets         : 15
   max_num_dsets         : 2147483647
 
