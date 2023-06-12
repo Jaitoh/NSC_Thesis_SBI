@@ -13,58 +13,138 @@ def kaiming_weight_initialization(named_parameters):
         elif 'bias' in name:
             param.data.fill_(0)
 
-import torch
-import torch.nn as nn
-
-class TransformerModel(nn.Module):
-    def __init__(self, dms, l, hidden_size=64, output_size=20, nhead=4, num_encoder_layers=2):
-        super(TransformerModel, self).__init__()
+class Transformer(nn.Module):
+    def __init__(self, dms, l, hidden_size=64, output_size=20, nhead=8, num_encoder_layers=4):
+        super(Transformer, self).__init__()
         
         # Embedding layer
-        self.embedding = nn.Linear(dms, hidden_size)
+        # self.embedding = nn.Linear(dms, hidden_size*2)
+        self.embedding = nn.Conv1d(in_channels=dms, out_channels=512, kernel_size=1)
         
         # Transformer Encoder
-        encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_size, nhead=nhead)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=nhead, dropout=0.1, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
         
         # Fully Connected Layers
-        self.fc1 = nn.Linear(l * hidden_size, 4 * hidden_size)
-        self.bn1 = nn.LayerNorm(4 * hidden_size)
+        self.fc1 = nn.Linear(l * 512, 4 * hidden_size)
         self.fc2 = nn.Linear(4 * hidden_size, output_size)
         
-        # Weight initialization similar to what you had previously
         kaiming_weight_initialization(self.named_parameters())
     
     def forward(self, x):
         # x has shape (B, DMS, L)
-        x = x.permute(0, 2, 1) # (B, L, DMS) - (batch_size, seq_len, input_size)
-        
         # Embedding
-        x = self.embedding(x)
+        x = self.embedding(x) # (B, 512, L)
+        x = x.permute(0, 2, 1) # (B, L, 512) - (batch_size, seq_len, input_size)
         
-        # Transformer Encoder
-        x = self.transformer_encoder(x)
+        # Transformer Encoder takes input of shape (B, L, hidden_size)
+        x = self.transformer_encoder(x) # (B, L, 512)
         
         # Flatten the output
-        x = x.reshape(x.shape[0], -1)
+        x = x.reshape(x.shape[0], -1) # (B, L * hidden_size)
         
         # Fully connected layers
         x = F.leaky_relu(self.fc1(x), negative_slope=0.01)
-        x = self.bn1(x)
         x = F.leaky_relu(self.fc2(x), negative_slope=0.01)
         
         return x
 
-# Parameters
-# dms = ... # input size
-# l = ... # sequence length
-# hidden_size = 64
-# output_size = 20
-# nhead = 4
+# TODO: check and use for training
+class Transformer_MeanPooling(nn.Module):
+    def __init__(self, dms, l, hidden_size=64, output_size=20, nhead=8, num_encoder_layers=4):
+        super(Transformer, self).__init__()
+        
+        # Embedding layer
+        # self.embedding = nn.Linear(dms, hidden_size*2)
+        self.conv1 = nn.Conv1d(in_channels=dms, out_channels=512, kernel_size=3, padding=1)
+        
+        # Transformer Encoder
+        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=nhead, dropout=0.1)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
+        
+        # Fully Connected Layers
+        self.fc1 = nn.Linear(512, 2 * hidden_size)
+        self.fc2 = nn.Linear(2 * hidden_size, output_size)
+        
+        kaiming_weight_initialization(self.named_parameters())
+    
+    def forward(self, x):
+        # x: (B, DMS, L)
+        
+        # Apply 1D convolution
+        x = F.relu(self.conv1(x))  # Output shape: (B, 512, L)
+        
+        # x: (B, 512, L) -> (L, B, 64)
+        x = x.permute(2, 0, 1)
+        
+        # Apply Transformer
+        x = self.transformer_encoder(x)  # Output shape: (L, B, 512)
+        
+        # x: (L, B, 64) -> (B, 512, L)
+        x = x.permute(1, 2, 0)
+        
+        # Apply adaptive average pooling
+        x = nn.AdaptiveAvgPool1d(1)(x)  # Output shape: (B, 512, 1)
+        
+        # Reshape
+        x = x.view(x.size(0), -1)  # Output shape: (B, 512)
+        
+        # Apply fully connected layers
+        x = F.relu(self.fc1(x))  # Output shape: (B, 32)
+        x = self.fc2(x)  # Output shape: (B, N)
+        
+        return x
+
+# TODO: transformer + deep sets
+class CustomDeepSetTransformer(nn.Module):
+    def __init__(self, dms_dim, num_features, num_heads, num_encoder_layers, dropout=0.1):
+        super(CustomDeepSetTransformer, self).__init__()
+        
+        # Phi function - applied elementwise
+        self.phi = nn.Sequential(
+            nn.Conv1d(in_channels=dms_dim, out_channels=512, kernel_size=1),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=512, out_channels=256, kernel_size=1)
+        )
+        
+        # Transformer encoder layer (Self-Attention)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=256, nhead=num_heads, dropout=dropout)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
+        
+        # Rho function - applied to the sum
+        self.rho = nn.Sequential(
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_features)
+        )
+        
+    def forward(self, x):
+        # Pass through Phi function elementwise (Conv1d)
+        x = self.phi(x.permute(0, 2, 1))
+        
+        # Sum across the DMS axis
+        x = x.sum(dim=2)
+        
+        # Adjust input shape to (L, B, E) for Transformer
+        x = x.unsqueeze(0)
+        
+        # Pass through the Transformer encoder
+        x = self.transformer_encoder(x)
+        
+        # Pass through Rho function
+        x = self.rho(x.squeeze(0))
+        
+        return x
+
+# # Example parameters
+# dms_dim = 14000
+# num_features = 20
+# num_heads = 8
 # num_encoder_layers = 2
 
-# Model
-# model = TransformerModel(dms, l, hidden_size, output_size, nhead, num_encoder_layers)
+# # Instantiate the model
+# model = CustomDeepSetTransformer(dms_dim, num_features, num_heads, num_encoder_layers)
+
 
 class GRUUnit(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -256,15 +336,6 @@ class LSTM_Embedding(nn.Module):
         self.bn1 = nn.LayerNorm(4*hidden_size)
         self.fc2 = nn.Linear(4*hidden_size, output_size)
         
-        # weight initialization
-        # for name, param in self.named_parameters():
-        #     if 'weight_ih' in name:
-        #         # nn.init.xavier_uniform_(param.data)  # Xavier initialization
-        #         nn.init.kaiming_uniform_(param.data)  # Kaiming initialization
-        #     elif 'weight_hh' in name:
-        #         nn.init.orthogonal_(param.data)
-        #     elif 'bias' in name:
-        #         param.data.fill_(0)
         kaiming_weight_initialization(self.named_parameters())
         
     def forward(self, x):
@@ -313,15 +384,6 @@ class LSTM_Embedding_Small(nn.Module):
         self.bn1 = nn.LayerNorm(4*hidden_size)
         self.fc2 = nn.Linear(4*hidden_size, output_size)
         
-        # weight initialization
-        # for name, param in self.named_parameters():
-        #     if 'weight_ih' in name:
-        #         # nn.init.xavier_uniform_(param.data)  # Xavier initialization
-        #         nn.init.kaiming_uniform_(param.data)  # Kaiming initialization
-        #     elif 'weight_hh' in name:
-        #         nn.init.orthogonal_(param.data)
-        #     elif 'bias' in name:
-        #         param.data.fill_(0)
         kaiming_weight_initialization(self.named_parameters())
         
     def forward(self, x):
@@ -344,6 +406,42 @@ class LSTM_Embedding_Small(nn.Module):
         # out = F.relu(self.fc2(out))
         out = F.leaky_relu(self.fc2(out), negative_slope=0.01)
         return out
+    
+
+class GRU_AVG(nn.Module):
+    
+    def __init__(self, 
+                 dms, 
+                 l, 
+                 hidden_size=64,
+                 output_size=20,
+            ):
+        self.dms, self.l = dms, l
+        super(GRU_AVG, self).__init__()
+        self.gru1 = nn.GRU(input_size=1, hidden_size=4, batch_first=True)
+        self.fc1 = nn.Linear(l*4, 4*hidden_size)
+        self.fc2 = nn.Linear(4*hidden_size, output_size)
+        # self.bn1 = nn.BatchNorm1d(4*hidden_size)
+        
+        kaiming_weight_initialization(self.named_parameters())
+        
+    def forward(self, x):
+        # x has shape (B, DMS, L) 
+        B = x.shape[0]
+        x = x.unsqueeze_(-1) # (B, DMS, L, 1)
+        x = x.reshape(B*self.dms, self.l, 1) # (B*DMS, L, 1) - (batch_size, seq_len, input_size)
+        
+        # Pass the first part (x1) through the RNN
+        x, _ = self.gru1(x) # (B*DMS, L, 4)
+        x = x.view(B, self.dms, self.l, -1) # (B, DMS, L, 4)
+        x = torch.mean(x, dim=1, keepdim=True) # (B, 1, L, hidden_size)
+        
+        x = x.view(B, -1) # (B, L*hidden_size) flatten
+        
+        x = F.leaky_relu(self.fc1(x), negative_slope=0.01)
+        x = F.leaky_relu(self.fc2(x), negative_slope=0.01)
+        
+        return x
 
 class RNN_Embedding_Small(nn.Module):
     def __init__(self, 

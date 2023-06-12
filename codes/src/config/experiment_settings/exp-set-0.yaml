@@ -1,4 +1,5 @@
 # experiment_settings:
-chosen_dur_list     : [3, 5, 7, 9, 11, 13, 15]
+# chosen_dur_list     : [3, 5, 7, 9, 11, 13, 15]
+chosen_dur_list     : [3, 9, 15]
 chosen_MS_list      : [0.2, 0.4, 0.8]
 seqC_sample_per_MS  : 700 # should be fixed as 700 for subject 2-10

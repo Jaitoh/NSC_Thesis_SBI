@@ -4,7 +4,7 @@ inference:
 
 density_estimator:
   embedding_net: 
-    type: rnn_multi_head
+    type: transformer  # 'lstm', 'lstm_small', 'rnn_small', 'gru_avg', 'transformer'
     hidden_size: 64
     output_size: 20
     embedding_net_use_3_dim_dataset: 
@@ -27,7 +27,7 @@ training:
   stop_after_dsets      : 90
 
   min_num_epochs        : 10
-  max_num_epochs        : 200
+  max_num_epochs        : 2147483647
   min_num_dsets         : 15
   max_num_dsets         : 2147483647
 
@@ -43,11 +43,12 @@ training:
   
   print_freq            : 100 # 2+1 records per epoch
   num_atoms             : 10
-  # num_runs              : 10
+  num_runs              : 10
   # num_rounds            : 3
   use_combined_loss     : True
   
 posterior:
   sampling_num  : 2000
   val_set_size  : 2
-  step          : 2     # the epoch steps to check posterior during training
+  plot_posterior: True
+  step          : 1     # the epoch steps to check posterior during training

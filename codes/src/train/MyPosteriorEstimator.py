@@ -225,7 +225,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         finally:
             self.release_resources()
 
-    def train_valid_one_epoch(self, val_loader, train_loader, train_start_time, training_kwargs):
+    def train_valid_one_epoch(self, val_loader, train_loader, train_start_time, training_kwargs, show_progress=True):
         
         with torch.no_grad():
             # fetcher same dataset for the coming epoch
@@ -263,7 +263,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
             print_mem_info(f"{'gpu memory usage after validation':46}", DO_PRINT_MEM)
 
             # update epoch info and counter
-            # self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
+            if show_progress:
+                self._show_epoch_progress(self.epoch, epoch_start_time, train_log_prob_average, self._val_log_prob)
             self.epoch += 1
             self.epoch_counter += 1
 
@@ -943,9 +944,11 @@ class MyPosteriorEstimator(PosteriorEstimator):
         ax1 = axes[1]
         ax1.plot(train_log_probs, '.-', label='training', alpha=0.8, lw=2, color='tab:blue', ms=0.1)
         ax1.plot(val_log_probs, '.-', label='validation', alpha=0.8, lw=2, color='tab:orange', ms=0.1)
-        if "test_log_probs" in self._summary.keys():
+        max_list = [max(val_log_probs), max(train_log_probs)]
+        if ("test_log_probs" in self._summary.keys()) and (len(self._summary["test_log_probs"]) > 0):
             test_log_probs = self._summary["test_log_probs"]
             ax1.plot(test_log_probs, '.-', label='test', alpha=0.8, lw=2, color='tab:brown', ms=0.1)
+            max_list.append(max(test_log_probs))
         
         # find best val log prob, and plot it
         best_val_log_prob = max(val_log_probs)
@@ -953,7 +956,7 @@ class MyPosteriorEstimator(PosteriorEstimator):
         
         ax1.plot(best_val_log_prob_epoch, best_val_log_prob, 'v', color='red', lw=2)
         ax1.text(best_val_log_prob_epoch, best_val_log_prob+0.02, f'{best_val_log_prob:.2f}', color='red', fontsize=10, ha='center', va='bottom') # type: ignore
-        # ax1.set_ylim(log_probs_lower_bound, max(val_log_probs)+0.2)
+        ax1.set_ylim(-25, max(max_list)+0.2)
         
         ax1.legend()
         ax1.set_xlabel('epochs')
@@ -1369,6 +1372,8 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
             # load new train set names
             train_set_names = next(train_set_name_loader)
             print(f'\n===== train_set_names: {train_set_names} =====\n')
+            if len(train_set_names) == 0:
+                break
             
             # get train and val loaders for the current dset
             train_loader, val_loader = self._get_train_val_loaders(
@@ -1390,23 +1395,28 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
                 and (not debug or self.epoch <= 1)
             ):  
                 epoch_start_time = time.time()
+                check_test = self.config.dataset.check_test_perf
+                
                 # train and validate for one epoch
                 self.train_valid_one_epoch(
                     val_loader          = val_loader, 
                     train_loader        = train_loader, 
                     train_start_time    = train_start_time, 
                     training_kwargs     = self.training_kwargs,
+                    show_progress       = not check_test,
                 )
                 
                 # test for one epoch
-                tic = time.time()
-                print('testing one epoch ...', end=' ')
-                if self.use_data_prefetcher:
-                    test_prefetcher = self._loader2prefetcher(self.test_loader)
-                self._test_log_prob = self._val_one_epoch( test_prefetcher if self.use_data_prefetcher else self.test_loader )
-                print(f'in {time.time()-tic:.2f} sec -->', end=' ')
-                self._test_one_epoch_log()
-                self._show_epoch_progress_with_test(self.epoch, epoch_start_time, self._train_log_prob, self._val_log_prob, self._test_log_prob)
+                if check_test:
+                    with torch.no_grad():
+                        tic = time.time()
+                        print('testing one epoch ...', end=' ')
+                        if self.use_data_prefetcher:
+                            test_prefetcher = self._loader2prefetcher(self.test_loader)
+                        self._test_log_prob = self._val_one_epoch( test_prefetcher if self.use_data_prefetcher else self.test_loader )
+                        print(f'in {time.time()-tic:.2f} sec -->', end=' ')
+                        self._test_one_epoch_log()
+                        self._show_epoch_progress_with_test(self.epoch, epoch_start_time, self._train_log_prob, self._val_log_prob, self._test_log_prob)
             
             with torch.no_grad():
                 # clear train loader, prefetcher, and val_prefetcher
@@ -1418,9 +1428,9 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
                 
         # clear
         print(f"best val_log_prob: {self._best_val_log_prob:.2f}")
-        del x, theta, self.val_dataset, self.train_dataset
-        if use_data_prefetcher:
-            del train_prefetcher, val_prefetcher
+        # del self.val_dataset, self.train_dataset
+        # if use_data_prefetcher:
+            # del train_prefetcher, val_prefetcher
         clean_cache()
 
         # Avoid keeping the gradients in the resulting network, which can cause memory leakage when benchmarking. save the network
@@ -1562,6 +1572,7 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         init_num    = self.dataset_kwargs.increment_params['init']
         step        = self.dataset_kwargs.increment_params['step']
         max_load    = self.dataset_kwargs.increment_params['max_load']
+        only_one_set= self.dataset_kwargs.increment_params['only_one_set']
 
         all_sets = self.all_train_set_names
         sets_in_queue = all_sets.copy()
@@ -1573,6 +1584,10 @@ class MyPosteriorEstimator_P3(MyPosteriorEstimator):
         yield list(loaded_sets)
 
         while True:
+            # when only_one_set is True, only load one set in the whole training process
+            if only_one_set:
+                yield []
+                
             for _ in range(step):
                 if len(sets_in_queue) == 0:
                     sets_in_queue = all_sets.copy()
