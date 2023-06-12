@@ -16,16 +16,17 @@ dataset_chosen_mode         : 'fixed' # determine how to choose all the dsets, t
   # 'fixed': choose the dsets, theta in a fixed order
 
 test_fraction               : [10, 20, 30, 40]
-test_num_theta              : 100
+test_num_theta              : 50
 check_test_perf             : True
 
 # train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
   # 'increment': append one more dataset at a time, training for each increased sized dset, limited to the last ndsets
-increment_params            : {'init': 2 , 'step': 2, 'max_load': 10, 'loop': True, 'only_one_set': False}
+increment_params            : {'init': 2 , 'step': 1, 'max_load': 2, 'loop': True, 'only_one_set': False}
   # increment_step: the dset for the increment
   # ndset_limit: the max dset size for the increment, -1 means no limit
   # loop: whether to loop over the dsets
+  # only one set: only one initial 2 sets, no increment
 train_num_theta             : 500
 validation_fraction         : 0.1
 
@@ -33,9 +34,9 @@ chosen_dur_trained_in_sequence:
   - [3, 9, 15]
 crop_dur                    : True
 
-# batch_process_method        : 'collate_fn'
+# probR_sampling_place        : 'collate_fn'
 # batch_size                  : 64
-batch_process_method        : 'in_dataset'
+probR_sampling_place        : 'in_dataset'
 batch_size                  : 128 #=32*100
 permutation_mode            : 'random' # fixed, random
 num_probR_sample            : 100 #25

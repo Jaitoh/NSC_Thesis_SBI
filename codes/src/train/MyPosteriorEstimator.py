@@ -632,6 +632,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 with torch.no_grad():
                     x, theta = train_prefetcher_or_loader.next()
                 # print(f'prefetcher time: {(time.time() - time_start)*1000:.2f} ms')
+                if self.config.debug and train_batch_num>=3:
+                    break
         else:
             # del x, theta
             # time_start = time.time()
@@ -654,7 +656,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 train_batch_num += 1
                 self.batch_counter += 1
                 # time_start = time.time()
-        
+                if self.config.debug and train_batch_num>=3:
+                    break
+                
         return epoch_start_time,train_log_probs_sum
 
     def _train_one_epoch_log(self, train_log_probs_sum):
@@ -785,6 +789,8 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 # get next batch
                 x_val, theta_val = val_prefetcher_or_loader.next()
                 # print_mem_info('\nmemory usage after batch', DO_PRINT_MEM)
+                if self.config.debug:
+                    break
                 
         else: # use data loader
             for x_val, theta_val in val_prefetcher_or_loader:
@@ -807,6 +813,9 @@ class MyPosteriorEstimator(PosteriorEstimator):
                 
                 del x_val, theta_val, masks_batch
                 clean_cache()
+                
+                if self.config.debug:
+                    break
         
         return val_log_prob_sum / val_data_size
     

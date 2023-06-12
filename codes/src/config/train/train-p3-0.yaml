@@ -11,7 +11,7 @@ density_estimator:
       - 'rnn_multi_head'
       - 'conv1d_rnn'
   posterior_nn:
-    model: maf
+    model: mdn
     hidden_features: 64
     num_transforms: 2
   

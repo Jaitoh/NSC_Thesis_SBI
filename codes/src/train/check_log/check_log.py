@@ -402,7 +402,7 @@ if __name__ == '__main__':
     val_perf, train_perf, lr, best = get_event_data(ea_post, ea_val, ea_train)
 
     # plot training curves including the learning rate and log_probs
-    # plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir, exp_name)
+    plot_lr_log_probs(val_perf, train_perf, lr, best, log_dir, exp_name)
 
     # animate posterior plots
     plot_shuffled = True
