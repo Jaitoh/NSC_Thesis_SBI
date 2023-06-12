@@ -23,7 +23,7 @@ training:
   weight_decay          : 1e-9
   
   improvement_threshold : 0.0005 # improvement bigger than this threshold is considered as an improvement
-  stop_after_epochs     : 10
+  stop_after_epochs     : 100
   stop_after_dsets      : 90
 
   min_num_epochs        : 10
@@ -50,4 +50,5 @@ training:
 posterior:
   sampling_num  : 2000
   val_set_size  : 2
-  step          : 2     # the epoch steps to check posterior during training
+  plot_posterior: True
+  step          : 20     # the epoch steps to check posterior during training

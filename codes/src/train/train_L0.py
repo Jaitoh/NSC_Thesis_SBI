@@ -57,7 +57,7 @@ from utils.setup import(
     check_path, get_args, # get_args_run_from_code
 )
 # from utils.resource import monitor_resources
-from train.MyData import collate_fn_vec, collate_fn_vec_high_dim
+from dataset.Dataset import collate_fn_vec, collate_fn_vec_high_dim
 
 # Set the start method to 'spawn' before creating the ProcessPoolExecutor instance
 # mp.set_start_method('spawn', force=True)
@@ -247,7 +247,7 @@ class Solver:
         # self.config.set('is_3_dim_dataset', is_3_dim_dataset) # add self.config with key 'is_3_dim_dataset' to config
 
 
-        if config_dataset.batch_process_method == 'in_dataset':
+        if config_dataset.probR_sampling_place == 'in_dataset':
             return {  # TODO check and modify in_dataset processing login, of high_dim
                 'num_workers': config_dataset.num_workers,
                 'worker_init_fn': seed_worker,
@@ -255,7 +255,7 @@ class Solver:
                 # 'batch_size'    :  self.config.dataset.batch_size
             }
         
-        elif config_dataset.batch_process_method == 'collate_fn':
+        elif config_dataset.probR_sampling_place == 'collate_fn':
             collate_fn = collate_fn_vec_high_dim if is_3_dim_dataset else collate_fn_vec
             
             return {
@@ -361,7 +361,7 @@ class Solver:
 
         print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
 
-@hydra.main(config_path="../config", config_name="config", version_base=None)
+@hydra.main(config_path="../config", config_name="config-test", version_base=None)
 def main(config : DictConfig):
     # args = get_args()
     # print(args.log_dir)

@@ -37,18 +37,15 @@ def main(config):
     theta_a = theta.clone().detach().to(torch.float32) # avoid float64 error
     x_a     = x.clone().detach().to(torch.float32)
     
-    # method 2 - get one sample on the fly
-    the_shape = seqC_b.shape
-    seqC_b = seqC_b.reshape(the_shape[0]*the_shape[1]*the_shape[2], the_shape[3]) # DMS, 15
-    choice_b = probR_b.repeat_interleave(25, dim=-1)
-    choice_b = torch.bernoulli(choice_b)
-    x_b = torch.empty((the_shape[0]*the_shape[1]*the_shape[2], 16))
-    x_b[:, 0:15] = seqC_b
-    x_b[:, 15] = choice_b
-    theta_b = theta_b[0,:]
-    torch.sum(x_a[0,:,:]-x_b[:,:]) # should be zero
-    
-    
+    # # method 2 - get one sample on the fly
+    # the_shape = seqC_b.shape
+    # seqC_b = seqC_b.reshape(the_shape[0]*the_shape[1]*the_shape[2], the_shape[3]) # DMS, 15
+    # choice_b = probR_b.repeat_interleave(25, dim=-1)
+    # choice_b = torch.bernoulli(choice_b)
+    # x_b = torch.empty((the_shape[0]*the_shape[1]*the_shape[2], 16))
+    # x_b[:, 0:15] = seqC_b
+    # x_b[:, 15] = choice_b
+    # theta_b = theta_b[0,:]
     
     # compare permute and reshape
     # import torch

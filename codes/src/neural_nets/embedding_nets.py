@@ -13,6 +13,59 @@ def kaiming_weight_initialization(named_parameters):
         elif 'bias' in name:
             param.data.fill_(0)
 
+import torch
+import torch.nn as nn
+
+class TransformerModel(nn.Module):
+    def __init__(self, dms, l, hidden_size=64, output_size=20, nhead=4, num_encoder_layers=2):
+        super(TransformerModel, self).__init__()
+        
+        # Embedding layer
+        self.embedding = nn.Linear(dms, hidden_size)
+        
+        # Transformer Encoder
+        encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_size, nhead=nhead)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
+        
+        # Fully Connected Layers
+        self.fc1 = nn.Linear(l * hidden_size, 4 * hidden_size)
+        self.bn1 = nn.LayerNorm(4 * hidden_size)
+        self.fc2 = nn.Linear(4 * hidden_size, output_size)
+        
+        # Weight initialization similar to what you had previously
+        kaiming_weight_initialization(self.named_parameters())
+    
+    def forward(self, x):
+        # x has shape (B, DMS, L)
+        x = x.permute(0, 2, 1) # (B, L, DMS) - (batch_size, seq_len, input_size)
+        
+        # Embedding
+        x = self.embedding(x)
+        
+        # Transformer Encoder
+        x = self.transformer_encoder(x)
+        
+        # Flatten the output
+        x = x.reshape(x.shape[0], -1)
+        
+        # Fully connected layers
+        x = F.leaky_relu(self.fc1(x), negative_slope=0.01)
+        x = self.bn1(x)
+        x = F.leaky_relu(self.fc2(x), negative_slope=0.01)
+        
+        return x
+
+# Parameters
+# dms = ... # input size
+# l = ... # sequence length
+# hidden_size = 64
+# output_size = 20
+# nhead = 4
+# num_encoder_layers = 2
+
+# Model
+# model = TransformerModel(dms, l, hidden_size, output_size, nhead, num_encoder_layers)
+
 class GRUUnit(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(GRUUnit, self).__init__()

@@ -5,10 +5,10 @@ defaults:
   - x_o: x_o-0
   - simulator: model-0
   - dataset: dataset-p3-test
-  - train: train-p3-0
+  - train: train-p3-test
 
 pipeline_version: p3
-log_dir: ./
+log_dir: ./src/train/logs/log_test
 data_path: /mnt/data/dataset/dataset_L0_exp_set_0.h5
 seed: 100
 debug: False

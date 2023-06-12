@@ -136,6 +136,7 @@ class My_HighD_Sets(Dataset):
         seqC_process, nan2num, summary_type = dataset_config.seqC_process, dataset_config.nan2num, dataset_config.summary_type
         L_seqC = get_L_seqC(seqC_process, summary_type)
         D, M, S, DMS = (*f[chosen_set_names[0]]['seqC'].shape[:-1], np.prod(f[chosen_set_names[0]]['seqC'].shape[:-1]))
+        self.D, self.M, self.S = D, M, S
         
         # define the final shape of the data
         chosen_theta_idx, num_chosen_theta_each_set = choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mode)
@@ -219,7 +220,7 @@ class My_HighD_Sets(Dataset):
         return seqC, theta, probR
 
 
-class My_Chosen_Sets(Dataset):
+class My_Chosen_Sets(Dataset): #TODO: remove / replace this class
     def __init__(self,
                  config, 
                  chosen_set_names, 
@@ -253,8 +254,8 @@ class My_Chosen_Sets(Dataset):
         seqC_process    = config['dataset']['seqC_process']
         nan2num         = config['dataset']['nan2num']
         summary_type    = config['dataset']['summary_type']
-        DMS             = f[chosen_set_names[0]]['seqC_normed'].shape[0]
         D, M, S         = f[chosen_set_names[0]]['seqC'].shape[:-1]
+        DMS             = D*M*S
         
         # chosen_theta_idx = np.random.choice(total_theta_in_a_set, num_chosen_theta_each_set, replace=False)
         chosen_theta_idx, num_chosen_theta_each_set = choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mode)
@@ -300,6 +301,7 @@ class My_Chosen_Sets(Dataset):
         
     def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, DMS_idx_chosen, set_name):
         
+        print(f[set_name].keys())
         if seqC_process == 'norm':
             seqC_data = f[set_name]['seqC_normed'][DMS_idx_chosen, :] if crop_dur else f[set_name]['seqC_normed'][:]
         
@@ -476,21 +478,20 @@ class My_Processed_HighD_Dataset(My_HighD_Sets):
         print(f"--> Further Sampling {self.C} times from probR (given 'in_dataset' process setting) ... ", end="")
         time_start = time.time()
         self.DM, self.S, self.T= self.seqC_all.shape[1], self.seqC_all.shape[2], self.theta_all.shape[1]
-        self.probR_all = self.probR_all.repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, DM, S, T*C)
-        self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).contiguous()  # (num_chosen_sets, D*M, S, T*C)
+        self.probR_all = self.probR_all.unsqueeze(-1).repeat_interleave(self.C, dim=-1)  # (num_chosen_sets, DM, S, T, C)
+        self.probR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).contiguous()  # (num_chosen_sets, DM, S, T, C, -1)
         print(f"in {(time.time()-time_start)/60:.2f}min")
         
         self.total_samples = len(chosen_set_names) * self.T * self.C
         print(f"sampled probR shape {self.probR_all.shape} MEM size {self.probR_all.element_size()*self.probR_all.nelement()/1024**3:.2f}GB, Total samples: {self.total_samples} ") 
         # self.permutations = generate_permutations(self.C*self.T*len(chosen_set_names)*self.DM, self.S).contiguous() # (C*T*Set*DM, S) #TODO use this way to shuffle
-        self.permutations = generate_permutations(self.total_samples, self.S).contiguous() # (C*T*Set*DM, S)
+        self.permutations = generate_permutations(self.total_samples, self.S).contiguous() # (C*T*Set*DM, S) #TODO: maybe wrong, current is (TC, s), different head share the same shuffling method
         
         self.seqC_all = self.seqC_all.contiguous()
         self.theta_all = self.theta_all
         
         indices = torch.arange(self.total_samples)
         self.set_idxs, self.theta_idxs, self.probR_sample_idxs = unravel_index(indices, (len(self.chosen_set_names), self.T, self.C))
-    
     
     def __len__(self):
         return self.total_samples
@@ -512,6 +513,71 @@ class My_Processed_HighD_Dataset(My_HighD_Sets):
         theta = self.theta_all[set_idx, theta_idx] # (4,)
         
         return x, theta
+
+class Dataset_2D(My_Processed_HighD_Dataset):
+    """
+    output 2D dataset of shape 
+    x: (DMS, 15 or L_x)
+    theta: (4)
+    """
+    
+    def __init__(self, 
+                 config, 
+                 chosen_set_names, 
+                 num_chosen_theta_each_set, 
+                 chosen_dur=[3,9,15], 
+                 theta_chosen_mode='random',
+                 mode='fixed_dataset', # 'fixed_permutation' or 'random_permutation'
+                 ):
+        super().__init__(config, chosen_set_names, num_chosen_theta_each_set, chosen_dur, theta_chosen_mode)
+        DM, S, C = self.DM, self.S, self.C
+        TC = self.T*self.C
+        
+        self.total_samples = len(chosen_set_names) * self.T * self.C
+        
+        indices = torch.arange(self.total_samples)
+        self.set_idxs, self.T_idxs, self.C_idxs = unravel_index(indices, (len(self.chosen_set_names), self.T, self.C))
+        self.permutations = generate_permutations(self.total_samples, DM*S).contiguous() # (TC*Set*DM, S) #TODO: maybe wrong, current is (TC, s), different head share the same shuffling method
+
+        self.mode = mode
+        
+        if mode == 'fixed_dataset':
+            num_sets = self.seqC_all.shape[0]
+            T, TC = self.T, self.T*self.C
+            
+            seqC = self.seqC_all.unsqueeze(-2).unsqueeze(-2).repeat_interleave(T, dim=-3).repeat_interleave(C, dim=-2) # (num_sets, DM, S, T, C, L_x)
+            probR = self.probR_all # (num_sets, DM, S, T, C, 1)
+            
+            x = torch.cat([seqC, probR], dim=-1).reshape(num_sets, DM, S, TC, -1).reshape(num_sets, DM*S, TC, -1).reshape(num_sets*TC, DM*S, -1) # (num_sets*TC, DMS, L_x+1)
+            del seqC, probR
+            
+            theta = self.theta_all.repeat_interleave(C, dim=1).reshape(num_sets*TC, -1)
+
+            self.x = x
+            self.theta = theta
+            
+    def __len__(self):
+        return self.total_samples
+
+    def __getitem__(self, idx):
+        
+        if self.mode == 'fixed_dataset':
+            return self.x[idx], self.theta[idx]
+
+        set_idx, T_idx, C_idx = self.set_idxs[idx], self.T_idxs[idx], self.C_idxs[idx] 
+
+        seqC = self.seqC_all[set_idx, :, :, :] # (DM, S, 15)
+        theta = self.theta_all[set_idx, T_idx, :] # (4,)
+        choice = self.probR_all[set_idx, :, :, T_idx, C_idx, :] # (DM, S, 1)
+        x = torch.cat((seqC, choice), dim=-1).reshape(self.DM*self.S, -1) # (DMS, 16)
+
+        if self.mode == 'fixed_permutation':
+            x = x[self.permutations[idx], :] # (DMS, 16)
+        elif self.mode == 'random_permutation':
+            x = x[torch.randperm(x.shape[0]), :] # (DMS, 16)
+
+        return x, theta
+
     
 class Data_Prefetcher():
     

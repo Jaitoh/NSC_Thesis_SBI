@@ -6,9 +6,10 @@ import itertools
 import pickle
 import yaml
 import hydra
+from omegaconf import DictConfig, OmegaConf
 # import dill
 
-# import h5py
+import h5py
 # import yaml
 # import glob
 import argparse
@@ -40,7 +41,7 @@ from dataset.dataset import training_dataset
 from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
 from train.MyData import collate_fn_probR
-from train.MyPosteriorEstimator import MySNPE_C
+from train.MyPosteriorEstimator import MySNPE_C_NPE
 from neural_nets.embedding_nets import LSTM_Embedding
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
@@ -51,6 +52,8 @@ from utils.train import (
     # check_path, train_inference_helper,
     # get_args, 
 )
+from train.MyData import My_Processed_Dataset, My_HighD_Sets, My_Chosen_Sets
+from train.MyData import *
 
 from utils.setup import check_path
 from utils.resource import monitor_resources
@@ -75,15 +78,15 @@ class Solver:
         print(f'using device: {self.device}')
         print_cuda_info(self.device)
 
-        self.log_dir = Path(self.args.log_dir)
-        self.data_dir = Path(config['data_dir'])
-        check_path(self.log_dir, self.data_dir, args)
+        self.log_dir = Path(self.config.log_dir)
+        self.data_path = Path(config['data_path'])
+        check_path(self.log_dir, self.data_path)
         
         
         # get dataset size
-        d = len(self.config['x_o']['chosen_dur_list'])
-        m = len(self.config['x_o']['chosen_MS_list'])
-        s = self.config['x_o']['seqC_sample_per_MS']
+        d = len(self.config['experiment_settings']['chosen_dur_list'])
+        m = len(self.config['experiment_settings']['chosen_MS_list'])
+        s = self.config['experiment_settings']['seqC_sample_per_MS']
         self.dms = d*m*s
         self.l_x = 15+1
         self.l_theta = len(self.config['prior']['prior_min'])
@@ -91,12 +94,12 @@ class Solver:
         
         # save the config file using yaml
         yaml_path = Path(self.log_dir) / 'config.yaml'
-        with open(yaml_path, 'w') as f:
-            yaml.dump(config, f)
+        with open(yaml_path, "w") as f:
+            f.write(OmegaConf.to_yaml(config))
         print(f'config file saved to: {yaml_path}')
 
         # set seed
-        seed = args.seed
+        seed = config.seed
         setup_seed(seed)
         # self.g = torch.Generator()
         # self.g.manual_seed(seed)
@@ -213,9 +216,9 @@ class Solver:
         # observed data from trial experiment
         x_o = get_xo(
             subject_id          = self.config['x_o']['subject_id'],
-            chosen_dur_list     = self.config['x_o']['chosen_dur_list'],
-            chosen_MS_list      = self.config['x_o']['chosen_MS_list'],
-            seqC_sample_per_MS  = self.config['x_o']['seqC_sample_per_MS'],
+            chosen_dur_list     = self.config['experiment_settings']['chosen_dur_list'],
+            chosen_MS_list      = self.config['experiment_settings']['chosen_MS_list'],
+            seqC_sample_per_MS  = self.config['experiment_settings']['seqC_sample_per_MS'],
             trial_data_path     = self.config['x_o']['trial_data_path'],
         
             seqC_process_method = self.config['dataset']['seqC_process'],
@@ -239,7 +242,7 @@ class Solver:
         neural_posterior = self.get_neural_posterior()
         print(f'neural_posterior: {neural_posterior}')
         
-        self.inference = MySNPE_C(
+        self.inference = MySNPE_C_NPE(
             prior               = prior,
             density_estimator   = neural_posterior,
             device              = self.device,
@@ -273,29 +276,41 @@ class Solver:
         for current_round in [0,]:
             
             # get simulated data
-            x, theta = simulate_for_sbi(
-                proposal        = proposal,
-                config          = self.config,
-            )
+            # x, theta = simulate_for_sbi(
+            #     proposal        = proposal,
+            #     config          = self.config,
+            # )
             
-            # choose and update the validation set
-            if len(self.post_val_set['x']) <= 5:
-                self.post_val_set = choose_cat_validation_set(
-                    x               = x, 
-                    theta           = theta, 
-                    val_set_size    = self.config['train']['posterior']['val_set_size'],
-                    post_val_set    = self.post_val_set,
-                )
+            self.all_set_names = self._get_max_all_set_names(self.config.dataset)
             
-            # append simulated data to "current round" dataset
-            print('appending simulated data to current round dataset')
+            # if loading_mode == 'fixed_dataset':
+            #     x, theta = self._load_data_from_disk()
+            
+            #     # choose and update the validation set
+            #     if len(self.post_val_set['x']) <= 5:
+            #         self.post_val_set = choose_cat_validation_set(
+            #             x               = x, 
+            #             theta           = theta, 
+            #             val_set_size    = self.config['train']['posterior']['val_set_size'],
+            #             post_val_set    = self.post_val_set,
+            #         )
+                
+            #     # append simulated data to "current round" dataset
+            #     print('appending simulated data to current round dataset')
+            #     self.inference.append_simulations(
+            #         theta         = theta,
+            #         x             = x,
+            #         proposal      = proposal,
+            #         data_device   = 'cpu',
+            #     )
+            # else:
             self.inference.append_simulations(
-                theta         = theta,
-                x             = x,
+                theta         = torch.empty((1)),
+                x             = torch.empty((1)),
                 proposal      = proposal,
                 data_device   = 'cpu',
             )
-            
+        
             # train for multiple runs
             for run in range(training_config['num_runs']):
 
@@ -305,19 +320,20 @@ class Solver:
                 start_time = time.time()
                 
                 # save x, theta for each round and run
-                if self.config['dataset']['save_train_data']:
+                # if self.config['dataset']['save_train_data']:
                     
-                    torch.save(x, f'{self.log_dir}/training_dataset/x_round{current_round}_run{run}.pt')
-                    torch.save(theta, f'{self.log_dir}/training_dataset/theta_round{current_round}_run{run}.pt')
+                #     torch.save(x, f'{self.log_dir}/training_dataset/x_round{current_round}_run{run}.pt')
+                #     torch.save(theta, f'{self.log_dir}/training_dataset/theta_round{current_round}_run{run}.pt')
                     
-                    print(f'x and theta saved to {self.log_dir}/training_dataset')
+                #     print(f'x and theta saved to {self.log_dir}/training_dataset')
                 
                 # run training with current run updated dataset
                 self.inference, density_estimator = self.inference.train(
-                    # num_atoms               = training_config['num_atoms'],
-                    training_batch_size     = training_config['training_batch_size'],
-                    learning_rate           = eval(training_config['learning_rate']),
-                    validation_fraction     = training_config['validation_fraction'],
+                    config                  = self.config,
+                    num_atoms               = training_config['num_atoms'],
+                    training_batch_size     = self.config.dataset['batch_size'],
+                    learning_rate           = training_config['learning_rate'],
+                    validation_fraction     = self.config.dataset['validation_fraction'],
                     stop_after_epochs       = training_config['stop_after_epochs'],
                     # max_num_epochs          = training_config['max_num_epochs'],
                     clip_max_norm           = training_config['clip_max_norm'],
@@ -328,7 +344,7 @@ class Solver:
                     use_combined_loss       = True,
                     retrain_from_scratch    = False,
                     show_train_summary      = True,
-                    seed                    = self.args.seed,
+                    seed                    = self.config.seed,
                     dataloader_kwargs       = my_dataloader_kwargs,
                 )  # density estimator
 
@@ -354,6 +370,7 @@ class Solver:
                         proposal        = proposal,
                         config          = self.config,
                     )
+                    x, theta = self._load_data_from_disk()
                     
                     # choose and update the validation set
                     if len(self.post_val_set['x']) <= 5:
@@ -384,7 +401,68 @@ class Solver:
                             
         print(f"finished training of {training_config['num_rounds']} rounds each of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
 
+    def _load_data_from_disk(self, loading_mode='fixed_dataset'):
+        config = self.config
+        data_path = config.data_path
 
+        # load 2 sets of data
+        set_names = ['set_0', 'set_1']
+        # set_names = [self.all_set_names.pop(0)]
+        # set_names.append(self.all_set_names.pop(0))
+
+        # if loading_mode == 'fixed_dataset':
+            
+        #     my_dset = Dataset_NPE(config = self.config,
+        #                chosen_set_names = set_names,
+        #                num_chosen_theta_each_set = 10,
+        #                chosen_dur=self.config.experiment_settings['chosen_dur_list'],
+        #                )
+            
+        #     num_sets = my_dset.seqC_all.shape[0]
+        #     DM, S, C = my_dset.DM, my_dset.S, my_dset.C
+        #     T, TC = my_dset.T, my_dset.T*my_dset.C
+            
+        #     seqC = my_dset.seqC_all.unsqueeze(-2).unsqueeze(-2).repeat_interleave(T, dim=-3).repeat_interleave(C, dim=-2)
+        #     probR = my_dset.probR_all
+            
+        #     x = torch.cat([seqC, probR], dim=-1).reshape(num_sets, DM, S, T*C, -1).reshape(num_sets, DM*S, T*C, -1).reshape(num_sets*T*C, DM*S, -1)
+        #     del seqC, probR
+            
+        #     theta = my_dset.theta_all.repeat_interleave(C, dim=1).reshape(num_sets*T*C, -1)
+
+        #     # shuffle along the 1st axis of x
+        #     for i in range(x.shape[0]):
+        #         x[i] = x[i][torch.randperm(x[i].shape[0]), :]
+
+        #     return x, theta
+        
+        # if loading_mode == 'fixed_permutation':
+            
+        my_dset = Dataset_NPE(config = self.config,
+                    chosen_set_names = set_names,
+                    num_chosen_theta_each_set = 10,
+                    chosen_dur=self.config.experiment_settings['chosen_dur_list'],
+                    mode=loading_mode,
+                    )
+            
+    
+    def _get_max_all_set_names(self, dataset_kwargs):
+        
+        # get all available set names
+        data_path = self.config.data_path
+        f = h5py.File(data_path, 'r', libver='latest', swmr=True)
+        all_set_names = list(f.keys())
+        num_total_sets = len(all_set_names)
+        f.close()
+        
+        # select a subset of sets
+        num_max_sets = dataset_kwargs['num_max_sets']
+        num_max_sets = min(num_max_sets, num_total_sets)
+        all_set_names = all_set_names[:num_max_sets]
+        print(f'=== program seen {len(all_set_names)} sets from stored {num_total_sets} sets ===')
+        
+        return all_set_names
+    
     def save_model(self):
 
         print('---\nsaving model...')
@@ -433,7 +511,7 @@ def main(config):
     print('\n--- config keys ---')
     print(config.keys())
 
-    solver = Solver(args, config)
+    solver = Solver(config)
     solver.sbi_train()
     solver.save_model()
         
