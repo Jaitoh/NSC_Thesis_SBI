@@ -37,7 +37,7 @@ crop_dur                    : True
 # batch_size                  : 64
 probR_sampling_place        : 'in_dataset'
 batch_size                  : 32 #=32*100
-permutation_mode            : 'random' # fixed, random
+permutation_mode            : 'fixed' # fixed, random
 num_probR_sample            : 25 #25
 shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 

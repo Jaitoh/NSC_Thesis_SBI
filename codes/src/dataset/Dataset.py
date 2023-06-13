@@ -410,7 +410,9 @@ class Choice_Sampled_2D_Dataset(Choice_Sampled_HighD_Dataset):
             x = x[self.permutations[idx], :] # (DMS, 16)
         elif self.mode == 'random':
             x = x[torch.randperm(x.shape[0]), :] # (DMS, 16)
-
+        else:
+            raise NotImplementedError
+        
         return x, theta
 
     

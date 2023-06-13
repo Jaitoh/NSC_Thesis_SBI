@@ -40,7 +40,7 @@ from config.load_config import load_config
 from dataset.dataset import training_dataset
 from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
-from train.MyData import collate_fn_probR
+from dataset.Dataset import collate_fn_probR
 from train.MyPosteriorEstimator import MySNPE_C_NPE
 from neural_nets.embedding_nets import LSTM_Embedding
 from simulator.model_sim_pR import get_boxUni_prior
@@ -52,8 +52,8 @@ from utils.train import (
     # check_path, train_inference_helper,
     # get_args, 
 )
-from train.MyData import My_Processed_Dataset, My_HighD_Sets, My_Chosen_Sets
-from train.MyData import *
+# from dataset.Dataset import My_Processed_Dataset, My_HighD_Sets, My_Chosen_Sets
+from dataset.Dataset import *
 
 from utils.setup import check_path
 from utils.resource import monitor_resources
@@ -148,7 +148,7 @@ class Solver:
             fig_x, _ = plot_posterior_with_label(
                 posterior       = posterior, 
                 sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x'][fig_idx].to(self.device),
+                x               = self.post_val_set['x'][fig_idx].unsqueeze(0).to(self.device),
                 true_params     = self.post_val_set['theta'][fig_idx],
                 limits          = self._get_limits(),
                 prior_labels    = self.config['prior']['prior_labels'],
@@ -158,7 +158,7 @@ class Solver:
             fig_x_shuffle, _ = plot_posterior_with_label(
                 posterior       = posterior, 
                 sample_num      = self.config['train']['posterior']['sampling_num'],
-                x               = self.post_val_set['x_shuffled'][fig_idx].to(self.device),
+                x               = self.post_val_set['x_shuffled'][fig_idx].unsqueeze(0).to(self.device),
                 true_params     = self.post_val_set['theta'][fig_idx],
                 limits          = self._get_limits(),
                 prior_labels    = self.config['prior']['prior_labels'],
@@ -173,7 +173,7 @@ class Solver:
         fig, _ = plot_posterior_unseen(
             posterior       = posterior, 
             sample_num      = self.config['train']['posterior']['sampling_num'],
-            x               = self.x_o.to(self.device),
+            x               = self.x_o.unsqueeze(0).to(self.device),
             limits          = self._get_limits(),
             prior_labels    = self.config['prior']['prior_labels'],
         )
@@ -202,7 +202,7 @@ class Solver:
             
         return my_dataloader_kwargs
     
-    def sbi_train(self):
+    def sbi_train(self, loading_mode='fixed_dataset', debug=True):
         """
         train the sbi model
 
@@ -284,16 +284,16 @@ class Solver:
             self.all_set_names = self._get_max_all_set_names(self.config.dataset)
             
             # if loading_mode == 'fixed_dataset':
-            #     x, theta = self._load_data_from_disk()
-            
-            #     # choose and update the validation set
-            #     if len(self.post_val_set['x']) <= 5:
-            #         self.post_val_set = choose_cat_validation_set(
-            #             x               = x, 
-            #             theta           = theta, 
-            #             val_set_size    = self.config['train']['posterior']['val_set_size'],
-            #             post_val_set    = self.post_val_set,
-            #         )
+            x, theta = self._load_data_from_disk()
+        
+            # choose and update the validation set
+            if len(self.post_val_set['x']) <= 5:
+                self.post_val_set = choose_cat_validation_set(
+                    x               = x, 
+                    theta           = theta, 
+                    val_set_size    = self.config['train']['posterior']['val_set_size'],
+                    post_val_set    = self.post_val_set,
+                )
                 
             #     # append simulated data to "current round" dataset
             #     print('appending simulated data to current round dataset')
@@ -352,6 +352,7 @@ class Solver:
                 best_model_state_dict = self.inference._best_model_state_dict
                 torch.save(best_model_state_dict, f"{self.log_dir}/model/best_model_round{current_round}_run{run}.pt")
                 
+                # print(f'finished training of === round {current_round} run {run} === in {(time.time()-start_time)/60:.2f} min\n\n')
                 print(f'finished training of === round {current_round} run {run} === in {(time.time()-start_time)/60:.2f} min\n\n')
                 
                 
@@ -360,46 +361,46 @@ class Solver:
                 self.posterior.append(posterior)
                 self.posterior_analysis(posterior, current_round, run)
                 
-                
                 # if not the last run
                 # run simulation during training 
                 # append to existing dataset after training
-                if run != training_config['num_runs']-1:
+                # if run != training_config['num_runs']-1:
                     
-                    x, theta = simulate_for_sbi(
-                        proposal        = proposal,
-                        config          = self.config,
-                    )
-                    x, theta = self._load_data_from_disk()
+                #     x, theta = simulate_for_sbi(
+                #         proposal        = proposal,
+                #         config          = self.config,
+                #     )
+                #     x, theta = self._load_data_from_disk()
                     
-                    # choose and update the validation set
-                    if len(self.post_val_set['x']) <= 5:
-                        self.post_val_set = choose_cat_validation_set(
-                            x               = x, 
-                            theta           = theta, 
-                            val_set_size    = self.config['train']['posterior']['val_set_size'],
-                            post_val_set    = self.post_val_set,
-                        )
+                #     # choose and update the validation set
+                #     if len(self.post_val_set['x']) <= 5:
+                #         self.post_val_set = choose_cat_validation_set(
+                #             x               = x, 
+                #             theta           = theta, 
+                #             val_set_size    = self.config['train']['posterior']['val_set_size'],
+                #             post_val_set    = self.post_val_set,
+                #         )
                     
-                    self.inference.append_simulations_for_run(
-                        theta = theta,
-                        x = x,
-                        current_round = current_round,
-                        data_device = 'cpu',
-                    )
+                #     self.inference.append_simulations_for_run(
+                #         theta = theta,
+                #         x = x,
+                #         current_round = current_round,
+                #         data_device = 'cpu',
+                #     )
                 
-                else:
+                # else:
                     
-                    print(f"---\nfinished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
-                    proposal = posterior.set_default_x(x_o)
-                
-                
+                #     print(f"---\nfinished training of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
+                #     proposal = posterior.set_default_x(x_o)
+                if debug:
+                    break
         # save post_val_set for after all runs
-        with open(f"{self.log_dir}/posterior/post_val_set.pkl", 'wb') as f:
-            pickle.dump(self.post_val_set, f)
+        # with open(f"{self.log_dir}/posterior/post_val_set.pkl", 'wb') as f:
+        #     pickle.dump(self.post_val_set, f)
 
-                            
-        print(f"finished training of {training_config['num_rounds']} rounds each of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
+        # print(f"finished training of {training_config['num_rounds']} rounds each of {training_config['num_runs']} runs in {(time.time()-start_time_total)/60:.2f} min")
+        print(f"finished training")
+        
 
     def _load_data_from_disk(self, loading_mode='fixed_dataset'):
         config = self.config
@@ -438,12 +439,15 @@ class Solver:
         
         # if loading_mode == 'fixed_permutation':
             
-        my_dset = Dataset_NPE(config = self.config,
+        my_dset = Choice_Sampled_2D_Dataset(
+                    config = self.config,
                     chosen_set_names = set_names,
                     num_chosen_theta_each_set = 10,
                     chosen_dur=self.config.experiment_settings['chosen_dur_list'],
-                    mode=loading_mode,
+                    permutation_mode=loading_mode,
                     )
+
+        return my_dset.x, my_dset.theta
             
     
     def _get_max_all_set_names(self, dataset_kwargs):
@@ -467,11 +471,11 @@ class Solver:
 
         print('---\nsaving model...')
 
-        inference_dir           = self.log_dir / 'inference.pkl'
-        with open(inference_dir, 'wb') as f:
-            pickle.dump(self.inference, f)
+        # inference_dir           = self.log_dir / 'inference.pkl'
+        # with open(inference_dir, 'wb') as f:
+        #     pickle.dump(self.inference, f)
             
-        print('inference saved to: ',           inference_dir)
+        # print('inference saved to: ',           inference_dir)
 
         # density_estimator_dir   = self.log_dir / 'density_estimator.pkl'
         # with open(density_estimator_dir, 'wb') as f:
@@ -485,7 +489,7 @@ class Solver:
         # print('posterior saved to: ',           posterior_dir)
 
 
-@hydra.main(config_path="../config", config_name="config-test-dataset", version_base=None)
+@hydra.main(config_path="../config", config_name="config-test", version_base=None)
 def main(config):
     # args = get_args()
     

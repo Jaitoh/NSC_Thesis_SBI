@@ -1894,7 +1894,7 @@ class MyPosteriorEstimator_NPE(PosteriorEstimator):
         resume_training: bool = False,
         seed: Optional[int] = 100,
         dataloader_kwargs: Optional[dict] = None,
-        loading_mode='random_permutation', # 'fixed_permutation' or 'random_permutation'
+        loading_mode='random', # 'fixed_permutation' or 'random_permutation'
     ) -> Tuple[data.DataLoader, data.DataLoader]:
         """Return dataloaders for training and validation.
 
@@ -1911,13 +1911,13 @@ class MyPosteriorEstimator_NPE(PosteriorEstimator):
 
         """
         print(f'\n--- get_dataloaders ---\nloading_mode: {loading_mode}')
-        dataset = Dataset_2D(
+        dataset = Choice_Sampled_2D_Dataset(
             config = self.config, 
             chosen_set_names = ['set_0', 'set_1'], 
             num_chosen_theta_each_set = self.config.dataset.train_num_theta, 
             chosen_dur=self.config.experiment_settings.chosen_dur_list,
             theta_chosen_mode='random',
-            mode=loading_mode,
+            permutation_mode='random',
         )
         
         # load and show one example of the dataset
@@ -1998,6 +1998,7 @@ class MyPosteriorEstimator_NPE(PosteriorEstimator):
         
         seed: Optional[int] = 100,
         dataloader_kwargs: Optional[dict] = None,
+        debug: Optional[bool] = False,
     ) -> nn.Module:
         r"""Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -2195,6 +2196,10 @@ class MyPosteriorEstimator_NPE(PosteriorEstimator):
 
             self._maybe_show_progress(self._show_progress_bars, self.epoch, starting_time, train_log_prob_average, self._val_log_prob)
             self._plot_training_curve()
+            
+            if debug: 
+                break
+            
         # self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
         # self._val_log_prob = self._best_val_log_prob
         
