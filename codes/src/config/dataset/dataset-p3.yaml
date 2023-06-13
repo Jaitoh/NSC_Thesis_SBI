@@ -46,6 +46,6 @@ shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 num_workers                 : 4
 pin_memory                  : True
 
-use_data_prefetcher         : True # set to false when memory is not enough
+use_data_prefetcher         : False # set to false when memory is not enough
 prefetch_factor             : 1
 Rchoice_method              : 'probR_sampling' # probR, probR_threshold

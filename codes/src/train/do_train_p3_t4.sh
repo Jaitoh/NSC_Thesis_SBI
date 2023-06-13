@@ -7,7 +7,7 @@ source activate sbi
 CLUSTER=t4
 # PORT=9906
 
-RUN_ID=exp-p3-3dur-transformer
+RUN_ID=exp-p3-3dur-lstm
 TRAIN_FILE_NAME=train_L0
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"

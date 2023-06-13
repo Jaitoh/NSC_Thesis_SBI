@@ -26,7 +26,7 @@ increment_params            : {'init': 2 , 'step': 2, 'max_load': 6, 'loop': Tru
   # increment_step: the dset for the increment
   # ndset_limit: the max dset size for the increment, -1 means no limit
   # loop: whether to loop over the dsets
-train_num_theta             : 10
+train_num_theta             : 50
 validation_fraction         : 0.1
 
 chosen_dur_trained_in_sequence: 
