@@ -4,8 +4,8 @@ inference:
 
 density_estimator:
   embedding_net: 
-    type: transformer  # 'lstm', 'lstm_small', 'rnn_small', 'gru_avg', 'transformer'
-    hidden_size: 64
+    type: lstm  # 'lstm', 'lstm_small', 'rnn_small', 'gru_avg', 'transformer'
+    hidden_size: 128
     output_size: 20
     embedding_net_use_3_dim_dataset: 
       - 'rnn_multi_head'
