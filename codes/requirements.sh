@@ -24,7 +24,18 @@ conda activate sbi
 conda clean --all
 pip cache purge
 
-# /home/wehe/data/conda/envs/sbi/bin/pip install opencv-python imageio
+/home/wehe/data/conda/envs/sbi/bin/pip install sbi
+/home/wehe/data/conda/envs/sbi/bin/pip install opencv-python pyyaml
+/home/wehe/data/conda/envs/sbi/bin/pip install jupyter h5py numpy pandas cython snakeviz
+/home/wehe/data/conda/envs/sbi/bin/pip install tqdm matplotlib tensorboard
+/home/wehe/data/conda/envs/sbi/bin/pip install gpustat pyyaml memory_profiler
+/home/wehe/data/conda/envs/sbi/bin/pip install imageio
+/home/wehe/data/conda/envs/sbi/bin/pip install torch_tb_profiler
+/home/wehe/data/conda/envs/sbi/bin/pip install hydra-core --upgrade
+/home/wehe/data/conda/envs/sbi/bin/pip install spyder-kernels
 
 # pip install tensorboard
 # pip install memory_profiler
+
+# module load anaconda3
+# source activate sbi

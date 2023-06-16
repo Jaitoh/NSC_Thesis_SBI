@@ -87,8 +87,8 @@ def one_DM_simulation(seqC, params, model_name, i, j, k, l):
     model = DM_model(params=params, model_name=model_name)
     _, probR = model.simulate(np.array(seqC))
 
-    # return seqC, params, probR, i, j, k, l
-    return probR, i, j, k, l
+    return seqC, params, probR, i, j, k, l
+    # return probR, i, j, k, l
 
 
 def DM_sim_for_seqCs_parallel(
@@ -216,7 +216,8 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
 
     # store the results
     print('stacking the results')
-    for probR_, i, j, k, l in results:
+    # for probR_, i, j, k, l in results:
+    for seqC_, param_, probR_, i, j, k, l in results:
         probR[i, j, k, l, 0] = probR_
     print('done stacking the results')
 

@@ -7,20 +7,20 @@ source activate sbi
 CLUSTER=t4
 # PORT=9906
 
-RUN_ID=exp-p3-3dur-lstm
+RUN_ID=exp-p3-test-transformer
 TRAIN_FILE_NAME=train_L0
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH="/mnt/data/dataset/dataset_L0_exp_set_0.h5"
-CONFIG_DATASET=dataset-p3
-CONFIG_TRAIN=train-p3-0
+CONFIG_DATASET=dataset-p3-test
+CONFIG_TRAIN=train-p3-test
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 
-CONFIG_SIMULATOR=model-0
-CONFIG_EXP=exp-set-0
-CONFIG_PRIOR=prior-0
+CONFIG_EXP=exp-set-test
+CONFIG_PRIOR=prior-test
 CONFIG_X_O=x_o-0
+CONFIG_SIMULATOR=model-0
 
 LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${CLUSTER}-${RUN_ID}.log"

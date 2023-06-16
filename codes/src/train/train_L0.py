@@ -43,6 +43,7 @@ sys.path.append('./src')
 # from simulator.seqC_generator import seqC_generator
 from train.MyPosteriorEstimator import MySNPE_C, MySNPE_C_P3
 from neural_nets.embedding_nets import LSTM_Embedding, LSTM_Embedding_Small, RNN_Embedding_Small, Conv1D_RNN, RNN_Multi_Head
+from neural_nets.embedding_nets import *
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
@@ -57,7 +58,7 @@ from utils.setup import(
     check_path, get_args, # get_args_run_from_code
 )
 # from utils.resource import monitor_resources
-from train.MyData import collate_fn_vec, collate_fn_vec_high_dim
+from dataset.Dataset import collate_fn_vec, collate_fn_vec_high_dim
 
 # Set the start method to 'spawn' before creating the ProcessPoolExecutor instance
 # mp.set_start_method('spawn', force=True)
@@ -74,8 +75,8 @@ class Solver:
 
         self.gpu = self.config.gpu and torch.cuda.is_available()
         self.device = 'cuda' if self.gpu else 'cpu'
-        print(f'using device: {self.device}')
-        print(f"starting time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        # print(f'using device: {self.device}')
+        # print(f"starting time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         print_cuda_info(self.device)
 
@@ -103,7 +104,7 @@ class Solver:
         yaml_path = Path(self.log_dir) / 'config.yaml'
         with open(yaml_path, "w") as f:
             f.write(OmegaConf.to_yaml(config))
-        print(f'config file saved to: {yaml_path}')
+        # print(f'config file saved to: {yaml_path}')
 
         # set seed
         self.seed = config.seed
@@ -133,40 +134,34 @@ class Solver:
         config_density = self.config['train']['density_estimator']
         net_type = config_density['embedding_net']['type']
         
-        if net_type == 'lstm':
-            embedding_net = LSTM_Embedding(
+        if net_type not in config_density['embedding_net']['embedding_net_use_3_dim_dataset']:
+            # 2 dim dataset
+            if net_type == 'lstm':
+                net = LSTM_Embedding
+            if net_type == 'lstm_small':
+                net = LSTM_Embedding_Small
+            if net_type == 'rnn_small':
+                net = RNN_Embedding_Small
+            if net_type == 'gru_avg':
+                net = GRU_AVG
+            if net_type == 'transformer':
+                net = Transformer
+            
+            embedding_net = net(
                 dms         = dms,
                 l           = l_x,
                 hidden_size = config_density['embedding_net']['hidden_size'],
                 output_size = config_density['embedding_net']['output_size'],
             )
-        
-        if net_type == 'lstm_small':
-            embedding_net = LSTM_Embedding_Small(
-                dms         = dms,
-                l           = l_x,
-                hidden_size = config_density['embedding_net']['hidden_size'],
-                output_size = config_density['embedding_net']['output_size'],
-            )
-        
-        if net_type == 'rnn_small':
-            embedding_net = RNN_Embedding_Small(
-                dms         = dms,
-                l           = l_x,
-                hidden_size = config_density['embedding_net']['hidden_size'],
-                output_size = config_density['embedding_net']['output_size'],
-            )
-        
-        # if net_type == 'conv1d_rnn':
-        if net_type == 'conv1d_rnn':
-            embedding_net = Conv1D_RNN(
-                DM = self.d*self.m,
-                S  = self.s,
-                L  = self.l_x,
-            )
-
-        if net_type == 'rnn_multi_head':
-            embedding_net = RNN_Multi_Head(
+            
+        else:
+            # high dim dataset
+            if net_type == 'conv1d_rnn':
+                net = Conv1D_RNN
+            if net_type == 'rnn_multi_head':
+                net = RNN_Multi_Head
+            
+            embedding_net = net(
                 DM = self.d*self.m,
                 S  = self.s,
                 L  = self.l_x,
@@ -233,38 +228,43 @@ class Solver:
         #     'crop_dur'                       : self.config.dataset.crop_dur
         #     'num_max_sets'                   : self.config.dataset.num_max_sets
         # }
-
-        config_dataset = self.config.dataset
-        if config_dataset.batch_process_method != 'collate_fn':
-            return {  # TODO check and modify in_dataset processing login, of high_dim
-                'num_workers': config_dataset.num_workers,
-                'worker_init_fn': seed_worker,
-                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
-                # 'batch_size'    :  self.config.dataset.batch_size
-            }
-
+        config_dataset      = self.config.dataset
         use_data_prefetcher = config_dataset.use_data_prefetcher
         prefetch_factor     = config_dataset.prefetch_factor
-
-        is_3_dim_dataset = self.config.train.density_estimator.embedding_net.type in self.config.train.density_estimator.embedding_net.embedding_net_use_3_dim_dataset
+        
+        # check if dataset is 3 dim and update config
+        is_3_dim_dataset    = self.config.train.density_estimator.embedding_net.type in self.config.train.density_estimator.embedding_net.embedding_net_use_3_dim_dataset
         # OmegaConf.update(self.config, "is_3_dim_dataset", is_3_dim_dataset, merge=True)
         OmegaConf.set_struct(self.config, False)
         OmegaConf.update(self.config, "is_3_dim_dataset", is_3_dim_dataset, merge=True)
         OmegaConf.set_struct(self.config, True)
 
         # self.config.set('is_3_dim_dataset', is_3_dim_dataset) # add self.config with key 'is_3_dim_dataset' to config
-        collate_fn = collate_fn_vec_high_dim if is_3_dim_dataset else collate_fn_vec
+
+
+        if config_dataset.probR_sampling_place == 'in_dataset':
+            return {  # TODO check and modify in_dataset processing login, of high_dim
+                'num_workers': config_dataset.num_workers,
+                'worker_init_fn': seed_worker,
+                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
+                # 'batch_size'    :  self.config.dataset.batch_size
+            }
         
-        return {
-            'num_workers': config_dataset.num_workers,
-            'worker_init_fn': seed_worker,
-            'collate_fn': lambda batch: collate_fn(
-                batch=batch,
-                config=self.config,
-                shuffling_method=config_dataset.shuffling_method,
-            ),
-            'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
-        }
+        elif config_dataset.probR_sampling_place == 'collate_fn':
+            collate_fn = collate_fn_vec_high_dim if is_3_dim_dataset else collate_fn_vec
+            
+            return {
+                'num_workers': config_dataset.num_workers,
+                'worker_init_fn': seed_worker,
+                'collate_fn': lambda batch: collate_fn(
+                    batch=batch,
+                    config=self.config,
+                    shuffling_method=config_dataset.shuffling_method,
+                ),
+                'prefetch_factor': prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
+            }
+        else:
+            raise NotImplementedError
     
     
     def sbi_train(self, debug=False):
@@ -309,7 +309,7 @@ class Solver:
 
         # get neural posterior
         neural_posterior = self.get_neural_posterior()
-        print(f'neural_posterior: {neural_posterior}')
+        # print(f'neural_posterior: {neural_posterior}')
 
         MySNPE = MySNPE_C_P3 if self.config.pipeline_version == 'p3' else MySNPE_C
         self.inference = MySNPE(
@@ -340,7 +340,7 @@ class Solver:
             )
 
         # start training
-        print(f"\n======\nstart of training\n======")
+        # print(f"\n======\nstart of training\n======")
 
         # run training with current run updated dataset
         self.inference, density_estimator = self.inference.train( # type: ignore
@@ -354,23 +354,23 @@ class Solver:
 
         torch.save(deepcopy(density_estimator.state_dict()), f"{self.log_dir}/model/a_final_best_model_state_dict.pt")
 
-        print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
+        # print(f"---\nfinished training in {(time.time()-start_time_total)/60:.2f} min")
 
-@hydra.main(config_path="../config", config_name="config", version_base=None)
+@hydra.main(config_path="../config", config_name="config-test", version_base=None)
 def main(config : DictConfig):
     # args = get_args()
     # print(args.log_dir)
     
     # monitor resources usage
     PID = os.getpid()
-    print(f"PID: {PID}")
+    # print(f"PID: {PID}")
     # log_file = f"{args.log_dir}/resource_usage.log"
     # monitor_process = multiprocessing.Process(target=monitor_resources, args=(PID, 5, log_file))
     # monitor_process.start()
     
     try:
-        print('\n--- config keys ---')
-        print(OmegaConf.to_yaml(config))
+        # print('\n--- config keys ---')
+        # print(OmegaConf.to_yaml(config))
         # config = load_config(
         #     config_simulator_path=args.config_simulator_path,
         #     config_dataset_path=args.config_dataset_path,
@@ -383,7 +383,7 @@ def main(config : DictConfig):
         solver = Solver(config)
         solver.sbi_train(debug=config.debug)
 
-        print(f"finishing time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        # print(f"finishing time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
     # except Exception as e:
     #         print(f"An error occurred: {e}")
@@ -392,9 +392,9 @@ def main(config : DictConfig):
         
         del solver
         gc.collect()
-        print('solver deleted')
+        # print('solver deleted')
         torch.cuda.empty_cache()
-        print('cuda cache emptied')
+        # print('cuda cache emptied')
         # del solver
         # print('solver deleted')
         

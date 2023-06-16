@@ -4,10 +4,10 @@ export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
 source activate sbi
 
-CLUSTER=t4
+CLUSTER=snn
 # PORT=9906
 
-RUN_ID=exp-p3-3dur-lstm
+RUN_ID=exp-p3-3dur-a0
 TRAIN_FILE_NAME=train_L0
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"

@@ -4,8 +4,8 @@ defaults:
   - prior: prior-0
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p2-test-t4
-  - train: train-p2-test-0
+  - dataset: dataset-p3
+  - train: train-p3-0
 
 pipeline_version: p3
 log_dir: ./

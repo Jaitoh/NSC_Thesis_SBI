@@ -15,19 +15,18 @@ dataset_chosen_mode         : 'fixed' # determine how to choose all the dsets, t
   # 'random': randomly choose the dsets, theta
   # 'fixed': choose the dsets, theta in a fixed order
 
-test_fraction               : [10, 20, 30, 40]
-test_num_theta              : 50
-check_test_perf             : True
+test_fraction               : [10]
+test_num_theta              : 10
+check_test_perf             : False
 
 # train_dataset_mode          : 'increment' # determine how to choose the training dataset
   # 'whole': use all the data as one dataset, training once for all dsets
   # 'increment': append one more dataset at a time, training for each increased sized dset, limited to the last ndsets
-increment_params            : {'init': 2 , 'step': 1, 'max_load': 2, 'loop': True, 'only_one_set': False}
+increment_params            : {'init': 2 , 'step': 2, 'max_load': 6, 'loop': True, 'only_one_set': True}
   # increment_step: the dset for the increment
   # ndset_limit: the max dset size for the increment, -1 means no limit
   # loop: whether to loop over the dsets
-  # only one set: only one initial 2 sets, no increment
-train_num_theta             : 500
+train_num_theta             : 50
 validation_fraction         : 0.1
 
 chosen_dur_trained_in_sequence: 
@@ -37,15 +36,15 @@ crop_dur                    : True
 # probR_sampling_place        : 'collate_fn'
 # batch_size                  : 64
 probR_sampling_place        : 'in_dataset'
-batch_size                  : 128 #=32*100
-permutation_mode            : 'random' # fixed, random
-num_probR_sample            : 100 #25
+batch_size                  : 32 #=32*100
+permutation_mode            : 'fixed' # fixed, random
+num_probR_sample            : 25 #25
 shuffling_method            : 0 # 0: complex shuffling, 1: simple shuffling
 
 
-num_workers                 : 4
+num_workers                 : 2
 pin_memory                  : True
 
-use_data_prefetcher         : False # set to false when memory is not enough
+use_data_prefetcher         : True # set to false when memory is not enough
 prefetch_factor             : 1
 Rchoice_method              : 'probR_sampling' # probR, probR_threshold

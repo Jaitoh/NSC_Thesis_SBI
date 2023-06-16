@@ -31,7 +31,7 @@ def store_info(data_path,dur_list,MS_list,seqC_sample_per_MS,model_name,num_prio
         info_group.create_dataset("num_prior_sample", data=num_prior_sample)
         info_group.create_dataset("prior_min", data=prior_min)
         info_group.create_dataset("prior_max", data=prior_max)
-        info_group.create_dataset("prior_labels", data=prior_labels)
+        # info_group.create_dataset("prior_labels", data=prior_labels)
     
     
 def store_data(data_path, seqC, theta, probR):
@@ -84,6 +84,8 @@ def simulate_and_save(data_path, config, seed):
     print(f'Results written to the file {data_path}')
     print(f'file size {os.path.getsize(data_path)} bytes')
     print(f'{os.path.getsize(data_path)/1024} MB')
+
+    return seqC, theta, probR
 
 
 def main():
