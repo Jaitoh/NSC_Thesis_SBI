@@ -42,7 +42,7 @@ from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
 from dataset.Dataset_Classes import collate_fn_probR
 from train.MyPosteriorEstimator import MySNPE_C_NPE
-from neural_nets.embedding_nets import LSTM_Embedding
+from neural_nets.embedding_nets import LSTM_Embedding, Transformer
 from simulator.model_sim_pR import get_boxUni_prior
 from utils.get_xo import get_xo
 from utils.set_seed import setup_seed, seed_worker
@@ -123,12 +123,23 @@ class Solver:
 
         config_density = self.config['train']['density_estimator']
 
-        embedding_net = LSTM_Embedding(
-            dms         = dms,
-            l           = l_x,
-            hidden_size = config_density['embedding_net']['hidden_size'],
-            output_size = config_density['embedding_net']['output_size'],
-        )
+        if config_density['embedding_net']['type'] == 'lstm':
+            print(f"--- embedding net: LSTM ---")
+            embedding_net = LSTM_Embedding(
+                dms         = dms,
+                l           = l_x,
+                hidden_size = config_density['embedding_net']['hidden_size'],
+                output_size = config_density['embedding_net']['output_size'],
+            )
+        
+        if config_density['embedding_net']['type'] == 'transformer':
+            print(f"--- embedding net: Transformer ---")
+            embedding_net = Transformer(
+                dms         = dms,
+                l           = l_x,
+                hidden_size = config_density['embedding_net']['hidden_size'],
+                output_size = config_density['embedding_net']['output_size'],
+            )
 
         neural_posterior = posterior_nn(
             model           = config_density['posterior_nn']['model'],
