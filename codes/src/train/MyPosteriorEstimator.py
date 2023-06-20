@@ -51,8 +51,8 @@ import signal
 import sys
 sys.path.append('./src')
 
-from dataset.Dataset import probR_HighD_Sets,Choice_Sampled_HighD_Dataset, Choice_Sampled_2D_Dataset, Data_Prefetcher
-from dataset.Dataset import *
+from dataset.Dataset_Classes import probR_HighD_Sets,Choice_Sampled_HighD_Dataset, Choice_Sampled_2D_Dataset, Data_Prefetcher
+from dataset.Dataset_Classes import *
 
 from utils.train import (
     plot_posterior_with_label,

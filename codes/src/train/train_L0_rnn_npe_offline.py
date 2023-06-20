@@ -40,7 +40,7 @@ from config.load_config import load_config
 from dataset.dataset import training_dataset
 from dataset.simulate_for_sbi import simulate_for_sbi
 from simulator.seqC_generator import seqC_generator
-from dataset.Dataset import collate_fn_probR
+from dataset.Dataset_Classes import collate_fn_probR
 from train.MyPosteriorEstimator import MySNPE_C_NPE
 from neural_nets.embedding_nets import LSTM_Embedding
 from simulator.model_sim_pR import get_boxUni_prior
@@ -53,7 +53,7 @@ from utils.train import (
     # get_args, 
 )
 # from dataset.Dataset import My_Processed_Dataset, My_HighD_Sets, My_Chosen_Sets
-from dataset.Dataset import *
+from codes.src.dataset.Dataset_Classes import *
 
 from utils.setup import check_path
 from utils.resource import monitor_resources
