@@ -10,11 +10,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.io as sio
 from pathlib import Path
+import os
+import time
+from tqdm import tqdm
 
 
 class Feature_Generator:
     def __init__(self):
-        self.MD_list = torch.range(-10, 10)
+        self.MD_list = torch.arange(-10, 11)
 
     def compute_kernels(self, seqC, chR, D, M, S):
         """
@@ -195,7 +198,7 @@ class Feature_Generator:
         return f1, f2
 
     def _get_mask_NS(
-        self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=True
+        self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=False
     ):
         """generate a mask for the NS kernel
         select only the first two
@@ -210,19 +213,19 @@ class Feature_Generator:
 
         mask[:, idx_mid_col] = 1
 
-        if show_mask:
-            plt.figure()
-            plt.imshow(mask.T.numpy())
-            # show values on the mask
-            for i in range(mask.shape[0]):
-                for j in range(mask.shape[1]):
-                    if not mask[i, j]:
-                        plt.text(i, j, "0", ha="center", va="center", color="w")
+        # if show_mask:
+        #     plt.figure()
+        #     plt.imshow(mask.T.numpy())
+        #     # show values on the mask
+        #     for i in range(mask.shape[0]):
+        #         for j in range(mask.shape[1]):
+        #             if not mask[i, j]:
+        #                 plt.text(i, j, "0", ha="center", va="center", color="w")
 
         return mask
 
     def _get_mask_MD(
-        self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=True
+        self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=False
     ):
         """generate a mask for the 2D"""
         mask = torch.ones(shape, dtype=torch.bool)
@@ -233,14 +236,14 @@ class Feature_Generator:
             lower, upper = idx_mid_col + mask_range[0], idx_mid_col + mask_range[1]
             mask[i, lower : upper + 1] = 0
 
-        if show_mask:
-            plt.figure()
-            plt.imshow(mask.T.numpy())
-            # show values on the mask
-            for i in range(mask.shape[0]):
-                for j in range(mask.shape[1]):
-                    if not mask[i, j]:
-                        plt.text(i, j, "0", ha="center", va="center", color="w")
+        # if show_mask:
+        #     plt.figure()
+        #     plt.imshow(mask.T.numpy())
+        #     # show values on the mask
+        #     for i in range(mask.shape[0]):
+        #         for j in range(mask.shape[1]):
+        #             if not mask[i, j]:
+        #                 plt.text(i, j, "0", ha="center", va="center", color="w")
 
         return mask
 
@@ -607,10 +610,84 @@ def main():
     plt.show()
 
 
-def feature_gen_for_whole_dataset(data_path):
+def feature_gen_for_whole_dataset(data_path, feature_path):
     """generate feature for the whole dataset"""
+    # data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5"
+    # feature_path = (
+    #     "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100.h5"
+    # )
+
+    # remove feature file if exists
+    if os.path.exists(feature_path):
+        os.remove(feature_path)
+
+    f = h5py.File(data_path, "r")
+    f_feature = h5py.File(feature_path, "a")
+
+    # with h5py.File(data_path, 'r') as f:
+    sets = list(f.keys())
+
+    C = 100
+    for group_name, group in f.items():
+        print(
+            f"processing group: {group_name} [{sets.index(group_name)}/{len(sets)-1}]",
+            end=" ",
+        )
+
+        seqC = torch.from_numpy(group["seqC"][:]).type(torch.float32)
+        probR = torch.from_numpy(group["probR"][:]).type(torch.float32).to("cuda")
+        theta = torch.from_numpy(group["theta"][:]).type(torch.float32)
+
+        # sample probR to get chR, with 100 samples
+        print(f"chR generated ", end="")
+        start_time = time.time()
+        chR = torch.repeat_interleave(probR, C, dim=-1)
+        chR = torch.bernoulli(chR).to("cpu")  # [D,M,S,T,C]
+        torch.cuda.empty_cache()
+        D, M, S, T, C = chR.shape
+        print(f"in {(time.time() - start_time)/60:.2f} min")
+
+        feature_1s = torch.empty((T, C, M, 69))
+        feature_2s = torch.empty((T, C, M, 69))
+        feature_3s = torch.empty((T, C, M, 15))
+        feature_4s = torch.empty((T, C, M, 12))
+        feature_5s = torch.empty((T, C, M, 56))
+
+        f_feature.create_group(group_name)
+        f_feature[group_name].create_dataset("theta", data=theta)
+
+        # generate kernels
+        for idx_T in range(T):  # 500
+            for idx_C in tqdm(range(C)):  # 100
+                chR_ = chR[:, :, :, idx_T, idx_C].view(D, M, S, 1)  # [D,M,S,1]
+
+                FG = Feature_Generator()
+                (
+                    feature_1,
+                    feature_2,
+                    feature_3,
+                    feature_4,
+                    feature_5,
+                ) = FG.compute_kernels(seqC, chR_, D, M, S).get_features()
+
+                feature_1s[idx_T, idx_C, :, :] = feature_1
+                feature_2s[idx_T, idx_C, :, :] = feature_2
+                feature_3s[idx_T, idx_C, :, :] = feature_3
+                feature_4s[idx_T, idx_C, :, :] = feature_4
+                feature_5s[idx_T, idx_C, :, :] = feature_5
+            # break
+        f_feature[group_name].create_dataset("feature_1", data=feature_1s)
+        f_feature[group_name].create_dataset("feature_2", data=feature_2s)
+        f_feature[group_name].create_dataset("feature_3", data=feature_3s)
+        f_feature[group_name].create_dataset("feature_4", data=feature_4s)
+        f_feature[group_name].create_dataset("feature_5", data=feature_5s)
+        # break
 
 
 if __name__ == "__main__":
     # main()
-    feature_gen_for_whole_dataset("/mnt/data/dataset/dataset_L0_exp_0_set100_T500.h5")
+    data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5"
+    feature_path = (
+        "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100.h5"
+    )
+    feature_gen_for_whole_dataset(data_path, feature_path)
