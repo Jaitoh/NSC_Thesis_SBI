@@ -17,10 +17,10 @@
 ./gdrive files move 141LcJ5Sj-IkvYvaxvVrtbW0vRZ0-kwMD 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 1jVfHONCf_TQN552A9BOq5UkMThA_9Xmh 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 
-# upload L0_exp_set_0 simulated dataset 
-./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_0.h5" # 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om
-./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_1.h5" # 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy
-./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_3.h5" # 1ecJ85SPYKBdzRxSsJ4ydb0Y10QQ1IbFa
+# upload L0_exp_set_0 simulated dataset
+./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_0.h5"       # 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om
+./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_1.h5"       # 1rSQbY7QHjC3Rovowy6uMOEKBi4HBXwpy
+./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_part_3.h5"       # 1ecJ85SPYKBdzRxSsJ4ydb0Y10QQ1IbFa
 ./gdrive files upload "/home/wehe/scratch/data/dataset/dataset_L0_exp_set_0.h5" # 1bcv3Nxh7nFBMbD5_6lThYQcFdFQlg0zV
 
 ./gdrive files move 1yl_F4oaA3mkU2ZJDQF1MNL_fLMM7h7Om 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
@@ -29,7 +29,7 @@
 
 ./gdrive files move 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
 
-./gdrive files upload "/home/wehe/data/NSC/codes/src/dataset/probR_set_0.npy" # 1CVyuUxRY_0RetrwVRTn46iu7uaC4c3m7
+./gdrive files upload "/home/wehe/data/NSC/codes/src/dataset/probR_set_0.npy"        # 1CVyuUxRY_0RetrwVRTn46iu7uaC4c3m7
 ./gdrive files upload "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_set_0_test.h5" # 1u_f83c62VNEoq8veVee0E8lhYUu3g3lf
 
 ./gdrive files upload "/home/wehe/data/NSC/data/dataset/dataset_L0_exp_set_0.h5" # 1vxaNvjlejlkfvZKt_erGmqP0VlG97eLk
@@ -38,5 +38,10 @@
 ./gdrive files upload /home/wehe/scratch/exp-b2-2-contd0.tar.gz # 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9
 ./gdrive files upload /home/wehe/scratch/exp-b3-2-contd0.tar.gz # 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV
 
-# upload L0_exp_set_0 partial T500
-./gdrive files upload /mnt/data/dataset/dataset_L0_exp_0_Set100_T500.h5
+# upload L0_exp_set_0 partial T500 - Jun21
+# 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG - Jun21
+./gdrive files upload /home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5
+./gdrive files move 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
+# 1CFCM_O55sQd-lcbqmuiE5CpbZG9dxcvh - Jun21
+./gdrive files upload /home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T5000.h5
+./gdrive files move 1CFCM_O55sQd-lcbqmuiE5CpbZG9dxcvh 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U

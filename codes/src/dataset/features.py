@@ -552,7 +552,7 @@ class Feature_Generator:
 
 
 def main():
-    DATA_PATH = "/mnt/data/dataset/dataset_L0_exp_set_0.h5"
+    DATA_PATH = "/mnt/data/dataset/dataset_L0_exp_0_set100_T500.h5"
     idx_set = 0
     idx_theta = 10
 
@@ -607,5 +607,10 @@ def main():
     plt.show()
 
 
+def feature_gen_for_whole_dataset(data_path):
+    """generate feature for the whole dataset"""
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    feature_gen_for_whole_dataset("/mnt/data/dataset/dataset_L0_exp_0_set100_T500.h5")
