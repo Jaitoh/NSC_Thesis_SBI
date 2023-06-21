@@ -750,9 +750,10 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
     f_feature.create_group(group_name)
     f_feature[group_name].create_dataset("theta", data=theta)
 
-    print(f"{T*C} tasks to be done")
+    print(f"{T*C} tasks to be done, update time interval 20s")
     # Create a multiprocessing pool
     num_workers = min(32, os.cpu_count())
+    print(f"{num_workers=}")
     pool = multiprocessing.Pool(processes=num_workers)
 
     # Submit all the tasks for execution
@@ -763,7 +764,7 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
     for idx_T, idx_C, features in tqdm(
         pool.imap_unordered(compute_features, args_list),
         total=len(args_list),
-        miniters=int(T * C / 200),
+        mininterval=20,
     ):
         feature_1s[idx_T, idx_C, :, :] = features[0]
         feature_2s[idx_T, idx_C, :, :] = features[1]
@@ -782,12 +783,14 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
     f_feature[group_name].create_dataset("feature_4", data=feature_4s)
     f_feature[group_name].create_dataset("feature_5", data=feature_5s)
     # break
+    
     print("finished saving features to h5 file")
-
-
+    f.close()
+    f_feature.close()
+    
 if __name__ == "__main__":
     # main()
-    data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_eset_0_set100_T500.h5"
+    data_path = "/home/wehe/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5"
     parser = argparse.ArgumentParser()
     parser.add_argument("--set_idx", "-s", type=int, default=0)
     parser.add_argument("--data_path", "-data", type=str, default=data_path)
@@ -798,7 +801,7 @@ if __name__ == "__main__":
 
     # set_idx = 0
     data_dir = "/".join(data_path.split("/")[:-1])
-    file_name = f"feature_L0_exp_0_set100_T500_C100_set{set_idx}.h5"
+    file_name = f"feature-L0-Eset0-100sets-T500-C100-set{set_idx}.h5"
     feat_path = os.path.join(data_dir, file_name)
 
     # feature_gen_for_whole_dataset(data_path, feature_path)

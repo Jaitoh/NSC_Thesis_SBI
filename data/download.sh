@@ -50,3 +50,5 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 
 # dataset_L0_exp_set_0.h5 updated-May30
 ./gdrive files download 1y3KGDe0p_MMmdnk8NQJxyFFNxUTH8i4H --destination ./tmp/NSC/data/dataset/
+
+./gdrive files download 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG --destination /home/wehe/scratch/data/

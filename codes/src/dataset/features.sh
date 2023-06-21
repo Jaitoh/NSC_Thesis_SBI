@@ -5,26 +5,27 @@
 
 #SBATCH --array=0-99
 
-#SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds
+#SBATCH --time=0-3:00:00 ## days-hours:minutes:seconds
 #SBATCH --ntasks=1
 
 #SBATCH --mem 10G
 #SBATCH --cpus-per-task=32
 
 #SBATCH --job-name=dataset
-#SBATCH --output=./cluster/uzh/dataset/data_gen/feature_exp_set_0_%a.out
-#SBATCH --error=./cluster/uzh/dataset/data_gen/feature_exp_set_0_%a.err
+#SBATCH --output=./cluster/uzh/dataset/feature_gen/feature-Eset0_%a.out
+#SBATCH --error=./cluster/uzh/dataset/feature_gen/feature-Eset0_%a.err
 
-SLURM_ARRAY_TASK_ID=0
+# SLURM_ARRAY_TASK_ID=0
 
-CLUSTER=snn
-RUN_ID=feature_eset_0
+# CLUSTER=snn
+CLUSTER=uzh
+RUN_ID=feature-Eset0
 
-DATA_PATH="/home/wehe/tmp/NSC/data/dataset/dataset_L0_eset_0_set100_T500.h5"
-# DATA_PATH=/home/wehe/scratch/data/dataset/dataset_part_${SLURM_ARRAY_TASK_ID}.h5
+# DATA_PATH="/home/wehe/tmp/NSC/data/dataset/dataset_L0_eset_0_set100_T500.h5"
+DATA_PATH=/home/wehe/scratch/data/dataset-L0-Eset0-100sets-T500.h5
 
 PRINT_DIR="./cluster/${CLUSTER}/dataset/"
-PRINT_LOG="./cluster/${CLUSTER}/dataset/${RUN_ID}_set${SLURM_ARRAY_TASK_ID}.log"
+PRINT_LOG="./cluster/${CLUSTER}/dataset/${RUN_ID}-set${SLURM_ARRAY_TASK_ID}.log"
 
 module load anaconda3
 source activate sbi
