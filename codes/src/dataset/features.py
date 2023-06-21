@@ -13,6 +13,9 @@ from pathlib import Path
 import os
 import time
 from tqdm import tqdm
+import multiprocessing
+import argparse
+from joblib import Parallel, delayed
 
 
 class Feature_Generator:
@@ -69,6 +72,7 @@ class Feature_Generator:
         self.stats_psy = self._compute_kernel_psy(
             seqC, chR, D, M, Dur, MS, Dur_list, MS_list
         )
+
         return self
 
     def get_features(self):
@@ -682,12 +686,129 @@ def feature_gen_for_whole_dataset(data_path, feature_path):
         f_feature[group_name].create_dataset("feature_4", data=feature_4s)
         f_feature[group_name].create_dataset("feature_5", data=feature_5s)
         # break
+    f.close()
+    f_feature.close()
+
+
+def compute_features(args):
+    idx_T, idx_C, chR, seqC, D, M, S = args
+    chR_ = chR[:, :, :, idx_T, idx_C].view(D, M, S, 1)  # [D,M,S,1]
+
+    # Initialize the Feature_Generator
+    FG = Feature_Generator()
+    # Compute features
+    features = FG.compute_kernels(seqC, chR_, D, M, S).get_features()
+
+    # Return the index and features
+    return idx_T, idx_C, features
+
+
+def feature_gen_for_whole_dataset_parallel_for_one_set(
+    data_path, feature_path, set_idx=0
+):
+    """generate feature for the whole dataset"""
+    # data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5"
+    # feature_path = (
+    #     "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100.h5"
+    # )
+    C = 100
+    torch.set_num_threads(1)
+
+    # remove feature file if exists
+    if os.path.exists(feature_path):
+        os.remove(feature_path)
+
+    f = h5py.File(data_path, "r")
+    f_feature = h5py.File(feature_path, "a")
+    sets = list(f.keys())
+
+    group_name = sets[set_idx]
+    group = f[group_name]
+
+    print(f"loading data from h5 file set [{group_name}]", end=" ")
+    start_time = time.time()
+    seqC = torch.from_numpy(group["seqC"][:]).type(torch.float32)
+    probR = torch.from_numpy(group["probR"][:]).type(torch.float32)
+    theta = torch.from_numpy(group["theta"][:]).type(torch.float32)
+    print(f"in {(time.time() - start_time)/60:.2f} min")
+
+    # sample probR to get chR, with 100 samples
+    print(f"chR generated ", end="")
+    start_time = time.time()
+    chR = torch.repeat_interleave(probR, C, dim=-1)
+    chR = torch.bernoulli(chR)  # [D,M,S,T,C]
+    # torch.cuda.empty_cache()
+    D, M, S, T, C = chR.shape
+    print(f"in {(time.time() - start_time)/60:.2f} min")
+
+    feature_1s = torch.empty((T, C, M, 69))
+    feature_2s = torch.empty((T, C, M, 69))
+    feature_3s = torch.empty((T, C, M, 15))
+    feature_4s = torch.empty((T, C, M, 12))
+    feature_5s = torch.empty((T, C, M, 56))
+
+    f_feature.create_group(group_name)
+    f_feature[group_name].create_dataset("theta", data=theta)
+
+    print(f"{T*C} tasks to be done")
+    # Create a multiprocessing pool
+    num_workers = min(32, os.cpu_count())
+    pool = multiprocessing.Pool(processes=num_workers)
+
+    # Submit all the tasks for execution
+    args_list = [
+        (idx_T, idx_C, chR, seqC, D, M, S) for idx_T in range(T) for idx_C in range(C)
+    ]
+
+    for idx_T, idx_C, features in tqdm(
+        pool.imap_unordered(compute_features, args_list),
+        total=len(args_list),
+        miniters=int(T * C / 200),
+    ):
+        feature_1s[idx_T, idx_C, :, :] = features[0]
+        feature_2s[idx_T, idx_C, :, :] = features[1]
+        feature_3s[idx_T, idx_C, :, :] = features[2]
+        feature_4s[idx_T, idx_C, :, :] = features[3]
+        feature_5s[idx_T, idx_C, :, :] = features[4]
+
+    # Close the pool and wait for all the tasks to complete
+    pool.close()
+    pool.join()
+
+    print("finished computing features, saving to h5 file")
+    f_feature[group_name].create_dataset("feature_1", data=feature_1s)
+    f_feature[group_name].create_dataset("feature_2", data=feature_2s)
+    f_feature[group_name].create_dataset("feature_3", data=feature_3s)
+    f_feature[group_name].create_dataset("feature_4", data=feature_4s)
+    f_feature[group_name].create_dataset("feature_5", data=feature_5s)
+    # break
+    print("finished saving features to h5 file")
 
 
 if __name__ == "__main__":
     # main()
-    data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5"
-    feature_path = (
-        "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100.h5"
+    data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_eset_0_set100_T500.h5"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--set_idx", "-s", type=int, default=0)
+    parser.add_argument("--data_path", "-data", type=str, default=data_path)
+    args = parser.parse_args()
+
+    set_idx = args.set_idx
+    data_path = args.data_path
+
+    # set_idx = 0
+    data_dir = "/".join(data_path.split("/")[:-1])
+    file_name = f"feature_L0_exp_0_set100_T500_C100_set{set_idx}.h5"
+    feat_path = os.path.join(data_dir, file_name)
+
+    # feature_gen_for_whole_dataset(data_path, feature_path)
+    feature_gen_for_whole_dataset_parallel_for_one_set(
+        data_path, feat_path, set_idx=set_idx
     )
-    feature_gen_for_whole_dataset(data_path, feature_path)
+
+    # feat_path = (
+    #     "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100_set0.h5"
+    # )
+    # f = h5py.File(feat_path, "r")
+    # f["set_0"].keys()
+    # f["set_0"]["feature_1"].shape
