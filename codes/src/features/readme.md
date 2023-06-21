@@ -4,3 +4,4 @@
     /home/wehe/scratch/data/
 2. 运行 merge_features.sh
     将子数据合成在一个大的文件中 feature-L0-Eset0-100sets-T500-C100.h5
+    `/data/wehe/conda/envs/sbi/bin/python3 -u ./src/features/merge_features.py`

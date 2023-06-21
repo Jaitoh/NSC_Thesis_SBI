@@ -45,3 +45,7 @@
 # 1CFCM_O55sQd-lcbqmuiE5CpbZG9dxcvh - Jun21
 ./gdrive files upload /home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T5000.h5
 ./gdrive files move 1CFCM_O55sQd-lcbqmuiE5CpbZG9dxcvh 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
+
+# feature-L0-Eset0-100sets-T500-C100.h5 - 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ - Jun22
+./gdrive files upload /home/wehe/scratch/data/feature-L0-Eset0-100sets-T500-C100.h5
+./gdrive files move 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
