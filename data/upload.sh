@@ -37,3 +37,6 @@
 ./gdrive files upload /home/wehe/scratch/exp-b0-2-contd0.tar.gz # 1uPv2D85kgPNRSJi6KxGP2n2CK3TI9__6
 ./gdrive files upload /home/wehe/scratch/exp-b2-2-contd0.tar.gz # 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9
 ./gdrive files upload /home/wehe/scratch/exp-b3-2-contd0.tar.gz # 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV
+
+# upload L0_exp_set_0 partial T500
+./gdrive files upload /mnt/data/dataset/dataset_L0_exp_0_Set100_T500.h5
