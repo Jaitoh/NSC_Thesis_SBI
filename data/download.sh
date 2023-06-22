@@ -35,7 +35,6 @@
 # dataset-L0-exp-set-0-500sets.h5
 ./gdrive files download 1QNWoJvrHv4kKX9bvICe24KovtTFC12Kk --destination ./tmp/NSC/data/
 
-
 ./gdrive files upload /home/wehe/scratch/exp-b0-2-contd0.tar.gz # 1uPv2D85kgPNRSJi6KxGP2n2CK3TI9__6
 ./gdrive files upload /home/wehe/scratch/exp-b2-2-contd0.tar.gz # 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9
 ./gdrive files upload /home/wehe/scratch/exp-b3-2-contd0.tar.gz # 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV
@@ -44,7 +43,6 @@
 ./gdrive files download 1KRnmCz8RxZZaI9EBTGYz-syGPQbG3Vb9 --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
 ./gdrive files download 1MaLrdu_H0u-aFeOh_hBcoyz897wL_5wV --destination /home/wehe/tmp/NSC/codes/src/train/logs/train_L0
 
-
 https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 ./gdrive files download 1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3 --destination ~/scratch --recursive
 
@@ -52,3 +50,5 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 ./gdrive files download 1y3KGDe0p_MMmdnk8NQJxyFFNxUTH8i4H --destination ./tmp/NSC/data/dataset/
 
 ./gdrive files download 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG --destination /home/wehe/scratch/data/
+# feature-L0-Eset0-100sets-T500-C100.h5
+./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /mnt/data/dataset/
