@@ -91,6 +91,7 @@ class Feature_Dataset(Dataset):
 def main(concatenate_feature_types=[3]):
     data_path = "/mnt/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     data_path = "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+    data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     f = h5py.File(data_path, "r")
     sets = list(f.keys())
     f.close()
@@ -120,10 +121,10 @@ def main(concatenate_feature_types=[3]):
 
     # load one sample
     plt.figure(figsize=(10, 5))
-    for idx in [0, 10, 101, 111, 45000, 45300, 90300, 4005000]:
+    for idx in [0, 10, 101, 111, 45300]:
         x, theta = Feature[idx]
         print(
-            f"{idx=:4} {theta=} {Feature.set_idxs[idx], Feature.T_idxs[idx], Feature.C_idxs[idx]} {x.shape=} {theta.shape=}"
+            f"{idx=:7} {theta=} {Feature.set_idxs[idx], Feature.T_idxs[idx], Feature.C_idxs[idx]} {x.shape=} {theta.shape=}"
         )  # {x.shape=} {theta.shape=}
         plt.plot(x, label=f"{idx=}")
     # set the legend outside the plot
@@ -160,9 +161,9 @@ if __name__ == "__main__":
     main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [1, 2]
     main(concatenate_feature_types=concatenate_feature_types)
-    concatenate_feature_types = [1, 2, 3]
+    concatenate_feature_types = [1, 3]
     main(concatenate_feature_types=concatenate_feature_types)
-    concatenate_feature_types = [1, 2, 3, 4]
+    concatenate_feature_types = [3, 4]
     main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [1, 2, 3, 4, 5]
     main(concatenate_feature_types=concatenate_feature_types)
