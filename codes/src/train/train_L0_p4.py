@@ -58,18 +58,26 @@ class Solver:
 
     def get_neural_posterior(self):
         config_density = self.config.train.density_estimator
+        concatenate_along_M = self.config.dataset.concatenate_along_M
+
+        num_layers = 1
+        input_size = 1 if concatenate_along_M else self.M
+        hidden_size = config_density.embedding_net.hidden_size
 
         print(f"\n=== embedding net === \n{config_density.embedding_net.type}")
-        net = GRU_FC
         match config_density.embedding_net.type:
             case "gru_fc":
-                net = GRU_FC
+                embedding_net = GRU_FC(input_size, hidden_size, num_layers)
+
             case "multi_head_gru_fc":
-                net = Multi_Head_GRU_FC
-        num_layers = 1
-        input_size = 1 if self.config.dataset.concatenate_along_M else self.M
-        hidden_size = config_density.embedding_net.hidden_size
-        embedding_net = net(input_size, hidden_size, num_layers)
+                if not concatenate_along_M:  # [B, F1+F2+..., M]
+                    feature_lengths = list(self.config.dataset.feature_lengths)
+                else:  # [B, F1+F2+F3 + F1+F2+F3 + F1+F2+F3 ..., 1]
+                    feature_lengths = self.M * list(self.config.dataset.feature_lengths)
+                print(f"{len(feature_lengths)} heads")
+                embedding_net = Multi_Head_GRU_FC(
+                    feature_lengths, input_size, hidden_size, num_layers
+                )
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],

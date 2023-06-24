@@ -88,6 +88,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             set_names=train_set_names,
             set_T_part=train_set_T_part,
             concatenate_feature_types=self.config.dataset.concatenate_feature_types,
+            concatenate_along_M=self.config.dataset.concatenate_along_M,
         )
 
         print("\n[validation] sets", end=" ")
@@ -96,6 +97,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             set_names=valid_set_names,
             set_T_part=valid_set_T_part,
             concatenate_feature_types=self.config.dataset.concatenate_feature_types,
+            concatenate_along_M=self.config.dataset.concatenate_along_M,
         )
 
         # prepare train, val, test dataloader

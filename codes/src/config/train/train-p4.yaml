@@ -1,7 +1,7 @@
 # train:
 density_estimator:
   embedding_net:
-    type: gru_fc
+    type: multi_head_gru_fc    # gru_fc, multi_head_gru_fc
     hidden_size: 512
     output_size: 128
   posterior_nn:
