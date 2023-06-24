@@ -30,7 +30,7 @@ training:
   scheduler             : 'None'
   scheduler_params      : {}
   
-  print_freq            : 20 # 2+1 records per epoch
+  print_freq            : 200 # 2+1 records per epoch
   num_atoms             : 10
   use_combined_loss     : True
   

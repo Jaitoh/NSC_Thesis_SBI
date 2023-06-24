@@ -97,7 +97,9 @@ class Feature_Dataset(Dataset):
         else:
             self.x = self.x.transpose(-1, -2)  # (n_sets, n_T, C, n_features, M)
 
-        print(f"dataset {self.total_samples=} => {self.x.shape=} {self.theta.shape=}")
+        print(
+            f"dataset info: ==> {self.total_samples=} => {self.x.shape=} {self.theta.shape=}"
+        )
 
         # get the idxs for each sample
         indices = torch.arange(self.total_samples)

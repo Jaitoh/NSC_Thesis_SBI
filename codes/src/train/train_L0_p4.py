@@ -13,6 +13,7 @@ from copy import deepcopy
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.tensorboard import SummaryWriter
 
+from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
 
 sys.path.append("./src")
@@ -26,7 +27,7 @@ from neural_nets.embedding_nets_p4 import GRU_FC, Multi_Head_GRU_FC
 class Solver:
     def __init__(self, config):
         self.config = config
-
+        self.log_dir = config.log_dir
         # gpu info
         self.gpu = self.config.gpu and torch.cuda.is_available()
         self.device = "cuda" if self.gpu else "cpu"
@@ -58,12 +59,13 @@ class Solver:
     def get_neural_posterior(self):
         config_density = self.config.train.density_estimator
 
+        print(f"\n=== embedding net === \n{config_density.embedding_net.type}")
+        net = GRU_FC
         match config_density.embedding_net.type:
-            case "GRU_FC":
+            case "gru_fc":
                 net = GRU_FC
-            case "Multi_Head_GRU_FC":
+            case "multi_head_gru_fc":
                 net = Multi_Head_GRU_FC
-
         num_layers = 1
         input_size = 1 if self.config.dataset.concatenate_along_M else self.M
         hidden_size = config_density.embedding_net.hidden_size
@@ -139,6 +141,7 @@ def main(config: DictConfig):
 
     del solver
     clean_cache()
+    print(f"PID: {PID} finished")
 
 
 if __name__ == "__main__":

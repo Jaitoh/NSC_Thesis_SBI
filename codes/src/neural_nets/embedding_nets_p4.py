@@ -27,6 +27,8 @@ class GRU_FC(nn.Module):
         x = F.relu(self.fc1(x))  # -> [B, 256]
         x = F.relu(self.fc2(x))  # -> [B, 128]
 
+        return x
+
 
 class Multi_Head_GRU_FC(nn.Module):
     def __init__(self, feature_lengths, input_size=3, hidden_size=512, num_layers=1):
