@@ -16,9 +16,11 @@ from torch.utils.tensorboard import SummaryWriter
 from sbi.utils.get_nn_models import posterior_nn
 
 sys.path.append("./src")
+from train.MyPosteriorEstimator_p4 import MySNPE_C_P4
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
-from utils.set_seed import setup_seed, seed_worker
+from utils.set_seed import setup_seed
+from neural_nets.embedding_nets_p4 import GRU_FC, Multi_Head_GRU_FC
 
 
 class Solver:
@@ -37,7 +39,6 @@ class Solver:
         self.S = self.config.experiment_settings.seqC_sample_per_MS
         self.DMS = self.D * self.M * self.S
         self.l_theta = len(self.config["prior"]["prior_min"])
-        # self.l_x = 15 + 1 TODO:
 
         # save the config file using yaml
         yaml_path = Path(self.log_dir) / "config.yaml"
@@ -57,32 +58,25 @@ class Solver:
     def get_neural_posterior(self):
         config_density = self.config.train.density_estimator
 
-        # TODO: embedding_net
-        embedding_net = net()
+        match config_density.embedding_net.type:
+            case "GRU_FC":
+                net = GRU_FC
+            case "Multi_Head_GRU_FC":
+                net = Multi_Head_GRU_FC
+
+        num_layers = 1
+        input_size = 1 if self.config.dataset.concatenate_along_M else self.M
+        hidden_size = config_density.embedding_net.hidden_size
+        embedding_net = net(input_size, hidden_size, num_layers)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
-            embedding_net=embedding_net,  # type: ignore
+            embedding_net=embedding_net,
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
         )
 
         return neural_posterior
-
-    def get_my_data_kwargs(self):
-        config_dataset = self.config.dataset
-        prefetch_factor = config_dataset.prefetch_factor
-
-        return {
-            "num_workers": config_dataset.num_workers,
-            "worker_init_fn": seed_worker,
-            "prefetch_factor": prefetch_factor + 2,
-            "collate_fn": lambda batch: collate_fn(  # TODO: collate_fn
-                batch=batch,
-                config=self.config,
-                shuffling_method=config_dataset.shuffling_method,
-            ),
-        }
 
     def sbi_train(self, debug=False):
         writer = SummaryWriter(log_dir=str(self.log_dir))
@@ -98,7 +92,7 @@ class Solver:
 
         # get neural posterior
         neural_posterior = self.get_neural_posterior()
-        MySNPE = MySNPE_C_P4  # TODO: MySNPE_C_P4
+        MySNPE = MySNPE_C_P4
         self.inference = MySNPE(
             prior=self.prior,
             density_estimator=neural_posterior,
@@ -109,7 +103,6 @@ class Solver:
         )
 
         # dataloader kwargs, initialize inference dataset
-        my_dataloader_kwargs = self.get_my_data_kwargs()
         self.inference.append_simulations(
             theta=torch.empty(1),
             x=torch.empty(1),
@@ -121,7 +114,6 @@ class Solver:
         self.inference, density_estimator = self.inference.train(  # type: ignore
             config=self.config,
             prior_limits=self._get_limits(),
-            dataloader_kwargs=my_dataloader_kwargs,
             continue_from_checkpoint=self.config.continue_from_checkpoint,
             debug=debug,
         )
@@ -133,7 +125,7 @@ class Solver:
         )
 
 
-@hydra.main(config_path="../config", config_name="config-test", version_base=None)
+@hydra.main(config_path="../config", config_name="config-p4", version_base=None)
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")

@@ -5,6 +5,7 @@ import time
 import h5py
 import torch
 import numpy as np
+from torch.utils import data
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -23,13 +24,28 @@ class Feature_Dataset(Dataset):
         set_names,
         set_T_part=[0, 0.9],
         concatenate_feature_types=[1, 3, 4, 5],
+        concatenate_along_M=True,
     ):
         """
         The resulting dataset
-        x    : (n_sets, n_T, C, M * n_features)
-        theta: (n_sets, n_T, n_theta)
+            (concatenate_along_M=True):
+                x    : (n_sets, n_T, C, M * n_features, 1)
+                theta: (n_sets, n_T, n_theta)
+
+            (concatenate_along_M=False):
+                x    : (n_sets, n_T, C, n_features, M)
+                theta: (n_sets, n_T, n_theta)
 
         max idxing length: n_sets * n_T * C
+
+        idxed data shape:
+            (concatenate_along_M=True):
+                x    : (M * n_features, 1)
+                theta: (n_theta)
+
+            (concatenate_along_M=False):
+                x    : (n_features, M)
+                theta: (n_theta)
         """
 
         super().__init__()
@@ -74,9 +90,16 @@ class Feature_Dataset(Dataset):
                 self.theta[idx_set] = torch.from_numpy(
                     f[set_name]["theta"][range_T[0] : range_T[1], :]
                 )
-        self.x = self.x.view(n_sets, n_T, C, M * n_features)
+
+        if concatenate_along_M:
+            self.x = self.x.view(n_sets, n_T, C, M * n_features)
+            self.x = self.x.unsqueeze(-1)  # (n_sets, n_T, C, M * n_features, 1)
+        else:
+            self.x = self.x.transpose(-1, -2)  # (n_sets, n_T, C, n_features, M)
+
         print(f"dataset {self.total_samples=} => {self.x.shape=} {self.theta.shape=}")
 
+        # get the idxs for each sample
         indices = torch.arange(self.total_samples)
         self.set_idxs, self.T_idxs, self.C_idxs = unravel_index(indices, (n_sets, n_T, C))
 
@@ -91,7 +114,7 @@ class Feature_Dataset(Dataset):
 def main(concatenate_feature_types=[3]):
     data_path = "/mnt/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     data_path = "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-    data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+    # data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     f = h5py.File(data_path, "r")
     sets = list(f.keys())
     f.close()
@@ -146,6 +169,23 @@ def main(concatenate_feature_types=[3]):
     for axis in ["top", "bottom", "left", "right"]:
         plt.gca().spines[axis].set_linewidth(3)
     plt.show()
+
+    # get a dataloader
+    loader_kwargs = {
+        "batch_size": 32,
+        "drop_last": True,
+        "pin_memory": False,
+        "num_workers": 4,
+        "prefetch_factor": 3,
+    }
+    print(f"{loader_kwargs=}")
+
+    g = torch.Generator()
+    g.manual_seed(100)
+
+    train_dataloader = data.DataLoader(Feature, generator=g, **loader_kwargs)
+    x_batch, theta_batch = next(iter(train_dataloader))
+    print(f"{x_batch.shape=} {theta_batch.shape=}")
 
 
 if __name__ == "__main__":

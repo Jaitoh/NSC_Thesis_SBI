@@ -1,0 +1,8 @@
+concatenate_feature_types : [1, 2, 3, 4, 5]
+concatenate_along_M       : True  # True: [B, n_feature*3, 1], False: [B, n_feature, 3]
+feature_lengths           : [69, 69, 15, 12, 56] 
+
+batch_size                : 128
+pin_memory                : True
+num_workers               : 4
+prefetch_factor           : 3
