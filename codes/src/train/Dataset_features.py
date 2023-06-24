@@ -23,6 +23,7 @@ class Feature_Dataset(Dataset):
         data_path,
         set_names,
         set_T_part=[0, 0.9],
+        partial_C=10,
         concatenate_feature_types=[1, 3, 4, 5],
         concatenate_along_M=True,
     ):
@@ -66,11 +67,14 @@ class Feature_Dataset(Dataset):
             n_T = int(T * (set_T_part[1] - set_T_part[0]))
             range_T = [int(set_T_part[0] * T), int(set_T_part[1] * T)]
 
+            C = partial_C
             self.total_samples = n_sets * n_T * C
             self.x = torch.empty((n_sets, n_T, C, M, n_features))
             self.theta = torch.empty((n_sets, n_T, n_theta))
 
-            print(f"loading {n_sets}sets T{(set_T_part[1]-set_T_part[0])*100:.2f}%")
+            print(
+                f"loading {n_sets}sets T{(set_T_part[1]-set_T_part[0])*100:.2f}% C{C}..."
+            )
             for idx_set, set_name in tqdm(
                 enumerate(set_names), total=n_sets, miniters=n_sets // 5
             ):
@@ -79,7 +83,9 @@ class Feature_Dataset(Dataset):
                 # concatenate selected different features along the last dimension
                 chosen_feature_data = [
                     torch.from_numpy(
-                        f[set_name][f"feature_{i}"][range_T[0] : range_T[1], :, :, :]
+                        f[set_name][f"feature_{i}"][
+                            range_T[0] : range_T[1], :partial_C, :, :
+                        ]
                     )
                     for i in concatenate_feature_types
                 ]

@@ -4,14 +4,14 @@ defaults:
   - prior: prior-0
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p4
-  - train: train-p4
+  - dataset: dataste-p4-5Fs-1D
+  - train: train-p4-gru-mdn
 
 pipeline_version: p4
 log_dir: ./src/train/logs/train_L0_p4/
-# data_path: /home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
-data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
+data_path: /home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
+# data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 seed: 100
-debug: True
+debug: False
 gpu: True
 continue_from_checkpoint: ""

@@ -74,7 +74,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         print("\n=== train, val dataset and dataloader ===")
         data_path = self.config.data_path
         with h5py.File(data_path, "r") as f:
-            sets = list(f.keys())
+            sets = list(f.keys())[: self.config.dataset.partial_sets]
 
         train_set_names = sets[: int(len(sets) * 0.9)]
         valid_set_names = sets[int(len(sets) * 0.9) :]
@@ -87,6 +87,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             data_path=data_path,
             set_names=train_set_names,
             set_T_part=train_set_T_part,
+            partial_C=self.config.dataset.partial_C,
             concatenate_feature_types=self.config.dataset.concatenate_feature_types,
             concatenate_along_M=self.config.dataset.concatenate_along_M,
         )
@@ -96,6 +97,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             data_path=data_path,
             set_names=valid_set_names,
             set_T_part=valid_set_T_part,
+            partial_C=self.config.dataset.partial_C,
             concatenate_feature_types=self.config.dataset.concatenate_feature_types,
             concatenate_along_M=self.config.dataset.concatenate_along_M,
         )
