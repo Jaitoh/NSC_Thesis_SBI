@@ -4,6 +4,12 @@ import argparse
 import gc
 import torch
 
+
+def clean_cache():
+    gc.collect()
+    torch.cuda.empty_cache()
+
+
 # def get_args_run_from_code():
 #     """
 #     Returns:
