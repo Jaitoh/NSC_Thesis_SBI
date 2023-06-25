@@ -7,13 +7,14 @@ source activate sbi
 CLUSTER=snn
 # PORT=9906
 
-RUN_ID=p4-5Fs-1D-mh_gru-mdn
+# RUN_ID=p4-5Fs-1D-mh_gru-mdn
+RUN_ID=p4-5Fs-1D-mh_gru-mdn-ctd0
 TRAIN_FILE_NAME=train_L0_p4
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 # DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
 DATA_PATH="/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-CONFIG_DATASET=dataste-p4-5Fs-1D
+CONFIG_DATASET=dataste-p4-5Fs-1D-ctd0
 CONFIG_TRAIN=train-p4-mh_gru-mdn
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
@@ -46,6 +47,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
     log_dir=${LOG_DIR} \
     data_path=${DATA_PATH} \
     seed=100 \
+    debug=False \
     >${PRINT_LOG} 2>&1
 # debug=True\
 # & tensorboard --logdir=${LOG_DIR} --port=${PORT}

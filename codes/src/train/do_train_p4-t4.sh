@@ -45,6 +45,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
     log_dir=${LOG_DIR} \
     data_path=${DATA_PATH} \
     seed=100 \
+    debug=False \
     >${PRINT_LOG} 2>&1
 # debug=True\
 # & tensorboard --logdir=${LOG_DIR} --port=${PORT}
