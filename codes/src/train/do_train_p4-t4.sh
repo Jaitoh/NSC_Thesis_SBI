@@ -7,7 +7,7 @@ source activate sbi
 CLUSTER=t4
 # PORT=9906
 
-RUN_ID=p4-5Fs-1D-gru-mdn
+RUN_ID=p4-5Fs-1D-gru-mdn-debug
 TRAIN_FILE_NAME=train_L0_p4
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"

@@ -213,15 +213,14 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         # train until no validation improvement for 'patience' epochs
         train_start_time = time.time()
+        print(
+            f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches"
+        )
         while (
             epoch <= config_training.max_num_epochs
-            and not self._converged(epoch)
-            and (not debug or epoch <= 2)
+            and not self._converged(epoch, debug)
+            # and (not debug or epoch <= 2)
         ):
-            print(
-                f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches"
-            )
-
             # train and log one epoch
             self._neural_net.train()
 
@@ -374,8 +373,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             else:
                 self.scheduler.step()
 
-            if debug and epoch > 3:
-                break
+            # if debug and epoch > 3:
+            #     break
             epoch += 1
 
         del train_dataloader, train_dataset
@@ -413,7 +412,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         return self, deepcopy(self._neural_net)
 
-    def _converged(self, epoch: int) -> bool:
+    def _converged(self, epoch, debug):
         converged = False
         epoch = epoch - 1
         assert self._neural_net is not None
@@ -437,10 +436,11 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         if (
             self._epochs_since_last_improvement > stop_after_epochs - 1
             and epoch > min_num_epochs
+            or (debug and epoch > 3)
         ):
             converged = True
             self._neural_net.load_state_dict(self._best_model_state_dict)
-            self._val_log_prob = self._best_val_log_prob
+            self._val_log_prob = self._best_valid_log_prob
             self._epochs_since_last_improvement = 0
 
         if epoch != -1:
