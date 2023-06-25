@@ -54,7 +54,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 echo "finished training"
 
 # check behavior output
-python3 -u ./src/train/check_log/check_log.py \
+python3 -u ./src/train/check_log/check_log_p4.py \
     --log_dir ${LOG_DIR} \
     --exp_name ${RUN_ID} \
     --num_frames 10 \

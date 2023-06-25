@@ -7,12 +7,12 @@ source activate sbi
 CLUSTER=t4
 # PORT=9906
 
-RUN_ID=p4-5Fs-1D-gru-mdn-debug
+RUN_ID=p4-5Fs-1D-gru-mdn-ctd0
 TRAIN_FILE_NAME=train_L0_p4
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-CONFIG_DATASET=dataste-p4-5Fs-1D
+CONFIG_DATASET=dataste-p4-5Fs-1D-ctd0
 CONFIG_TRAIN=train-p4-gru-mdn
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
@@ -53,7 +53,7 @@ python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 echo "finished training"
 
 # check behavior output
-python3 -u ./src/train/check_log/check_log.py \
+python3 -u ./src/train/check_log/check_log_p4.py \
     --log_dir ${LOG_DIR} \
     --exp_name ${RUN_ID} \
     --num_frames 5 \
