@@ -59,9 +59,9 @@ def get_events(log_dir):
 # load the event data
 def get_event_data_p4(ea_post, ea_val, ea_train):
     val_perf = {}
-    print(f"==>> ea_post.Tags(): {ea_post.Tags()}")
-    print(f"==>> ea_train.Tags(): {ea_train.Tags()}")
-    print(f"==>> ea_val.Tags(): {ea_val.Tags()}")
+    # print(f"==>> ea_post.Tags(): {ea_post.Tags()}")
+    # print(f"==>> ea_train.Tags(): {ea_train.Tags()}")
+    # print(f"==>> ea_val.Tags(): {ea_val.Tags()}")
     val_ = np.array([[e.wall_time, e.step, e.value] for e in ea_val.Scalars("log_probs")])
     val_perf["time"], val_perf["step"], val_perf["log_probs"] = (
         val_[:, 0],
@@ -239,41 +239,41 @@ def plot_one_img(
 
     fig_dir = log_dir / "posterior" / "figures"
 
-    fig, axs = plt.subplots(5, 2, figsize=(20, 28))
+    # fig, axs = plt.subplots(5, 2, figsize=(20, 28))
+    fig = plt.figure(figsize=(20, 28))
+    # axs = axs.flatten()
+    grid = plt.GridSpec(5, 2, wspace=0.1, hspace=0.5)
+    ax0 = plt.subplot(grid[0, :])
+    ax1 = plt.subplot(grid[1:3, 0])
+    ax2 = plt.subplot(grid[1:3, 1])
+    ax3 = plt.subplot(grid[3:5, 0])
+    ax4 = plt.subplot(grid[3:5, 1])
 
-    axs = axs.flatten()
-    grid = plt.GridSpec(5, 2, wspace=0.1, hspace=0.1)
-    axs[0] = plt.subplot(grid[0, :])
-    axs[1] = plt.subplot(grid[1:3, 0])
-    axs[2] = plt.subplot(grid[1:3, 1])
-    axs[3] = plt.subplot(grid[3:5, 0])
-    axs[4] = plt.subplot(grid[3:5, 1])
-
-    ax = axs[1]
+    ax = ax1
     img_path = str(fig_dir / train_figure_names_0[plt_idx])
     title = f"seen 0 epoch {chosen_plot_idx[plt_idx]}"
     ax.set_title(title)
     load_img(img_path, ax, title)
 
-    ax = axs[2]
+    ax = ax2
     img_path = str(fig_dir / train_figure_names_1[plt_idx])
     title = f"seen 1 epoch {chosen_plot_idx[plt_idx]}"
     ax.set_title(title)
     load_img(img_path, ax, title)
 
-    ax = axs[3]
+    ax = ax3
     img_path = str(fig_dir / val_figure_names_0[plt_idx])
     title = f"unseen 0 epoch {chosen_plot_idx[plt_idx]}"
     ax.set_title(title)
     load_img(img_path, ax, title)
 
-    ax = axs[4]
+    ax = ax4
     img_path = str(fig_dir / val_figure_names_1[plt_idx])
     title = f"unseen 1 epoch {chosen_plot_idx[plt_idx]}"
     ax.set_title(title)
     load_img(img_path, ax, title)
 
-    ax = axs[0]
+    ax = ax0
     epoch_idx = chosen_plot_idx[plt_idx]
     # plot the training curve
     ax = plot_log_prob_p4(ax, val_perf, train_perf, plot_time=True)
@@ -365,6 +365,8 @@ def animate_posterior(
     # generate animation
     images = []
     chosen_plot_idx = plot_idx[np.linspace(0, len(plot_idx) - 1, num_frames).astype(int)]
+    # add the last element for multiple times
+    chosen_plot_idx = np.concatenate([chosen_plot_idx, [chosen_plot_idx[-1]] * 3])
     print(f"chosen {num_frames} plots to animate, idx: {chosen_plot_idx}")
 
     for plt_idx in tqdm(range(len(chosen_plot_idx))):
@@ -387,6 +389,21 @@ def animate_posterior(
     imageio.mimsave(log_dir / fig_name, images, duration=duration, loop=0)
     print("saved animation to ", log_dir / fig_name)
     print()
+
+    # save the last figure
+    fig = plot_one_img(
+        chosen_plot_idx,
+        len(chosen_plot_idx) - 1,
+        log_dir,
+        val_perf,
+        train_perf,
+        lr,
+        exp_name,
+    )
+    fig_name = f"posterior-{exp_name}.png"
+    fig.savefig(log_dir / fig_name, dpi=300)
+    print("saved figure to ", log_dir / fig_name)
+    plt.close(fig)
 
 
 if __name__ == "__main__":

@@ -57,7 +57,7 @@ echo "finished training"
 python3 -u ./src/train/check_log/check_log.py \
     --log_dir ${LOG_DIR} \
     --exp_name ${RUN_ID} \
-    --num_frames 5 \
+    --num_frames 10 \
     --duration 1000
 
 code ${LOG_DIR}/posterior-${RUN_ID}.gif
