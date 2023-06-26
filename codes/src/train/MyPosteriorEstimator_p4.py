@@ -140,9 +140,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
             self.unseen_data_for_posterior["x"].append(x_valid_batch[i, :])
             self.unseen_data_for_posterior["theta"].append(theta_valid_batch[i, :])
-        print(
-            f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes"
-        )
+        print(f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes")
 
         # initialize the network
         if self._neural_net is None:
@@ -190,9 +188,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         )
 
         if config_training["scheduler"] == "ReduceLROnPlateau":
-            self.scheduler = ReduceLROnPlateau(
-                self.optimizer, **config_training["scheduler_params"]
-            )
+            self.scheduler = ReduceLROnPlateau(self.optimizer, **config_training["scheduler_params"])
         if config_training["scheduler"] == "CosineAnnealingWarmRestarts":
             self.scheduler = CosineAnnealingWarmRestarts(
                 self.optimizer, **config_training["scheduler_params"]
@@ -213,9 +209,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         # train until no validation improvement for 'patience' epochs
         train_start_time = time.time()
-        print(
-            f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches"
-        )
+        print(f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches")
         while (
             epoch <= config_training.max_num_epochs
             and not self._converged(epoch, debug)
@@ -274,9 +268,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 elif train_batch_num % (len(train_dataloader) // print_freq) == 0:
                     print(batch_info)
 
-                self._summary_writer.add_scalar(
-                    "train_loss_batch", train_loss, batch_counter
-                )
+                self._summary_writer.add_scalar("train_loss_batch", train_loss, batch_counter)
 
                 train_batch_num += 1
                 batch_counter += 1
@@ -288,9 +280,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             train_log_prob_average = train_log_probs_sum / train_data_size
             self._train_log_prob = train_log_prob_average
             self._summary["training_log_probs"].append(train_log_prob_average)
-            self._summary_writer.add_scalars(
-                "log_probs", {"training": train_log_prob_average}, epoch
-            )
+            self._summary_writer.add_scalars("log_probs", {"training": train_log_prob_average}, epoch)
 
             # epoch log - learning rate
             if epoch < config_training.warmup_epochs:
@@ -350,9 +340,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
                 # epoch log - validation log prob
                 self._valid_log_prob = valid_log_prob_sum / valid_data_size
-                self._summary_writer.add_scalars(
-                    "log_probs", {"validation": self._valid_log_prob}, epoch
-                )
+                self._summary_writer.add_scalars("log_probs", {"validation": self._valid_log_prob}, epoch)
 
                 toc = time.time()
                 self._summary["validation_log_probs"].append(self._valid_log_prob)
@@ -567,8 +555,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         ax3 = axes[2]
         ax3.plot(
-            train_log_probs[-40:],
-            ".-",
+            train_log_probs[-20:],
+            "o-",
             label="training",
             alpha=0.8,
             lw=2,
@@ -576,8 +564,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             ms=0.1,
         )
         ax3.plot(
-            valid_log_probs[-40:],
-            ".-",
+            valid_log_probs[-20:],
+            "o-",
             label="validation",
             alpha=0.8,
             lw=2,
@@ -642,9 +630,7 @@ class MySNPE_C_P4(SNPE_C, MyPosteriorEstimator_P4):
                 and isinstance(proposal.posterior_estimator._distribution, mdn)
                 and self._neural_net is not None
                 and isinstance(self._neural_net._distribution, mdn)
-                and check_dist_class(
-                    self._prior, class_to_check=(Uniform, MultivariateNormal)
-                )[0]
+                and check_dist_class(self._prior, class_to_check=(Uniform, MultivariateNormal))[0]
             )
 
             algorithm = "non-atomic" if self.use_non_atomic_loss else "atomic"
