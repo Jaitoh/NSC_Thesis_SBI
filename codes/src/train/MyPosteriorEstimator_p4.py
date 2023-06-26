@@ -392,8 +392,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         self._neural_net.zero_grad(set_to_none=True)
         # save best model
         torch.save(
-            self._neural_net,
-            os.path.join(self.config.log_dir, f"model/round_{self._round}_model.pt"),
+            deepcopy(self._neural_net.state_dict()),
+            os.path.join(self.config.log_dir, f"model/best_model.pt"),
         )
 
         self._plot_training_curve()
