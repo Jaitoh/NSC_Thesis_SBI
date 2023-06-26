@@ -10,23 +10,44 @@ CLUSTER=snn
 # RUN_ID=p4-5Fs-1D-mh_gru-mdn
 # RUN_ID=p4-5Fs-1D-mh_gru-mdn-ctd0
 # RUN_ID=p4-5Fs-1D-lstm3-mdn
-RUN_ID=p4-5Fs-1D-gru3-mdn-ctd
+# RUN_ID=p4-5Fs-1D-gru3-mdn-ctd
 # RUN_ID=p4-3Fs-1D-gru3-mdn
 # RUN_ID=p4-4Fs-1D-gru3-mdn
-TRAIN_FILE_NAME=train_L0_p4
 
-# DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-# DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-DATA_PATH="/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
 # CONFIG_DATASET=dataset-p4-5Fs-1D-ctd0
 # CONFIG_TRAIN=train-p4-mh_gru-mdn
-CONFIG_DATASET=dataset-p4-5Fs-1D
+# CONFIG_DATASET=dataset-p4-5Fs-1D
 # CONFIG_DATASET=dataset-p4-3Fs-1D
 # CONFIG_DATASET=dataset-p4-4Fs-1D
 # CONFIG_TRAIN=train-p4-lstm3-mdn
+# CONFIG_TRAIN=train-p4-gru3-mdn
+
+RUN_ID=p4-F1-1D-gru3-mdn
+CONFIG_DATASET=dataset-p4-F1-1D
 CONFIG_TRAIN=train-p4-gru3-mdn
 
+# RUN_ID=p4-F2-1D-gru3-mdn
+# CONFIG_DATASET=dataset-p4-F2-1D
+# CONFIG_TRAIN=train-p4-gru3-mdn
+
+# RUN_ID=p4-F3-1D-gru3-mdn
+# CONFIG_DATASET=dataset-p4-F3-1D
+# CONFIG_TRAIN=train-p4-gru3-mdn
+
+# RUN_ID=p4-F4-1D-gru3-mdn
+# CONFIG_DATASET=dataset-p4-F4-1D
+# CONFIG_TRAIN=train-p4-gru3-mdn
+
+# RUN_ID=p4-F5-1D-gru3-mdn
+# CONFIG_DATASET=dataset-p4-F5-1D
+# CONFIG_TRAIN=train-p4-gru3-mdn
+
 # CHECK_POINT_PATH="/home/wehe/tmp/NSC/codes/src/train/logs/train_L0_p4/p4-5Fs-1D-gru3-mdn/model/model_check_point.pt"
+
+TRAIN_FILE_NAME=train_L0_p4
+# DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
+# DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+DATA_PATH="/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
 
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
