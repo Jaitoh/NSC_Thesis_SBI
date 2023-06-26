@@ -119,10 +119,10 @@ class Feature_Dataset(Dataset):
         return self.x[set_idx, T_idx, C_idx], self.theta[set_idx, T_idx]
 
 
-def main(concatenate_feature_types=[3]):
+def main(concatenate_feature_types=[3], num_train_sets=90):
     data_path = "/mnt/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     data_path = "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-    # data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+    data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     f = h5py.File(data_path, "r")
     sets = list(f.keys())
     f.close()
@@ -134,11 +134,11 @@ def main(concatenate_feature_types=[3]):
         gc.collect()
 
     # 90% sets for training, 10% for testing
-    train_set_names = sets[:90]
-    test_set_names = sets[90:]
+    train_set_names = sets[:num_train_sets]
+    test_set_names = sets[num_train_sets:]
     val_set_names = sets
 
-    train_set_T_part = [0, 0.9]
+    train_set_T_part = [0, 1]
     val_set_T_part = [0.9, 1.0]
     test_set_T_part = [0, 0.9]
     Feature = Feature_Dataset(
@@ -195,23 +195,38 @@ def main(concatenate_feature_types=[3]):
     x_batch, theta_batch = next(iter(train_dataloader))
     print(f"{x_batch.shape=} {theta_batch.shape=}")
 
+    return Feature, train_dataloader
+
 
 if __name__ == "__main__":
     concatenate_feature_types = [1]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [2]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [3]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [4]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [5]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [1, 2]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [1, 3]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [3, 4]
-    main(concatenate_feature_types=concatenate_feature_types)
+    _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [1, 2, 3, 4, 5]
-    main(concatenate_feature_types=concatenate_feature_types)
+    Feature, _ = main(
+        concatenate_feature_types=concatenate_feature_types, num_train_sets=45
+    )
+
+    Feature.theta.shape
+    # plot the distribution of theta
+    fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+    axs = axs.flatten()
+    titles = ["bias", "sigma2a", "sigma2s", "L0"]
+    for i in range(4):
+        axs[i].hist(Feature.theta[:, :, i].flatten(), bins=100)
+        axs[i].set_title(titles[i])
+
+    plt.grid(alpha=0.2)

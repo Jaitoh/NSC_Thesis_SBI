@@ -509,7 +509,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         plt.tight_layout()
 
-        fig, axes = plt.subplots(2, 1, figsize=(25, 12))
+        fig, axes = plt.subplots(3, 1, figsize=(25, 18))
         fig.subplots_adjust(hspace=0.6)
 
         # plot learning rate
@@ -558,6 +558,31 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             alpha=0,
         )
         ax2.set_xlabel("time (hours)")
+
+        ax3 = axes[2]
+        ax3.plot(
+            train_log_probs[-40:],
+            ".-",
+            label="training",
+            alpha=0.8,
+            lw=2,
+            color="tab:blue",
+            ms=0.1,
+        )
+        ax3.plot(
+            valid_log_probs[-40:],
+            ".-",
+            label="validation",
+            alpha=0.8,
+            lw=2,
+            color="tab:orange",
+            ms=0.1,
+        )
+
+        ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
+        ax3.set_xlabel("the last 40 epochs")
+        ax3.set_ylabel("log_prob")
+        ax3.grid(alpha=0.2)
 
         # save the figure
         plt.savefig(f"{log_dir}/training_curve.png")
