@@ -1,11 +1,12 @@
 #!/bin/bash
 
-CLUSTER=snn
+CLUSTER=t4
 # RUN_ID=p4-5Fs-1D-mh_gru-mdn
 # RUN_ID=p4-5Fs-2D-mh_gru-mdn
 # RUN_ID=p4-5Fs-1D-gru-mdn
 RUN_ID=p4-5Fs-2D-mh_gru-mdn-ctd0
 RUN_ID=p4-5Fs-1D-mh_gru-mdn-ctd0
+RUN_ID=p4-5Fs-1D-gru-mdn-ctd0
 
 TRAIN_FILE_NAME=train_L0_p4
 

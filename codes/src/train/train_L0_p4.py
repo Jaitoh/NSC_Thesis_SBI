@@ -21,7 +21,7 @@ from train.MyPosteriorEstimator_p4 import MySNPE_C_P4
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
-from neural_nets.embedding_nets_p4 import GRU_FC, Multi_Head_GRU_FC
+from neural_nets.embedding_nets_p4 import GRU_FC, Multi_Head_GRU_FC, GRU3_FC, LSTM3_FC
 
 
 class Solver:
@@ -68,6 +68,12 @@ class Solver:
         match config_density.embedding_net.type:
             case "gru_fc":
                 embedding_net = GRU_FC(input_size, hidden_size, num_layers)
+
+            case "gru3_fc":
+                embedding_net = GRU3_FC(input_size, num_layers)
+
+            case "lstm3_fc":
+                embedding_net = LSTM3_FC(input_size, num_layers)
 
             case "multi_head_gru_fc":
                 if not concatenate_along_M:  # [B, F1+F2+..., M]

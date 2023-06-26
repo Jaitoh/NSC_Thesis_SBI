@@ -4,7 +4,7 @@ concatenate_along_M       : True  # True: [B, n_feature*3, 1], False: [B, n_feat
 partial_C                 : 10 # max 100
 partial_sets              : 20 # max 100
 
-batch_size                : 768 # 128
+batch_size                : 256 # 128
 pin_memory                : True
 num_workers               : 8
 prefetch_factor           : 2
