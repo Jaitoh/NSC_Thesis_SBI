@@ -1,0 +1,17 @@
+defaults:
+  - _self_
+  - experiment_settings: exp-set-0
+  - prior: prior-0
+  - x_o: x_o-0
+  - simulator: model-0
+  - dataset: dataset-p5
+  - train: train-p5-gru3-mdn
+
+pipeline_version: p5
+log_dir: ./src/train/logs/train_L0_p5/
+data_path: /mnt/data/dataset/dataset-L0-Eset0-100sets-T500.h5
+# data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
+seed: 100
+debug: True
+gpu: True
+continue_from_checkpoint: ""

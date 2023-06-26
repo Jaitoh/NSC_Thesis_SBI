@@ -20,7 +20,7 @@ from train.MyPosteriorEstimator_p5 import MySNPE_C_P5
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
-from neural_nets.embedding_nets_p4 import GRU_FC, Multi_Head_GRU_FC, GRU3_FC, LSTM3_FC
+from neural_nets.embedding_nets_p5 import GRU3_FC
 
 
 class Solver:
@@ -34,7 +34,7 @@ class Solver:
         print_cuda_info(self.device)
 
         # get experiement settings
-        self.D = len(self.config.experiment_settings.chosen_dur_list)
+        self.D = len(self.config.dataset.chosen_dur_list)
         self.M = len(self.config.experiment_settings.chosen_MS_list)
         self.S = self.config.experiment_settings.seqC_sample_per_MS
         self.DMS = self.D * self.M * self.S
@@ -57,22 +57,19 @@ class Solver:
 
     def get_neural_posterior(self):
         config_density = self.config.train.density_estimator
-        concatenate_along_M = self.config.dataset.concatenate_along_M
-
-        num_layers = 1
-        input_size = 1 if concatenate_along_M else self.M
-        hidden_size = config_density.embedding_net.hidden_size
 
         print(f"\n=== embedding net === \n{config_density.embedding_net.type}")
         match config_density.embedding_net.type:
-            case "GRU_FC":
-                pass  # TODO
+            case "gru3_fc":
+                embedding_net = GRU3_FC(self.DMS)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
             embedding_net=embedding_net,
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
+            z_score_x=None,  # remove z_score
+            z_score_y=None,  # remove z_score
         )
 
         return neural_posterior

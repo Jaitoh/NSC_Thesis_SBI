@@ -183,7 +183,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         config_training = self.config.train.training
         warmup_epochs = config_training.warmup_epochs
         initial_lr = config_training.initial_lr
-
+        # optimizer
         self.optimizer = optim.Adam(
             list(self._neural_net.parameters()),
             lr=config_training.learning_rate,
@@ -191,7 +191,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
             if isinstance(config_training.weight_decay, str)
             else config_training.weight_decay,
         )
-        # warmup scheduler
+        # scheduler
         self.scheduler_warmup = WarmupScheduler(
             self.optimizer,
             warmup_epochs=warmup_epochs,
@@ -595,7 +595,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         plt.close()
 
 
-class MySNPE_C_P5(SNPE_C, MyPosteriorEstimator_P4):
+class MySNPE_C_P5(SNPE_C, MyPosteriorEstimator_P5):
     def __init__(
         self,
         prior=None,

@@ -81,15 +81,15 @@ class Solver:
                 else:  # [B, F1+F2+F3 + F1+F2+F3 + F1+F2+F3 ..., 1]
                     feature_lengths = self.M * list(self.config.dataset.feature_lengths)
                 print(f"{len(feature_lengths)} heads")
-                embedding_net = Multi_Head_GRU_FC(
-                    feature_lengths, input_size, hidden_size, num_layers
-                )
+                embedding_net = Multi_Head_GRU_FC(feature_lengths, input_size, hidden_size, num_layers)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
             embedding_net=embedding_net,
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
+            z_score_x=None,  # remove z_score
+            z_score_y=None,  # remove z_score
         )
 
         return neural_posterior

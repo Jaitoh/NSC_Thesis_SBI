@@ -95,9 +95,7 @@ class Solver:
 
         # get dataset size
         # d = len(self.config['experiment_settings']['chosen_dur_list'])
-        dur_lens = [
-            len(dur) for dur in self.config.dataset.chosen_dur_trained_in_sequence
-        ]
+        dur_lens = [len(dur) for dur in self.config.dataset.chosen_dur_trained_in_sequence]
         d = max(dur_lens)
         m = len(self.config.experiment_settings.chosen_MS_list)
         s = self.config.experiment_settings.seqC_sample_per_MS
@@ -142,10 +140,7 @@ class Solver:
         config_density = self.config["train"]["density_estimator"]
         net_type = config_density["embedding_net"]["type"]
 
-        if (
-            net_type
-            not in config_density["embedding_net"]["embedding_net_use_3_dim_dataset"]
-        ):
+        if net_type not in config_density["embedding_net"]["embedding_net_use_3_dim_dataset"]:
             # 2 dim dataset
             if net_type == "lstm":
                 net = LSTM_Embedding
@@ -183,6 +178,8 @@ class Solver:
             embedding_net=embedding_net,  # type: ignore
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
+            z_score_x=None,  # remove z_score
+            z_score_y=None,  # remove z_score
         )
 
         return neural_posterior
@@ -257,9 +254,7 @@ class Solver:
             return {  # TODO check and modify in_dataset processing login, of high_dim
                 "num_workers": config_dataset.num_workers,
                 "worker_init_fn": seed_worker,
-                "prefetch_factor": prefetch_factor
-                if use_data_prefetcher
-                else 2 + prefetch_factor,
+                "prefetch_factor": prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
                 # 'batch_size'    :  self.config.dataset.batch_size
             }
 
@@ -274,9 +269,7 @@ class Solver:
                     config=self.config,
                     shuffling_method=config_dataset.shuffling_method,
                 ),
-                "prefetch_factor": prefetch_factor
-                if use_data_prefetcher
-                else 2 + prefetch_factor,
+                "prefetch_factor": prefetch_factor if use_data_prefetcher else 2 + prefetch_factor,
             }
         else:
             raise NotImplementedError

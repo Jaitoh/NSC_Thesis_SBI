@@ -146,6 +146,8 @@ class Solver:
             embedding_net=embedding_net,
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
+            z_score_x=None,  # remove z_score
+            z_score_y=None,  # remove z_score
         )
 
         return neural_posterior
@@ -193,9 +195,7 @@ class Solver:
             limits=self._get_limits(),
             prior_labels=self.config["prior"]["prior_labels"],
         )
-        plt.savefig(
-            f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png"
-        )
+        plt.savefig(f"{self.log_dir}/posterior/post_plot_x_o_round{current_round}_run{run}.png")
 
     def get_my_dataloader_kwargs(self, Rchoice_method):
         if Rchoice_method == "probR":
@@ -482,9 +482,7 @@ class Solver:
         num_max_sets = dataset_kwargs["num_max_sets"]
         num_max_sets = min(num_max_sets, num_total_sets)
         all_set_names = all_set_names[:num_max_sets]
-        print(
-            f"=== program seen {len(all_set_names)} sets from stored {num_total_sets} sets ==="
-        )
+        print(f"=== program seen {len(all_set_names)} sets from stored {num_total_sets} sets ===")
 
         return all_set_names
 
