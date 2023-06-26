@@ -9,7 +9,8 @@ CLUSTER=snn
 
 # RUN_ID=p4-5Fs-1D-mh_gru-mdn
 # RUN_ID=p4-5Fs-1D-mh_gru-mdn-ctd0
-RUN_ID=p4-5Fs-1D-lstm3-mdn
+# RUN_ID=p4-5Fs-1D-lstm3-mdn
+RUN_ID=p4-5Fs-1D-gru3-mdn
 TRAIN_FILE_NAME=train_L0_p4
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
@@ -18,7 +19,8 @@ DATA_PATH="/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 # CONFIG_DATASET=dataste-p4-5Fs-1D-ctd0
 # CONFIG_TRAIN=train-p4-mh_gru-mdn
 CONFIG_DATASET=dataste-p4-5Fs-1D
-CONFIG_TRAIN=train-p4-lstm3-mdn
+# CONFIG_TRAIN=train-p4-lstm3-mdn
+CONFIG_TRAIN=train-p4-gru3-mdn
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 

@@ -37,5 +37,5 @@ training:
 posterior:
   num_posterior_check   : 2
   sampling_num          : 2000
-  step                  : 1     
+  step                  : 1
   # 0: do not print posterior, the epoch steps to check posterior during training

@@ -427,6 +427,12 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             # plot posterior behavior when best model is updated
             if epoch != -1 and posterior_step != 0 and epoch % posterior_step == 0:
                 self._posterior_behavior_log(self.prior_limits, epoch)
+
+            # save the model
+            torch.save(
+                self._neural_net,
+                os.path.join(self.config.log_dir, f"model/model_check_point.pt"),
+            )
         else:
             self._epochs_since_last_improvement += 1
 
