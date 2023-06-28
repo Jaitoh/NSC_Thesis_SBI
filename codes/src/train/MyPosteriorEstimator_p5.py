@@ -122,7 +122,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
                 len(train_dataset),
                 len(valid_dataset),
             ),
-            "drop_last": True,
+            "drop_last": False,
             "shuffle": True,
             "pin_memory": config_dataset.pin_memory,
             "num_workers": config_dataset.num_workers,
@@ -135,6 +135,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         g.manual_seed(self.config.seed)
 
         train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
+        loader_kwargs["drop_last"] = True
         valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
 
         # collect posterior sets
