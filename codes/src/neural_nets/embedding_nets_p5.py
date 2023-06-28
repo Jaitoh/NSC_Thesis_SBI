@@ -33,7 +33,7 @@ class Conv_Transformer(nn.Module):
 
     def forward(self, x):
         # (B, DMS, L + 1)
-        seqC = x[..., :-1]  # (B, DMS, L)
+        seqC = x[..., 1:-1]  # (B, DMS, L)
         chR = x[..., -1]  # (B, DMS)
 
         seqC = self.conv1(seqC)  # (B, 1024, L)
@@ -84,7 +84,7 @@ class Conv_LSTM(nn.Module):
 
     def forward(self, x):
         # (B, DMS, L + 1)
-        seqC = x[..., :-1]  # (B, DMS, L)
+        seqC = x[..., 1:-1]  # (B, DMS, L) !removed the first signal
         chR = x[..., -1].unsqueeze(-1)  # (B, DMS, 1)
 
         seqC = self.conv1(seqC)  # (B, 1024, L)
@@ -136,7 +136,7 @@ class GRU3_FC(nn.Module):
 
     def forward(self, x):
         # x: [B, DMS, 16]
-        seqC = x[..., :15]  # [B, DMS, 15]
+        seqC = x[..., 1:15]  # [B, DMS, 15]
         chR = x[..., -1]  # [B, DMS]
 
         # seqC [B, DMS, 15]
