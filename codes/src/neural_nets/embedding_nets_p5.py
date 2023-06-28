@@ -10,7 +10,7 @@ from utils.train import kaiming_weight_initialization
 
 
 class Conv_Transformer(nn.Module):
-    def __ini__(self, DMS, nhead=8, num_encoder_layers=6):
+    def __init__(self, DMS, nhead=8, num_encoder_layers=6):
         super(Conv_Transformer, self).__init__()
 
         self.conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
