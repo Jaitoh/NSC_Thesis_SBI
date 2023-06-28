@@ -20,7 +20,7 @@ from train.MyPosteriorEstimator_p5 import MySNPE_C_P5
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
-from neural_nets.embedding_nets_p5 import GRU3_FC
+from neural_nets.embedding_nets_p5 import GRU3_FC, Conv_LSTM, Conv_Transformer
 
 
 class Solver:
@@ -62,6 +62,12 @@ class Solver:
         match config_density.embedding_net.type:
             case "gru3_fc":
                 embedding_net = GRU3_FC(self.DMS)
+
+            case "conv_transformer":
+                embedding_net = Conv_Transformer(self.DMS)
+
+            case "conv_lstm":
+                embedding_net = Conv_LSTM(self.DMS)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],

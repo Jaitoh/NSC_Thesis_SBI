@@ -9,6 +9,111 @@ sys.path.append("./src")
 from utils.train import kaiming_weight_initialization
 
 
+class Conv_Transformer(nn.Module):
+    def __ini__(self, DMS, nhead=8, num_encoder_layers=6):
+        super(Conv_Transformer, self).__init__()
+
+        self.conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=3, padding=1)
+
+        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=nhead, dropout=0.1, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_encoder_layers)
+
+        self.fc1 = nn.Linear(512, 512)
+        self.fc2 = nn.Linear(512, 256)
+
+        self.chR_fc_1 = nn.Linear(DMS, 1024)
+        self.chR_fc_2 = nn.Linear(1024, 512)
+        self.chR_fc_3 = nn.Linear(512, 256)
+
+        self.fc_out1 = nn.Linear(512, 512)
+        self.fc_out2 = nn.Linear(512, 256)
+
+        kaiming_weight_initialization(self.named_parameters())
+
+    def forward(self, x):
+        # (B, DMS, L + 1)
+        seqC = x[..., :-1]  # (B, DMS, L)
+        chR = x[..., -1]  # (B, DMS)
+
+        seqC = self.conv1(seqC)  # (B, 1024, L)
+        seqC = self.conv2(seqC)  # (B, 512, L)
+
+        seqC = seqC.permute(0, 2, 1)  # (B, L, 512)
+
+        seqC = self.transformer_encoder(seqC)  # (B, L, 512)
+
+        seqC = seqC[:, -1, :]  # (B, 512)
+
+        seqC = self.fc1(seqC)  # (B, 512)
+        seqC = self.fc2(seqC)  # (B, 256)
+
+        chR = self.chR_fc_1(chR)  # (B, 1024)
+        chR = self.chR_fc_2(chR)  # (B, 512)
+        chR = self.chR_fc_3(chR)  # (B, 256)
+
+        out = torch.cat((seqC, chR), dim=1)  # (B, 512)
+
+        out = self.fc_out1(out)  # (B, 512)
+        out = self.fc_out2(out)  # (B, 256)
+
+        return out
+
+
+class Conv_LSTM(nn.Module):
+    def __init__(self, DMS):
+        super(Conv_LSTM, self).__init__()
+
+        self.conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=3, padding=1)
+        self.lstm1 = nn.LSTM(input_size=512, hidden_size=1024, batch_first=True)
+        self.lstm2 = nn.LSTM(input_size=1024, hidden_size=512, batch_first=True)
+
+        self.fc1 = nn.Linear(512, 512)
+        self.fc2 = nn.Linear(512, 256)
+
+        self.chR_conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
+        self.chR_conv2 = nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=3, padding=1)
+        self.chR_fc_1 = nn.Linear(512, 512)
+        self.chR_fc_2 = nn.Linear(512, 256)
+
+        self.fc_out1 = nn.Linear(512, 512)
+        self.fc_out2 = nn.Linear(512, 256)
+
+        kaiming_weight_initialization(self.named_parameters())
+
+    def forward(self, x):
+        # (B, DMS, L + 1)
+        seqC = x[..., :-1]  # (B, DMS, L)
+        chR = x[..., -1].unsqueeze(-1)  # (B, DMS, 1)
+
+        seqC = self.conv1(seqC)  # (B, 1024, L)
+        seqC = self.conv2(seqC)  # (B, 512, L)
+
+        seqC = seqC.permute(0, 2, 1)  # (B, L, 512)
+        seqC, _ = self.lstm1(seqC)  # (B, L, 1024)
+        seqC, _ = self.lstm2(seqC)  # (B, L, 512)
+
+        seqC = seqC[:, -1, :]  # (B, 512)
+
+        seqC = self.fc1(seqC)  # (B, 512)
+        seqC = self.fc2(seqC)  # (B, 256)
+
+        chR = self.chR_conv1(chR)  # (B, 1024, 1)
+        chR = self.chR_conv2(chR)  # (B, 512, 1)
+
+        chR = chR.squeeze(-1)  # (B, 512)
+        chR = self.chR_fc_1(chR)  # (B, 512)
+        chR = self.chR_fc_2(chR)  # (B, 256)
+
+        out = torch.cat((seqC, chR), dim=1)  # (B, 512)
+
+        out = self.fc_out1(out)  # (B, 512)
+        out = self.fc_out2(out)  # (B, 256)
+
+        return out
+
+
 class GRU3_FC(nn.Module):
     def __init__(self, DMS):
         super(GRU3_FC, self).__init__()

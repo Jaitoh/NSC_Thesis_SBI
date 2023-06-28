@@ -50,5 +50,5 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 ./gdrive files download 1y3KGDe0p_MMmdnk8NQJxyFFNxUTH8i4H --destination ./tmp/NSC/data/dataset/
 
 ./gdrive files download 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG --destination /home/wehe/scratch/data/
-# feature-L0-Eset0-100sets-T500-C100.h5
+# feature-L0-Eset0-100sets-T500-C100.h5 - June 28
 ./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /mnt/data/dataset/
