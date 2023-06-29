@@ -76,17 +76,19 @@ CONFIG_TRAIN=train-p4-mlp-mdn
 # CHECK_POINT_PATH="/home/wehe/tmp/NSC/codes/src/train/logs/train_L0_p4/p4-5Fs-1D-gru3-mdn/model/model_check_point.pt"
 
 TRAIN_FILE_NAME=train_L0_p4
+DRIVER_DIR="/content/drive/Shareddrives/Master_NSC/02_Master_NSC/02_2023FS/NSC"
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+# DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
 # DATA_PATH="/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-# DATA_PATH="/content/drive/Shareddrives/Master_NSC/02_Master_NSC/02_2023FS/NSC/data/dataset/L0_exp_set_0/feature-L0-Eset0-100sets-T500-C100.h5"
+DATA_PATH="${DRIVER_DIR}/data/dataset/L0_exp_set_0/feature-L0-Eset0-100sets-T500-C100.h5"
 
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_PRIOR=prior-0
 CONFIG_X_O=x_o-0
 
-LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
+# LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
+LOG_DIR="${DRIVER_DIR}/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${CLUSTER}-${RUN_ID}.log"
 rm -r ${LOG_DIR}
 mkdir -p ${LOG_DIR}
