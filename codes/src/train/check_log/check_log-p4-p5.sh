@@ -8,6 +8,7 @@ RUN_ID=p4-5Fs-2D-mh_gru-mdn-ctd0
 RUN_ID=p4-5Fs-1D-mh_gru-mdn-ctd0
 RUN_ID=p4-5Fs-1D-gru-mdn-ctd0
 RUN_ID=p5-gru3
+RUN_ID=p5-conv_lstm
 
 TRAIN_FILE_NAME=train_L0_p5
 
