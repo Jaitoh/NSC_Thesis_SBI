@@ -1,12 +1,107 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
 # from torchsummary import summary
 import sys
 
 sys.path.append("./src")
 from utils.train import kaiming_weight_initialization
+
+
+class CNN_FC(nn.Module):
+    def __init__(self, input_feature_length):
+        super().__init__()
+
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.pool1 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.pool2 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.pool3 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+
+        self.fc1 = nn.Linear(256 * math.ceil(input_feature_length / 8), 1024)
+        self.fc2 = nn.Linear(1024, 256)
+
+        kaiming_weight_initialization(self.named_parameters())
+
+    def forward(self, x):
+        # x: [B, M*221, 1]
+        x = x.permute(0, 2, 1)  # [B, 1, M*221]
+        x = F.relu(self.conv1(x))  # [B, 64, M*221=663]
+        x = self.pool1(x)  # [B, 64, 332]
+        x = F.relu(self.conv2(x))  # [B, 128, 332]
+        x = self.pool2(x)  # [B, 128, M*56]
+        x = F.relu(self.conv3(x))  # [B, 256, 166]
+        x = self.pool3(x)  # [B, 256, 83]
+
+        x = x.view(x.size(0), -1)  # [B, 256*M*28]
+        x = F.relu(self.fc1(x))  # [B, 1024]
+        x = F.relu(self.fc2(x))  # [B, 256]
+
+        return x
+
+
+class Multi_Channel_CNN_FC(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv1 = nn.Conv1d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.pool1 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.pool2 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.pool3 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+
+        self.fc1 = nn.Linear(7168, 1024)
+        self.fc2 = nn.Linear(1024, 256)
+
+        kaiming_weight_initialization(self.named_parameters())
+
+    def forward(self, x):
+        # x: [B, 221, 3]
+        x = x.permute(0, 2, 1)  # [B, 3, 221]
+        x = F.relu(self.conv1(x))  # [B, 64, 221]
+        x = self.pool1(x)  # [B, 64, 111]
+        x = F.relu(self.conv2(x))  # [B, 128, 111]
+        x = self.pool2(x)  # [B, 128, 55]
+        x = F.relu(self.conv3(x))  # [B, 256, 56]
+        x = self.pool3(x)  # [B, 256, 28]
+
+        x = x.view(x.size(0), -1)  # [B, 256*56]
+        x = F.relu(self.fc1(x))  # [B, 1024]
+        x = F.relu(self.fc2(x))  # [B, 256]
+
+        return x
+
+
+class MLP_FC(nn.Module):
+    def __init__(self, input_feature_length):
+        super().__init__()
+
+        self.fc1 = nn.Linear(input_feature_length, 1024)
+        self.fc2 = nn.Linear(1024, 2048)
+        self.fc3 = nn.Linear(2048, 1024)
+        self.fc4 = nn.Linear(1024, 512)
+        self.fc5 = nn.Linear(512, 512)
+        self.fc6 = nn.Linear(512, 256)
+        self.fc7 = nn.Linear(256, 256)
+
+        kaiming_weight_initialization(self.named_parameters())
+
+    def forward(self, x):
+        # x: [B, 3*221, 1]
+        x = x.view(x.size(0), -1)  # [B, 3*221]
+        x = F.relu(self.fc1(x))  # [B, 1024]
+        x = F.relu(self.fc2(x))  # [B, 2048]
+        x = F.relu(self.fc3(x))  # [B, 1024]
+        x = F.relu(self.fc4(x))  # [B, 512]
+        x = F.relu(self.fc5(x))  # [B, 512]
+        x = F.relu(self.fc6(x))  # [B, 256]
+        x = F.relu(self.fc7(x))  # [B, 256]
+
+        return x
 
 
 class GRU3_FC(nn.Module):
@@ -90,9 +185,7 @@ class Multi_Head_GRU_FC(nn.Module):
         self.feature_lengths = feature_lengths
 
         # Initialize GRUs for each feature
-        self.grus = nn.ModuleList(
-            [nn.GRU(input_size, hidden_size, num_layers) for _ in feature_lengths]
-        )
+        self.grus = nn.ModuleList([nn.GRU(input_size, hidden_size, num_layers) for _ in feature_lengths])
 
         # Initialize FC layers
         self.fc1 = nn.Linear(hidden_size * len(feature_lengths), 512)
