@@ -4,14 +4,43 @@ defaults:
   - prior: prior-0
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataste-p4-5Fs-1D
-  - train: train-p4-gru-mdn
+  # - dataset: dataset-p4-4Fs-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-5Fs-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-5Fs-2D
+  # - train: train-p4-mch_cnn-mdn
+  # - dataset: dataset-p4-3Fs-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-F1-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-F2-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-F3-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-F4-1D
+  # - train: train-p4-cnn-mdn
+  # - dataset: dataset-p4-F5-1D
+  # - train: train-p4-cnn-mdn
+  - dataset: dataset-p4-F3-1D
+  - train: train-p4-mlp-mdn
+
 
 pipeline_version: p4
-log_dir: ./src/train/logs/train_L0_p4/
+# log_dir: ./src/train/logs/train_L0_p4/p4-4Fs-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-5Fs-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-5Fs-2D-mh_cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-3Fs-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-F1-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-F2-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-F3-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-F4-1D-cnn
+# log_dir: ./src/train/logs/train_L0_p4/p4-F5-1D-cnn
+log_dir: ./src/train/logs/train_L0_p4/p4-F3-1D-mlp
+
 data_path: /home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 # data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 seed: 100
-debug: False
+debug: True
 gpu: True
 continue_from_checkpoint: ""

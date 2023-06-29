@@ -10,18 +10,18 @@ CLUSTER=t4
 # CONFIG_DATASET=dataset-p5
 # CONFIG_TRAIN=train-p5-gru3-mdn
 
-RUN_ID=p5-conv_lstm
-CONFIG_DATASET=dataset-p5
-CONFIG_TRAIN=train-p5-conv_lstm-mdn
-
-# RUN_ID=p5-conv_transformer
+# RUN_ID=p5-conv_lstm
 # CONFIG_DATASET=dataset-p5
-# CONFIG_TRAIN=train-p5-conv_transformer-mdn
+# CONFIG_TRAIN=train-p5-conv_lstm-mdn
+
+RUN_ID=p5-conv_transformer
+CONFIG_DATASET=dataset-p5
+CONFIG_TRAIN=train-p5-conv_transformer-mdn
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 TRAIN_FILE_NAME=train_L0_p5
 DATA_PATH=/home/ubuntu/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5
-# DATA_PATH=/mnt/data/dataset/dataset-L0-Eset0-100sets-T500.h5
+DATA_PATH=/mnt/data/dataset/dataset-L0-Eset0-100sets-T500.h5
 
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0

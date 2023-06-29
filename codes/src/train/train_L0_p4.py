@@ -21,7 +21,15 @@ from train.MyPosteriorEstimator_p4 import MySNPE_C_P4
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
-from neural_nets.embedding_nets_p4 import GRU_FC, Multi_Head_GRU_FC, GRU3_FC, LSTM3_FC
+from neural_nets.embedding_nets_p4 import (
+    GRU_FC,
+    Multi_Head_GRU_FC,
+    GRU3_FC,
+    LSTM3_FC,
+    MLP_FC,
+    Multi_Channel_CNN_FC,
+    CNN_FC,
+)
 
 
 class Solver:
@@ -64,8 +72,18 @@ class Solver:
         input_size = 1 if concatenate_along_M else self.M
         hidden_size = config_density.embedding_net.hidden_size
 
+        input_feature_length = np.sum(self.config.dataset.feature_lengths) * self.M
         print(f"\n=== embedding net === \n{config_density.embedding_net.type}")
         match config_density.embedding_net.type:
+            case "mlp":
+                embedding_net = MLP_FC(input_feature_length)
+
+            case "cnn":
+                embedding_net = CNN_FC(input_feature_length)
+
+            case "mch_cnn":
+                embedding_net = Multi_Channel_CNN_FC()
+
             case "gru_fc":
                 embedding_net = GRU_FC(input_size, hidden_size, num_layers)
 
