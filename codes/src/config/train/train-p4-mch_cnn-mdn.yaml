@@ -6,7 +6,7 @@ density_estimator:
     output_size: 128
   posterior_nn:
     model: mdn
-    hidden_features: 64
+    hidden_features: 128
     num_transforms: 2
   
 
