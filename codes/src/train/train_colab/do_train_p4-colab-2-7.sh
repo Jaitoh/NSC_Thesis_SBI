@@ -77,10 +77,11 @@ CONFIG_TRAIN=train-p4-mlp-mdn
 
 TRAIN_FILE_NAME=train_L0_p4
 DRIVER_DIR="/content/drive/Shareddrives/Master_NSC/02_Master_NSC/02_2023FS/NSC"
+DRIVER_DIR="/home/ubuntu/tmp/NSC"
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-# DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
 # DATA_PATH="/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-DATA_PATH="${DRIVER_DIR}/data/dataset/L0_exp_set_0/feature-L0-Eset0-100sets-T500-C100.h5"
+# DATA_PATH="${DRIVER_DIR}/data/dataset/L0_exp_set_0/feature-L0-Eset0-100sets-T500-C100.h5"
 
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
