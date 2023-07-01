@@ -562,10 +562,9 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         ax3.plot(train_log_probs, "o-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
         ax3.plot(valid_log_probs, "o-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
 
-        upper = np.maximum(train_log_probs, valid_log_probs)[0] + 0.1
-        lower = -1 * np.percentile(
-            np.abs(np.concatenate([train_log_probs, valid_log_probs])), 80, axis=0
-        )
+        all_probs = np.concatenate([train_log_probs, valid_log_probs])
+        upper = np.max(all_probs)
+        lower = -1 * np.percentile(np.abs(all_probs), 80, axis=0)
         ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
         ax3.set_xlabel("epochs")
         ax3.set_ylabel("log_prob")

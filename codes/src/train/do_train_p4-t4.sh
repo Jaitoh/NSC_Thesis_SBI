@@ -11,8 +11,8 @@ RUN_ID=p4-4Fs-1D-cnn2-0
 CONFIG_DATASET=dataset-p4-4Fs-size0
 CONFIG_TRAIN=train-p4-cnn2-0
 
-RUN_ID=p4-4Fs-1D-cnn2-size1
-CONFIG_DATASET=dataset-p4-4Fs-size1
+# RUN_ID=p4-4Fs-1D-cnn2-size1
+# CONFIG_DATASET=dataset-p4-4Fs-size1
 
 RUN_ID=p4-4Fs-1D-cnn2-size2
 CONFIG_DATASET=dataset-p4-4Fs-size2

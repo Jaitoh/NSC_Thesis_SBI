@@ -2,9 +2,9 @@ concatenate_feature_types : [1, 3, 4, 5]
 feature_lengths           : [69, 15, 12, 56]
 concatenate_along_M       : True  # True: [B, n_feature*3, 1], False: [B, n_feature, 3]
 partial_C                 : 10 # max 100
-partial_sets              : 10 # max 100
+partial_sets              : 20 # max 100
 
-batch_size                : 2048 # 128
+batch_size                : 3072 # 128
 pin_memory                : True
 num_workers               : 8
 prefetch_factor           : 2
