@@ -1,0 +1,19 @@
+defaults:
+  - _self_
+  - experiment_settings: exp-set-0
+  - prior: prior-0
+  - x_o: x_o-0
+  - simulator: model-0
+  - dataset: dataset-p4-F1-1D
+  - train: train-p4-cnn-mdn
+
+
+pipeline_version: p4
+log_dir: ./src/train/logs/train_L0_p4/p4-F1-1D-cnn-test
+
+data_path: /home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
+# data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
+seed: 100
+debug: True
+gpu: True
+continue_from_checkpoint: ""

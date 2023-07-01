@@ -29,6 +29,7 @@ from neural_nets.embedding_nets_p4 import (
     MLP_FC,
     Multi_Channel_CNN_FC,
     CNN_FC,
+    CNN_FC2,
 )
 
 
@@ -81,6 +82,9 @@ class Solver:
             case "cnn":
                 embedding_net = CNN_FC(input_feature_length)
 
+            case "cnn2":
+                embedding_net = CNN_FC2(input_feature_length)
+
             case "mch_cnn":
                 embedding_net = Multi_Channel_CNN_FC()
 
@@ -106,6 +110,7 @@ class Solver:
             embedding_net=embedding_net,
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
+            num_components=10,
             z_score_x=None,  # remove z_score
             z_score_y=None,  # remove z_score
         )
@@ -159,7 +164,7 @@ class Solver:
         )
 
 
-@hydra.main(config_path="../config", config_name="config-p4", version_base=None)
+@hydra.main(config_path="../config", config_name="config-p4-test", version_base=None)
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")

@@ -4,20 +4,22 @@ export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
 source activate sbi
 
-CLUSTER=t4
+CLUSTER=t4-1
 # PORT=9906
 
-# RUN_ID=p4-5Fs-1D-gru-mdn-ctd0
-RUN_ID=p4-5Fs-1D-gru3-mdn-ctd0
+RUN_ID=p4-4Fs-1D-cnn2-0
+CONFIG_DATASET=dataset-p4-4Fs-size0
+CONFIG_TRAIN=train-p4-cnn2-0
+
+RUN_ID=p4-4Fs-1D-cnn2-size1
+CONFIG_DATASET=dataset-p4-4Fs-size1
+
+RUN_ID=p4-4Fs-1D-cnn2-size2
+CONFIG_DATASET=dataset-p4-4Fs-size2
 
 TRAIN_FILE_NAME=train_L0_p4
-
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH="/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-# CONFIG_DATASET=dataste-p4-5Fs-1D-ctd0
-# CONFIG_TRAIN=train-p4-gru-mdn
-CONFIG_DATASET=dataste-p4-5Fs-1D-ctd0
-CONFIG_TRAIN=train-p4-gru3-mdn
 
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 

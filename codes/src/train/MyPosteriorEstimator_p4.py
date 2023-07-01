@@ -340,7 +340,9 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
                 # epoch log - validation log prob
                 self._valid_log_prob = valid_log_prob_sum / valid_data_size
-                self._summary_writer.add_scalars("log_probs", {"validation": self._valid_log_prob}, epoch)
+                self._summary_writer.add_scalars(
+                    "log_probs", {"validation": self._valid_log_prob}, epoch
+                )
 
                 toc = time.time()
                 self._summary["validation_log_probs"].append(self._valid_log_prob)
@@ -482,7 +484,9 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                     limits=limits,
                     prior_labels=config.prior.prior_labels,
                 )
-                fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
+                fig_path = (
+                    f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
+                )
                 plt.savefig(fig_path)
                 plt.close(fig_x_val)
                 del fig_x_val, _
@@ -554,28 +558,18 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         ax2.set_xlabel("time (hours)")
 
         ax3 = axes[2]
-        ax3.plot(
-            train_log_probs[-20:],
-            "o-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax3.plot(
-            valid_log_probs[-20:],
-            "o-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
 
+        ax3.plot(train_log_probs, "o-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax3.plot(valid_log_probs, "o-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
+
+        upper = np.maximum(train_log_probs, valid_log_probs)[0] + 0.1
+        lower = -1 * np.percentile(
+            np.abs(np.concatenate([train_log_probs, valid_log_probs])), 80, axis=0
+        )
         ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
-        ax3.set_xlabel("the last 40 epochs")
+        ax3.set_xlabel("epochs")
         ax3.set_ylabel("log_prob")
+        ax3.set_ylim(lower, upper)
         ax3.grid(alpha=0.2)
 
         # save the figure
