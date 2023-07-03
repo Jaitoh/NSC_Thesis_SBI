@@ -4,18 +4,18 @@ export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
 source activate sbi
 
-CLUSTER=t4-1
+CLUSTER=t4-2
 # PORT=9906
 
 RUN_ID=p4-4Fs-1D-cnn2-0
 CONFIG_DATASET=dataset-p4-4Fs-size0
 CONFIG_TRAIN=train-p4-cnn2-0
 
-# RUN_ID=p4-4Fs-1D-cnn2-size1
-# CONFIG_DATASET=dataset-p4-4Fs-size1
+RUN_ID=p4-4Fs-1D-cnn2-size1
+CONFIG_DATASET=dataset-p4-4Fs-size1
 
-RUN_ID=p4-4Fs-1D-cnn2-size2
-CONFIG_DATASET=dataset-p4-4Fs-size2
+# RUN_ID=p4-4Fs-1D-cnn2-size2
+# CONFIG_DATASET=dataset-p4-4Fs-size2
 
 TRAIN_FILE_NAME=train_L0_p4
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
@@ -40,7 +40,7 @@ echo "data_path: ${DATA_PATH}"
 
 code ${PRINT_LOG}
 
-python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
+nice python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
     hydra.run.dir=${LOG_DIR} \
     experiment_settings=${CONFIG_EXP} \
     prior=${CONFIG_PRIOR} \
