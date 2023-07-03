@@ -49,6 +49,15 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 # dataset_L0_exp_set_0.h5 updated-May30
 ./gdrive files download 1y3KGDe0p_MMmdnk8NQJxyFFNxUTH8i4H --destination ./tmp/NSC/data/dataset/
 
+# dataset-L0-Eset0-100sets-T500.h5 - June 28
 ./gdrive files download 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG --destination /home/wehe/scratch/data/
 # feature-L0-Eset0-100sets-T500-C100.h5 - June 28
 ./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /mnt/data/dataset/
+
+# log p4-4Fs-1D-cnn.tar.gz
+./gdrive files download 1nYVIZIU8ngv-cVUNNsdYQ4RgeFms0SHl --destination /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
+cd /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
+tar -xzf p4-4Fs-1D-cnn.tar.gz
+mv ./home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4/p4-4Fs-1D-cnn ./p4-4Fs-1D-cnn
+rm -r ./home
+rm p4-4Fs-1D-cnn.tar.gz

@@ -56,20 +56,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
 
-    def train_base_p4(
-        self,
-        config,
-        prior_limits,
-        continue_from_checkpoint=None,
-        debug=False,
-    ):
-        self.config = config
-        self.log_dir = config.log_dir
-        self.prior_limits = prior_limits
-        self.dataset_kwargs = self.config.dataset
-        self.training_kwargs = self.config.train.training
-        setup_seed(config.seed)
-
+    def prepare_for_training(self, continue_from_checkpoint):
         # prepare train, valdataset and dataloader
         print("\n=== train, val dataset and dataloader ===")
         data_path = self.config.data_path
@@ -166,6 +153,22 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 self._neural_net.load_state_dict(torch.load(continue_from_checkpoint))
 
         self._neural_net.to(self._device)
+
+    def train_base_p4(
+        self,
+        config,
+        prior_limits,
+        continue_from_checkpoint=None,
+        debug=False,
+    ):
+        self.config = config
+        self.log_dir = config.log_dir
+        self.prior_limits = prior_limits
+        self.dataset_kwargs = self.config.dataset
+        self.training_kwargs = self.config.train.training
+        setup_seed(config.seed)
+
+        self.prepare_for_training(continue_from_checkpoint=continue_from_checkpoint)
 
         # initialize optimizer / sheduler
         config_training = self.config.train.training

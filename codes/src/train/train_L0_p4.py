@@ -118,28 +118,7 @@ class Solver:
         return neural_posterior
 
     def sbi_train(self, debug=False):
-        writer = SummaryWriter(log_dir=str(self.log_dir))
-
-        # prior
-        self.prior_min = self.config.prior.prior_min
-        self.prior_max = self.config.prior.prior_max
-        self.prior = utils.torchutils.BoxUniform(  # type: ignore
-            low=np.array(self.prior_min, dtype=np.float32),
-            high=np.array(self.prior_max, dtype=np.float32),
-            device=self.device,
-        )
-
-        # get neural posterior
-        neural_posterior = self.get_neural_posterior()
-        MySNPE = MySNPE_C_P4
-        self.inference = MySNPE(
-            prior=self.prior,
-            density_estimator=neural_posterior,
-            device=self.device,
-            logging_level="INFO",
-            summary_writer=writer,
-            show_progress_bars=True,
-        )
+        self.init_inference()
 
         # dataloader kwargs, initialize inference dataset
         self.inference.append_simulations(
@@ -162,6 +141,31 @@ class Solver:
             deepcopy(density_estimator.state_dict()),
             f"{self.log_dir}/model/a_final_best_model_state_dict.pt",
         )
+
+    def init_inference(self):
+        writer = SummaryWriter(log_dir=str(self.log_dir))
+
+        # prior
+        self.prior_min = self.config.prior.prior_min
+        self.prior_max = self.config.prior.prior_max
+        self.prior = utils.torchutils.BoxUniform(  # type: ignore
+            low=np.array(self.prior_min, dtype=np.float32),
+            high=np.array(self.prior_max, dtype=np.float32),
+            device=self.device,
+        )
+
+        # get neural posterior
+        neural_posterior = self.get_neural_posterior()
+        MySNPE = MySNPE_C_P4
+        self.inference = MySNPE(
+            prior=self.prior,
+            density_estimator=neural_posterior,
+            device=self.device,
+            logging_level="INFO",
+            summary_writer=writer,
+            show_progress_bars=True,
+        )
+        return self.inference
 
 
 @hydra.main(config_path="../config", config_name="config-p4-test", version_base=None)
