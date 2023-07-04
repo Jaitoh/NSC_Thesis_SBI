@@ -29,7 +29,9 @@ class Feature_Generator:
         """
         DMS = D * M * S
         seqC = seqC.view(DMS, -1)  # [DMS, 15]
+        seqC = seqC.type(torch.float32)
         chR = chR.view(DMS, -1)  # [DMS, 1]
+        chR = chR.type(torch.float32)
         self.D, self.M, self.S, self.DMS = D, M, S, DMS
 
         # ================== seqC properties ==================

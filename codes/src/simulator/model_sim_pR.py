@@ -77,7 +77,7 @@ def one_DM_simulation_and_output_figure(seqC, params, model_name, figure_name):
     return (seqC, params, probR, fig)
 
 
-def one_DM_simulation(seqC, params, model_name, i, j, k, l):
+def one_DM_simulation(seqC, params, model_name, i=0, j=0, k=0, l=0):
     """do one simulation of DM model with one seqC and one param input, returns probR"""
 
     # check seqC and params dimension should be 1

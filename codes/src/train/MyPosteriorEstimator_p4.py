@@ -65,6 +65,9 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         train_set_names = sets[: int(len(sets) * 0.9)]
         valid_set_names = sets[int(len(sets) * 0.9) :]
+        print(f"{train_set_names=}")
+        print(f"{valid_set_names=}")
+        self.train_set_names, self.valid_set_names = train_set_names, valid_set_names
 
         train_set_T_part = [0, 1]
         valid_set_T_part = [0, 1]
