@@ -103,7 +103,9 @@ class Solver:
                 else:  # [B, F1+F2+F3 + F1+F2+F3 + F1+F2+F3 ..., 1]
                     feature_lengths = self.M * list(self.config.dataset.feature_lengths)
                 print(f"{len(feature_lengths)} heads")
-                embedding_net = Multi_Head_GRU_FC(feature_lengths, input_size, hidden_size, num_layers)
+                embedding_net = Multi_Head_GRU_FC(
+                    feature_lengths, input_size, hidden_size, num_layers
+                )
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
@@ -118,9 +120,10 @@ class Solver:
         return neural_posterior
 
     def sbi_train(self, debug=False):
+        # initialize inference
         self.init_inference()
 
-        # dataloader kwargs, initialize inference dataset
+        # initialize inference dataset
         self.inference.append_simulations(
             theta=torch.empty(1),
             x=torch.empty(1),
@@ -137,10 +140,10 @@ class Solver:
         )
 
         # save model
-        torch.save(
-            deepcopy(density_estimator.state_dict()),
-            f"{self.log_dir}/model/a_final_best_model_state_dict.pt",
-        )
+        # torch.save(
+        #     deepcopy(density_estimator.state_dict()),
+        #     f"{self.log_dir}/model/a_final_best_model_state_dict.pt",
+        # )
 
     def init_inference(self):
         writer = SummaryWriter(log_dir=str(self.log_dir))
