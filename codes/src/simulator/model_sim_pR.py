@@ -91,10 +91,23 @@ def one_DM_simulation(seqC, params, model_name, i=0, j=0, k=0, l=0):
     # return probR, i, j, k, l
 
 
+def one_DM_simulation_simple(seqC, params, model_name, i=0, j=0, k=0, l=0):
+    """do one simulation of DM model with one seqC and one param input, returns probR"""
+
+    # check seqC and params dimension should be 1
+    if len(seqC.shape) != 1 or len(params.shape) != 1:
+        raise ValueError("seqC and params dimension should be 1")
+
+    model = DM_model(params=params, model_name=model_name)
+    _, probR = model.simulate(np.array(seqC))
+
+    return probR, i, j, k, l
+
+
 def DM_sim_for_seqCs_parallel(
     seqCs,
     prior,
-    num_prior_sample,
+    num_prior_sample=1,
     model_name="B-G-L0S-O-N-",
     num_workers=16,
     save_data_path=None,
@@ -190,7 +203,7 @@ def DM_sim_for_seqCs_parallel(
 def DM_sim_for_seqCs_parallel_with_smaller_output(
     seqCs,
     prior,
-    num_prior_sample,
+    num_prior_sample=1,
     model_name="B-G-L0S-O-N-",
     num_workers=16,
     save_data_path=None,
@@ -234,7 +247,7 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
     num_workers = min(num_workers, os.cpu_count())
 
     results = Parallel(n_jobs=num_workers, verbose=1)(
-        delayed(one_DM_simulation)(
+        delayed(one_DM_simulation_simple)(
             seqCs[i, j, k, :], params[l, :], model_name, i, j, k, l
         )
         for i in range(seqCs.shape[0])
@@ -246,8 +259,7 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
 
     # store the results
     print("stacking the results")
-    # for probR_, i, j, k, l in results:
-    for seqC_, param_, probR_, i, j, k, l in results:
+    for probR_, i, j, k, l in results:
         probR[i, j, k, l, 0] = probR_
     print("done stacking the results")
 
