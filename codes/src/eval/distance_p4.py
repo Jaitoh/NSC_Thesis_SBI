@@ -21,6 +21,8 @@ from features.features import Feature_Generator
 from simulator.model_sim_pR import DM_sim_for_seqCs_parallel_with_smaller_output
 
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 PID = os.getpid()
 print(f"PID: {PID}")
 
@@ -37,7 +39,7 @@ config.log_dir = str(Path(LOG_DIR) / EXP_ID)
 
 # get the trained posterior
 solver = Solver(config)
-solver.init_inference().prepare_dataset_network(config, model_path, device="cpu")
+solver.init_inference().prepare_dataset_network(config, model_path, device=device)
 
 posterior = solver.inference.build_posterior(solver.inference._neural_net)
 solver.inference._model_bank = []
@@ -65,13 +67,28 @@ num_C = config.dataset.partial_C  # number of Ch samplings
 num_estimation = 3
 chosen_features = config.dataset.concatenate_feature_types
 
+
 # comput the feature from seqC and chR
+def probR_2_chR(probR, num_C, device):
+    if device == "cuda":
+        probR = probR.cuda()
+        probR = probR.repeat_interleave(num_C, dim=-1)
+        chR = torch.bernoulli(probR).cpu()
+    else:
+        probR = probR.repeat_interleave(num_C, dim=-1)
+        chR = torch.bernoulli(probR)
+    return chR
+
+
+chR = probR_2_chR(probR, num_C, device)
+
+FG = Feature_Generator()
+
 feature_collection = []
 for i in tqdm(range(num_C)):
-    chR = torch.bernoulli(probR)
-    FG = Feature_Generator()
+    chR_ = chR[..., i]
     feature = (
-        FG.compute_kernels(seqC, chR, D, M, S)
+        FG.compute_kernels(seqC, chR_, D, M, S)
         .get_provided_feature(chosen_features)
         .view(1, -1, 1)
     )
@@ -79,14 +96,26 @@ for i in tqdm(range(num_C)):
 feature_collection = torch.cat(feature_collection, dim=0)
 
 # pickle feature_collection
-# with open("./src/eval/features/feature_collection.pkl", "wb") as f:
-#     pickle.dump(feature_collection, f)
-# print(f"==>> feature_collection.pkl saved\n")
+with open(
+    "/home/ubuntu/tmp/NSC/codes/src/eval/features/feature_collection.pkl", "wb"
+) as f:
+    pickle.dump(feature_collection, f)
+print(f"==>> feature_collection.pkl saved\n")
+
 feature_estimated_collection_different_theta = []
+
 for j in range(num_estimation):
     # sample from the posterior with x
     feature = feature_collection[i]
-    samples = posterior.sample((20000,), x=feature, show_progress_bars=True)
+    samples = (
+        posterior.sample(
+            (20000,),
+            x=feature.cuda() if device == "cuda" else feature,
+            show_progress_bars=True,
+        )
+        .cpu()
+        .numpy()
+    )
 
     # find estimated theta using "kde"
     theta_estimated = []
@@ -114,11 +143,12 @@ for j in range(num_estimation):
 
     feature_estimated_collection = []
     # compute the feature from seqC and chR_estimated
+    chR_estimated = probR_2_chR(probR_estimated, num_C, device)
     for i in tqdm(range(num_C)):
-        chR_estimated = torch.bernoulli(probR_estimated)
+        chR_estimated_ = chR_estimated[..., i]
         FG = Feature_Generator()
         feature_estimated = (
-            FG.compute_kernels(seqC, chR, D, M, S)
+            FG.compute_kernels(seqC, chR_estimated_, D, M, S)
             .get_provided_feature(chosen_features)
             .view(1, -1, 1)
         )
@@ -132,9 +162,13 @@ for j in range(num_estimation):
     feature_estimated_collection_different_theta.append(feature_estimated_collection)
 
     # pickle feature_estimated_collection
-    # with open(f"./src/eval/features/feature_estimated_collection_{j}.pkl", "wb") as f:
-    #     pickle.dump(feature_estimated_collection, f)
-    # print(f"==>> feature_estimated_collection_{j}.pkl saved")
+    with open(
+        f"/home/ubuntu/tmp/NSC/codes/src/eval/features/feature_estimated_collection_{j}.pkl",
+        "wb",
+    ) as f:
+        pickle.dump(feature_estimated_collection, f)
+    print(f"==>> feature_estimated_collection_{j}.pkl saved")
+
 fig, axes = analysis.pairplot(
     samples.cpu().numpy(),
     limits=prior_limits,
