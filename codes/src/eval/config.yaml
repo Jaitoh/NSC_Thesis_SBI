@@ -1,0 +1,6 @@
+LOG_DIR: "/home/ubuntu/tmp/NSC/codes/src/train/logs"
+OUT_DIR: "/home/ubuntu/tmp/NSC/codes/src/eval/"
+EXP_ID: "train_L0_p4/p4-4Fs-1D-cnn"
+DATA_PATH: "/home/ubuntu/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5"
+num_C: 100
+num_estimation: 3
