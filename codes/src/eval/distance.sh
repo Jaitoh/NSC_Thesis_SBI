@@ -1,0 +1,1 @@
+nice python3 ./src/eval/distance_p4.py > ./src/eval/distance_p4.log 2>&1 &

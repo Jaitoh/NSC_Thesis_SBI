@@ -16,6 +16,41 @@ from tqdm import tqdm
 import multiprocessing
 import argparse
 from joblib import Parallel, delayed
+from torch.utils.data import Dataset, DataLoader
+
+
+# class Feature_Generator_Dataset(Dataset):
+#     def __init__(self, C, probR, seqC, D, M, S, chosen_features):
+#         self.C = C
+#         self.probR = probR
+#         self.seqC = seqC
+#         self.D = D
+#         self.M = M
+#         self.S = S
+#         self.chosen_features = chosen_features
+
+#     def __len__(self):
+#         return self.C
+
+#     def __getitem__(self, idx):
+#         chR = torch.bernoulli(self.probR)
+#         FG = Feature_Generator()
+#         feature = (
+#             FG.compute_kernels(self.seqC, chR, self.D, self.M, self.S)
+#             .get_provided_feature(self.chosen_features)
+#             .view(1, -1, 1)
+#         )
+#         return feature
+
+
+# dataset = Feature_Generator_Dataset(
+#     num_embeddings, probR, seqC, D, M, S, chosen_features
+# )
+# dataloader = DataLoader(dataset, batch_size=64, num_workers=4)
+
+# feature_collection = []
+# for features in tqdm(dataloader):
+#     feature_collection.append(features)
 
 
 class Feature_Generator:
@@ -96,9 +131,12 @@ class Feature_Generator:
         feature_2s = torch.stack(feature_2s, dim=0)
 
         # feature 3
-        feature_3s = []
-        for i in range(3):
-            feature_3s.append(self._extract_f3(self.stats_MD2[i, :], ranges=[-7, 7]))
+        # feature_3s = []
+        # for i in range(3):
+        #     feature_3s.append(self._extract_f3(self.stats_MD2[i, :], ranges=[-7, 7]))
+        feature_3s = [
+            self._extract_f3(self.stats_MD2[i, :], ranges=[-7, 7]) for i in range(3)
+        ]
 
         # generate a mask for NS
         ranges = [(-2, 2), (-4, 4)]
@@ -108,15 +146,17 @@ class Feature_Generator:
         feature_3s = torch.stack(feature_3s, dim=0)
 
         # feature 4
-        feature_4s = []
-        for i in range(self.M):
-            feature_4s.append(self._extract_f4(self.stats_NS[:, i, :]))
+        # feature_4s = []
+        # for i in range(self.M):
+        #     feature_4s.append(self._extract_f4(self.stats_NS[:, i, :]))
+        feature_4s = [self._extract_f4(self.stats_NS[:, i, :]) for i in range(self.M)]
         feature_4s = torch.stack(feature_4s, dim=0)
 
         # feature 5
-        feature_5s = []
-        for i in range(self.M):
-            feature_5s.append(self._extract_f5(self.stats_psy[:, i, :]))
+        # feature_5s = []
+        # for i in range(self.M):
+        #     feature_5s.append(self._extract_f5(self.stats_psy[:, i, :]))
+        feature_5s = [self._extract_f5(self.stats_psy[:, i, :]) for i in range(self.M)]
         feature_5s = torch.stack(feature_5s, dim=0)
 
         return feature_1s, feature_2s, feature_3s, feature_4s, feature_5s
@@ -137,28 +177,35 @@ class Feature_Generator:
         if 5 in feature_list:
             objects.append(feature_5s)
 
-        features = []
-        for i in range(self.M):
-            features.append(torch.cat([obj[i] for obj in objects], dim=0))
+        # features = []
+        # for i in range(self.M):
+        #     features.append(torch.cat([obj[i] for obj in objects], dim=0))
+        features = [
+            torch.cat([obj[i] for obj in objects], dim=0) for i in range(self.M)
+        ]
 
         feature = torch.cat([feature for feature in features], dim=0)
         return feature
 
     def _extract_f5(self, stats_psy):
         D, P = stats_psy.shape
-        f5 = []
-        for i in range(P):
-            starting_idx = i // 2
-            f5.append(stats_psy[starting_idx:, i])
+        # f5 = []
+        # for i in range(P):
+        #     starting_idx = i // 2
+        #     f5.append(stats_psy[starting_idx:, i])
+        f5 = [stats_psy[i // 2 :, i] for i in range(P)]
         f5 = torch.cat(f5, dim=0)
         return f5
 
     def _extract_f4(self, stats_NS):
         D, MD = stats_NS.shape
-        f4 = []
-        for idx_D in range(D):
-            idx_nan = torch.isnan(stats_NS[idx_D, :])
-            f4.append(stats_NS[idx_D, :][~idx_nan])
+        # f4 = []
+        # for idx_D in range(D):
+        #     idx_nan = torch.isnan(stats_NS[idx_D, :])
+        #     f4.append(stats_NS[idx_D, :][~idx_nan])
+        f4 = [
+            stats_NS[idx_D, :][~torch.isnan(stats_NS[idx_D, :])] for idx_D in range(D)
+        ]
         f4 = torch.cat(f4, dim=0)
 
         # plt.plot(f4, ".-", label="f4")
@@ -181,19 +228,27 @@ class Feature_Generator:
         """
         D, MD = stats_MD.shape
         # extract f1
-        f1 = []
-        for idx_D in np.arange(D):
-            # remove the nan values in stats_MD
-            idx_D = D - idx_D - 1
-            idx_nan = torch.isnan(stats_MD[idx_D, :])
-            f1.append(stats_MD[idx_D, :][~idx_nan])
+        # f1 = []
+        # for idx_D in np.arange(D):
+        #     # remove the nan values in stats_MD
+        #     idx_D = D - idx_D - 1
+        #     idx_nan = torch.isnan(stats_MD[idx_D, :])
+        #     f1.append(stats_MD[idx_D, :][~idx_nan])
+        f1 = [
+            stats_MD[D - idx_D - 1, :][~torch.isnan(stats_MD[D - idx_D - 1, :])]
+            for idx_D in np.arange(D)
+        ]
         f1 = torch.cat(f1, dim=0)
 
         # extract f2
-        f2 = []
-        for idx_MD in np.arange(MD):
-            idx_nan = torch.isnan(stats_MD[:, idx_MD])
-            f2.append(stats_MD[:, idx_MD][~idx_nan])
+        # f2 = []
+        # for idx_MD in np.arange(MD):
+        #     idx_nan = torch.isnan(stats_MD[:, idx_MD])
+        #     f2.append(stats_MD[:, idx_MD][~idx_nan])
+        f2 = [
+            stats_MD[:, idx_MD][~torch.isnan(stats_MD[:, idx_MD])]
+            for idx_MD in np.arange(MD)
+        ]
         f2 = torch.cat(f2, dim=0)
 
         # plt.plot(f1, '.-', label='f1')
@@ -212,8 +267,7 @@ class Feature_Generator:
         mask = torch.ones(shape, dtype=torch.bool)
         idx_mid_col = mask.shape[1] // 2
 
-        for i in range(len(ranges)):
-            mask_range = ranges[i]
+        for i, mask_range in enumerate(ranges):
             lower, upper = idx_mid_col + mask_range[0], idx_mid_col + mask_range[1]
             mask[i, lower : upper + 1] = 0
 
