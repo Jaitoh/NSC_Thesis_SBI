@@ -1,8 +1,8 @@
 DO_ZIP=1
 DO_Gdrive=1
 
-# TRAIN_ID=train_L0_p4
-TRAIN_ID=train_L0_p5
+TRAIN_ID=train_L0_p4
+# TRAIN_ID=train_L0_p5
 
 # "p4-5Fs-1D-cnn"
 # "p4-4Fs-1D-cnn"
@@ -25,9 +25,9 @@ TRAIN_ID=train_L0_p5
 # "p4-4Fs-1D-cnn2-size2"
 # "p5-gru3"
 # "p5-conv_transformer"
+# "p5-conv_lstm"
+# "p4-4Fs-1D-cnn2-size1"
 EXP_IDS=(
-    "p5-conv_lstm"
-    "p4-4Fs-cnn2-size1"
 )
 
 # zip log files
@@ -52,6 +52,6 @@ if [ ${DO_Gdrive} -eq 1 ]; then
         cd ~
         ./gdrive files upload "${LOG_DIR}/${TRAIN_ID}/${EXP_ID}.tar.gz"
         rm "${LOG_DIR}/${TRAIN_ID}/${EXP_ID}.tar.gz"
-        echo "finished"
+        echo "finished and removed file ${LOG_DIR}/${TRAIN_ID}/${EXP_ID}.tar.gz"
     done
 fi
