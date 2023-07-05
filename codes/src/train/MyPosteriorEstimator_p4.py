@@ -155,9 +155,17 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             # load network from state dict if specified
             if continue_from_checkpoint != None and continue_from_checkpoint != "":
                 print(f"loading neural net from '{continue_from_checkpoint}'")
-                self._neural_net.load_state_dict(
-                    torch.load(continue_from_checkpoint, map_location=device)
-                )
+                if str(continue_from_checkpoint).endswith("check_point.pt"):
+                    self._neural_net.load_state_dict(
+                        torch.load(
+                            continue_from_checkpoint, map_location=device
+                        ).state_dict()
+                    )
+
+                else:
+                    self._neural_net.load_state_dict(
+                        torch.load(continue_from_checkpoint, map_location=device)
+                    )
 
         return (
             train_dataloader,

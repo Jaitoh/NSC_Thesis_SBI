@@ -3,10 +3,9 @@ pwd
 
 TRAIN_ID="train_L0_p4"
 EXP_IDS=(
+    "p4-4Fs-1D-cnn2-0"
     "p4-4Fs-1D-cnn"
     "p4-3Fs-1D-cnn"
-    "p4-4Fs-1D-cnn"
-    "p4-4Fs-1D-cnn2-0"
     "p4-4Fs-1D-cnn2-size2"
     "p4-5Fs-1D-cnn"
     "p4-5Fs-2D-mh_cnn"
@@ -19,7 +18,7 @@ for EXP_ID in "${EXP_IDS[@]}"; do
 
     OUT_DIR="${ROOT_DIR}/src/eval/${TRAIN_ID}/${EXP_ID}"
     mkdir -p ${OUT_DIR}
-
+    echo "OUT_DIR: ${OUT_DIR}"
     nice python3 ./src/eval/distance_p4.py \
         hydra.run.dir=${ROOT_DIR} \
         OUT_DIR=${OUT_DIR} \
@@ -27,7 +26,7 @@ for EXP_ID in "${EXP_IDS[@]}"; do
         EXP_ID="${TRAIN_ID}/${EXP_ID}" \
         num_C=100 \
         num_estimation=3 \
-        >${OUT_DIR}/distance.log 2>&1 &
+        >${OUT_DIR}/distance.log 2>&1 #&
     code ${OUT_DIR}/distance.log
 done
 
