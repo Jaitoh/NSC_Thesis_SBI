@@ -33,6 +33,7 @@ from utils.set_seed import setup_seed, seed_worker
 from train.Dataset_features import Feature_Dataset
 from utils.train import WarmupScheduler, plot_posterior_with_label
 from utils.setup import clean_cache
+from utils.dataset import update_prior_min_max
 
 # set matplotlib, font of size 16, bold
 plt.rcParams.update({"font.size": 22})
@@ -72,6 +73,14 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         train_set_T_part = [0, 1]
         valid_set_T_part = [0, 1]
 
+        # get the original prior min and max for normalization
+        _, _, unnormed_prior_min, unnormed_prior_max = update_prior_min_max(
+            prior_min=self.config.prior.prior_min,
+            prior_max=self.config.prior.prior_max,
+            ignore_ss=self.config.prior.ignore_ss,
+            normalize=self.config.prior.normalize,
+        )
+
         print("[training] sets", end=" ")
         train_dataset = Feature_Dataset(
             data_path=data_path,
@@ -82,6 +91,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             concatenate_along_M=config.dataset.concatenate_along_M,
             ignore_ss=config.prior.ignore_ss,
             normalize_theta=config.prior.normalize,
+            unnormed_prior_min=unnormed_prior_min,
+            unnormed_prior_max=unnormed_prior_max,
         )
 
         print("\n[validation] sets", end=" ")
@@ -94,6 +105,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             concatenate_along_M=config.dataset.concatenate_along_M,
             ignore_ss=config.prior.ignore_ss,
             normalize_theta=config.prior.normalize,
+            unnormed_prior_min=unnormed_prior_min,
+            unnormed_prior_max=unnormed_prior_max,
         )
 
         # prepare train, val, test dataloader

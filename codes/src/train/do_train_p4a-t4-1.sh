@@ -7,7 +7,7 @@ source activate sbi
 CLUSTER=t4-1
 ROOT_DIR="/home/ubuntu/tmp/NSC"
 
-RUN_ID=p4a-4Fs-cnn-ignore_ss
+RUN_ID=p4a-4Fs-cnn-Tnorm
 CONFIG_PRIOR=prior-2
 CONFIG_DATASET=dataset-p4-4Fs-size0
 CONFIG_TRAIN=train-p4-cnn-mdn
@@ -15,9 +15,7 @@ CONFIG_TRAIN=train-p4-cnn-mdn
 TRAIN_FILE_NAME=train_L0_p4a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
-
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0

@@ -32,6 +32,7 @@ from neural_nets.embedding_nets_p4 import (
     CNN_FC,
     CNN_FC2,
 )
+from utils.dataset import update_prior_min_max
 
 
 class Solver:
@@ -150,23 +151,17 @@ class Solver:
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # prior
-        if not ignore_ss:
-            self.unnormed_prior_min = self.config.prior.prior_min
-            self.unnormed_prior_max = self.config.prior.prior_max
-        else:
-            self.unnormed_prior_min = (
-                self.config.prior.prior_min[:1] + self.config.prior.prior_min[3:]
-            )
-            self.unnormed_prior_max = (
-                self.config.prior.prior_max[:1] + self.config.prior.prior_max[3:]
-            )
-
-        if self.config.prior.normalize:
-            self.prior_min = np.zeros_like(self.unnormed_prior_min)
-            self.prior_max = np.ones_like(self.unnormed_prior_max)
-        else:
-            self.prior_min = self.unnormed_prior_min
-            self.prior_max = self.unnormed_prior_max
+        (
+            self.prior_min,
+            self.prior_max,
+            unnormed_prior_min,
+            unnormed_prior_max,
+        ) = update_prior_min_max(
+            prior_min=self.config.prior.prior_min,
+            prior_max=self.config.prior.prior_max,
+            ignore_ss=self.config.prior.ignore_ss,
+            normalize=self.config.prior.normalize,
+        )
 
         self.prior = utils.torchutils.BoxUniform(  # type: ignore
             low=np.array(self.prior_min, dtype=np.float32),
@@ -174,8 +169,9 @@ class Solver:
             device=self.device,
         )
 
-        print(f"prior min before norm: {self.unnormed_prior_min}")
-        print(f"prior max before norm: {self.unnormed_prior_max}")
+        if self.config.prior.normalize:
+            print(f"prior min before norm: {unnormed_prior_min}")
+            print(f"prior max before norm: {unnormed_prior_max}")
         print(f"prior min: {self.prior_min}")
         print(f"prior max: {self.prior_max}")
 

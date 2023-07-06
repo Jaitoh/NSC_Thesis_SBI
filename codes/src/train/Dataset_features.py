@@ -104,8 +104,7 @@ class Feature_Dataset(Dataset):
             self.theta = torch.cat((self.theta[:, :, :1], self.theta[:, :, 3:]), dim=-1)
 
         if normalize_theta:
-            num_theta = self.theta.shape[-1]
-            for i in range(num_theta):
+            for i in range(self.theta.shape[-1]):
                 self.theta[:, :, i] = (self.theta[:, :, i] - unnormed_prior_min[i]) / (
                     unnormed_prior_max[i] - unnormed_prior_min[i]
                 )

@@ -8,7 +8,7 @@ defaults:
   - train: train-p4-cnn-mdn
 
 pipeline_version: p4
-log_dir: ./src/train/logs/train_L0_p4/p4a-4Fs-cnn-test
+log_dir: ./src/train/logs/train_L0_p4a/p4a-4Fs-cnn-Tnorm-test
 
 data_path: /home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 # data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
