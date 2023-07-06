@@ -81,6 +81,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             concatenate_feature_types=config.dataset.concatenate_feature_types,
             concatenate_along_M=config.dataset.concatenate_along_M,
             ignore_ss=config.prior.ignore_ss,
+            normalize_theta=config.prior.normalize,
         )
 
         print("\n[validation] sets", end=" ")
@@ -92,6 +93,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             concatenate_feature_types=config.dataset.concatenate_feature_types,
             concatenate_along_M=config.dataset.concatenate_along_M,
             ignore_ss=config.prior.ignore_ss,
+            normalize_theta=config.prior.normalize,
         )
 
         # prepare train, val, test dataloader

@@ -8,7 +8,7 @@ CLUSTER=t4-1
 ROOT_DIR="/home/ubuntu/tmp/NSC"
 
 RUN_ID=p4a-4Fs-cnn-ignore_ss
-CONFIG_PRIOR=prior-1
+CONFIG_PRIOR=prior-2
 CONFIG_DATASET=dataset-p4-4Fs-size0
 CONFIG_TRAIN=train-p4-cnn-mdn
 

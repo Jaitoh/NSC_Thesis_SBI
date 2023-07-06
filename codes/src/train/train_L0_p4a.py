@@ -151,15 +151,22 @@ class Solver:
 
         # prior
         if not ignore_ss:
-            self.prior_min = self.config.prior.prior_min
-            self.prior_max = self.config.prior.prior_max
+            self.unnormed_prior_min = self.config.prior.prior_min
+            self.unnormed_prior_max = self.config.prior.prior_max
         else:
-            self.prior_min = (
+            self.unnormed_prior_min = (
                 self.config.prior.prior_min[:1] + self.config.prior.prior_min[3:]
             )
-            self.prior_max = (
+            self.unnormed_prior_max = (
                 self.config.prior.prior_max[:1] + self.config.prior.prior_max[3:]
             )
+
+        if self.config.prior.normalize:
+            self.prior_min = np.zeros_like(self.unnormed_prior_min)
+            self.prior_max = np.ones_like(self.unnormed_prior_max)
+        else:
+            self.prior_min = self.unnormed_prior_min
+            self.prior_max = self.unnormed_prior_max
 
         self.prior = utils.torchutils.BoxUniform(  # type: ignore
             low=np.array(self.prior_min, dtype=np.float32),
@@ -167,6 +174,8 @@ class Solver:
             device=self.device,
         )
 
+        print(f"prior min before norm: {self.unnormed_prior_min}")
+        print(f"prior max before norm: {self.unnormed_prior_max}")
         print(f"prior min: {self.prior_min}")
         print(f"prior max: {self.prior_max}")
 

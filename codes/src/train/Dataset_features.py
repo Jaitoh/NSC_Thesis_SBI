@@ -27,6 +27,9 @@ class Feature_Dataset(Dataset):
         concatenate_feature_types=[1, 3, 4, 5],
         concatenate_along_M=True,
         ignore_ss=False,
+        normalize_theta=False,
+        unnormed_prior_min=None,
+        unnormed_prior_max=None,
     ):
         """
         The resulting dataset
@@ -99,6 +102,13 @@ class Feature_Dataset(Dataset):
                 )
         if ignore_ss:
             self.theta = torch.cat((self.theta[:, :, :1], self.theta[:, :, 3:]), dim=-1)
+
+        if normalize_theta:
+            num_theta = self.theta.shape[-1]
+            for i in range(num_theta):
+                self.theta[:, :, i] = (self.theta[:, :, i] - unnormed_prior_min[i]) / (
+                    unnormed_prior_max[i] - unnormed_prior_min[i]
+                )
 
         if concatenate_along_M:
             self.x = self.x.view(n_sets, n_T, C, M * n_features)
