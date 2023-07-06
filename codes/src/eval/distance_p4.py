@@ -356,7 +356,8 @@ def main(_config):
         ax13.legend()
 
         fig.tight_layout()
-        fig_name = f"{OUT_DIR}/fig/estimation_evaluation_{i}.png"
+        EXP_ID = str(config.exp_id).split("/")[-1]
+        fig_name = f"{OUT_DIR}/fig/{EXP_ID}-eval_{i}.png"
         fig.savefig(fig_name)
 
 

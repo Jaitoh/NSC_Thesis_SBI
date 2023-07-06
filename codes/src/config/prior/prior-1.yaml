@@ -3,4 +3,4 @@ num_prior_sample: 5000
 prior_min       : [-2.5,   0,  0,  -11]
 prior_max       : [ 2.5,  77, 18,   10]
 prior_labels    : ['bias', 'sigma2a', 'sigma2s', 'L0']
-ignore_ss       : False  # true: ignore the sigma2a sigma2s parameter
+ignore_ss       : True  # true ignore the sigma2a sigma2s parameter

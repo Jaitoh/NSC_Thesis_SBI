@@ -26,6 +26,7 @@ class Feature_Dataset(Dataset):
         partial_C=10,
         concatenate_feature_types=[1, 3, 4, 5],
         concatenate_along_M=True,
+        ignore_ss=False,
     ):
         """
         The resulting dataset
@@ -96,6 +97,8 @@ class Feature_Dataset(Dataset):
                 self.theta[idx_set] = torch.from_numpy(
                     f[set_name]["theta"][range_T[0] : range_T[1], :]
                 )
+        if ignore_ss:
+            self.theta = torch.cat((self.theta[:, :, :1], self.theta[:, :, 3:]), dim=-1)
 
         if concatenate_along_M:
             self.x = self.x.view(n_sets, n_T, C, M * n_features)
@@ -109,7 +112,9 @@ class Feature_Dataset(Dataset):
 
         # get the idxs for each sample
         indices = torch.arange(self.total_samples)
-        self.set_idxs, self.T_idxs, self.C_idxs = unravel_index(indices, (n_sets, n_T, C))
+        self.set_idxs, self.T_idxs, self.C_idxs = unravel_index(
+            indices, (n_sets, n_T, C)
+        )
 
     def __len__(self):
         return self.total_samples
@@ -121,7 +126,9 @@ class Feature_Dataset(Dataset):
 
 def main(concatenate_feature_types=[3], num_train_sets=90):
     data_path = "/mnt/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-    data_path = "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+    data_path = (
+        "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+    )
     data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     f = h5py.File(data_path, "r")
     sets = list(f.keys())
@@ -170,7 +177,9 @@ def main(concatenate_feature_types=[3], num_train_sets=90):
         for value in len_feature_each_type:
             color = "k" if value == len_feature_each_type[-1] else "grey"
             plt.axvline(
-                value_accumulate := value_accumulate + value, color=color, linestyle="--"
+                value_accumulate := value_accumulate + value,
+                color=color,
+                linestyle="--",
             )
 
     # set boarder width to 3

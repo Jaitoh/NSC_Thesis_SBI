@@ -14,19 +14,33 @@ class CNN_FC2(nn.Module):
     def __init__(self, input_feature_length):
         super().__init__()
 
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=64, kernel_size=5, stride=1, padding=2)
+        self.conv1 = nn.Conv1d(
+            in_channels=1, out_channels=64, kernel_size=5, stride=1, padding=2
+        )
         self.pool1 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2)
+        self.conv2 = nn.Conv1d(
+            in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2
+        )
         self.pool2 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=5, stride=1, padding=2)
+        self.conv3 = nn.Conv1d(
+            in_channels=128, out_channels=256, kernel_size=5, stride=1, padding=2
+        )
         self.pool3 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv4 = nn.Conv1d(in_channels=256, out_channels=512, kernel_size=5, stride=1, padding=2)
+        self.conv4 = nn.Conv1d(
+            in_channels=256, out_channels=512, kernel_size=5, stride=1, padding=2
+        )
         self.pool4 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv5 = nn.Conv1d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv1d(
+            in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=2
+        )
         self.pool5 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv6 = nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=5, stride=1, padding=2)
+        self.conv6 = nn.Conv1d(
+            in_channels=1024, out_channels=512, kernel_size=5, stride=1, padding=2
+        )
         self.pool6 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv7 = nn.Conv1d(in_channels=512, out_channels=256, kernel_size=5, stride=1, padding=2)
+        self.conv7 = nn.Conv1d(
+            in_channels=512, out_channels=256, kernel_size=5, stride=1, padding=2
+        )
         self.pool7 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
         self.fc1 = nn.Linear(256 * math.ceil(input_feature_length / 2**7), 1024)
@@ -67,11 +81,17 @@ class Multi_Channel_CNN_FC(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv1d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv1d(
+            in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1
+        )
         self.pool1 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv1d(
+            in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1
+        )
         self.pool2 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv1d(
+            in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1
+        )
         self.pool3 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
         self.fc1 = nn.Linear(7168, 1024)
@@ -128,15 +148,22 @@ class CNN_FC(nn.Module):
     def __init__(self, input_feature_length):
         super().__init__()
 
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv1d(
+            in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1
+        )
         self.pool1 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv1d(
+            in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1
+        )
         self.pool2 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv1d(
+            in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1
+        )
         self.pool3 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
         self.fc1 = nn.Linear(256 * math.ceil(input_feature_length / 8), 1024)
-        self.fc2 = nn.Linear(1024, 256)
+        self.fc2 = nn.Linear(1024, 512)
+        self.fc3 = nn.Linear(512, 256)
 
         kaiming_weight_initialization(self.named_parameters())
 
@@ -152,7 +179,8 @@ class CNN_FC(nn.Module):
 
         x = x.view(x.size(0), -1)  # [B, 256*M*28]
         x = F.relu(self.fc1(x))  # [B, 1024]
-        x = F.relu(self.fc2(x))  # [B, 256]
+        x = F.relu(self.fc2(x))  # [B, 512]
+        x = F.relu(self.fc3(x))  # [B, 256]
 
         return x
 
@@ -161,11 +189,17 @@ class Multi_Channel_CNN_FC(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv1d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv1d(
+            in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1
+        )
         self.pool1 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv1d(
+            in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1
+        )
         self.pool2 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv1d(
+            in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1
+        )
         self.pool3 = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
         self.fc1 = nn.Linear(7168, 1024)
@@ -299,7 +333,9 @@ class Multi_Head_GRU_FC(nn.Module):
         self.feature_lengths = feature_lengths
 
         # Initialize GRUs for each feature
-        self.grus = nn.ModuleList([nn.GRU(input_size, hidden_size, num_layers) for _ in feature_lengths])
+        self.grus = nn.ModuleList(
+            [nn.GRU(input_size, hidden_size, num_layers) for _ in feature_lengths]
+        )
 
         # Initialize FC layers
         self.fc1 = nn.Linear(hidden_size * len(feature_lengths), 512)
@@ -316,7 +352,9 @@ class Multi_Head_GRU_FC(nn.Module):
 
         # Pass each feature through its corresponding GRU and get the last timestamp output
         # -> [B, 512], [B, 512], ...
-        xs = [self.grus[i](xs[i])[0][:, -1, :] for i in range(len(self.feature_lengths))]
+        xs = [
+            self.grus[i](xs[i])[0][:, -1, :] for i in range(len(self.feature_lengths))
+        ]
 
         # Concatenate the features
         # -> [B, 512 * len(feature_lengths)]

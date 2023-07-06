@@ -80,6 +80,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             partial_C=config.dataset.partial_C,
             concatenate_feature_types=config.dataset.concatenate_feature_types,
             concatenate_along_M=config.dataset.concatenate_along_M,
+            ignore_ss=config.prior.ignore_ss,
         )
 
         print("\n[validation] sets", end=" ")
@@ -90,6 +91,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             partial_C=config.dataset.partial_C,
             concatenate_feature_types=config.dataset.concatenate_feature_types,
             concatenate_along_M=config.dataset.concatenate_along_M,
+            ignore_ss=config.prior.ignore_ss,
         )
 
         # prepare train, val, test dataloader
@@ -405,7 +407,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             #     break
             epoch += 1
 
-        del train_dataloader, train_dataset
+        del train_dataloader
         clean_cache()
 
         info = f"""
@@ -484,6 +486,10 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
     def _posterior_behavior_log(self, limits, epoch):
         config = self.config
+        if config.prior.ignore_ss:
+            prior_labels = config.prior.prior_labels[:1] + config.prior.prior_labels[3:]
+        else:
+            prior_labels = config.prior.prior_labels
 
         with torch.no_grad():
             current_net = deepcopy(self._neural_net)
@@ -505,7 +511,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                     x=self.seen_data_for_posterior["x"][fig_idx].to(self._device),
                     true_params=self.seen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
-                    prior_labels=config.prior.prior_labels,
+                    prior_labels=prior_labels,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
@@ -520,7 +526,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                     x=self.unseen_data_for_posterior["x"][fig_idx].to(self._device),
                     true_params=self.unseen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
-                    prior_labels=config.prior.prior_labels,
+                    prior_labels=prior_labels,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
