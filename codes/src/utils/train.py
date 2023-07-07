@@ -24,6 +24,20 @@ def train_inference_helper(inference, **kwargs):
     return inference.train(**kwargs)
 
 
+def load_net(continue_from_checkpoint, neural_net, device):
+    print(f"loading neural net from '{continue_from_checkpoint}'")
+    if str(continue_from_checkpoint).endswith("check_point.pt"):
+        neural_net.load_state_dict(
+            torch.load(continue_from_checkpoint, map_location=device).state_dict()
+        )
+
+    else:
+        neural_net.load_state_dict(
+            torch.load(continue_from_checkpoint, map_location=device)
+        )
+    return neural_net
+
+
 class WarmupScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, warmup_epochs, init_lr, target_lr, last_epoch=-1):
         self.warmup_epochs = warmup_epochs
@@ -35,7 +49,8 @@ class WarmupScheduler(torch.optim.lr_scheduler._LRScheduler):
         if self.last_epoch < self.warmup_epochs:
             return [
                 self.init_lr
-                + (self.target_lr - self.init_lr) * (self.last_epoch / self.warmup_epochs)
+                + (self.target_lr - self.init_lr)
+                * (self.last_epoch / self.warmup_epochs)
                 for _ in self.base_lrs
             ]
         else:

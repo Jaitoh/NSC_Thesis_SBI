@@ -13,6 +13,7 @@ import sys
 sys.path.append("./src")
 sys.path.append("../../src")
 from dataset.data_process import process_x_seqC_part
+from utils.dataset import process_theta
 
 
 def generate_permutations(N, K):
@@ -45,7 +46,9 @@ def unravel_index(index, shape):
 
 
 def apply_advanced_indexing_along_dim1(tensor, indices):
-    idx0 = torch.arange(tensor.size(0))[:, None].expand(indices.size(0), indices.size(1))
+    idx0 = torch.arange(tensor.size(0))[:, None].expand(
+        indices.size(0), indices.size(1)
+    )
     return tensor[idx0, indices]
 
 
@@ -72,7 +75,9 @@ def choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mod
 
     # choose randomly num_chosen_theta_each_set from all the theta in the set
     if theta_chosen_mode == "random":
-        theta_idx = np.random.choice(max_theta_in_a_set, num_chosen_theta_each_set, replace=False)
+        theta_idx = np.random.choice(
+            max_theta_in_a_set, num_chosen_theta_each_set, replace=False
+        )
         return np.sort(theta_idx), len(theta_idx)
 
     # choose first 80% as training set from num_chosen_theta_each_set
@@ -84,7 +89,9 @@ def choose_theta(num_chosen_theta_each_set, max_theta_in_a_set, theta_chosen_mod
     # choose last 20% as validation set from num_chosen_theta_each_set
     elif theta_chosen_mode.startswith("last"):  # last_20
         percentage = 1 - eval(theta_chosen_mode[-2:]) / 100
-        theta_idx = np.arange(int(num_chosen_theta_each_set * percentage), num_chosen_theta_each_set)
+        theta_idx = np.arange(
+            int(num_chosen_theta_each_set * percentage), num_chosen_theta_each_set
+        )
         return theta_idx, len(theta_idx)
 
     else:
@@ -167,8 +174,12 @@ class probR_HighD_Sets(Dataset):
             dur_list.index(dur) for dur in chosen_dur
         ]  # mapping from [3, 5, 7, 9, 11, 13, 15] to [0, 1, 2, 3, 4, 5, 6]
         chosen_D = len(chosen_dur) if crop_dur else D
-        self.seqC_all = np.empty((len(chosen_set_names), chosen_D, M, S, L_seqC))  # (n_set, D, M, S, L)
-        self.theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4))  # (n_set, T, 4)
+        self.seqC_all = np.empty(
+            (len(chosen_set_names), chosen_D, M, S, L_seqC)
+        )  # (n_set, D, M, S, L)
+        self.theta_all = np.empty(
+            (len(chosen_set_names), num_chosen_theta_each_set, 4)
+        )  # (n_set, T, 4)
         self.probR_all = np.empty(
             (len(chosen_set_names), chosen_D, M, S, num_chosen_theta_each_set, 1)
         )  # (n_set, D, M, S, T, 1)
@@ -187,7 +198,9 @@ class probR_HighD_Sets(Dataset):
                 else f[set_name]["probR"][:, :, :, chosen_theta_idx]
             )  # (D, M, S, T)
 
-            self.theta_all[set_idx] = f[set_name]["theta"][:][chosen_theta_idx, :]  # (T, 4)
+            self.theta_all[set_idx] = f[set_name]["theta"][:][
+                chosen_theta_idx, :
+            ]  # (T, 4)
             self.seqC_all[set_idx] = seqC_data
             self.probR_all[set_idx] = probR_data
             del seqC_data, probR_data
@@ -214,11 +227,17 @@ class probR_HighD_Sets(Dataset):
             .to(torch.float32)
             .contiguous()
         )  # (n_set, DM, S, T)
-        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()  # (n_set, T, 4)
+        self.theta_all = (
+            torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
+        )  # (n_set, T, 4)
 
-    def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name):
+    def _get_seqC_data(
+        self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name
+    ):
         seqC = (
-            f[set_name]["seqC"][chosen_dur_idx, :, :, :] if crop_dur else f[set_name]["seqC"][:]
+            f[set_name]["seqC"][chosen_dur_idx, :, :, :]
+            if crop_dur
+            else f[set_name]["seqC"][:]
         )  # (D, M, S, L)
         return process_x_seqC_part(
             seqC=seqC,
@@ -250,7 +269,9 @@ class probR_HighD_Sets(Dataset):
         probR   (DM, S, 1)
         """
 
-        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set)  # faset than unravel_index indexing
+        set_idx, theta_idx = divmod(
+            idx, self.num_chosen_theta_each_set
+        )  # faset than unravel_index indexing
 
         # set_idx, theta_idx = self.set_idxs[idx], self.theta_idxs[idx]
 
@@ -311,7 +332,9 @@ class probR_2D_Sets(probR_HighD_Sets):
         return self.total_samples
 
     def __getitem__(self, idx):
-        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set)  # faset than unravel_index indexing
+        set_idx, theta_idx = divmod(
+            idx, self.num_chosen_theta_each_set
+        )  # faset than unravel_index indexing
         # set_idx, theta_idx = self.set_idxs[idx], self.theta_idxs[idx]
 
         seqC = self.seqC_all[set_idx]
@@ -392,7 +415,9 @@ class chR_HighD_Dataset(probR_HighD_Sets):
             .repeat_interleave(self.C, dim=-1)
         )
         # chR_all (num_chosen_sets, DM, S, T, C, 1)
-        self.chR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).to("cpu").contiguous()
+        self.chR_all = (
+            torch.bernoulli(self.probR_all).unsqueeze(-1).to("cpu").contiguous()
+        )
         print(f"in {(time.time()-time_start)/60:.2f}min")
         del self.probR_all
         torch.cuda.empty_cache()
@@ -403,7 +428,9 @@ class chR_HighD_Dataset(probR_HighD_Sets):
         # self.permutations = generate_permutations(self.C*self.T*len(chosen_set_names)*self.DM, self.S).contiguous() # (C*T*Set*DM, S) #TODO use this way to shuffle
         # TODO: maybe wrong, current is (TC, s), different head share the same shuffling method
         if permutation_mode == "offline":
-            self.permutations = generate_permutations(self.total_samples, self.S).contiguous()
+            self.permutations = generate_permutations(
+                self.total_samples, self.S
+            ).contiguous()
 
         self.seqC_all = self.seqC_all.contiguous()  # (num_chosen_sets, DM, S, 15)
         self.theta_all = self.theta_all  # (num_chosen_sets, T, 4)
@@ -424,10 +451,14 @@ class chR_HighD_Dataset(probR_HighD_Sets):
         set_idx, T_idx, C_idx = self.set_idxs[idx], self.T_idxs[idx], self.C_idxs[idx]
         # set_idx, theta_idx, probR_sample_idx = self.set_idxs[idx], self.theta_idxs[idx], self.probR_sample_idxs[idx]
 
-        x = torch.empty((self.DM, self.S, self.seqC_all.shape[-1] + 1), dtype=torch.float32)
+        x = torch.empty(
+            (self.DM, self.S, self.seqC_all.shape[-1] + 1), dtype=torch.float32
+        )
         # TODO more complex shuffling methods? currently along S axis
         x[:, :, : self.seqC_all.shape[-1]] = self.seqC_all[set_idx]  # (DM, S, 15)
-        x[:, :, self.seqC_all.shape[-1] :] = self.chR_all[set_idx, :, :, T_idx, C_idx, :]  # (DM, S, 1)
+        x[:, :, self.seqC_all.shape[-1] :] = self.chR_all[
+            set_idx, :, :, T_idx, C_idx, :
+        ]  # (DM, S, 1)
 
         # shuffle along S
         if self.permutation_mode == "offline":
@@ -460,6 +491,10 @@ class chR_2D_Dataset(chR_HighD_Dataset):
         summary_type="0",
         permutation_mode="online",
         num_probR_sample=100,
+        ignore_ss=False,
+        normalize_theta=False,
+        unnormed_prior_min=None,
+        unnormed_prior_max=None,
     ):
         super().__init__(
             data_path=data_path,
@@ -478,9 +513,20 @@ class chR_2D_Dataset(chR_HighD_Dataset):
         self.DMS = DM * S
 
         if permutation_mode == "offline":  # (nSets*TC, DMS)
-            self.permutations = generate_permutations(self.total_samples, DM * S).contiguous()
+            self.permutations = generate_permutations(
+                self.total_samples, DM * S
+            ).contiguous()
 
         self.permutation_mode = permutation_mode
+
+        # process theta [nSets, TC, 4]
+        self.theta = process_theta(
+            self.theta,
+            ignore_ss=ignore_ss,
+            normalize_theta=normalize_theta,
+            unnormed_prior_min=unnormed_prior_min,
+            unnormed_prior_max=unnormed_prior_max,
+        )
 
     def __len__(self):
         return self.total_samples
@@ -585,7 +631,9 @@ def collate_fn_vec_high_dim(batch, config, shuffling_method=0, debug=False):
     seqC_batch, theta_batch, probR_batch = map(torch.stack, zip(*batch))
 
     if debug:
-        print(f"collate_fn_vec_high_dim: dataloading {(time.time() - start_time_0)*1000:.2f} ms")
+        print(
+            f"collate_fn_vec_high_dim: dataloading {(time.time() - start_time_0)*1000:.2f} ms"
+        )
 
     # del batch, seqC, theta, probR
 
@@ -599,12 +647,16 @@ def collate_fn_vec_high_dim(batch, config, shuffling_method=0, debug=False):
     probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, DM, S, 1)
 
     # bernouli sampling choice, and concatenate x_seqC and x_choice
-    x_batch = torch.cat([seqC_batch, probR_batch.bernoulli_()], dim=-1)  # (C*B, DM, S, 16)
+    x_batch = torch.cat(
+        [seqC_batch, probR_batch.bernoulli_()], dim=-1
+    )  # (C*B, DM, S, 16)
     del probR_batch, seqC_batch
     gc.collect()
 
     if debug:
-        print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
+        print(
+            f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms"
+        )
         start_time = time.time()
 
     # Shuffle x along the 3rd axis S, using advanced indexing
@@ -689,12 +741,16 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # probR_batch.bernoulli_() # (C*B, D*M*S, 1)
 
         # Concatenate x_seqC and x_choice
-        x_batch = torch.cat([seqC_batch, probR_batch.bernoulli_()], dim=-1)  # (C*B, D*M*S, 16)
+        x_batch = torch.cat(
+            [seqC_batch, probR_batch.bernoulli_()], dim=-1
+        )  # (C*B, D*M*S, 16)
         del probR_batch, seqC_batch
         gc.collect()
 
         if debug:
-            print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
+            print(
+                f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms"
+            )
             start_time = time.time()
 
         # Shuffle x along the 2nd axis
@@ -725,7 +781,9 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # del x_batch
 
         if debug:
-            print(f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
+            print(
+                f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms"
+            )
             start_time = time.time()
 
             # permutations = torch.stack([torch.randperm(DMS) for _ in range(B*C)])
@@ -786,7 +844,9 @@ def collate_fn(batch, config, debug=False):
     )
     theta_batch = torch.empty((C * len(batch), batch[0][1].shape[0]))
 
-    for i, (seqC, theta, probR) in enumerate(batch):  # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
+    for i, (seqC, theta, probR) in enumerate(
+        batch
+    ):  # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
         probR = probR.unsqueeze_(dim=0).repeat_interleave(C, dim=0)  # (C, D*M*S, 1)
         x_seqC = seqC.unsqueeze_(dim=0).repeat_interleave(C, dim=0)  # (C, D*M*S, 15)
         x_choice = torch.bernoulli(probR)  # (C, D*M*S, 1)
@@ -803,7 +863,9 @@ def collate_fn(batch, config, debug=False):
     if debug:
         start_time = time.time()
     # Shuffle x along the 2nd axis
-    x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
+    x_batch = torch.stack(
+        [x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])]
+    )
     if debug:
         print(f"collate_fn: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
 
@@ -815,7 +877,9 @@ def collate_fn(batch, config, debug=False):
     theta_batch = theta_batch[indices]
     if debug:
         print(f"collate_fn: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
-        print(f"collate_fn: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
+        print(
+            f"collate_fn: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms"
+        )
 
     return x_batch.to(torch.float32), theta_batch.to(torch.float32)
 

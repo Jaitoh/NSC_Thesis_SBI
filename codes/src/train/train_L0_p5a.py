@@ -1,9 +1,7 @@
-""" training pipeline p4
-features: offline hand-crafted features
-training: one round
-ignore the 2nd and 3rd parameter ss
+""" training pipeline p5
+rebuild the pipeline of training
+this time using network parsing the relationship between seqC and chR
 """
-
 import os
 import sys
 import torch
@@ -18,20 +16,11 @@ from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
 
 sys.path.append("./src")
-from train.MyPosteriorEstimator_p4 import MySNPE_C_P4
+from train.MyPosteriorEstimator_p5 import MySNPE_C_P5
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
-from neural_nets.embedding_nets_p4 import (
-    GRU_FC,
-    Multi_Head_GRU_FC,
-    GRU3_FC,
-    LSTM3_FC,
-    MLP_FC,
-    Multi_Channel_CNN_FC,
-    CNN_FC,
-    CNN_FC2,
-)
+from neural_nets.embedding_nets_p5 import GRU3_FC, Conv_LSTM, Conv_Transformer
 from utils.dataset import update_prior_min_max
 
 
@@ -46,7 +35,7 @@ class Solver:
         print_cuda_info(self.device)
 
         # get experiement settings
-        self.D = len(self.config.experiment_settings.chosen_dur_list)
+        self.D = len(self.config.dataset.chosen_dur_list)
         self.M = len(self.config.experiment_settings.chosen_MS_list)
         self.S = self.config.experiment_settings.seqC_sample_per_MS
         self.DMS = self.D * self.M * self.S
@@ -69,45 +58,17 @@ class Solver:
 
     def get_neural_posterior(self):
         config_density = self.config.train.density_estimator
-        concatenate_along_M = self.config.dataset.concatenate_along_M
 
-        num_layers = 1
-        input_size = 1 if concatenate_along_M else self.M
-        hidden_size = config_density.embedding_net.hidden_size
-
-        input_feature_length = np.sum(self.config.dataset.feature_lengths) * self.M
         print(f"\n=== embedding net === \n{config_density.embedding_net.type}")
         match config_density.embedding_net.type:
-            case "mlp":
-                embedding_net = MLP_FC(input_feature_length)
-
-            case "cnn":
-                embedding_net = CNN_FC(input_feature_length)
-
-            case "cnn2":
-                embedding_net = CNN_FC2(input_feature_length)
-
-            case "mch_cnn":
-                embedding_net = Multi_Channel_CNN_FC()
-
-            case "gru_fc":
-                embedding_net = GRU_FC(input_size, hidden_size, num_layers)
-
             case "gru3_fc":
-                embedding_net = GRU3_FC(input_size, num_layers)
+                embedding_net = GRU3_FC(self.DMS)
 
-            case "lstm3_fc":
-                embedding_net = LSTM3_FC(input_size, num_layers)
+            case "conv_transformer":
+                embedding_net = Conv_Transformer(self.DMS)
 
-            case "multi_head_gru_fc":
-                if not concatenate_along_M:  # [B, F1+F2+..., M]
-                    feature_lengths = list(self.config.dataset.feature_lengths)
-                else:  # [B, F1+F2+F3 + F1+F2+F3 + F1+F2+F3 ..., 1]
-                    feature_lengths = self.M * list(self.config.dataset.feature_lengths)
-                print(f"{len(feature_lengths)} heads")
-                embedding_net = Multi_Head_GRU_FC(
-                    feature_lengths, input_size, hidden_size, num_layers
-                )
+            case "conv_lstm":
+                embedding_net = Conv_LSTM(self.DMS)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
@@ -121,7 +82,7 @@ class Solver:
 
         return neural_posterior
 
-    def init_inference(self, ignore_ss=True):
+    def init_inference(self, ignore_ss=False):
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # prior
@@ -151,7 +112,7 @@ class Solver:
 
         # get neural posterior
         neural_posterior = self.get_neural_posterior()
-        self.inference = MySNPE_C_P4(
+        self.inference = MySNPE_C_P5(
             prior=self.prior,
             density_estimator=neural_posterior,
             device=self.device,
@@ -159,7 +120,6 @@ class Solver:
             summary_writer=writer,
             show_progress_bars=True,
         )
-        return self.inference
 
     def sbi_train(self, debug=False):
         # initialize inference
@@ -181,14 +141,14 @@ class Solver:
             debug=debug,
         )
 
-        # save model
+        # # save model
         # torch.save(
         #     deepcopy(density_estimator.state_dict()),
         #     f"{self.log_dir}/model/a_final_best_model_state_dict.pt",
         # )
 
 
-@hydra.main(config_path="../config", config_name="config-p4-test", version_base=None)
+@hydra.main(config_path="../config", config_name="config-p5-test", version_base=None)
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")

@@ -31,7 +31,7 @@ from sbi.utils import (
 sys.path.append("./src")
 from utils.set_seed import setup_seed, seed_worker
 from train.Dataset_features import Feature_Dataset
-from utils.train import WarmupScheduler, plot_posterior_with_label
+from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.setup import clean_cache
 from utils.dataset import update_prior_min_max
 
@@ -117,7 +117,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 len(train_dataset),
                 len(valid_dataset),
             ),
-            "drop_last": True,
+            "drop_last": False,
             "shuffle": True,
             "pin_memory": config_dataset.pin_memory,
             "num_workers": config_dataset.num_workers,
@@ -130,6 +130,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         g.manual_seed(config.seed)
 
         train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
+        loader_kwargs["drop_last"] = True
         valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
 
         # collect posterior sets
@@ -171,18 +172,11 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
             # load network from state dict if specified
             if continue_from_checkpoint != None and continue_from_checkpoint != "":
-                print(f"loading neural net from '{continue_from_checkpoint}'")
-                if str(continue_from_checkpoint).endswith("check_point.pt"):
-                    self._neural_net.load_state_dict(
-                        torch.load(
-                            continue_from_checkpoint, map_location=device
-                        ).state_dict()
-                    )
-
-                else:
-                    self._neural_net.load_state_dict(
-                        torch.load(continue_from_checkpoint, map_location=device)
-                    )
+                self._neural_net = load_net(
+                    continue_from_checkpoint,
+                    self._neural_net,
+                    device=device,
+                )
 
         return (
             train_dataloader,
@@ -448,10 +442,10 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         # avoid keeping gradients in resulting network
         self._neural_net.zero_grad(set_to_none=True)
         # save best model
-        torch.save(
-            deepcopy(self._neural_net.state_dict()),
-            os.path.join(self.config.log_dir, f"model/best_model.pt"),
-        )
+        # torch.save(
+        #     deepcopy(self._neural_net.state_dict()),
+        #     os.path.join(self.config.log_dir, f"model/best_model.pt"),
+        # )
 
         self._plot_training_curve()
 
@@ -649,7 +643,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         all_probs = np.concatenate([train_log_probs, valid_log_probs])
         upper = np.max(all_probs)
-        lower = -1 * np.percentile(np.abs(all_probs), 80, axis=0)
+        lower = np.percentile(all_probs, 10)
         ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
         ax3.set_xlabel("epochs")
         ax3.set_ylabel("log_prob")
