@@ -530,7 +530,9 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
-                fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_up_to_date.png"
+                fig_path = (
+                    f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
+                )
                 plt.savefig(fig_path)
                 plt.close(fig_x)
                 del fig_x, _
@@ -547,7 +549,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
-                fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_up_to_date.png"
+                fig_path = f"{self.log_dir}/posterior/posterior_unseen_{fig_idx}_up_to_date.png"
                 plt.savefig(fig_path)
                 plt.close(fig_x_val)
                 del fig_x_val, _
