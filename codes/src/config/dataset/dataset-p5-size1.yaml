@@ -9,7 +9,7 @@ summary_type: 0
 
 
 # ========== parameter settings for the probR ==========
-num_max_sets                : 40 #101 in total
+num_max_sets                : 20 #101 in total
 num_max_theta_each_set      : 500 #5000 in total
 
 chosen_dur_list             : [3, 9, 15]
@@ -20,7 +20,7 @@ num_probR_sample            : 25 #25
 
 
 # ========== data loader settings ==========
-batch_size                  : 2048 #=32*100
+batch_size                  : 128 #=32*100
 pin_memory                  : True
 num_workers                 : 4
 prefetch_factor             : 2

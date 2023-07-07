@@ -425,7 +425,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
             #     break
             epoch += 1
 
-        del train_dataloader, train_dataset
+        del train_dataloader  # , train_dataset
         clean_cache()
 
         info = f"""

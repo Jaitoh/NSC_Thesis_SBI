@@ -520,8 +520,8 @@ class chR_2D_Dataset(chR_HighD_Dataset):
         self.permutation_mode = permutation_mode
 
         # process theta [nSets, TC, 4]
-        self.theta = process_theta(
-            self.theta,
+        self.theta_all = process_theta(
+            self.theta_all,
             ignore_ss=ignore_ss,
             normalize_theta=normalize_theta,
             unnormed_prior_min=unnormed_prior_min,

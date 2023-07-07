@@ -22,6 +22,7 @@ def process_theta(
             theta[:, :, i] = (theta[:, :, i] - unnormed_prior_min[i]) / (
                 unnormed_prior_max[i] - unnormed_prior_min[i]
             )
+    return theta
 
 
 def update_prior_min_max(prior_min, prior_max, ignore_ss, normalize):
