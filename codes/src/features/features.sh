@@ -19,22 +19,27 @@
 
 # CLUSTER=snn
 CLUSTER=uzh
-RUN_ID=feature-Eset0
+RUN_ID=feature-Eset0-T500v2
 
 # DATA_PATH="/home/wehe/tmp/NSC/data/dataset/dataset_L0_eset_0_set100_T500.h5"
-DATA_PATH=/home/wehe/scratch/data/dataset-L0-Eset0-100sets-T500.h5
+# DATA_PATH=/home/ubuntu/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500v2.h5
+# FEAT_PATH=/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500v2-C100-set${SLURM_ARRAY_TASK_ID}.h5
+DATA_PATH=/home/wehe/scratch/data/dataset-L0-Eset0-100sets-T500v2.h5
+FEAT_PATH=/home/wehe/scratch/data/feature/v2/feature-L0-Eset0-100sets-T500v2-C100-set${SLURM_ARRAY_TASK_ID}.h5
 
-PRINT_DIR="./cluster/${CLUSTER}/dataset/"
-PRINT_LOG="./cluster/${CLUSTER}/dataset/${RUN_ID}-set${SLURM_ARRAY_TASK_ID}.log"
+PRINT_DIR="./cluster/${CLUSTER}/feature/"
+PRINT_LOG="./cluster/${CLUSTER}/feature/${RUN_ID}-set${SLURM_ARRAY_TASK_ID}.log"
 
 module load anaconda3
 source activate sbi
 
 echo "print_log: ${PRINT_LOG}"
+code ${PRINT_LOG}
 
 python3 -u ./src/dataset/features.py \
     --data_path ${DATA_PATH} \
-    --set_idx ${SLURM_ARRAY_TASK_ID} &>${PRINT_LOG}
+    --set_idx ${SLURM_ARRAY_TASK_ID} \
+    --feat_path ${FEAT_PATH} >${PRINT_LOG} 2>&1
 
 echo 'finished simulation'
 

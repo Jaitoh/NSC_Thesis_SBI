@@ -58,6 +58,8 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 # feature-L0-Eset0-100sets-T500-C100.h5 - June 28
 ./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /mnt/data/dataset/
 
+# dataset-L0-Eset0-100sets-T500v2.h5 - July 9
+./gdrive files download 1aN7hmzpOBd0OowAq9MXH848ntlp8DqIP --destination /home/ubuntu/tmp/NSC/data/dataset
 # log p4-4Fs-1D-cnn.tar.gz
 # ./gdrive files download 1nYVIZIU8ngv-cVUNNsdYQ4RgeFms0SHl --destination /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
 # cd /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
