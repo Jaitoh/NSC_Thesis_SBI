@@ -9,11 +9,12 @@ ROOT_DIR="/home/ubuntu/tmp/NSC"
 
 RUN_ID=p4a-4Fs-cnn-Tv2-0
 CONFIG_PRIOR=prior-v2-0
+
+RUN_ID=p4a-4Fs-cnn-Tv2-1
+CONFIG_PRIOR=prior-v2-1
+
 CONFIG_DATASET=dataset-p4-4Fs-size0
 CONFIG_TRAIN=train-p4-cnn-mdn
-
-# RUN_ID=p4a-4Fs-cnn-Tv2-1
-# CONFIG_PRIOR=prior-v2-1
 
 TRAIN_FILE_NAME=train_L0_p4a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
