@@ -55,11 +55,14 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 
 # dataset-L0-Eset0-100sets-T500.h5 - June 28
 ./gdrive files download 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG --destination /home/ubuntu/tmp/NSC/data/dataset
+./gdrive files download 1qPRmzw9bELYXAs5-FhgQv7VyeV6SFUbG --destination /c/Users/hwj/tmp/NSC/data/dataset
 # feature-L0-Eset0-100sets-T500-C100.h5 - June 28
 ./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /mnt/data/dataset/
+./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /c/Users/hwj/tmp/NSC/data/dataset
 
 # dataset-L0-Eset0-98sets-T500v2.h5 - July 9
 ./gdrive files download 1aN7hmzpOBd0OowAq9MXH848ntlp8DqIP --destination /home/ubuntu/tmp/NSC/data/dataset
+./gdrive.exe files download 1aN7hmzpOBd0OowAq9MXH848ntlp8DqIP --destination /c/Users/hwj/tmp/NSC/data/dataset
 
 # feature-L0-Eset0-98sets-T500v2.h5 - July 9
 ./gdrive files download 1Cw573UCNfDBPi7tm3ZIJ07sTMJyoyMB9 --destination /home/ubuntu/tmp/NSC/data/dataset
