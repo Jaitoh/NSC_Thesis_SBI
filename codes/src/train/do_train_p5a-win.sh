@@ -1,15 +1,14 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=0
-cd ~/tmp/NSC/codes
 source activate sbi
 
-CLUSTER=t4-2
-ROOT_DIR="/home/ubuntu/tmp/NSC"
+CLUSTER=win
+ROOT_DIR="/c/Users/hwj/tmp/NSC"
 cd ${ROOT_DIR}/codes
 
-RUN_ID=p5a-conv_lstm-Tv2-0
-CONFIG_PRIOR=prior-v2-0
+# RUN_ID=p5a-conv_lstm-Tv2-0
+# CONFIG_PRIOR=prior-v2-0
 CONFIG_DATASET=dataset-p5
 CONFIG_TRAIN=train-p5-conv_lstm-mdn
 
@@ -36,8 +35,10 @@ echo "print_log: ${PRINT_LOG}"
 echo "data_path: ${DATA_PATH}"
 
 code ${PRINT_LOG}
+source activate sbi
 
-nice python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
+# "D:\Program\Anaconda3\envs\sbi\python.exe"
+nice /d/Program/Anaconda3/envs/sbi/python.exe -u ./src/train/${TRAIN_FILE_NAME}.py \
     hydra.run.dir=${LOG_DIR} \
     experiment_settings=${CONFIG_EXP} \
     prior=${CONFIG_PRIOR} \
