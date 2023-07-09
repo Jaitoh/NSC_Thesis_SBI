@@ -5,20 +5,40 @@ seqC and cR
 """
 import h5py
 import os
+import argparse
 
-# feature_dir = "/home/wehe/tmp/NSC/data/dataset/"
-feature_dir = "/home/wehe/scratch/data/feature"
+# data_dir = "/home/wehe/tmp/NSC/data/dataset/"
+data_dir = "/home/wehe/scratch/data/feature/v2"
+merged_data_path = "feature-L0-Eset0-98sets-T500v2-C100.h5"
 
-# list all files in the feature_dir starting with "feature"
+parser = argparse.ArgumentParser(description="merge features")
+parser.add_argument(
+    "--data_dir",
+    type=str,
+    default=data_dir,
+    help="simulated feature subsets store/load dir",
+)
+parser.add_argument(
+    "--merged_data_path",
+    type=str,
+    default=merged_data_path,
+)
+args = parser.parse_args()
+
+data_dir = args.data_dir
+merged_data_path = args.merged_data_path
+
+# list all files in the data_dir starting with "feature"
 feature_files = [
-    os.path.join(feature_dir, f)
-    for f in os.listdir(feature_dir)
-    if os.path.isfile(os.path.join(feature_dir, f)) and f.startswith("feature")
+    os.path.join(data_dir, f)
+    for f in os.listdir(data_dir)
+    if os.path.isfile(os.path.join(data_dir, f)) and f.startswith("feature")
 ]
 feature_files.sort()
 print(feature_files)
 
-dest_file = os.path.join(feature_dir, "feature-L0-Eset0-100sets-T500-C100.h5")
+# dest_file = os.path.join(data_dir, merged_data_path)
+dest_file = merged_data_path
 
 f_dest = h5py.File(dest_file, "a")
 for i in range(len(feature_files)):
