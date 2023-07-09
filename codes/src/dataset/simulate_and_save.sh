@@ -1,14 +1,14 @@
-#!/bin/bash 
-### Comment lines start with ## or #+space 
-### Slurm option lines start with #SBATCH 
-### Here are the SBATCH parameters that you should always consider: 
+#!/bin/bash
+### Comment lines start with ## or #+space
+### Slurm option lines start with #SBATCH
+### Here are the SBATCH parameters that you should always consider:
 
 #SBATCH --array=274-500
 
-#SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds 
+#SBATCH --time=5-12:00:00 ## days-hours:minutes:seconds
 #SBATCH --ntasks=1
 
-#SBATCH --mem 22G
+#SBATCH --mem 4G
 #SBATCH --cpus-per-task=18
 
 #SBATCH --job-name=dataset
@@ -18,15 +18,15 @@
 # SLURM_ARRAY_TASK_ID=$1
 
 CLUSTER=uzh
-RUN_ID=exp_set_0
+RUN_ID=Eset0_priorV2
 
-CONFIG_SIMULATOR_PATH=./src/config/simulator/exp_set_0.yaml
-CONFIG_DATASET_PATH=./src/config/dataset/default.yaml
-CONFIG_TRAIN_PATH=./src/config/train/default.yaml
+CONFIG_EXP=exp-set-0
+CONFIG_PRIOR=prior-v2-0
+CONFIG_SIMULATOR=model-0
 
 if [ "${CLUSTER}" == "uzh" ]; then
-    DATA_PATH=/home/wehe/scratch/data/dataset/dataset_part_${SLURM_ARRAY_TASK_ID}.h5
-    DATA_DIR=/home/wehe/scratch/data/dataset/
+    DATA_PATH=/home/wehe/scratch/data/dataset/v2/dataset-L0-Eset0-100sets-T500v2-part_${SLURM_ARRAY_TASK_ID}.h5
+    DATA_DIR=/home/wehe/scratch/data/dataset/v2/
 else
     DATA_PATH=../data/dataset/dataset_part_${SLURM_ARRAY_TASK_ID}.h5
     DATA_DIR=../data/dataset/
@@ -42,17 +42,20 @@ source activate sbi
 echo "print_log: ${PRINT_LOG}"
 echo "SEED: ${SEED}"
 
-# mkdir -p $DATA_DIR
-# mkdir -p $PRINT_DIR
+mkdir -p $DATA_DIR
+mkdir -p $PRINT_DIR
 
 python3 -u ./src/dataset/simulate_and_save.py \
---seed ${SEED} \
---config_simulator_path ${CONFIG_SIMULATOR_PATH} \
---config_dataset_path ${CONFIG_DATASET_PATH} \
---config_train_path ${CONFIG_TRAIN_PATH} \
---log_dir ${PRINT_DIR} \
---run ${SLURM_ARRAY_TASK_ID} \
---data_path ${DATA_PATH} &> ${PRINT_LOG}
+    hydra.run.dir=${PRINT_DIR} \
+    experiment_settings=${CONFIG_EXP} \
+    prior=${CONFIG_PRIOR} \
+    simulator=${CONFIG_SIMULATOR} \
+    data_path=${DATA_PATH} \
+    seed=${SEED} \
+    log_dir=${PRINT_DIR} \
+    run=${SLURM_ARRAY_TASK_ID} \
+    data_path=${DATA_PATH} \
+    >${PRINT_LOG} 2>&1
 
 echo 'finished simulation'
 

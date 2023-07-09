@@ -17,6 +17,7 @@ import multiprocessing
 import argparse
 from joblib import Parallel, delayed
 from torch.utils.data import Dataset, DataLoader
+import cProfile
 
 
 # class Feature_Generator_Dataset(Dataset):
@@ -760,14 +761,17 @@ def compute_features(args):
 
 
 def feature_gen_for_whole_dataset_parallel_for_one_set(
-    data_path, feature_path, set_idx=0
+    data_path, feature_path, set_idx=0, debug=False
 ):
     """generate feature for the whole dataset"""
     # data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5"
     # feature_path = (
     #     "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100.h5"
     # )
-    C = 100
+    if debug:
+        C = 2
+    else:
+        C = 100
     torch.set_num_threads(1)
 
     # remove feature file if exists
@@ -789,7 +793,7 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
     print(f"in {(time.time() - start_time)/60:.2f} min")
 
     # sample probR to get chR, with 100 samples
-    print(f"chR generated ", end="")
+    print(f"chR generating ... ", end="")
     start_time = time.time()
     chR = torch.repeat_interleave(probR, C, dim=-1)
     chR = torch.bernoulli(chR)  # [D,M,S,T,C]
@@ -806,7 +810,7 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
     f_feature.create_group(group_name)
     f_feature[group_name].create_dataset("theta", data=theta)
 
-    print(f"{T*C} tasks to be done, update time interval 20s")
+    print(f"{T*C} feature extraction tasks to be done, update time interval 20s")
     # Create a multiprocessing pool
     num_workers = min(32, os.cpu_count())
     print(f"{num_workers=}")
@@ -846,24 +850,33 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
 
 
 if __name__ == "__main__":
+    # profiler = cProfile.Profile()
+    # profiler.enable()
+
     # main()
-    data_path = "/home/wehe/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5"
+    data_path = "/home/ubuntu/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500v2.h5"
+    feat_path = (
+        "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500v2-C100.h5"
+    )
     parser = argparse.ArgumentParser()
     parser.add_argument("--set_idx", "-s", type=int, default=0)
     parser.add_argument("--data_path", "-data", type=str, default=data_path)
+    parser.add_argument("--feat_path", "-feat", type=str, default=feat_path)
     args = parser.parse_args()
 
     set_idx = args.set_idx
     data_path = args.data_path
+    feat_path = args.feat_path
+    # file_name = f"feature-L0-Eset0-100sets-T500-C100-set{set_idx}.h5"
+    # file_name = data_path.split("/")[-1].split(".")[0] + f"-C100-set{set_idx}.h5"
 
     # set_idx = 0
-    data_dir = "/".join(data_path.split("/")[:-1])
-    file_name = f"feature-L0-Eset0-100sets-T500-C100-set{set_idx}.h5"
-    feat_path = os.path.join(data_dir, file_name)
+    # data_dir = "/".join(data_path.split("/")[:-1])
+    # feat_path = os.path.join(data_dir, file_name)
 
     # feature_gen_for_whole_dataset(data_path, feature_path)
     feature_gen_for_whole_dataset_parallel_for_one_set(
-        data_path, feat_path, set_idx=set_idx
+        data_path, feat_path, set_idx=set_idx, debug=False
     )
 
     # feat_path = (
@@ -872,3 +885,6 @@ if __name__ == "__main__":
     # f = h5py.File(feat_path, "r")
     # f["set_0"].keys()
     # f["set_0"]["feature_1"].shape
+
+    # profiler.disable()
+    # profiler.print_stats(sort="time")

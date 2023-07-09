@@ -1,7 +1,7 @@
 DO_ZIP=1
 DO_Gdrive=1
 
-TRAIN_ID=train_L0_p4
+TRAIN_ID=train_L0_p4a
 # TRAIN_ID=train_L0_p5
 
 # "p4-5Fs-1D-cnn"
@@ -28,6 +28,7 @@ TRAIN_ID=train_L0_p4
 # "p5-conv_lstm"
 # "p4-4Fs-1D-cnn2-size1"
 EXP_IDS=(
+    "p4a-4Fs-cnn-maf-Tnorm-datasize1"
 )
 
 # zip log files

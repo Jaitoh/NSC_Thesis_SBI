@@ -1,3 +1,7 @@
+# fitted parameters
+./gdrive files download 1_naDKYIqC_e26nk17S2Yzrsa2bZp7FqD --destination ./tmp/NSC/data/
+tar -xzf params.tar.gz
+
 # x.pt
 # ./gdrive files download 1mr9Wxx5v9qGgYDrhBbfu09rF6g3WhxYI --destination ./tmp/NSC/data/dataset_for_training
 ./gdrive files download 1mr9Wxx5v9qGgYDrhBbfu09rF6g3WhxYI --destination ./NSC/data/training_datasets
@@ -56,6 +60,8 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 ./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /mnt/data/dataset/
 ./gdrive files download 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ --destination /c/Users/hwj/tmp/NSC/data/dataset
 
+# dataset-L0-Eset0-98sets-T500v2.h5 - July 9
+./gdrive files download 1aN7hmzpOBd0OowAq9MXH848ntlp8DqIP --destination /home/ubuntu/tmp/NSC/data/dataset
 # log p4-4Fs-1D-cnn.tar.gz
 # ./gdrive files download 1nYVIZIU8ngv-cVUNNsdYQ4RgeFms0SHl --destination /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
 # cd /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
@@ -63,3 +69,9 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 # mv ./home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4/p4-4Fs-1D-cnn ./p4-4Fs-1D-cnn
 # rm -r ./home
 # rm p4-4Fs-1D-cnn.tar.gz
+
+# 解压缩
+tar -xzf exp-b0-2-contd0.tar.gz
+
+# 压缩
+tar -zcf exp-b0-2-contd0.tar.gz ./train/logs/train_L0/exp-b0-2-contd0

@@ -4,20 +4,22 @@ export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
 source activate sbi
 
-CLUSTER=t4-1
+CLUSTER=t4-2
 ROOT_DIR="/home/ubuntu/tmp/NSC"
+cd ${ROOT_DIR}/codes
 
-RUN_ID=p4a-4Fs-cnn-Tv2-0
+RUN_ID=p5a-conv_lstm-Tv2-0
 CONFIG_PRIOR=prior-v2-0
-CONFIG_DATASET=dataset-p4-4Fs-size0
-CONFIG_TRAIN=train-p4-cnn-mdn
+CONFIG_DATASET=dataset-p5
+CONFIG_TRAIN=train-p5-conv_lstm-mdn
 
-# RUN_ID=p4a-4Fs-cnn-Tv2-1
-# CONFIG_PRIOR=prior-v2-1
+RUN_ID=p5a-conv_lstm-Tv2-1
+CONFIG_PRIOR=prior-v2-1
 
-TRAIN_FILE_NAME=train_L0_p4a
+TRAIN_FILE_NAME=train_L0_p5a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-98sets-T500v2-C100.h5"
+# DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
+DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-98sets-T500v2.h5"
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
