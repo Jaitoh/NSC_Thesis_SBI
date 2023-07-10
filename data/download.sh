@@ -64,6 +64,9 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 ./gdrive files download 1aN7hmzpOBd0OowAq9MXH848ntlp8DqIP --destination /home/ubuntu/tmp/NSC/data/dataset
 ./gdrive.exe files download 1aN7hmzpOBd0OowAq9MXH848ntlp8DqIP --destination /c/Users/hwj/tmp/NSC/data/dataset
 
+# feature-L0-Eset0-98sets-T500v2.h5 - July 9
+./gdrive files download 1Cw573UCNfDBPi7tm3ZIJ07sTMJyoyMB9 --destination /home/ubuntu/tmp/NSC/data/dataset
+
 # log p4-4Fs-1D-cnn.tar.gz
 # ./gdrive files download 1nYVIZIU8ngv-cVUNNsdYQ4RgeFms0SHl --destination /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4
 # cd /home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p4

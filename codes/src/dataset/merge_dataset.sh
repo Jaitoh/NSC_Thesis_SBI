@@ -18,4 +18,4 @@ code ${PRINT_LOG}
 echo 'finished dataset merge'
 
 cd /home/wehe/data
-./gdrive files upload ${MERGED_DATA_path}
+./gdrive files upload ${MERGED_DATA_path} >/home/wehe/data/NSC/codes/${PRINT_LOG} 2>&1

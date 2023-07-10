@@ -2,7 +2,7 @@ DO_ZIP=1
 DO_Gdrive=1
 
 TRAIN_ID=train_L0_p4a
-# TRAIN_ID=train_L0_p5
+# TRAIN_ID=train_L0_p5a
 
 # "p4-5Fs-1D-cnn"
 # "p4-4Fs-1D-cnn"
@@ -27,8 +27,11 @@ TRAIN_ID=train_L0_p4a
 # "p5-conv_transformer"
 # "p5-conv_lstm"
 # "p4-4Fs-1D-cnn2-size1"
+# "p4a-4Fs-cnn-maf-Tnorm-datasize1"
+"p5a-conv_lstm-ignore_ss"
 EXP_IDS=(
-    "p4a-4Fs-cnn-maf-Tnorm-datasize1"
+    "p4a-4Fs-cnn-ignore_ss"
+    "p4a-4Fs-cnn-Tnorm"
 )
 
 # zip log files

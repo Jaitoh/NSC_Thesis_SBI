@@ -9,7 +9,7 @@
 #SBATCH --ntasks=1
 
 #SBATCH --mem 10G
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=16
 
 #SBATCH --job-name=dataset
 #SBATCH --output=./cluster/uzh/dataset/feature_gen/feature-Eset0_%a.out
@@ -36,7 +36,7 @@ source activate sbi
 echo "print_log: ${PRINT_LOG}"
 code ${PRINT_LOG}
 
-python3 -u ./src/dataset/features.py \
+python3 -u ./src/features/features.py \
     --data_path ${DATA_PATH} \
     --set_idx ${SLURM_ARRAY_TASK_ID} \
     --feat_path ${FEAT_PATH} >${PRINT_LOG} 2>&1
