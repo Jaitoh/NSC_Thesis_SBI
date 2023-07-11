@@ -8,13 +8,14 @@ ROOT_DIR="/home/ubuntu/tmp/NSC"
 cd ${ROOT_DIR}/codes
 
 # CHECK_POINT_PATH=''
-# RUN_ID=p5a-conv_lstm-Tv2-0-ctd
-# CONFIG_PRIOR=prior-v2-0
+
+RUN_ID=p5a-conv_lstm-Tv2-0-noZ
+CONFIG_PRIOR=prior-v2-0
 # CHECK_POINT_PATH=/home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_lstm-Tv2-0/model/model_check_point.pt
 
-RUN_ID=p5a-conv_lstm-Tv2-1-ctd
-CONFIG_PRIOR=prior-v2-1
-CHECK_POINT_PATH=/home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_lstm-Tv2-1/model/model_check_point.pt
+# RUN_ID=p5a-conv_lstm-Tv2-1-noZ
+# CONFIG_PRIOR=prior-v2-1
+# CHECK_POINT_PATH=/home/ubuntu/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_lstm-Tv2-1/model/model_check_point.pt
 
 CONFIG_DATASET=dataset-p5
 CONFIG_TRAIN=train-p5-conv_lstm-mdn

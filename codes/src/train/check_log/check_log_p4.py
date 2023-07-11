@@ -62,7 +62,9 @@ def get_event_data_p4(ea_post, ea_val, ea_train):
     # print(f"==>> ea_post.Tags(): {ea_post.Tags()}")
     # print(f"==>> ea_train.Tags(): {ea_train.Tags()}")
     # print(f"==>> ea_val.Tags(): {ea_val.Tags()}")
-    val_ = np.array([[e.wall_time, e.step, e.value] for e in ea_val.Scalars("log_probs")])
+    val_ = np.array(
+        [[e.wall_time, e.step, e.value] for e in ea_val.Scalars("log_probs")]
+    )
     val_perf["time"], val_perf["step"], val_perf["log_probs"] = (
         val_[:, 0],
         val_[:, 1],
@@ -147,6 +149,9 @@ def plot_log_prob_p4(ax1, val_perf, train_perf, plot_time=True):
         f"{val_log_probs[best_epoch]:.2f}",
         fontsize=12,
     )
+    # upper = np.max(val_log_probs)
+    # lower = np.percentile(val_log_probs, 10)
+    # ax1.set_ylim(lower, upper)
 
     # ax1.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
     ax1.legend()
@@ -179,7 +184,9 @@ def plot_posterior_samples(log_dir, best_epochs_epoch, num_rows, exact_epoch=Tru
 
         for i in range(num_rows):
             for j in range(len(best_epochs_epoch)):
-                epoch = best_epochs_epoch[j] if exact_epoch else best_epochs_epoch[j] + 1
+                epoch = (
+                    best_epochs_epoch[j] if exact_epoch else best_epochs_epoch[j] + 1
+                )
                 # Load the image using OpenCV
                 img = cv2.imread(
                     f"{log_dir}/posterior/figures/posterior_x_{case}_{i}_epoch_{epoch}.png"
@@ -296,7 +303,11 @@ def plot_one_img(
     )
 
     ax.plot(
-        chosen_plot_idx, val_perf["log_probs"][chosen_plot_idx], "v", color="k", alpha=0.1
+        chosen_plot_idx,
+        val_perf["log_probs"][chosen_plot_idx],
+        "v",
+        color="k",
+        alpha=0.1,
     )
     ax.plot(epoch_idx, val_perf["log_probs"][epoch_idx], "v", color="green")
     ax.text(
@@ -364,7 +375,9 @@ def animate_posterior(
 
     # generate animation
     images = []
-    chosen_plot_idx = plot_idx[np.linspace(0, len(plot_idx) - 1, num_frames).astype(int)]
+    chosen_plot_idx = plot_idx[
+        np.linspace(0, len(plot_idx) - 1, num_frames).astype(int)
+    ]
     # add the last element for multiple times
     chosen_plot_idx = np.concatenate([chosen_plot_idx, [chosen_plot_idx[-1]] * 3])
     print(f"chosen {num_frames} plots to animate, idx: {chosen_plot_idx}")

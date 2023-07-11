@@ -20,7 +20,7 @@ num_probR_sample            : 10 #25
 
 
 # ========== data loader settings ==========
-batch_size                  : 768 #=32*100
+batch_size                  : 640 #=32*100
 pin_memory                  : True
 num_workers                 : 4
 prefetch_factor             : 2
