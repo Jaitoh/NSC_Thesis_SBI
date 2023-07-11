@@ -28,10 +28,12 @@ TRAIN_ID=train_L0_p4a
 # "p5-conv_lstm"
 # "p4-4Fs-1D-cnn2-size1"
 # "p4a-4Fs-cnn-maf-Tnorm-datasize1"
-"p5a-conv_lstm-ignore_ss"
+# "p5a-conv_lstm-ignore_ss"
+# "p4a-4Fs-cnn-ignore_ss"
+# "p4a-4Fs-cnn-Tnorm"
 EXP_IDS=(
-    "p4a-4Fs-cnn-ignore_ss"
-    "p4a-4Fs-cnn-Tnorm"
+    "p4a-4Fs-cnn-Tv2-0"
+    "p4a-4Fs-cnn-Tv2-1"
 )
 
 # zip log files
