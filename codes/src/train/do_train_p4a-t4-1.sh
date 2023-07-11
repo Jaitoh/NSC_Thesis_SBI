@@ -7,10 +7,10 @@ source activate sbi
 CLUSTER=t4-1
 ROOT_DIR="/home/ubuntu/tmp/NSC"
 
-RUN_ID=p4a-4Fs-cnn-Tv2-0
+RUN_ID=p4a-4Fs-cnn-Tv2-0-noZ
 CONFIG_PRIOR=prior-v2-0
 
-RUN_ID=p4a-4Fs-cnn-Tv2-1
+RUN_ID=p4a-4Fs-cnn-Tv2-1-noZ
 CONFIG_PRIOR=prior-v2-1
 
 CONFIG_DATASET=dataset-p4-4Fs-size0

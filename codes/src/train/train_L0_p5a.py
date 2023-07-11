@@ -76,8 +76,8 @@ class Solver:
             hidden_features=config_density["posterior_nn"]["hidden_features"],
             num_transforms=config_density["posterior_nn"]["num_transforms"],
             num_components=10,
+            z_score_theta=None,  # remove z_score
             z_score_x=None,  # remove z_score
-            z_score_y=None,  # remove z_score
         )
 
         return neural_posterior
