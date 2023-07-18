@@ -100,7 +100,7 @@ theta_o = zeros(1, theta_dim)
 xos = [theta_o.repeat(nt, 1) for nt in num_trials]
 
 # Obtain analytical posterior samples for each of them.
-true_samples = [get_true_posterior_samples(xo, 5000) for xo in xos]
+true_samples = [get_true_posterior_samples(xo, 50) for xo in xos]
 
 
 # In[4]:
@@ -149,10 +149,10 @@ inferer.append_simulations(theta, x).train(training_batch_size=1000)
 
 # Obtain posterior samples for different number of iid xos.
 nle_samples = []
-num_samples = 5000
+num_samples = 50
 
 mcmc_parameters = dict(
-    num_chains=50,
+    num_chains=10,
     thin=10,
     warmup_steps=50,
     init_strategy="proposal",
