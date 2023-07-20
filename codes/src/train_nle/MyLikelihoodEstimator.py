@@ -1,8 +1,13 @@
+import time
+import os
 from abc import ABC
 from copy import deepcopy
 from typing import Any, Callable, Dict, Optional, Union, Tuple
+import h5py
 
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
 from pyknos.nflows import flows
 from torch import Tensor, nn, optim
 from torch.distributions import Distribution
@@ -36,6 +41,13 @@ from sbi.inference.snle.snle_base import LikelihoodEstimator
 from sbi.neural_nets.mnle import MixedDensityEstimator
 from sbi.types import TensorboardSummaryWriter, TorchModule
 from sbi.utils import check_prior, del_entries
+from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
+
+import sys
+
+sys.path.append("./src")
+from utils.set_seed import setup_seed, seed_worker
+from utils.setup import clean_cache
 
 
 class MyLikelihoodEstimator(NeuralInference, ABC):
@@ -145,19 +157,158 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         return self
 
+    def prepare_dataset_network(self):
+        # prepare train, val dataset and dataloader
+        print("\n=== train, val dataset and dataloader ===")
+        data_path = self.config.data_path
+        with h5py.File(data_path, "r") as f:
+            sets = list(f.keys())[: self.config.dataset.num_max_sets]
+
+        train_set_names = sets[: int(len(sets) * 0.9)]
+        valid_set_names = sets[int(len(sets) * 0.9) :]
+
+        DS_config = self.config.dataset
+        num_train_set_T = DS_config.num_max_theta_each_set
+        num_valid_set_T = DS_config.num_max_theta_each_set
+
+        # get the original prior min and max for normalization
+        _, _, unnormed_prior_min, unnormed_prior_max = update_prior_min_max(
+            prior_min=self.config.prior.prior_min,
+            prior_max=self.config.prior.prior_max,
+            ignore_ss=self.config.prior.ignore_ss,
+            normalize=self.config.prior.normalize,
+        )
+
+        print("[training] sets", end=" ")
+        train_dataset = chR_2D_Dataset(
+            data_path=data_path,
+            chosen_set_names=train_set_names,
+            num_chosen_theta_each_set=num_train_set_T,
+            chosen_dur=DS_config.chosen_dur_list,
+            crop_dur=DS_config.crop_dur,
+            max_theta_in_a_set=num_train_set_T,
+            theta_chosen_mode="random",
+            seqC_process=DS_config.seqC_process,
+            summary_type=DS_config.summary_type,
+            permutation_mode=DS_config.permutation_mode,
+            num_probR_sample=DS_config.num_probR_sample,
+            ignore_ss=config.prior.ignore_ss,
+            normalize_theta=config.prior.normalize,
+            unnormed_prior_min=unnormed_prior_min,
+            unnormed_prior_max=unnormed_prior_max,
+        )
+
+        print("\n[validation] sets", end=" ")
+        valid_dataset = chR_2D_Dataset(
+            data_path=data_path,
+            chosen_set_names=valid_set_names,
+            num_chosen_theta_each_set=num_valid_set_T,
+            chosen_dur=DS_config.chosen_dur_list,
+            crop_dur=DS_config.crop_dur,
+            max_theta_in_a_set=num_valid_set_T,
+            theta_chosen_mode="random",
+            seqC_process=DS_config.seqC_process,
+            summary_type=DS_config.summary_type,
+            permutation_mode=DS_config.permutation_mode,
+            num_probR_sample=DS_config.num_probR_sample,
+            ignore_ss=config.prior.ignore_ss,
+            normalize_theta=config.prior.normalize,
+            unnormed_prior_min=unnormed_prior_min,
+            unnormed_prior_max=unnormed_prior_max,
+        )
+
+        # prepare train, val, test dataloader
+        config_dataset = self.config.dataset
+        loader_kwargs = {
+            "batch_size": min(
+                config_dataset.batch_size,
+                len(train_dataset),
+                len(valid_dataset),
+            ),
+            "drop_last": False,
+            "shuffle": True,
+            "pin_memory": config_dataset.pin_memory,
+            "num_workers": config_dataset.num_workers,
+            "prefetch_factor": config_dataset.prefetch_factor,
+            "worker_init_fn": seed_worker,
+        }
+        print(f"{loader_kwargs=}")
+
+        g = torch.Generator()
+        g.manual_seed(self.config.seed)
+
+        train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
+        loader_kwargs["drop_last"] = True
+        valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
+
+        # collect posterior sets
+        print(f"\ncollect posterior sets...", end=" ")
+        tic = time.time()
+        self.seen_data_for_posterior = {"x": [], "theta": []}
+        self.unseen_data_for_posterior = {"x": [], "theta": []}
+
+        x_train_batch, theta_train_batch = next(iter(train_dataloader))
+        x_valid_batch, theta_valid_batch = next(iter(valid_dataloader))
+
+        for i in range(self.config.train.posterior.num_posterior_check):
+            self.seen_data_for_posterior["x"].append(x_train_batch[i, :])
+            self.seen_data_for_posterior["theta"].append(theta_train_batch[i, :])
+
+            self.unseen_data_for_posterior["x"].append(x_valid_batch[i, :])
+            self.unseen_data_for_posterior["theta"].append(theta_valid_batch[i, :])
+        print(
+            f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes"
+        )
+
+        # initialize the network
+        if self._neural_net is None:
+            # Use only training data for building the neural net (z-scoring transforms)
+            self._neural_net = self._build_neural_net(
+                theta_train_batch[:3].to("cpu"),
+                x_train_batch[:3].to("cpu"),
+            )
+            self._x_shape = x_shape_from_simulation(x_train_batch.to("cpu"))
+
+            print("\nfinished build network")
+            print(self._neural_net)
+
+            test_posterior_net_for_multi_d_x(
+                self._neural_net,
+                theta_train_batch.to("cpu"),
+                x_train_batch.to("cpu"),
+            )
+
+            # load network from state dict if specified
+            if continue_from_checkpoint != None and continue_from_checkpoint != "":
+                self._neural_net = load_net(
+                    continue_from_checkpoint,
+                    self._neural_net,
+                    device=device,
+                )
+
+        return (
+            train_dataloader,
+            valid_dataloader,
+            self._neural_net.to(self._device),
+        )
+
     def train(
         self,
-        training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
-        stop_after_epochs: int = 20,
-        max_num_epochs: int = 2**31 - 1,
-        clip_max_norm: Optional[float] = 5.0,
-        resume_training: bool = False,
-        discard_prior_samples: bool = False,
-        retrain_from_scratch: bool = False,
-        show_train_summary: bool = False,
-        dataloader_kwargs: Optional[Dict] = None,
+        # training_batch_size: int = 50,
+        # learning_rate: float = 5e-4,
+        # validation_fraction: float = 0.1,
+        # stop_after_epochs: int = 20,
+        # max_num_epochs: int = 2**31 - 1,
+        # clip_max_norm: Optional[float] = 5.0,
+        # resume_training: bool = False,
+        # discard_prior_samples: bool = False,
+        # retrain_from_scratch: bool = False,
+        # show_train_summary: bool = False,
+        # dataloader_kwargs: Optional[Dict] = None,
+        config,
+        prior_limits,
+        continue_from_checkpoint=None,
+        debug=False,
     ) -> flows.Flow:
         r"""Train the density estimator to learn the distribution $p(x|\theta)$.
 
@@ -181,99 +332,208 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         """
         # Load data from most recent round.
         self._round = max(self._data_round_index)
-        # Starting index for the training set (1 = discard round-0 samples).
-        start_idx = int(discard_prior_samples and self._round > 0)
+        self.config = config
+        self.log_dir = config.log_dir
+        self.prior_limits = prior_limits
+        self.dataset_kwargs = self.config.dataset
+        self.training_kwargs = self.config.train.training
+        setup_seed(config.seed)
 
-        train_loader, val_loader = self.get_dataloaders(
-            start_idx,
-            training_batch_size,
-            validation_fraction,
-            resume_training,
-            dataloader_kwargs=dataloader_kwargs,
+        # ========== 1. Prepare dataset and network ==========
+        train_dataloader, valid_dataloader, _ = self.prepare_dataset_network(
+            self.config,
+            continue_from_checkpoint=continue_from_checkpoint,
+            device=self._device,
         )
 
-        # First round or if retraining from scratch:
-        # Call the `self._build_neural_net` with the rounds' thetas and xs as
-        # arguments, which will build the neural network
-        # This is passed into NeuralPosterior, to create a neural posterior which
-        # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        if self._neural_net is None or retrain_from_scratch:
-            # Get theta,x to initialize NN
-            theta, x, _ = self.get_simulations(starting_round=start_idx)
-            # Use only training data for building the neural net (z-scoring transforms)
-            self._neural_net = self._build_neural_net(
-                theta[self.train_indices].to("cpu"),
-                x[self.train_indices].to("cpu"),
-            )
-            self._x_shape = x_shape_from_simulation(x.to("cpu"))
-            del theta, x
-            assert (
-                len(self._x_shape) < 3
-            ), "SNLE cannot handle multi-dimensional simulator output."
+        # ========== 2. initialize before training ==========
+        config_training = self.config.train.training
+        warmup_epochs = config_training.warmup_epochs
+        initial_lr = config_training.initial_lr
+        # optimizer
+        self.optimizer = optim.Adam(
+            list(self._neural_net.parameters()),
+            lr=config_training.learning_rate,
+            weight_decay=eval(config_training.weight_decay)
+            if isinstance(config_training.weight_decay, str)
+            else config_training.weight_decay,
+        )
+        # scheduler
+        self.scheduler_warmup = WarmupScheduler(
+            self.optimizer,
+            warmup_epochs=warmup_epochs,
+            init_lr=initial_lr,
+            target_lr=config_training.learning_rate,
+        )
 
-        self._neural_net.to(self._device)
-        if not resume_training:
-            self.optimizer = optim.Adam(
-                list(self._neural_net.parameters()),
-                lr=learning_rate,
+        if config_training["scheduler"] == "ReduceLROnPlateau":
+            self.scheduler = ReduceLROnPlateau(
+                self.optimizer, **config_training["scheduler_params"]
             )
-            self.epoch, self._val_log_prob = 0, float("-Inf")
+        if config_training["scheduler"] == "CosineAnnealingWarmRestarts":
+            self.scheduler = CosineAnnealingWarmRestarts(
+                self.optimizer, **config_training["scheduler_params"]
+            )
+        if config_training["scheduler"] == "None":  # constant lr
+            self.scheduler = ConstantLR(self.optimizer, factor=1.0)
 
-        while self.epoch <= max_num_epochs and not self._converged(
-            self.epoch, stop_after_epochs
+        # initialize values
+        epoch = 0
+        batch_counter = 0
+        self._valid_log_prob = float("-Inf")
+        self._best_valid_log_prob = float("-Inf")
+        # self._best_model_from_epoch = -1
+        self._summary["training_log_probs"] = []
+        self._summary["learning_rates"] = []
+        self._summary["validation_log_probs"] = []
+        self._summary["epoch_durations_sec"] = []
+
+        # train until no validation improvement for 'patience' epochs
+        train_start_time = time.time()
+        print(
+            f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches"
+        )
+
+        # ========== 2. Train network ==========
+        # train until no validation improvement for 'patience' epochs
+        train_start_time = time.time()
+        while (
+            epoch <= config_training.max_num_epochs
+            and not self._converged(epoch, debug)
+            # and (not debug or epoch <= 2)
         ):
             # Train for a single epoch.
             self._neural_net.train()
+
+            epoch_start_time = time.time()
+            batch_timer = time.time()
+
+            train_data_size = 0
             train_log_probs_sum = 0
-            for batch in train_loader:
+            train_batch_num = 0
+
+            for x, theta in train_dataloader:
                 self.optimizer.zero_grad()
-                theta_batch, x_batch = (
-                    batch[0].to(self._device),
-                    batch[1].to(self._device),
-                )
+                # theta_batch, x_batch = (
+                #     batch[0].to(self._device),
+                #     batch[1].to(self._device),
+                # )
+                # train on batch
+                with torch.no_grad():
+                    x = x.to(self._device)
+                    theta = theta.to(self._device)
+
                 # Evaluate on x with theta as context.
-                train_losses = self._loss(theta=theta_batch, x=x_batch)
+                train_data_size += len(x)
+                train_losses = self._loss(theta=theta, x=x)
                 train_loss = torch.mean(train_losses)
                 train_log_probs_sum -= train_losses.sum().item()
 
                 train_loss.backward()
+
+                # clip gradients
+                clean_cache()
+                clip_max_norm = config_training.clip_max_norm
                 if clip_max_norm is not None:
                     clip_grad_norm_(
                         self._neural_net.parameters(),
                         max_norm=clip_max_norm,
                     )
+
+                del x, theta, masks_batch, train_losses
+                clean_cache()
+
                 self.optimizer.step()
 
-            self.epoch += 1
+                # log one batch
+                print_freq = config_training.print_freq
+                batch_info = f"epoch {epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min"
+                if print_freq == 0:  # do nothing
+                    pass
+                elif len(train_dataloader) <= print_freq:
+                    print(batch_info)
+                elif train_batch_num % (len(train_dataloader) // print_freq) == 0:
+                    print(batch_info)
 
-            train_log_prob_average = train_log_probs_sum / (
-                len(train_loader) * train_loader.batch_size  # type: ignore
-            )
+                self._summary_writer.add_scalar(
+                    "train_loss_batch", train_loss, batch_counter
+                )
+
+                train_batch_num += 1
+                batch_counter += 1
+
+                if self.config.debug and train_batch_num >= 3:
+                    break
+
+            # self.epoch += 1
+            train_log_prob_average = train_log_probs_sum / train_data_size
+            self._train_log_prob = train_log_prob_average
             self._summary["training_log_probs"].append(train_log_prob_average)
+            self._summary_writer.add_scalars(
+                "log_probs", {"training": train_log_prob_average}, epoch
+            )
+
+            # epoch log - learning rate
+            if epoch < config_training.warmup_epochs:
+                current_lr = self.scheduler_warmup.optimizer.param_groups[0]["lr"]
+            else:
+                current_lr = self.scheduler.optimizer.param_groups[0]["lr"]
+            self._summary["learning_rates"].append(current_lr)
+            self._summary_writer.add_scalar("learning_rates", current_lr, epoch)
 
             # Calculate validation performance.
             self._neural_net.eval()
-            val_log_prob_sum = 0
             with torch.no_grad():
-                for batch in val_loader:
-                    theta_batch, x_batch = (
-                        batch[0].to(self._device),
-                        batch[1].to(self._device),
-                    )
+                valid_start_time = time.time()
+
+                # initialize values
+                valid_data_size = 0
+                valid_log_prob_sum = 0
+
+                # do validate and log
+                for x_valid, theta_valid in valid_dataloader:
+                    x_valid = x_valid.to(self._device)
+                    theta_valid = theta_valid.to(self._device)
+
                     # Evaluate on x with theta as context.
-                    val_losses = self._loss(theta=theta_batch, x=x_batch)
+                    val_losses = self._loss(theta=theta_valid, x=x_valid)
                     val_log_prob_sum -= val_losses.sum().item()
+                    valid_data_size += len(x_valid)
 
-            # Take mean over all validation samples.
-            self._val_log_prob = val_log_prob_sum / (
-                len(val_loader) * val_loader.batch_size  # type: ignore
-            )
-            # Log validation log prob for every epoch.
-            self._summary["validation_log_probs"].append(self._val_log_prob)
+                    del x_valid, theta_valid, masks_batch, valid_losses
+                    clean_cache()
 
-            self._maybe_show_progress(self._show_progress_bars, self.epoch)
+                    if self.config.debug:
+                        break
 
-        self._report_convergence_at_end(self.epoch, stop_after_epochs, max_num_epochs)
+                # Take mean over all validation samples.
+                self._valid_log_prob = valid_log_prob_sum / valid_data_size
+                self._summary_writer.add_scalars(
+                    "log_probs", {"validation": self._valid_log_prob}, epoch
+                )
+
+                toc = time.time()
+                self._summary["validation_log_probs"].append(self._valid_log_prob)
+                self._summary["epoch_durations_sec"].append(toc - train_start_time)
+
+                valid_info = f"\nvalid_log_prob: {self._valid_log_prob:.2f} in {(time.time() - valid_start_time)/60:.2f} min"
+                print(valid_info)
+
+            # update epoch info and counter
+            epoch_info = f"| Epochs trained: {epoch:4} | log_prob train: {self._train_log_prob:.2f} | log_prob val: {self._valid_log_prob:.2f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
+            print(epoch_info)
+
+            # update scheduler
+            if epoch < config_training["warmup_epochs"]:
+                self.scheduler_warmup.step()
+            elif config_training["scheduler"] == "ReduceLROnPlateau":
+                self.scheduler.step(self._valid_log_prob)
+            else:
+                self.scheduler.step()
+
+            # if debug and epoch > 3:
+            #     break
+            epoch += 1
 
         # Update summary.
         self._summary["epochs_trained"].append(self.epoch)
@@ -282,13 +542,33 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # Update TensorBoard and summary dict.
         self._summarize(round_=self._round)
 
-        # Update description for progress bar.
-        if show_train_summary:
-            print(self._describe_round(self._round, self._summary))
+        del train_dataloader  # , train_dataset
+        clean_cache()
 
-        # Avoid keeping the gradients in the resulting network, which can
-        # cause memory leakage when benchmarking.
+        info = f"""
+        -------------------------
+        ||||| STATS |||||:
+        -------------------------
+        Total epochs trained: {epoch-1}
+        Best validation performance: {self._best_valid_log_prob:.4f}, from epoch {self._best_model_from_epoch:5}
+        Model from best epoch {self._best_model_from_epoch} is loaded for further training
+        -------------------------
+        """
+        print(info)
+
+        # finish training
+        train_dataloader = None
+        valid_dataloader = None
+        train_dataset = None
+        valid_dataset = None
+        x = None
+        theta = None
+        del train_dataloader, x, theta, valid_dataset, train_dataset
+        clean_cache()
+        # avoid keeping gradients in resulting network
         self._neural_net.zero_grad(set_to_none=True)
+
+        self._plot_training_curve()
 
         return deepcopy(self._neural_net)
 
@@ -300,55 +580,142 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         """
         return -self._neural_net.log_prob(x=x, theta=theta)
 
+    def _converged(self, epoch, debug):
+        converged = False
+        epoch = epoch - 1
+        assert self._neural_net is not None
 
-class CNLE(MyLikelihoodEstimator):
-    def __init__(
-        self,
-        prior: Optional[Distribution] = None,
-        density_estimator: Union[str, Callable] = "mnle",
-        device: str = "cpu",
-        logging_level: Union[int, str] = "WARNING",
-        summary_writer: Optional[TensorboardSummaryWriter] = None,
-        show_progress_bars: bool = True,
-    ):
-        r"""Mixed Neural Likelihood Estimation (MNLE) [1].
+        if epoch != -1:
+            self._plot_training_curve()
 
-        Like SNLE, but not sequential and designed to be applied to data with mixed
-        types, e.g., continuous data and discrete data like they occur in
-        decision-making experiments (reation times and choices).
+        if epoch == -1 or (self._valid_log_prob > self._best_valid_log_prob):
+            self._epochs_since_last_improvement = 0
+            self._best_valid_log_prob = self._valid_log_prob
+            self._best_model_state_dict = deepcopy(self._neural_net.state_dict())
+            self._best_model_from_epoch = epoch
 
-        [1] Flexible and efficient simulation-based inference for models of
-        decision-making, Boelts et al. 2021,
-        https://www.biorxiv.org/content/10.1101/2021.12.22.473472v2
+            posterior_step = self.config.train.posterior.step
+            # plot posterior behavior when best model is updated
+            if epoch != -1 and posterior_step != 0 and epoch % posterior_step == 0:
+                self._posterior_behavior_log(self.prior_limits, epoch)
 
-        Args:
-            prior: A probability distribution that expresses prior knowledge about the
-                parameters, e.g. which ranges are meaningful for them. If `None`, the
-                prior must be passed to `.build_posterior()`.
-            density_estimator: If it is a string, it must be "mnle" to use the
-                preconfiugred neural nets for MNLE. Alternatively, a function
-                that builds a custom neural network can be provided. The function will
-                be called with the first batch of simulations (theta, x), which can
-                thus be used for shape inference and potentially for z-scoring. It
-                needs to return a PyTorch `nn.Module` implementing the density
-                estimator. The density estimator needs to provide the methods
-                `.log_prob`, `.log_prob_iid()` and `.sample()`.
-            device: Training device, e.g., "cpu", "cuda" or "cuda:{0, 1, ...}".
-            logging_level: Minimum severity of messages to log. One of the strings
-                INFO, WARNING, DEBUG, ERROR and CRITICAL.
-            summary_writer: A tensorboard `SummaryWriter` to control, among others, log
-                file location (default is `<current working directory>/logs`.)
-            show_progress_bars: Whether to show a progressbar during simulation and
-                sampling.
-        """
+            # save the model
+            torch.save(
+                self._neural_net,
+                os.path.join(self.config.log_dir, f"model/model_check_point.pt"),
+            )
+        else:
+            self._epochs_since_last_improvement += 1
 
-        if isinstance(density_estimator, str):
-            assert (
-                density_estimator == "mnle"
-            ), f"""MNLE can be used with preconfigured 'mnle' density estimator only,
-                not with {density_estimator}."""
-        kwargs = del_entries(locals(), entries=("self", "__class__"))
-        super().__init__(**kwargs)
+        # If no validation improvement over many epochs, stop training.
+        stop_after_epochs = self.config.train.training.stop_after_epochs
+        min_num_epochs = self.config.train.training.min_num_epochs
+        if (
+            self._epochs_since_last_improvement > stop_after_epochs - 1
+            and epoch > min_num_epochs
+            or (debug and epoch > 3)
+        ):
+            converged = True
+            self._neural_net.load_state_dict(self._best_model_state_dict)
+            self._val_log_prob = self._best_valid_log_prob
+            self._epochs_since_last_improvement = 0
+
+        return converged
+
+    def _plot_training_curve(self):
+        log_dir = self.config.log_dir
+        duration = np.array(self._summary["epoch_durations_sec"])
+        train_log_probs = self._summary["training_log_probs"]
+        valid_log_probs = self._summary["validation_log_probs"]
+        learning_rates = self._summary["learning_rates"]
+        best_valid_log_prob = self._best_valid_log_prob
+        best_valid_log_prob_epoch = self._best_model_from_epoch
+
+        plt.tight_layout()
+
+        fig, axes = plt.subplots(3, 1, figsize=(25, 18))
+        fig.subplots_adjust(hspace=0.6)
+
+        # plot learning rate
+        ax0 = axes[0]
+        ax0.plot(learning_rates, "-", label="lr", lw=2)
+        ax0.plot(best_valid_log_prob_epoch, learning_rates[best_valid_log_prob_epoch], "v", color="tab:red", lw=2)  # type: ignore
+
+        ax0.set_xlabel("epochs")
+        ax0.set_ylabel("learning rate")
+        ax0.grid(alpha=0.2)
+        ax0.set_title("training curve")
+
+        ax1 = axes[1]
+        ax1.plot(
+            train_log_probs,
+            ".-",
+            label="training",
+            alpha=0.8,
+            lw=2,
+            color="tab:blue",
+            ms=0.1,
+        )
+        ax1.plot(
+            valid_log_probs,
+            ".-",
+            label="validation",
+            alpha=0.8,
+            lw=2,
+            color="tab:orange",
+            ms=0.1,
+        )
+        ax1.plot(best_valid_log_prob_epoch, best_valid_log_prob, "v", color="red", lw=2)
+        ax1.text(best_valid_log_prob_epoch, best_valid_log_prob, f"{best_valid_log_prob:.2f}", color="red", fontsize=10, ha="center", va="bottom")  # type: ignore
+        # ax1.set_ylim(log_probs_lower_bound, max(valid_log_probs)+0.2)
+
+        ax1.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("log_prob")
+        ax1.grid(alpha=0.2)
+
+        ax2 = ax1.twiny()
+        ax2.plot(
+            (duration - duration[0]) / 60 / 60,
+            max(valid_log_probs) * np.ones_like(valid_log_probs),
+            "-",
+            alpha=0,
+        )
+        ax2.set_xlabel("time (hours)")
+
+        ax3 = axes[2]
+
+        ax3.plot(
+            train_log_probs,
+            "o-",
+            label="training",
+            alpha=0.8,
+            lw=2,
+            color="tab:blue",
+            ms=0.1,
+        )
+        ax3.plot(
+            valid_log_probs,
+            "o-",
+            label="validation",
+            alpha=0.8,
+            lw=2,
+            color="tab:orange",
+            ms=0.1,
+        )
+
+        all_probs = np.concatenate([train_log_probs, valid_log_probs])
+        upper = np.max(all_probs)
+        lower = np.percentile(all_probs, 10)
+        ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
+        ax3.set_xlabel("epochs")
+        ax3.set_ylabel("log_prob")
+        ax3.set_ylim(lower, upper)
+        ax3.grid(alpha=0.2)
+
+        # save the figure
+        plt.savefig(f"{log_dir}/training_curve.png")
+        plt.close()
 
     def build_posterior(
         self,
@@ -363,10 +730,11 @@ class CNLE(MyLikelihoodEstimator):
     ) -> Union[MCMCPosterior, RejectionPosterior, VIPosterior]:
         r"""Build posterior from the neural density estimator.
 
-        SNLE trains a neural network to approximate the likelihood $p(x|\theta)$. The
+        CNLE trains a neural network to approximate the likelihood $p(chR|\theta, seqC)$. The
         posterior wraps the trained network such that one can directly evaluate the
-        unnormalized posterior log probability $p(\theta|x) \propto p(x|\theta) \cdot
-        p(\theta)$ and draw samples from the posterior with MCMC or rejection sampling.
+        unnormalized posterior log probability
+        $p(\theta|seqC, chR) \propto p(chR|\theta, seqC) \cdot p(\theta)$
+        and draw samples from the posterior with MCMC or rejection sampling.
 
         Args:
             density_estimator: The density estimator that the posterior is based on.
@@ -447,12 +815,134 @@ class CNLE(MyLikelihoodEstimator):
         else:
             raise NotImplementedError
 
-        # Store models at end of each round.
-        # self._model_bank.append(deepcopy(self._posterior))
-
         return deepcopy(self._posterior)
 
+    def posterior_behavior_log(self, limits, epoch):
+        config = self.config
+        if config.prior.ignore_ss:
+            prior_labels = config.prior.prior_labels[:1] + config.prior.prior_labels[3:]
+        else:
+            prior_labels = config.prior.prior_labels
 
+        with torch.no_grad():
+            tic = time.time()
+            print("--> Building posterior...", end=" ")
+
+            mcmc_parameters = dict(
+                warmup_steps=100,
+                thin=2,
+                num_chains=10,
+                num_workers=10,
+                init_strategy="sir",
+            )
+
+            posterior = self.build_posterior(
+                density_estimator=self._neural_net,
+                prior=self._prior,
+                sample_with="mcmc",
+                mcmc_method="slice",
+                mcmc_parameters=mcmc_parameters,
+            )
+
+            self._model_bank = []  # !clear model bank to avoid memory leak
+
+            print(f"in {(time.time()-tic)/60:.2f} min, Plotting ... ", end=" ")
+            num_data = len(self.seen_data_for_posterior["x"])
+
+            for fig_idx in range(num_data):
+                print(f"{fig_idx}/{num_data-1}", end=" ")
+                # plot posterior - seen data
+                fig_x, _ = plot_posterior_with_label(
+                    posterior=posterior,
+                    sample_num=config.train.posterior.sampling_num,
+                    x=self.seen_data_for_posterior["x"][fig_idx].to(self._device),
+                    true_params=self.seen_data_for_posterior["theta"][fig_idx],
+                    limits=limits,
+                    prior_labels=prior_labels,
+                )
+                fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
+                plt.savefig(fig_path)
+                fig_path = (
+                    f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
+                )
+                plt.savefig(fig_path)
+                plt.close(fig_x)
+                del fig_x, _
+                clean_cache()
+
+                # plot posterior - unseen data
+                fig_x_val, _ = plot_posterior_with_label(
+                    posterior=posterior,
+                    sample_num=config.train.posterior.sampling_num,
+                    x=self.unseen_data_for_posterior["x"][fig_idx].to(self._device),
+                    true_params=self.unseen_data_for_posterior["theta"][fig_idx],
+                    limits=limits,
+                    prior_labels=prior_labels,
+                )
+                fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
+                plt.savefig(fig_path)
+                fig_path = f"{self.log_dir}/posterior/posterior_unseen_{fig_idx}_up_to_date.png"
+                plt.savefig(fig_path)
+                plt.close(fig_x_val)
+                del fig_x_val, _
+                clean_cache()
+
+            del posterior, current_net
+            clean_cache()
+            print(f"finished in {(time.time()-tic)/60:.2f}min")
+
+
+class CNLE(MyLikelihoodEstimator):
+    def __init__(
+        self,
+        prior: Optional[Distribution] = None,
+        density_estimator: Union[str, Callable] = "mnle",
+        device: str = "cpu",
+        logging_level: Union[int, str] = "WARNING",
+        summary_writer: Optional[TensorboardSummaryWriter] = None,
+        show_progress_bars: bool = True,
+    ):
+        r"""Mixed Neural Likelihood Estimation (MNLE) [1].
+
+        Like SNLE, but not sequential and designed to be applied to data with mixed
+        types, e.g., continuous data and discrete data like they occur in
+        decision-making experiments (reation times and choices).
+
+        [1] Flexible and efficient simulation-based inference for models of
+        decision-making, Boelts et al. 2021,
+        https://www.biorxiv.org/content/10.1101/2021.12.22.473472v2
+
+        Args:
+            prior: A probability distribution that expresses prior knowledge about the
+                parameters, e.g. which ranges are meaningful for them. If `None`, the
+                prior must be passed to `.build_posterior()`.
+            density_estimator: If it is a string, it must be "mnle" to use the
+                preconfiugred neural nets for MNLE. Alternatively, a function
+                that builds a custom neural network can be provided. The function will
+                be called with the first batch of simulations (theta, x), which can
+                thus be used for shape inference and potentially for z-scoring. It
+                needs to return a PyTorch `nn.Module` implementing the density
+                estimator. The density estimator needs to provide the methods
+                `.log_prob`, `.log_prob_iid()` and `.sample()`.
+            device: Training device, e.g., "cpu", "cuda" or "cuda:{0, 1, ...}".
+            logging_level: Minimum severity of messages to log. One of the strings
+                INFO, WARNING, DEBUG, ERROR and CRITICAL.
+            summary_writer: A tensorboard `SummaryWriter` to control, among others, log
+                file location (default is `<current working directory>/logs`.)
+            show_progress_bars: Whether to show a progressbar during simulation and
+                sampling.
+        """
+
+        if isinstance(density_estimator, str):
+            assert (
+                density_estimator == "mnle"
+            ), f"""MNLE can be used with preconfigured 'mnle' density estimator only,
+                not with {density_estimator}."""
+        kwargs = del_entries(locals(), entries=("self", "__class__"))
+        super().__init__(**kwargs)
+
+
+# ========== posterior related potential functions ==========
 def conditioned_likelihood_estimator_based_potential(
     likelihood_estimator,
     prior,
