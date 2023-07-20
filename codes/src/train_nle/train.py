@@ -22,7 +22,7 @@ from utils.dataset import update_prior_min_max
 
 
 from neural_nets.my_nn_models import my_likelihood_nn
-from train_nle.MyLikelihoodEstimator import MyMNLE
+from train_nle.MyLikelihoodEstimator import CNLE
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
 
@@ -124,7 +124,7 @@ class Solver:
 
         # get neural posterior
         neural_likelihood = self.get_neural_likelihood()
-        self.inference = MyMNLE(
+        self.inference = CNLE(
             prior=self.prior,
             density_estimator=neural_likelihood,
             device=self.device,

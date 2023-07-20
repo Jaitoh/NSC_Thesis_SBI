@@ -239,7 +239,11 @@ class CategoricalNet(nn.Module):
 
         self.output_layer = nn.Linear(num_hidden_category // 4, num_categories)
 
-    def forward(self, seqC: Tensor, theta: Tensor) -> Tensor:
+    def forward(
+        self,
+        seqC: Tensor,
+        theta: Tensor,
+    ) -> Tensor:
         """Return categorical probability predicted from a batch of parameters conditioned on the input seqC.
 
         Args:
@@ -266,7 +270,12 @@ class CategoricalNet(nn.Module):
 
         return self.softmax(self.output_layer(x))
 
-    def log_prob(self, seqC: Tensor, theta: Tensor, chR: Tensor) -> Tensor:
+    def log_prob(
+        self,
+        seqC: Tensor,
+        theta: Tensor,
+        chR: Tensor,
+    ) -> Tensor:
         """Return categorical log probability of categories x, given parameters theta.
 
         Args:
@@ -280,7 +289,12 @@ class CategoricalNet(nn.Module):
         ps = self.forward(seqC=seqC, theta=theta)
         return Categorical(probs=ps).log_prob(chR.squeeze())
 
-    def sample(self, num_samples: int, seqC: Tensor, theta: Tensor) -> Tensor:
+    def sample(
+        self,
+        num_samples: int,
+        seqC: Tensor,
+        theta: Tensor,
+    ) -> Tensor:
         """Returns samples from categorical random variable with probs predicted from
         the neural net.
 
@@ -310,9 +324,7 @@ class ConditionedDensityEstimator(nn.Module):
 
     def __init__(
         self,
-        discrete_net: CategoricalNet,
-        # continuous_net: flows.Flow,
-        # log_transform_x: bool = False,
+        conditioned_net: CategoricalNet,
     ):
         """Initialize class for combining density estimators for MNLE.
 
@@ -321,16 +333,24 @@ class ConditionedDensityEstimator(nn.Module):
         """
         super(ConditionedDensityEstimator, self).__init__()
 
-        self.discrete_net = discrete_net
+        self.conditioned_net = conditioned_net
 
-    def forward(self, seqC: Tensor, theta: Tensor):
+    def forward(
+        self,
+        seqC: Tensor,
+        theta: Tensor,
+    ):
         raise NotImplementedError(
             """The forward method is not implemented for MNLE, use '.sample(...)' to
             generate samples though a forward pass."""
         )
 
     def sample(
-        self, theta: Tensor, num_samples: int = 1, track_gradients: bool = False
+        self,
+        num_samples: int = 1,
+        seqC: Tensor = None,
+        theta: Tensor = None,
+        track_gradients: bool = False,
     ) -> Tensor:
         """Return sample from mixed data distribution.
 
@@ -342,17 +362,23 @@ class ConditionedDensityEstimator(nn.Module):
             Tensor: samples with shape (num_samples, num_data_dimensions)
         """
         assert theta.shape[0] == 1, "Samples can be generated for a single theta only."
+        assert seqC.shape[0] == 1, "Samples can be generated for a single seqC only."
 
         with torch.set_grad_enabled(track_gradients):
             # Sample discrete data given parameters.
-            discrete_chR = self.discrete_net.sample(
-                theta=theta,
+            conditioned_chR = self.conditioned_net.sample(
                 num_samples=num_samples,
+                seqC=seqC,
+                theta=theta,
             ).reshape(num_samples, 1)
 
-        return discrete_chR
+        return conditioned_chR
 
-    def log_prob(self, x: Tensor, theta: Tensor) -> Tensor:
+    def log_prob(
+        self,
+        x: Tensor,
+        theta: Tensor,
+    ) -> Tensor:
         """Return log-probability of samples under the learned CNLE.
 
         For a fixed data point x this returns the value of the likelihood function
@@ -374,10 +400,13 @@ class ConditionedDensityEstimator(nn.Module):
         seqC, chR = _separate_x(x)
         num_parameters = theta.shape[0]
 
-        disc_log_prob = self.discrete_net.log_prob(
-            seqC=seqC, theta=theta, chR=chR
+        conditioned_log_prob = self.conditioned_net.log_prob(
+            seqC=seqC,
+            theta=theta,
+            chR=chR,
         ).reshape(num_parameters)
-        return disc_log_prob
+
+        return conditioned_log_prob
 
     def log_prob_iid(self, x: Tensor, theta: Tensor) -> Tensor:
         """Return log prob given a batch of iid x and a different batch of theta.
@@ -402,47 +431,31 @@ class ConditionedDensityEstimator(nn.Module):
             Tensor: log probs with shape (num_trials, num_parameters), i.e., the log
                 prob for each theta for each trial.
         """
-        # TODO: modify the pipeline
-
         theta = atleast_2d(theta)
         x = atleast_2d(x)
         batch_size = theta.shape[0]
         num_trials = x.shape[0]
-        # x: XaXbXc -> XaXaXa XbXbXb XcXcXc
-        # theta: TaTbTc -> TaTbTc TaTbTc TaTbTc
+
+        # x iid trials: XaXbXc -> XaXaXa XbXbXb XcXcXc
+        # theta:        TaTbTc -> TaTbTc TaTbTc TaTbTc
         theta_repeated, x_repeated = match_theta_and_x_batch_shapes(theta, x)
 
-        net_device = next(self.discrete_net.parameters()).device
+        net_device = next(self.conditioned_net.parameters()).device
         assert (
             net_device == x.device and x.device == theta.device
         ), f"device mismatch: net, x, theta: {net_device}, {x.device}, {theta.device}."
 
         seqC_repeated, chR_repeated = _separate_x(x_repeated)
-        seqC, chR = _separate_x(x)
 
-        # repeat categories for parameters
-        repeated_categories = torch.repeat_interleave(
-            torch.arange(self.discrete_net.num_categories - 1), batch_size, dim=0
-        )
-        # repeat parameters for categories
-        repeated_theta = theta.repeat(self.discrete_net.num_categories - 1, 1)
-        log_prob_per_cat = torch.zeros(self.discrete_net.num_categories, batch_size).to(
-            net_device
-        )
-        log_prob_per_cat[:-1, :] = self.discrete_net.log_prob(
-            repeated_categories.to(net_device),
-            repeated_theta.to(net_device),
-        ).reshape(-1, batch_size)
-        # infer the last category logprob from sum to one.
-        log_prob_per_cat[-1, :] = torch.log(1 - log_prob_per_cat[:-1, :].exp().sum(0))
-
-        # fill in lps for each occurred category
-        log_probs_discrete = log_prob_per_cat[
-            x_disc.type_as(torch.zeros(1, dtype=torch.long)).squeeze()
-        ].reshape(-1)
+        # compute the log probs for each oberseved data [seqC, chR] given each theta
+        log_probs_conditioned = self.conditioned_net.log_prob(
+            seqC=seqC_repeated,
+            theta=theta_repeated,
+            chR=chR_repeated,
+        ).reshape(num_trials, batch_size)
 
         # Return batch over trials as required by SBI potentials.
-        return log_probs_discrete
+        return log_probs_conditioned
 
 
 def _separate_x(x: Tensor) -> Tuple[Tensor, Tensor]:

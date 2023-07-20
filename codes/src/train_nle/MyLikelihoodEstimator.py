@@ -1,6 +1,6 @@
 from abc import ABC
 from copy import deepcopy
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union, Tuple
 
 import torch
 from pyknos.nflows import flows
@@ -13,7 +13,7 @@ from torch.utils.tensorboard.writer import SummaryWriter
 from sbi import utils as utils
 from sbi.inference import NeuralInference
 from sbi.inference.posteriors import MCMCPosterior, RejectionPosterior, VIPosterior
-from sbi.inference.potentials import likelihood_estimator_based_potential
+from sbi.types import TorchTransform
 from sbi.utils import (
     check_estimator_arg,
     check_prior,
@@ -26,8 +26,12 @@ from sbi.utils import (
 )
 
 from sbi.inference.posteriors import MCMCPosterior, RejectionPosterior, VIPosterior
-from sbi.inference.potentials import mixed_likelihood_estimator_based_potential
-from sbi.inference.potentials import LikelihoodBasedPotential
+from sbi.inference.potentials import (
+    likelihood_estimator_based_potential,
+    LikelihoodBasedPotential,
+    MixedLikelihoodBasedPotential,
+)
+from sbi.utils import mcmc_transform
 from sbi.inference.snle.snle_base import LikelihoodEstimator
 from sbi.neural_nets.mnle import MixedDensityEstimator
 from sbi.types import TensorboardSummaryWriter, TorchModule
@@ -288,107 +292,6 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         return deepcopy(self._neural_net)
 
-    def build_posterior(
-        self,
-        density_estimator: Optional[nn.Module] = None,
-        prior: Optional[Distribution] = None,
-        sample_with: str = "mcmc",
-        mcmc_method: str = "slice_np",
-        vi_method: str = "rKL",
-        mcmc_parameters: Dict[str, Any] = {},
-        vi_parameters: Dict[str, Any] = {},
-        rejection_sampling_parameters: Dict[str, Any] = {},
-    ) -> Union[MCMCPosterior, RejectionPosterior, VIPosterior]:
-        r"""Build posterior from the neural density estimator.
-
-        SNLE trains a neural network to approximate the likelihood $p(x|\theta)$. The
-        posterior wraps the trained network such that one can directly evaluate the
-        unnormalized posterior log probability $p(\theta|x) \propto p(x|\theta) \cdot
-        p(\theta)$ and draw samples from the posterior with MCMC or rejection sampling.
-
-        Args:
-            density_estimator: The density estimator that the posterior is based on.
-                If `None`, use the latest neural density estimator that was trained.
-            prior: Prior distribution.
-            sample_with: Method to use for sampling from the posterior. Must be one of
-                [`mcmc` | `rejection` | `vi`].
-            mcmc_method: Method used for MCMC sampling, one of `slice_np`, `slice`,
-                `hmc`, `nuts`. Currently defaults to `slice_np` for a custom numpy
-                implementation of slice sampling; select `hmc`, `nuts` or `slice` for
-                Pyro-based sampling.
-            vi_method: Method used for VI, one of [`rKL`, `fKL`, `IW`, `alpha`]. Note
-                some of the methods admit a `mode seeking` property (e.g. rKL) whereas
-                some admit a `mass covering` one (e.g fKL).
-            mcmc_parameters: Additional kwargs passed to `MCMCPosterior`.
-            vi_parameters: Additional kwargs passed to `VIPosterior`.
-            rejection_sampling_parameters: Additional kwargs passed to
-                `RejectionPosterior`.
-
-        Returns:
-            Posterior $p(\theta|x)$  with `.sample()` and `.log_prob()` methods
-            (the returned log-probability is unnormalized).
-        """
-        if prior is None:
-            assert (
-                self._prior is not None
-            ), """You did not pass a prior. You have to pass the prior either at
-            initialization `inference = SNLE(prior)` or to `.build_posterior
-            (prior=prior)`."""
-            prior = self._prior
-        else:
-            check_prior(prior)
-
-        if density_estimator is None:
-            likelihood_estimator = self._neural_net
-            # If internal net is used device is defined.
-            device = self._device
-        else:
-            likelihood_estimator = density_estimator
-            # Otherwise, infer it from the device of the net parameters.
-            device = next(density_estimator.parameters()).device.type
-
-        potential_fn, theta_transform = likelihood_estimator_based_potential(
-            likelihood_estimator=likelihood_estimator,
-            prior=prior,
-            x_o=None,
-        )
-
-        if sample_with == "mcmc":
-            self._posterior = MCMCPosterior(
-                potential_fn=potential_fn,
-                theta_transform=theta_transform,
-                proposal=prior,
-                method=mcmc_method,
-                device=device,
-                x_shape=self._x_shape,
-                **mcmc_parameters,
-            )
-        elif sample_with == "rejection":
-            self._posterior = RejectionPosterior(
-                potential_fn=potential_fn,
-                proposal=prior,
-                device=device,
-                x_shape=self._x_shape,
-                **rejection_sampling_parameters,
-            )
-        elif sample_with == "vi":
-            self._posterior = VIPosterior(
-                potential_fn=potential_fn,
-                theta_transform=theta_transform,
-                prior=prior,  # type: ignore
-                vi_method=vi_method,
-                device=device,
-                x_shape=self._x_shape,
-                **vi_parameters,
-            )
-        else:
-            raise NotImplementedError
-
-        # Store models at end of each round.
-        self._model_bank.append(deepcopy(self._posterior))
-
-        return deepcopy(self._posterior)
-
     def _loss(self, theta: Tensor, x: Tensor) -> Tensor:
         r"""Return loss for SNLE, which is the likelihood of $-\log q(x_i | \theta_i)$.
 
@@ -398,7 +301,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         return -self._neural_net.log_prob(x=x, theta=theta)
 
 
-class MyMNLE(MyLikelihoodEstimator):
+class CNLE(MyLikelihoodEstimator):
     def __init__(
         self,
         prior: Optional[Distribution] = None,
@@ -506,12 +409,10 @@ class MyMNLE(MyLikelihoodEstimator):
             # Otherwise, infer it from the device of the net parameters.
             device = next(density_estimator.parameters()).device.type
 
-        assert isinstance(
-            likelihood_estimator, MixedDensityEstimator
-        ), f"""net must be of type MixedDensityEstimator but is {type
-            (likelihood_estimator)}."""
-
-        potential_fn, theta_transform = mixed_likelihood_estimator_based_potential(
+        (
+            potential_fn,
+            theta_transform,
+        ) = conditioned_likelihood_estimator_based_potential(
             likelihood_estimator=likelihood_estimator, prior=prior, x_o=None
         )
 
@@ -552,29 +453,41 @@ class MyMNLE(MyLikelihoodEstimator):
         return deepcopy(self._posterior)
 
 
-# class MixedLikelihoodBasedPotential(LikelihoodBasedPotential):
-#     def __init__(
-#         self,
-#         likelihood_estimator: MixedDensityEstimator,
-#         prior: Distribution,
-#         x_o: Optional[Tensor],
-#         device: str = "cpu",
-#     ):
-#         super().__init__(likelihood_estimator, prior, x_o, device)
+def conditioned_likelihood_estimator_based_potential(
+    likelihood_estimator,
+    prior,
+    x_o,
+) -> Tuple[Callable, TorchTransform]:
+    device = str(next(likelihood_estimator.discrete_net.parameters()).device)
 
-#     def __call__(self, theta: Tensor, track_gradients: bool = True) -> Tensor:
-#         # Calculate likelihood in one batch.
-#         with torch.set_grad_enabled(track_gradients):
-#             # Call the specific log prob method of the mixed likelihood estimator as
-#             # this optimizes the evaluation of the discrete data part.
-#             # TODO: how to fix pyright issues?
-#             log_likelihood_trial_batch = self.likelihood_estimator.log_prob_iid(
-#                 x=self.x_o,
-#                 theta=theta.to(self.device),
-#             )  # type: ignore
-#             # Reshape to (x-trials x parameters), sum over trial-log likelihoods.
-#             log_likelihood_trial_sum = log_likelihood_trial_batch.reshape(
-#                 self.x_o.shape[0], -1
-#             ).sum(0)
+    potential_fn = ConditionedLikelihoodBasedPotential(
+        likelihood_estimator, prior, x_o, device=device
+    )
+    theta_transform = mcmc_transform(prior, device=device)
 
-#         return log_likelihood_trial_sum + self.prior.log_prob(theta)
+    return potential_fn, theta_transform
+
+
+class ConditionedLikelihoodBasedPotential(LikelihoodBasedPotential):
+    def __init__(
+        self,
+        likelihood_estimator,
+        prior,
+        x_o,
+        device="cpu",
+    ):
+        super().__init__(likelihood_estimator, prior, x_o, device)
+
+    def __call__(self, theta: Tensor, track_gradients: bool = True) -> Tensor:
+        # Calculate likelihood in one batch.
+        with torch.set_grad_enabled(track_gradients):
+            log_likelihood_trial_batch = self.likelihood_estimator.log_prob_iid(
+                x=self.x_o,
+                theta=theta.to(self.device),
+            )
+            # Reshape to (x-trials x parameters), sum over trial-log likelihoods.
+            log_likelihood_trial_sum = log_likelihood_trial_batch.reshape(
+                self.x_o.shape[0], -1
+            ).sum(0)
+
+        return log_likelihood_trial_sum + self.prior.log_prob(theta)
