@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 import argparse
@@ -6,16 +7,17 @@ import sys
 import h5py
 from pathlib import Path
 
-sys.path.append("./src")
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
 
 from simulator.model_sim_pR import (
     DM_sim_for_seqCs_parallel_with_smaller_output as sim_parallel,
 )
 from simulator.model_sim_pR import get_boxUni_prior
-from utils.set_seed import setup_seed
 from simulator.seqC_generator import seqC_combinatorial_generator
+from utils.set_seed import setup_seed
+from utils.dataset import pad_seqC_with_nans_to_len15
 
-NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
 
 setup_seed(100)
 
@@ -31,10 +33,10 @@ if do_generate_seqC_combinatorial:
         key = f"dur_{dur}"
 
         # save the output
-        with h5py.File(f"{NSC_DIR}/data/seqC_combinatorial.h5", "a") as f:
+        with h5py.File(f"{NSC_DIR}/data/dataset-comb/seqC_combinatorial.h5", "a") as f:
             f.create_dataset(key, data=seqCs)
 
-    print(f"file saved to {NSC_DIR}/data/seqC_combinatorial.h5")
+    print(f"file saved to {NSC_DIR}/data/dataset-comb/seqC_combinatorial.h5")
 
 # get input arguments
 args = argparse.ArgumentParser()
@@ -50,12 +52,9 @@ print(f"dur_list: {dur_list}")
 print(f"task_part: {task_part}")
 ms_list = [0.2, 0.4, 0.8]
 
-
-with h5py.File(f"{NSC_DIR}/data/seqC_combinatorial.h5", "r") as f:
-    for key in f.keys():
-        print(f"{key} number of possible combinations: {len(f[key][:]):7}")
-
-f = h5py.File(f"{NSC_DIR}/data/seqC_combinatorial.h5", "r")
+f = h5py.File(f"{NSC_DIR}/data/dataset-comb/seqC_combinatorial.h5", "r")
+for key in f.keys():
+    print(f"{key} number of possible combinations: {len(f[key][:]):7}")
 
 # prior
 num_prior_sample = 500
@@ -98,7 +97,10 @@ for dur in dur_list:
             privided_prior=True,
         )
 
-        output_dir = f"{NSC_DIR}/data/dataset-comb-dur{dur}-T500-part{task_nums[i]}.h5"
+        # pad seq with nans to length 15
+        seq = pad_seqC_with_nans_to_len15(seq)
+
+        output_dir = f"{NSC_DIR}/data/dataset-comb/dataset-comb-dur{dur}-T500-part{task_nums[i]}.h5"
         with h5py.File(output_dir, "w") as f_result:
             f_result.create_dataset(f"seqC", data=seq)
             f_result.create_dataset(f"theta", data=params)
@@ -109,18 +111,37 @@ for dur in dur_list:
 
 f.close()
 
+# ============================== check the output ==============================
+post_check = False
 
-import h5py
+if post_check:
+    dur = 11
+    for dur in [3, 5, 7, 9, 11]:
+        print("".center(50, "="))
+        print(f"==>> dur: {dur}")
+        print("".center(50, "="))
 
-dur = 5
-f = h5py.File(f"/home/ubuntu/tmp/NSC/data/dataset-comb-dur{dur}-T500.h5", "r")
-f.keys()
+        old_name = f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500-part0.h5"
+        new_name = (
+            f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500.h5"
+        )
+        os.remove(new_name)
+        os.rename(old_name, new_name)
 
+        f = h5py.File(new_name, "r+")
+        print(f"==>> f.keys(): {f.keys()}")
 
-print("".center(50, "-"))
-print(f"==>> f['seqC'][:].shape: {f['seqC'][:].shape}")
-print(f"==>> f['theta'][:].shape: {f['theta'][:].shape}")
-print(f"==>> f['probR'][:].shape: {f['probR'][:].shape}")
-print("".center(50, "-"))
+        print("".center(50, "-"))
+        print(f"==>> f['seqC'][:].shape: {f['seqC'][:].shape}")
+        print(f"==>> f['theta'][:].shape: {f['theta'][:].shape}")
+        print(f"==>> f['probR'][:].shape: {f['probR'][:].shape}")
+        print("".center(50, "-"))
 
-f.close()
+        theta = f["theta"][:]
+        print(f"first 3 theta:\n {theta[:3]}")
+        print(f"last 3 theta:\n {theta[-3:]}")
+
+        seqC = f["seqC"][:]
+        print(f"first 3 seqC:\n {seqC[0,0,:3]}")
+
+        f.close()

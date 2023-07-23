@@ -15,9 +15,9 @@ sys.path.append("../../src")
 from dataset.data_process import process_x_seqC_part
 from utils.dataset import (
     process_theta,
-    generate_permutations,
     unravel_index,
-    get_L_seqC,
+    generate_permutations,
+    get_len_seqC,
     choose_theta,
 )
 
@@ -26,25 +26,17 @@ class probR_HighD_Sets(Dataset):
     def __init__(
         self,
         data_path,
-        chosen_set_names,
         num_chosen_theta_each_set,
         chosen_dur=[3, 9, 15],
-        crop_dur=False,
-        max_theta_in_a_set=500,
+        prop_each_dur=[1, 1, 1],
         theta_chosen_mode="random",
-        seqC_process="norm",
-        summary_type="0",
     ):
         super().__init__()
 
         """Loading the high-dimensional sets into memory
-        seqC            of shape set_0:(D, M, S, 15)  - (7, 3, 700, 15)
-        seqC_normed     of shape set_0:(DMS, 15)      - (14700, 15) #TODO add this part into the dataset (currently removed)
-        seqC_summary_0  of shape set_0:(DMS, 15)      - (14700, 11)
-        seqC_summary_1  of shape set_0:(DMS, 15)      - (14700, 8)
-        
-        probR           of shape set_0:(D, M, S, T)   - (7, 3, 700, 5000)
-        theta           of shape set_0:(T, 4)         - (5000, 4)
+        seqC            of shape:(1, M, S, 15)  - (1, 3, 700, 15)
+        probR           of shape:(1, M, S, T)   - (1, 3, 700, 5000)
+        theta           of shape:(T, 4)         - (5000, 4)
         
         loaded into memory:
         seqC_normed     of shape (num_sets, DM, S, L) - (7, 21, 700, 15)
@@ -80,7 +72,7 @@ class probR_HighD_Sets(Dataset):
         f = h5py.File(data_path, "r", libver="latest", swmr=True)
 
         # get the shape of the data
-        L_seqC = get_L_seqC(seqC_process, summary_type)
+        L_seqC = get_len_seqC(seqC_process, summary_type)
         D, M, S, DMS = (
             *f[chosen_set_names[0]]["seqC"].shape[:-1],
             np.prod(f[chosen_set_names[0]]["seqC"].shape[:-1]),

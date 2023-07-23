@@ -49,3 +49,16 @@
 # feature-L0-Eset0-100sets-T500-C100.h5 - 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ - Jun22
 ./gdrive files upload /home/wehe/scratch/data/feature-L0-Eset0-100sets-T500-C100.h5
 ./gdrive files move 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
+
+# === dataset-comb
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur3-T500.h5  # 1qwx4fLo3YIw3F5QGA3Ft67vtzCq6E2yA
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur5-T500.h5  # 1YR1jacbczCpL2gW2qljbUdDClSGXUVgm
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur7-T500.h5  # 11Uj4fGiXZwYEpJibWI_O8gowzBEqvS-3
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur9-T500.h5  # 1cph4S6kNaGVMB9HC9Flf7lwUeSA1wi3c
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur11-T500.h5 # 1HIfN0zUaX-9FOwAzDojNriTXcJa4GNkd
+# move to data/dataset-comb
+./gdrive files move 1qwx4fLo3YIw3F5QGA3Ft67vtzCq6E2yA 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1YR1jacbczCpL2gW2qljbUdDClSGXUVgm 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 11Uj4fGiXZwYEpJibWI_O8gowzBEqvS-3 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1cph4S6kNaGVMB9HC9Flf7lwUeSA1wi3c 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1HIfN0zUaX-9FOwAzDojNriTXcJa4GNkd 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
