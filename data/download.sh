@@ -75,6 +75,13 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 # rm -r ./home
 # rm p4-4Fs-1D-cnn.tar.gz
 
+# ========== dataset comb ==========
+./gdrive files download 1MIUVVt0dojEZtYXqtO9YCjiT_-Dd-84z --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 16eG3TFMzIH4JLma-9Inr7kwxac9eH6Es --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 14ZPwGZLnM3LnxHMoQCxW0m3QJPEQD-ai --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 108_dKDeQ6oxDEMTTzUUNr3wvE74rrJfY --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+
 # 解压缩
 tar -xzf exp-b0-2-contd0.tar.gz
 

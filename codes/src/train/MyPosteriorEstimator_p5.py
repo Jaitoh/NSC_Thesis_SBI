@@ -26,15 +26,18 @@ from sbi.utils import (
     x_shape_from_simulation,
     test_posterior_net_for_multi_d_x,
 )
+from pathlib import Path
 
-sys.path.append("./src")
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
 from utils.set_seed import setup_seed, seed_worker
 
 # from train.Dataset_features import Feature_Dataset
 from train.Dataset_Classes import chR_2D_Dataset
 from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.setup import clean_cache
-from utils.dataset import update_prior_min_max
+from utils.dataset.dataset import update_prior_min_max
 
 # set matplotlib, font of size 16, bold
 plt.rcParams.update({"font.size": 22})

@@ -16,7 +16,7 @@ from simulator.model_sim_pR import (
 from simulator.model_sim_pR import get_boxUni_prior
 from simulator.seqC_generator import seqC_combinatorial_generator
 from utils.set_seed import setup_seed
-from utils.dataset import pad_seqC_with_nans_to_len15
+from utils.dataset.dataset import pad_seqC_with_nans_to_len15
 
 
 setup_seed(100)
@@ -112,21 +112,27 @@ for dur in dur_list:
 f.close()
 
 # ============================== check the output ==============================
+import os
+import h5py
+
 post_check = False
+do_rename = False
 
 if post_check:
-    dur = 11
-    for dur in [3, 5, 7, 9, 11]:
+    for dur in [3, 5, 7, 9]:
+        # dur = 3
         print("".center(50, "="))
         print(f"==>> dur: {dur}")
         print("".center(50, "="))
 
-        old_name = f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500-part0.h5"
         new_name = (
             f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500.h5"
         )
-        os.remove(new_name)
-        os.rename(old_name, new_name)
+
+        if do_rename:
+            old_name = f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500-part0.h5"
+            os.remove(new_name)
+            os.rename(old_name, new_name)
 
         f = h5py.File(new_name, "r+")
         print(f"==>> f.keys(): {f.keys()}")
@@ -136,6 +142,14 @@ if post_check:
         print(f"==>> f['theta'][:].shape: {f['theta'][:].shape}")
         print(f"==>> f['probR'][:].shape: {f['probR'][:].shape}")
         print("".center(50, "-"))
+
+        # remove last dim of probR (D, M, S, T, 1)
+        probR = f["probR"][:]
+        if probR.shape[-1] == 1:
+            probR = probR.squeeze(-1)
+            print(f"==>> probR.shape: {probR.shape}")
+            del f["probR"]
+            f.create_dataset("probR", data=probR)
 
         theta = f["theta"][:]
         print(f"first 3 theta:\n {theta[:3]}")

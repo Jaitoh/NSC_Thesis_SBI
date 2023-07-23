@@ -51,14 +51,14 @@
 ./gdrive files move 1nVG9AmkOBLelKQXwus5llYvLl1oNyKH_ 1xn4xcEtxLGwBqXyFP9p48CrEqGeymD8U
 
 # === dataset-comb
-./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur3-T500.h5  # 1qwx4fLo3YIw3F5QGA3Ft67vtzCq6E2yA
-./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur5-T500.h5  # 1YR1jacbczCpL2gW2qljbUdDClSGXUVgm
-./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur7-T500.h5  # 11Uj4fGiXZwYEpJibWI_O8gowzBEqvS-3
-./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur9-T500.h5  # 1cph4S6kNaGVMB9HC9Flf7lwUeSA1wi3c
-./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur11-T500.h5 # 1HIfN0zUaX-9FOwAzDojNriTXcJa4GNkd
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur3-T500.h5  # 1lSqU_Ua0F0p4VOA2oXxgFkCd5c1kAJqr
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur5-T500.h5  # 14hze-JojkALL4NorC7h-hbHxhEGISgno
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur7-T500.h5  # 1n8lskK61ZwDXOOzdZl8nn5vHH4waFXur
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur9-T500.h5  # 1AdvCoeOYgUkxifjKJplwsj7yE_h77OGI
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur11-T500.h5 #
 # move to data/dataset-comb
-./gdrive files move 1qwx4fLo3YIw3F5QGA3Ft67vtzCq6E2yA 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
-./gdrive files move 1YR1jacbczCpL2gW2qljbUdDClSGXUVgm 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
-./gdrive files move 11Uj4fGiXZwYEpJibWI_O8gowzBEqvS-3 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
-./gdrive files move 1cph4S6kNaGVMB9HC9Flf7lwUeSA1wi3c 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
-./gdrive files move 1HIfN0zUaX-9FOwAzDojNriTXcJa4GNkd 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1lSqU_Ua0F0p4VOA2oXxgFkCd5c1kAJqr 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 14hze-JojkALL4NorC7h-hbHxhEGISgno 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1n8lskK61ZwDXOOzdZl8nn5vHH4waFXur 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1AdvCoeOYgUkxifjKJplwsj7yE_h77OGI 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq

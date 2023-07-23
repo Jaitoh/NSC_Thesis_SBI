@@ -12,9 +12,12 @@ import matplotlib.pyplot as plt
 
 import sys
 
-sys.path.append("../../src")
-sys.path.append("./src")
-from utils.dataset import unravel_index
+from pathlib import Path
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
+from utils.dataset.dataset import unravel_index
 
 
 class Feature_Dataset(Dataset):

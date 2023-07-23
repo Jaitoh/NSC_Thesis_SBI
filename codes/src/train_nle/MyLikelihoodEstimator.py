@@ -44,8 +44,11 @@ from sbi.utils import check_prior, del_entries
 from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 
 import sys
+from pathlib import Path
 
-sys.path.append("./src")
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
 from utils.set_seed import setup_seed, seed_worker
 from utils.setup import clean_cache
 

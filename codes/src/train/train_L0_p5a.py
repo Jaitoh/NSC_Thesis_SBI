@@ -15,13 +15,17 @@ from torch.utils.tensorboard import SummaryWriter
 from sbi import utils as utils
 from sbi.utils.get_nn_models import posterior_nn
 
-sys.path.append("./src")
+from pathlib import Path
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
 from train.MyPosteriorEstimator_p5 import MySNPE_C_P5
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
 from neural_nets.embedding_nets_p5 import GRU3_FC, Conv_LSTM, Conv_Transformer
-from utils.dataset import update_prior_min_max
+from utils.dataset.dataset import update_prior_min_max
 
 
 class Solver:
