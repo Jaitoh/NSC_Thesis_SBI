@@ -96,9 +96,18 @@ for dur in dur_list:
             num_workers=16,
             privided_prior=True,
         )
+        # params shape: (T, l_theta)
+
+        if probR.shape[-1] == 1:
+            probR = probR.squeeze(-1)
+            # probR shape: (D, M, S, T)
 
         # pad seq with nans to length 15
         seq = pad_seqC_with_nans_to_len15(seq)
+        # seq shape: (D, M, S, L_seqC)
+        print(f"seq.shape: {seq.shape}")
+        print(f"theta.shape: {params.shape}")
+        print(f"probR.shape: {probR.shape}")
 
         output_dir = f"{NSC_DIR}/data/dataset-comb/dataset-comb-dur{dur}-T500-part{task_nums[i]}.h5"
         with h5py.File(output_dir, "w") as f_result:
@@ -119,8 +128,8 @@ post_check = False
 do_rename = False
 
 if post_check:
-    for dur in [3, 5, 7, 9]:
-        # dur = 3
+    for dur in [3, 5, 7, 9, 11]:
+        # dur = 11
         print("".center(50, "="))
         print(f"==>> dur: {dur}")
         print("".center(50, "="))

@@ -55,10 +55,10 @@
 ./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur5-T500.h5  # 14hze-JojkALL4NorC7h-hbHxhEGISgno
 ./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur7-T500.h5  # 1n8lskK61ZwDXOOzdZl8nn5vHH4waFXur
 ./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur9-T500.h5  # 1AdvCoeOYgUkxifjKJplwsj7yE_h77OGI
-./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur11-T500.h5 #
+./gdrive files upload /home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur11-T500.h5 # 1HKKxl5MpvcZdtAgRdntt0XCziVs2VRUv
 # move to data/dataset-comb
 ./gdrive files move 1lSqU_Ua0F0p4VOA2oXxgFkCd5c1kAJqr 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 14hze-JojkALL4NorC7h-hbHxhEGISgno 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 1n8lskK61ZwDXOOzdZl8nn5vHH4waFXur 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 1AdvCoeOYgUkxifjKJplwsj7yE_h77OGI 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
-./gdrive files move 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+./gdrive files move 1HKKxl5MpvcZdtAgRdntt0XCziVs2VRUv 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
