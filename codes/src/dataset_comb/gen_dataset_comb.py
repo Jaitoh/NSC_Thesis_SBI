@@ -65,11 +65,15 @@ prior_max = [2.5, 77, 18, 10]
 prior = get_boxUni_prior(prior_min, prior_max)
 # ! keep the same prior for all seqCs
 params = prior.sample((num_prior_sample,)).cpu().numpy()
+# print first 5 and last 5 params
+print(f"first 5 params:\n {params[:5]}")
+print(f"last 5 params:\n {params[-5:]}")
 
 # reshape for parallel probR computation
 for dur in dur_list:
     seqCs_combs_dur = f[f"dur_{dur}"][:]
-    print(f"\n=== calculating probR for each seqC of dur_{dur}...")
+    print("".center(50, "-"))
+    print(f"=== calculating probR for each seqC of dur_{dur} ===")
     seqs = np.empty((1, 3, *seqCs_combs_dur.shape))
     for i, ms in enumerate(ms_list):
         seqs[:, i, :] = f[f"dur_{dur}"][:] * ms_list[i]
@@ -94,9 +98,7 @@ for dur in dur_list:
             privided_prior=True,
         )
 
-        output_dir = (
-            f"{NSC_DIR}/data/dataset_combinatorial_dur_{dur}_part{task_nums[i]}.h5"
-        )
+        output_dir = f"{NSC_DIR}/data/dataset-comb-dur{dur}-T500-part{task_nums[i]}.h5"
         with h5py.File(output_dir, "w") as f_result:
             f_result.create_dataset(f"seqC", data=seq)
             f_result.create_dataset(f"theta", data=params)
@@ -104,5 +106,21 @@ for dur in dur_list:
 
         print(f"file saved to {output_dir}\n")
 
+
+f.close()
+
+
+import h5py
+
+dur = 5
+f = h5py.File(f"/home/ubuntu/tmp/NSC/data/dataset-comb-dur{dur}-T500.h5", "r")
+f.keys()
+
+
+print("".center(50, "-"))
+print(f"==>> f['seqC'][:].shape: {f['seqC'][:].shape}")
+print(f"==>> f['theta'][:].shape: {f['theta'][:].shape}")
+print(f"==>> f['probR'][:].shape: {f['probR'][:].shape}")
+print("".center(50, "-"))
 
 f.close()
