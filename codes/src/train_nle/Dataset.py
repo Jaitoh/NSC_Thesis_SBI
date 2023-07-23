@@ -65,13 +65,6 @@ class probR_Comb_Dataset(Dataset):
             'first_80' - choose first 80% from 'num_chosen_theta' (normally as training set)
             'last_20'  - choose first 20% from 'num_chosen_theta' (normally as validation set)
         """
-        # set seed
-        # np.random.seed(config.seed)
-        # torch.manual_seed(config.seed)
-        # torch.cuda.manual_seed(config.seed)
-
-        dur_list = [3, 5, 7, 9, 11, 13, 15]
-
         start_loading_time = time.time()
         print("\nstart loading data into MEM ... ", end="")
         self.num_chosen_theta = num_chosen_theta
@@ -121,8 +114,6 @@ class probR_Comb_Dataset(Dataset):
             counter += 1
             S_cnt += _S
 
-        # (T, 4)
-
         # convert to tensor and reshape
         self.seqC_all = (
             torch.from_numpy(self.seqC_all)
@@ -140,7 +131,7 @@ class probR_Comb_Dataset(Dataset):
         self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
 
         if print_info:
-            self._print_info(chosen_dur, start_loading_time)
+            self._print_info(chosen_dur, part_each_dur, start_loading_time)
 
     def _get_seqC_data(self, f, part, last_part=False):
         seqC_shape = f["seqC"].shape  # seqC: (1, M, S, L)
@@ -161,12 +152,14 @@ class probR_Comb_Dataset(Dataset):
             summary_type=0,  # 0 or 1
         )
 
-    def _print_info(self, chosen_dur, start_loading_time):
+    def _print_info(self, chosen_dur, part_each_dur, start_loading_time):
         print(f" finished in: {time.time()-start_loading_time:.2f}s")
+
         print("".center(50, "="))
         print("[dataset info]")
         print(f"total # samples: {self.total_samples}")
-        print(f"dur of {list(chosen_dur)} are chosen")
+        print(f"dur of {list(chosen_dur)}")
+        print(f"part of {list(part_each_dur)} are chosen")
 
         print("".center(50, "-"))
         print("shapes:")
@@ -252,11 +245,7 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
         self.chR_mode = chR_mode
 
         if self.chR_mode == "offline":
-            time_start = time.time()
-            print(
-                f"\n('offline') Sampling C={self.C} times from probR ... ",
-                end="",
-            )
+            print(f"\n('offline') Sampling C={self.C} times from probR ... ", end="")
 
             self.probR_all = self.probR_all.to(
                 "cuda" if torch.cuda.is_available() else "cpu"
@@ -273,15 +262,16 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
 
         self.total_samples = self.T * self.C * self.MS
         if print_info:
-            self._print_info(chosen_dur, start_loading_time)
+            self._print_info(chosen_dur, part_each_dur, start_loading_time)
 
-    def _print_info(self, chosen_dur, start_loading_time):
+    def _print_info(self, chosen_dur, part_each_dur, start_loading_time):
         print(f" in: {time.time()-start_loading_time:.2f}s")
 
         print("".center(50, "="))
         print("[dataset info]")
         print(f"total # samples: {self.total_samples}")
-        print(f"dur of {list(chosen_dur)} are chosen")
+        print(f"dur of {list(chosen_dur)}")
+        print(f"part of {list(part_each_dur)} are chosen")
 
         print("".center(50, "-"))
         print("shapes:")
@@ -334,26 +324,36 @@ if __name__ == "__main__":
         num_chosen_theta=50,
         chosen_dur=[3, 9],
         part_each_dur=[1, 1],
+        max_theta=50,
+        theta_chosen_mode="random",
+        print_info=True,
+    )
+    seqC, theta, probR = Dataset[0]
+
+    setup_seed(100)
+    Dataset = probR_Comb_Dataset(
+        data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
+        num_chosen_theta=500,
+        chosen_dur=[3, 5, 7, 9],
+        part_each_dur=[1, 0.5, 0.8, 0.2],
         max_theta=500,
         theta_chosen_mode="random",
         print_info=True,
     )
-
     seqC, theta, probR = Dataset[0]
 
     setup_seed(100)
     Dataset = chR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
-        chosen_dur=[3, 9],
-        part_each_dur=[1, 1],
-        max_theta=500,
+        chosen_dur=[3, 5, 7, 9],
+        part_each_dur=[1, 1, 0.1, 0.1],
+        max_theta=50,
         theta_chosen_mode="random",
         num_probR_sample=100,
         chR_mode="offline",
         print_info=True,
     )
-
     x, theta = Dataset[0]
 
     setup_seed(100)
@@ -361,12 +361,11 @@ if __name__ == "__main__":
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
         chosen_dur=[3, 9],
-        part_each_dur=[1, 1],
+        part_each_dur=[1, 0.2],
         max_theta=500,
         theta_chosen_mode="random",
         num_probR_sample=100,
         chR_mode="online",
         print_info=True,
     )
-
     x, theta = Dataset[0]
