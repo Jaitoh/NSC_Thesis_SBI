@@ -25,8 +25,6 @@ from utils.dataset.dataset import update_prior_min_max
 from neural_nets.my_nn_models import my_likelihood_nn
 from train_nle.MyLikelihoodEstimator import CNLE
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
-
 
 class Solver:
     def __init__(self, config):
@@ -41,8 +39,6 @@ class Solver:
         # get experiement settings
         self.D = len(self.config.dataset.chosen_dur_list)
         self.M = len(self.config.experiment_settings.chosen_MS_list)
-        self.S = self.config.experiment_settings.seqC_sample_per_MS
-        self.DMS = self.D * self.M * self.S
         self.l_theta = len(self.config["prior"]["prior_min"])
 
         # save the config file using yaml
@@ -61,23 +57,7 @@ class Solver:
         return [[x, y] for x, y in zip(self.prior_min, self.prior_max)]
 
     def get_neural_likelihood(self):
-        # config_density = self.config.train.density_estimator
-
-        # print(f"\n=== embedding net === \n{config_density.embedding_net.type}")
-        # match config_density.embedding_net.type:
-        #     case "gru3_fc":
-        #         embedding_net = GRU3_FC(self.DMS)
-
-        #     case "conv_transformer":
-        #         embedding_net = Conv_Transformer(self.DMS)
-
-        #     case "conv_lstm":
-        #         embedding_net = Conv_LSTM(self.DMS)
-
-        #     # default case
-        #     case _:
-        #         embedding_net = nn.Identity()
-
+        # define embedding net
         embedding_net = nn.Identity()
 
         neural_likelihood = my_likelihood_nn(
@@ -95,7 +75,7 @@ class Solver:
 
         return neural_likelihood
 
-    def init_inference(self, ignore_ss=False):
+    def init_inference(self):
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # prior
@@ -129,16 +109,16 @@ class Solver:
             prior=self.prior,
             density_estimator=neural_likelihood,
             device=self.device,
-            logging_level="Error",
+            logging_level="CRITICAL",
             summary_writer=writer,
             show_progress_bars=True,
         )
 
     def sbi_train(self, debug=False):
         # initialize inference
-        self.init_inference(ignore_ss=self.config.prior.ignore_ss)
+        self.init_inference()
 
-        # initialize inference dataset
+        # initialize inference dataset (data will not be used)
         self.inference.append_simulations(
             theta=torch.randn(10, 4),
             x=torch.cat([torch.randn(10, 14), torch.randint(0, 2, (10, 1))], dim=1),
@@ -146,26 +126,31 @@ class Solver:
         )
 
         # run training
-        self.inference, density_estimator = self.inference.train()
-
-        # build MCMC posterior
-        mcmc_parameters = dict(
-            warmup_steps=100,
-            thin=10,
-            num_chains=10,
-            num_workers=10,
-            init_strategy="sir",
+        self.inference, density_estimator = self.inference.train(
+            config=self.config,
+            prior_limits=self._get_limits(),
+            continue_from_checkpoint=self.config.continue_from_checkpoint,
+            debug=debug,
         )
 
-        cnle_posterior = self.inference.build_posterior(
-            density_estimator=density_estimator,
-            mcmc_parameters=mcmc_parameters,
-        )
+        # # build MCMC posterior
+        # mcmc_parameters = dict(
+        #     warmup_steps=100,
+        #     thin=10,
+        #     num_chains=10,
+        #     num_workers=10,
+        #     init_strategy="sir",
+        # )
 
-        # generate posterior samples
-        cnle_samples = cnle_posterior.sample(
-            (num_samples,), x=x_o.reshape(num_trials, 2)
-        )
+        # cnle_posterior = self.inference.build_posterior(
+        #     density_estimator=density_estimator,
+        #     mcmc_parameters=mcmc_parameters,
+        # )
+
+        # # generate posterior samples
+        # cnle_samples = cnle_posterior.sample(
+        #     (num_samples,), x=x_o.reshape(num_trials, 2)
+        # )
 
 
 @hydra.main(config_path="../config", config_name="config-nle-test", version_base=None)

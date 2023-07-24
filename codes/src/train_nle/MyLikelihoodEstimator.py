@@ -6,6 +6,12 @@ from typing import Any, Callable, Dict, Optional, Union, Tuple
 import h5py
 
 import torch
+from torch.optim.lr_scheduler import (
+    CosineAnnealingWarmRestarts,
+    ReduceLROnPlateau,
+    ConstantLR,
+)
+
 import numpy as np
 import matplotlib.pyplot as plt
 from pyknos.nflows import flows
@@ -31,7 +37,7 @@ from sbi.utils import (
 )
 
 from sbi.inference.posteriors import MCMCPosterior, RejectionPosterior, VIPosterior
-from sbi.inference.potentials import (
+from sbi.inference.potentials.likelihood_based_potential import (
     likelihood_estimator_based_potential,
     LikelihoodBasedPotential,
     MixedLikelihoodBasedPotential,
@@ -51,6 +57,8 @@ sys.path.append(f"{NSC_DIR}/codes/src")
 
 from utils.set_seed import setup_seed, seed_worker
 from utils.setup import clean_cache
+from utils.dataset.dataset import update_prior_min_max
+from train_nle.Dataset import chR_Comb_Dataset, probR_Comb_Dataset
 
 
 class MyLikelihoodEstimator(NeuralInference, ABC):
@@ -160,68 +168,66 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         return self
 
-    def prepare_dataset_network(self):
+    def prepare_dataset_network(
+        self, config, continue_from_checkpoint=None, device="cuda"
+    ):
         # prepare train, val dataset and dataloader
-        print("\n=== train, val dataset and dataloader ===")
-        data_path = self.config.data_path
-        with h5py.File(data_path, "r") as f:
-            sets = list(f.keys())[: self.config.dataset.num_max_sets]
+        print("".center(50, "="))
+        print("prepare train, val dataset and dataloader")
 
-        train_set_names = sets[: int(len(sets) * 0.9)]
-        valid_set_names = sets[int(len(sets) * 0.9) :]
+        # get the original prior min and max for normalization
+        # _, _, unnormed_prior_min, unnormed_prior_max = update_prior_min_max(
+        #     prior_min=self.config.prior.prior_min,
+        #     prior_max=self.config.prior.prior_max,
+        #     ignore_ss=self.config.prior.ignore_ss,
+        #     normalize=self.config.prior.normalize,
+        # )
 
+        # --- train / valid set ---
+        data_dir = self.config.data_path
         DS_config = self.config.dataset
         num_train_set_T = DS_config.num_max_theta_each_set
         num_valid_set_T = DS_config.num_max_theta_each_set
 
-        # get the original prior min and max for normalization
-        _, _, unnormed_prior_min, unnormed_prior_max = update_prior_min_max(
-            prior_min=self.config.prior.prior_min,
-            prior_max=self.config.prior.prior_max,
-            ignore_ss=self.config.prior.ignore_ss,
-            normalize=self.config.prior.normalize,
+        print("".center(50, "="))
+        print("[training] sets")
+        # print("".center(50, "-"))
+        train_dataset = chR_Comb_Dataset(
+            data_dir=data_dir,
+            num_chosen_theta=500,  # TODO: change to variable
+            chosen_dur=[3, 5, 7],
+            part_each_dur=[0.9, 0.9, 0.9, 0.9, 0.9],
+            last_part=False,
+            max_theta=500,
+            theta_chosen_mode="random",
+            num_probR_sample=10,
+            chR_mode="online",
+            print_info=True,
+            config_theta=self.config.prior,
         )
 
-        print("[training] sets", end=" ")
-        train_dataset = chR_2D_Dataset(
-            data_path=data_path,
-            chosen_set_names=train_set_names,
-            num_chosen_theta_each_set=num_train_set_T,
-            chosen_dur=DS_config.chosen_dur_list,
-            crop_dur=DS_config.crop_dur,
-            max_theta_in_a_set=num_train_set_T,
+        print("".center(50, "="))
+        print("[validation] sets")
+        # print("".center(50, "-"))
+        valid_dataset = chR_Comb_Dataset(
+            data_dir=data_dir,
+            num_chosen_theta=500,  # TODO: change to variable
+            chosen_dur=[3, 5, 7],
+            part_each_dur=[0.1, 0.1, 0.1, 0.1, 0.1],
+            last_part=True,
+            max_theta=500,
             theta_chosen_mode="random",
-            seqC_process=DS_config.seqC_process,
-            summary_type=DS_config.summary_type,
-            permutation_mode=DS_config.permutation_mode,
-            num_probR_sample=DS_config.num_probR_sample,
-            ignore_ss=config.prior.ignore_ss,
-            normalize_theta=config.prior.normalize,
-            unnormed_prior_min=unnormed_prior_min,
-            unnormed_prior_max=unnormed_prior_max,
-        )
-
-        print("\n[validation] sets", end=" ")
-        valid_dataset = chR_2D_Dataset(
-            data_path=data_path,
-            chosen_set_names=valid_set_names,
-            num_chosen_theta_each_set=num_valid_set_T,
-            chosen_dur=DS_config.chosen_dur_list,
-            crop_dur=DS_config.crop_dur,
-            max_theta_in_a_set=num_valid_set_T,
-            theta_chosen_mode="random",
-            seqC_process=DS_config.seqC_process,
-            summary_type=DS_config.summary_type,
-            permutation_mode=DS_config.permutation_mode,
-            num_probR_sample=DS_config.num_probR_sample,
-            ignore_ss=config.prior.ignore_ss,
-            normalize_theta=config.prior.normalize,
-            unnormed_prior_min=unnormed_prior_min,
-            unnormed_prior_max=unnormed_prior_max,
+            num_probR_sample=10,
+            chR_mode="online",
+            print_info=True,
+            config_theta=self.config.prior,
         )
 
         # prepare train, val, test dataloader
         config_dataset = self.config.dataset
+        prefetch_factor = (
+            config_dataset.prefetch_factor if config_dataset.num_workers > 0 else None
+        )
         loader_kwargs = {
             "batch_size": min(
                 config_dataset.batch_size,
@@ -232,9 +238,10 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             "shuffle": True,
             "pin_memory": config_dataset.pin_memory,
             "num_workers": config_dataset.num_workers,
-            "prefetch_factor": config_dataset.prefetch_factor,
+            "prefetch_factor": prefetch_factor,
             "worker_init_fn": seed_worker,
         }
+        print("".center(50, "-"))
         print(f"{loader_kwargs=}")
 
         g = torch.Generator()
@@ -245,7 +252,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
 
         # collect posterior sets
-        print(f"\ncollect posterior sets...", end=" ")
+        print(f"collect posterior sets...", end=" ")
         tic = time.time()
         self.seen_data_for_posterior = {"x": [], "theta": []}
         self.unseen_data_for_posterior = {"x": [], "theta": []}
@@ -262,6 +269,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         print(
             f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes"
         )
+        print("".center(50, "-"))
+        print("")
 
         # initialize the network
         if self._neural_net is None:
@@ -274,12 +283,6 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
             print("\nfinished build network")
             print(self._neural_net)
-
-            test_posterior_net_for_multi_d_x(
-                self._neural_net,
-                theta_train_batch.to("cpu"),
-                x_train_batch.to("cpu"),
-            )
 
             # load network from state dict if specified
             if continue_from_checkpoint != None and continue_from_checkpoint != "":
@@ -426,7 +429,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     x = x.to(self._device)
                     theta = theta.to(self._device)
 
-                # Evaluate on x with theta as context.
+                # Evaluate on x with theta as context. TODO: the sign of loss +?-?
                 train_data_size += len(x)
                 train_losses = self._loss(theta=theta, x=x)
                 train_loss = torch.mean(train_losses)
@@ -443,7 +446,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                         max_norm=clip_max_norm,
                     )
 
-                del x, theta, masks_batch, train_losses
+                del x, theta, train_losses
                 clean_cache()
 
                 self.optimizer.step()
@@ -499,11 +502,11 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     theta_valid = theta_valid.to(self._device)
 
                     # Evaluate on x with theta as context.
-                    val_losses = self._loss(theta=theta_valid, x=x_valid)
-                    val_log_prob_sum -= val_losses.sum().item()
+                    valid_losses = self._loss(theta=theta_valid, x=x_valid)
+                    valid_log_prob_sum -= valid_losses.sum().item()
                     valid_data_size += len(x_valid)
 
-                    del x_valid, theta_valid, masks_batch, valid_losses
+                    del x_valid, theta_valid, valid_losses
                     clean_cache()
 
                     if self.config.debug:
@@ -519,12 +522,15 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                 self._summary["validation_log_probs"].append(self._valid_log_prob)
                 self._summary["epoch_durations_sec"].append(toc - train_start_time)
 
-                valid_info = f"\nvalid_log_prob: {self._valid_log_prob:.2f} in {(time.time() - valid_start_time)/60:.2f} min"
+                valid_info = f"valid_log_prob: {self._valid_log_prob:.2f} in {(time.time() - valid_start_time)/60:.2f} min"
                 print(valid_info)
 
             # update epoch info and counter
-            epoch_info = f"| Epochs trained: {epoch:4} | log_prob train: {self._train_log_prob:.2f} | log_prob val: {self._valid_log_prob:.2f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
+            epoch_info = f"Epochs trained: {epoch:4} | log_prob train: {self._train_log_prob:.2f} | log_prob val: {self._valid_log_prob:.2f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
+            print("".center(50, "-"))
             print(epoch_info)
+            print("".center(50, "-"))
+            print("")
 
             # update scheduler
             if epoch < config_training["warmup_epochs"]:
@@ -539,8 +545,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             epoch += 1
 
         # Update summary.
-        self._summary["epochs_trained"].append(self.epoch)
-        self._summary["best_validation_log_prob"].append(self._best_val_log_prob)
+        self._summary["epochs_trained"].append(epoch)
+        self._summary["best_validation_log_prob"].append(self._best_valid_log_prob)
 
         # Update TensorBoard and summary dict.
         self._summarize(round_=self._round)
@@ -573,7 +579,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         self._plot_training_curve()
 
-        return deepcopy(self._neural_net)
+        return self, deepcopy(self._neural_net)
 
     def _loss(self, theta: Tensor, x: Tensor) -> Tensor:
         r"""Return loss for SNLE, which is the likelihood of $-\log q(x_i | \theta_i)$.
@@ -597,10 +603,10 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             self._best_model_state_dict = deepcopy(self._neural_net.state_dict())
             self._best_model_from_epoch = epoch
 
-            posterior_step = self.config.train.posterior.step
+            # posterior_step = self.config.train.posterior.step
             # plot posterior behavior when best model is updated
-            if epoch != -1 and posterior_step != 0 and epoch % posterior_step == 0:
-                self._posterior_behavior_log(self.prior_limits, epoch)
+            # if epoch != -1 and posterior_step != 0 and epoch % posterior_step == 0:
+            #     self.posterior_behavior_log(self.prior_limits, epoch)
 
             # save the model
             torch.save(
@@ -905,11 +911,11 @@ class CNLE(MyLikelihoodEstimator):
         summary_writer: Optional[TensorboardSummaryWriter] = None,
         show_progress_bars: bool = True,
     ):
-        r"""Mixed Neural Likelihood Estimation (MNLE) [1].
+        r"""COnditioned Neural Likelihood Estimation (MNLE) [1].
 
-        Like SNLE, but not sequential and designed to be applied to data with mixed
+        Like SNLE, but not sequential and designed to be applied to data with conditioned
         types, e.g., continuous data and discrete data like they occur in
-        decision-making experiments (reation times and choices).
+        decision-making experiments
 
         [1] Flexible and efficient simulation-based inference for models of
         decision-making, Boelts et al. 2021,
@@ -951,7 +957,7 @@ def conditioned_likelihood_estimator_based_potential(
     prior,
     x_o,
 ) -> Tuple[Callable, TorchTransform]:
-    device = str(next(likelihood_estimator.discrete_net.parameters()).device)
+    device = str(next(likelihood_estimator.conditioned_net.parameters()).device)
 
     potential_fn = ConditionedLikelihoodBasedPotential(
         likelihood_estimator, prior, x_o, device=device

@@ -70,7 +70,7 @@ def build_cnle(
         num_hidden_category=256,
     )
 
-    return ConditionedDensityEstimator(discrete_net=disc_nle)
+    return ConditionedDensityEstimator(conditioned_net=disc_nle)
 
 
 # Define the LSTM part of the model
@@ -199,11 +199,19 @@ class CategoricalNet(nn.Module):
         """Initialize the neural net.
 
         Args:
-            num_input: number of input units, i.e., dimensionality of parameters.
-            num_categories: number of output units, i.e., number of categories.
-            num_hidden: number of hidden units per layer.
-            num_layers: number of hidden layers.
-            embedding: emebedding net for parameters, e.g., a z-scoring transform.
+            --- seqC net ---
+            input_dim_seqC: dimension of the input seqC.
+            hidden_dim_seqC: number of hidden units in the LSTM.
+            num_layers_seqC: number of layers in the LSTM.
+
+            --- theta net ---
+            num_input_theta: dimension of the input theta.
+            num_hidden_theta: number of hidden units in the MLP.
+            num_layers_theta: number of layers in the MLP.
+
+            --- categorical net ---
+            num_categories: number of categories to predict.
+            num_hidden_category: number of hidden units in the MLP.
         """
         super(CategoricalNet, self).__init__()
 
@@ -211,6 +219,7 @@ class CategoricalNet(nn.Module):
         self.softmax = Softmax(dim=1)
         self.num_input_theta = num_input_theta
 
+        # --- seqC net ---
         self.seqC_net = LSTMNet(
             input_dim=input_dim_seqC,
             hidden_dim=hidden_dim_seqC,
@@ -218,12 +227,14 @@ class CategoricalNet(nn.Module):
             dropout=0.1,
         )
 
+        # --- theta net ---
         self.theta_net = MLP(
             num_input=num_input_theta,
             num_hidden=num_hidden_theta,
             num_layers=num_layers_theta,
         )
 
+        # --- categorical net ---
         self.input_layer = nn.Linear(
             num_hidden_theta + hidden_dim_seqC, num_hidden_category
         )
@@ -341,7 +352,7 @@ class ConditionedDensityEstimator(nn.Module):
         theta: Tensor,
     ):
         raise NotImplementedError(
-            """The forward method is not implemented for MNLE, use '.sample(...)' to
+            """The forward method is not implemented for CNLE, use '.sample(...)' to
             generate samples though a forward pass."""
         )
 
@@ -356,6 +367,7 @@ class ConditionedDensityEstimator(nn.Module):
 
         Args:
             theta: parameters for which to generate samples.
+            seqC: seqC under which condition to generate samples.
             num_samples: number of samples to generate.
 
         Returns:

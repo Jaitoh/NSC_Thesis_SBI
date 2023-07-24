@@ -16,7 +16,7 @@ sys.path.append(f"{NSC_DIR}/codes/src")
 
 from dataset.data_process import process_x_seqC_part
 from utils.dataset.dataset import (
-    process_theta,
+    process_theta_2D,
     unravel_index,
     generate_permutations,
     get_len_seqC,
@@ -37,6 +37,7 @@ class probR_Comb_Dataset(Dataset):
         max_theta=500,
         theta_chosen_mode="random",
         print_info=False,
+        config_theta=None,
     ):
         super().__init__()
 
@@ -66,7 +67,7 @@ class probR_Comb_Dataset(Dataset):
             'last_20'  - choose first 20% from 'num_chosen_theta' (normally as validation set)
         """
         start_loading_time = time.time()
-        print("\nstart loading data into MEM ... ", end="")
+        print("start loading data into MEM ... ", end="")
         self.num_chosen_theta = num_chosen_theta
 
         # define the final shape of the data
@@ -79,7 +80,7 @@ class probR_Comb_Dataset(Dataset):
         for dur, part in zip(chosen_dur, part_each_dur):
             f = h5py.File(Path(data_dir) / f"dataset-comb-dur{dur}-T500.h5", "r")
             _, self.M, S, self.L_seqC = f["seqC"].shape  # (1, M, S, L)
-            _S = int(S * part)
+            _S = round(S * part)
             self.S += _S
             self.theta_all = f["theta"][chosen_theta_idx, :]
             f.close()
@@ -128,7 +129,18 @@ class probR_Comb_Dataset(Dataset):
             .to(torch.float32)
             .contiguous()
         )
+
+        # process theta [nSets, TC, 4]
         self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
+        self.theta_all = (
+            process_theta_2D(  # normalize and processing of the theta values
+                self.theta_all,
+                ignore_ss=config_theta.ignore_ss,
+                normalize_theta=config_theta.normalize,
+                unnormed_prior_min=config_theta.prior_min,
+                unnormed_prior_max=config_theta.prior_max,
+            )
+        )
 
         if print_info:
             self._print_info(chosen_dur, part_each_dur, start_loading_time)
@@ -136,7 +148,7 @@ class probR_Comb_Dataset(Dataset):
     def _get_seqC_data(self, f, part, last_part=False):
         seqC_shape = f["seqC"].shape  # seqC: (1, M, S, L)
         S = seqC_shape[2]
-        S_part = int(S * part)
+        S_part = round(S * part)
         # take partial of S
         seqC = (
             f["seqC"][:, :, -S_part:, :][0]
@@ -228,6 +240,7 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
         num_probR_sample=100,
         chR_mode="online",  # online or offline
         print_info=True,
+        config_theta=None,
     ):
         start_loading_time = time.time()
         super().__init__(
@@ -238,6 +251,7 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
             last_part=last_part,
             max_theta=max_theta,
             theta_chosen_mode=theta_chosen_mode,
+            config_theta=config_theta,
         )
         self.C = num_probR_sample
         self.MS = self.seqC_all.shape[0]

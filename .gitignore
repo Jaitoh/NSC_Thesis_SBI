@@ -66,3 +66,4 @@ codes/outputs/2024-*
 codes/outputs/2025-*
 codes/outputs/2026-*
 *.hydra*
+*/train_nle/logs/

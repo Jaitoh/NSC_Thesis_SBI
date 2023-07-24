@@ -156,14 +156,41 @@ def process_theta(
     ignore_ss: whether to ignore the second and third parameters of theta
     normalize_theta: whether to normalize theta
     """
-    if ignore_ss:
-        theta = torch.cat((theta[:, :, :1], theta[:, :, 3:]), dim=-1)
 
     if normalize_theta:
         for i in range(theta.shape[-1]):
             theta[:, :, i] = (theta[:, :, i] - unnormed_prior_min[i]) / (
                 unnormed_prior_max[i] - unnormed_prior_min[i]
             )
+
+    if ignore_ss:
+        theta = torch.cat((theta[:, :, :1], theta[:, :, 3:]), dim=-1)
+
+    return theta
+
+
+def process_theta_2D(
+    theta,
+    ignore_ss=False,
+    normalize_theta=False,
+    unnormed_prior_min=None,
+    unnormed_prior_max=None,
+):
+    """
+    theta: (n_T, n_theta)
+    ignore_ss: whether to ignore the second and third parameters of theta
+    normalize_theta: whether to normalize theta
+    """
+
+    if normalize_theta:
+        for i in range(theta.shape[-1]):
+            theta[:, i] = (theta[:, i] - unnormed_prior_min[i]) / (
+                unnormed_prior_max[i] - unnormed_prior_min[i]
+            )
+
+    if ignore_ss:
+        theta = torch.cat((theta[:, :1], theta[:, 3:]), dim=-1)
+
     return theta
 
 

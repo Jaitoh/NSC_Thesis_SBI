@@ -4,14 +4,14 @@ defaults:
   - prior: prior-3
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p5-size1
+  - dataset: dataset-nle-test
   - train: train-p5-conv_lstm-mdn
 
 pipeline_version: nle
-log_dir: ./src/train/logs/train_nle/nle-test
-data_path: /home/wehe/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5
+log_dir: ./src/train_nle/logs/nle-test
+data_path: /home/ubuntu/tmp/NSC/data/dataset-comb
 # data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 seed: 100
-debug: True
+debug: False
 gpu: True
 continue_from_checkpoint: ""
