@@ -1,7 +1,7 @@
 pipeline_version: nle
 log_dir: ./src/train_nle/logs/nle-test
-data_path: /home/ubuntu/tmp/NSC/data/dataset-comb
-seed: 100
+data_path: /home/wehe/tmp/NSC/data/dataset-comb
+seed: 42
 debug: false
 gpu: true
 continue_from_checkpoint: ''
@@ -56,7 +56,7 @@ dataset:
   crop_dur: true
   permutation_mode: online
   num_probR_sample: 25
-  batch_size: 61440
+  batch_size: 35840
   pin_memory: true
   num_workers: 8
   prefetch_factor: 2
@@ -81,7 +81,7 @@ train:
     initial_lr: 1.0e-08
     scheduler: None
     scheduler_params: {}
-    print_freq: 5
+    print_freq: 2
     num_atoms: 10
     use_combined_loss: true
   posterior:

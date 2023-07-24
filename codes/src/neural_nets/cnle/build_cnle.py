@@ -68,6 +68,7 @@ def build_cnle(
         num_layers_theta=4,
         num_categories=2,
         num_hidden_category=256,
+        use_conv=True,
     )
 
     return ConditionedDensityEstimator(conditioned_net=disc_nle)
@@ -110,6 +111,7 @@ class ConvNet(nn.Module):
         input_dim=1,
         num_filters=64,
         filter_size=3,
+        seqC_length=14,
     ):
         super(ConvNet, self).__init__()
         self.conv1 = nn.Conv1d(
@@ -126,6 +128,16 @@ class ConvNet(nn.Module):
         )
         self.pool = nn.MaxPool1d(filter_size)
 
+        num_features = (
+            seqC_length // filter_size // filter_size * 2 * num_filters
+        )  # 512
+
+        self.fc1 = nn.Linear(num_features, num_filters * 16)  # 1024
+        self.fc2 = nn.Linear(num_filters * 16, num_filters * 4)  # 256
+        self.fc3 = nn.Linear(num_filters * 4, num_filters)  # 64
+        self.activation = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.1)
+
     def forward(self, x):
         # x.shape: (batch_size, seq_length)
         x.unsqueeze_(1)  # add a channel dimension
@@ -141,6 +153,15 @@ class ConvNet(nn.Module):
         # x.shape: (batch_size, num_filters*2, (seq_length//filter_size)//filter_size)
         x = x.view(x.size(0), -1)  # flatten the output for the classifier
         # x.shape: (batch_size, num_filters*2 * ((seq_length//filter_size)//filter_size))
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        # x.shape: (batch_size, num_features * 16)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        # x.shape: (batch_size, num_features * 4)
+        x = F.relu(self.fc3(x))
+        # x.shape: (batch_size, num_features)
+        x = self.dropout(x)
         return x
 
 
@@ -190,11 +211,13 @@ class CategoricalNet(nn.Module):
         input_dim_seqC=1,
         hidden_dim_seqC=64,
         num_layers_seqC=3,
+        filter_size_seqC=3,
         num_input_theta=4,
         num_hidden_theta=64,
         num_layers_theta=4,
         num_categories=2,
         num_hidden_category=256,
+        use_conv=False,
     ):
         """Initialize the neural net.
 
@@ -216,16 +239,26 @@ class CategoricalNet(nn.Module):
         super(CategoricalNet, self).__init__()
 
         self.activation = Sigmoid()
+        # self.activation = nn.ReLU()
         self.softmax = Softmax(dim=1)
         self.num_input_theta = num_input_theta
 
         # --- seqC net ---
-        self.seqC_net = LSTMNet(
-            input_dim=input_dim_seqC,
-            hidden_dim=hidden_dim_seqC,
-            n_layers=num_layers_seqC,
-            dropout=0.1,
-        )
+
+        if use_conv:
+            self.seqC_net = ConvNet(
+                input_dim=input_dim_seqC,
+                num_filters=hidden_dim_seqC,
+                filter_size=filter_size_seqC,
+                seqC_length=14,
+            )
+        else:
+            self.seqC_net = LSTMNet(
+                input_dim=input_dim_seqC,
+                hidden_dim=hidden_dim_seqC,
+                n_layers=num_layers_seqC,
+                dropout=0.1,
+            )
 
         # --- theta net ---
         self.theta_net = MLP(
