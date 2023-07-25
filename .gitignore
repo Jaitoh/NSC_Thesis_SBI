@@ -53,6 +53,7 @@ codes/src/simulator/DM_compute.html
 codes/src/simulator/DM_compute.c
 
 codes/src/train/logs/*
+codes/src/train_nle/logs/*
 
 *.key
 *.gz
@@ -66,4 +67,3 @@ codes/outputs/2024-*
 codes/outputs/2025-*
 codes/outputs/2026-*
 *.hydra*
-*/train_nle/logs/
