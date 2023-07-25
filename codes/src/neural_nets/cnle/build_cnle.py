@@ -21,7 +21,7 @@ from pathlib import Path
 NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent.as_posix()
 sys.path.append(f"{NSC_DIR}/codes/src")
 
-from neural_nets.cnle.cnle_nets import CategoricalNet
+from neural_nets.cnle.cnle_nets import *
 
 
 def build_cnle(
@@ -95,7 +95,7 @@ class ConditionedDensityEstimator(nn.Module):
 
     def __init__(
         self,
-        conditioned_net: CategoricalNet,
+        conditioned_net,
     ):
         """Initialize class for combining density estimators for MNLE.
 

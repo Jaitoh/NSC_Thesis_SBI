@@ -27,7 +27,7 @@ print(OmegaConf.to_yaml(config))
 
 model_path = (
     Path(NSC_DIR)
-    / "codes/src/train_nle/logs/L0-nle-cnn-dur3-online-copy/model/model_check_point.pt"
+    / "codes/src/train_nle/logs/L0-nle-cnn/L0-nle-cnn-dur3-online-copy/model/model_check_point.pt"
 )
 
 
@@ -76,7 +76,7 @@ posterior = solver.inference.build_posterior(
 
 
 # prepare data for posterior
-def get_data_for_theta(dataset, idx_theta, chR=True):
+def get_data_for_theta(idx_theta, dataset, chR=True):
     """
     get the data from the dataset for a given theta
     """
@@ -95,27 +95,29 @@ def get_data_for_theta(dataset, idx_theta, chR=True):
             data_seq = data_seq.repeat(C, 1)  # [C, 14]
             data[idx_seq] = torch.cat([data_seq, data_chR], dim=1)  # [C, 15]
 
-    return train_data, theta_value
+    return data, theta_value
 
 
 idx_theta = 0
 train_data, theta_value = get_data_for_theta(idx_theta, train_dataset)  # [MS, C, 15]
 valid_data, theta_value = get_data_for_theta(idx_theta, valid_dataset)  # [MS, C, 15]
 
-print("".center(50, "-"))
+print("".center(50, "-"), "\n")
+print(f"==>> theta_value: {theta_value}")
 print(f"==>> train_data.shape: {train_data.shape}")
 print(f"==>> valid_data.shape: {valid_data.shape}")
-
+print("\n", "".center(50, "-"))
 
 # run posterior and plot
 fig_x, _ = plot_posterior_with_label(
     posterior=posterior,
-    sample_num=config.train.posterior.sampling_num,
-    x=seen_data.to(solver._device),  # TODO: change to data
-    true_params=self.seen_data_for_posterior["theta"][fig_idx],
-    limits=limits,
-    prior_labels=prior_labels,
+    sample_num=config.posterior.sampling_num,
+    x=train_data[0].reshape(-1, 15).to(solver.inference._device),
+    true_params=theta_value,
+    limits=solver._get_limits(),
+    prior_labels=config.prior.prior_labels,
 )
+print(f"==>> train_data[0].shape: {train_data[0].reshape(-1, 15).shape}")
 
 # generate posterior samples
 cnle_samples = cnle_posterior.sample((num_samples,), x=x_o.reshape(num_trials, 2))
