@@ -360,9 +360,9 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         self.optimizer = optim.Adam(
             list(self._neural_net.parameters()),
             lr=config_training.learning_rate,
-            # weight_decay=eval(config_training.weight_decay) #! weight decay ignored
-            # if isinstance(config_training.weight_decay, str)
-            # else config_training.weight_decay,
+            weight_decay=eval(config_training.weight_decay)  # ! weight decay ignored?
+            if isinstance(config_training.weight_decay, str)
+            else config_training.weight_decay,
         )
         # scheduler
         self.scheduler_warmup = WarmupScheduler(
