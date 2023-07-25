@@ -119,13 +119,6 @@ fig_x, _ = plot_posterior_with_label(
 )
 print(f"==>> train_data[0].shape: {train_data[0].reshape(-1, 15).shape}")
 
-# generate posterior samples
-cnle_samples = cnle_posterior.sample((num_samples,), x=x_o.reshape(num_trials, 2))
-
 del solver
 clean_cache()
 print(f"PID: {PID} finished")
-
-
-# if __name__ == "__main__":
-#     main()
