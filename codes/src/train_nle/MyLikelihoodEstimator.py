@@ -195,13 +195,13 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         train_dataset = chR_Comb_Dataset(
             data_dir=data_dir,
             num_chosen_theta=500,  # TODO: change to variable
-            chosen_dur=[3, 5, 7],
+            chosen_dur=[3],
             part_each_dur=[0.9, 0.9, 0.9, 0.9, 0.9],
             last_part=False,
             max_theta=500,
             theta_chosen_mode="random",
-            num_probR_sample=10,
-            chR_mode="online",
+            num_probR_sample=100,
+            chR_mode="offline",
             print_info=True,
             config_theta=self.config.prior,
         )
@@ -212,13 +212,13 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         valid_dataset = chR_Comb_Dataset(
             data_dir=data_dir,
             num_chosen_theta=500,  # TODO: change to variable
-            chosen_dur=[3, 5, 7],
+            chosen_dur=[3],
             part_each_dur=[0.1, 0.1, 0.1, 0.1, 0.1],
             last_part=True,
             max_theta=500,
             theta_chosen_mode="random",
-            num_probR_sample=10,
-            chR_mode="online",
+            num_probR_sample=100,
+            chR_mode="offline",
             print_info=True,
             config_theta=self.config.prior,
         )
@@ -360,7 +360,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         self.optimizer = optim.Adam(
             list(self._neural_net.parameters()),
             lr=config_training.learning_rate,
-            weight_decay=eval(config_training.weight_decay)
+            weight_decay=eval(config_training.weight_decay)  # ! weight decay ignored?
             if isinstance(config_training.weight_decay, str)
             else config_training.weight_decay,
         )

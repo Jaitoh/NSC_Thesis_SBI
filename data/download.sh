@@ -77,10 +77,10 @@ https://drive.google.com/drive/folders/1bvSrSvoR-xhwN1qf7Cps_W0rTk_g6Bn3
 
 # ========== dataset comb ==========
 # dataset-comb-dur3-T500.h5 ~ 5, 7, 9, 11
-./gdrive files download 1MIUVVt0dojEZtYXqtO9YCjiT_-Dd-84z --destination /home/ubuntu/tmp/NSC/data/dataset-comb
-./gdrive files download 16eG3TFMzIH4JLma-9Inr7kwxac9eH6Es --destination /home/ubuntu/tmp/NSC/data/dataset-comb
-./gdrive files download 14ZPwGZLnM3LnxHMoQCxW0m3QJPEQD-ai --destination /home/ubuntu/tmp/NSC/data/dataset-comb
-./gdrive files download 108_dKDeQ6oxDEMTTzUUNr3wvE74rrJfY --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 1lSqU_Ua0F0p4VOA2oXxgFkCd5c1kAJqr --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 14hze-JojkALL4NorC7h-hbHxhEGISgno --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 1n8lskK61ZwDXOOzdZl8nn5vHH4waFXur --destination /home/ubuntu/tmp/NSC/data/dataset-comb
+./gdrive files download 1AdvCoeOYgUkxifjKJplwsj7yE_h77OGI --destination /home/ubuntu/tmp/NSC/data/dataset-comb
 ./gdrive files download 1HKKxl5MpvcZdtAgRdntt0XCziVs2VRUv --destination /home/ubuntu/tmp/NSC/data/dataset-comb
 
 # 解压缩
