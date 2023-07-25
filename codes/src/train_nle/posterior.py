@@ -21,12 +21,12 @@ from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 # @hydra.main(config_path="../config", config_name="config-nle-test", version_base=None)
 # def main(config: DictConfig):
 hydra.core.global_hydra.GlobalHydra.instance().clear()
-initialize(config_path="../config", job_name="test_nle")
+initialize(config_path="../config_nle", job_name="test_nle")
 config = compose(config_name="config-nle-test")
 print(OmegaConf.to_yaml(config))
 
 model_path = (
-    Path(NSC_DIR) / "codes/src/train_nle/logs/nle-lstm/model/model_check_point.pt"
+    Path(NSC_DIR) / "codes/src/train_nle/logs/nle-test-cnn/model/model_check_point.pt"
 )
 
 
@@ -37,8 +37,10 @@ log_dir = Path(config.log_dir)
 data_path = Path(config.data_path)
 
 # initialize solver and network
-solver = Solver(config)
+solver = Solver(config, store_config=False)
 solver.init_inference()
+
+# get the training dataset, & trained network
 (
     _,
     _,
@@ -51,7 +53,7 @@ solver.init_inference()
     device="cuda" if torch.cuda.is_available() and config.gpu else "cpu",
 )
 
-# build posterior
+# build MCMC posterior
 mcmc_parameters = dict(
     warmup_steps=100,
     thin=10,
@@ -73,26 +75,24 @@ posterior = solver.inference.build_posterior(
 
 
 # prepare data for posterior
-def get_data_for_theta(train_dataset, idx_theta, chR=True):
+def get_data_for_theta(dataset, idx_theta, chR=True):
     """
     get the data from the dataset for a given theta
     """
-    theta_value = train_dataset.theta_all[idx_theta]
+    theta_value = dataset.theta_all[idx_theta]
 
     if chR:
-        # train_dataset.seqC_all.shape  # [MS, 15]
-        # train_dataset.chR_all.shape  # [MS, T, C, 1]
-        # train_dataset.theta_all.shape  # [T, 4]
-        n_seq = train_dataset.seqC_all.shape[0]
-        T, C = train_dataset.chR_all.shape[1:3]
-        train_data = torch.empty((n_seq, C, 15))  # [MS, C, 15]
+        # dataset.seqC_all.shape  # [MS, 15]
+        # dataset.chR_all.shape  # [MS, T, C, 1]
+        # dataset.theta_all.shape  # [T, 4]
+        n_seq = dataset.seqC_all.shape[0]
+        T, C = dataset.chR_all.shape[1:3]
+        data = torch.empty((n_seq, C, 15))  # [MS, C, 15]
         for idx_seq in range(n_seq):
-            train_data_seq = train_dataset.seqC_all[idx_seq, 1:]  # [14]
-            train_data_chR = train_dataset.chR_all[idx_seq, idx_theta, :, :]  # [C, 1]
-            train_data_seq = train_data_seq.repeat(C, 1)  # [C, 14]
-            train_data[idx_seq] = torch.cat(
-                [train_data_seq, train_data_chR], dim=1
-            )  # [C, 15]
+            data_seq = dataset.seqC_all[idx_seq, 1:]  # [14]
+            data_chR = dataset.chR_all[idx_seq, idx_theta, :, :]  # [C, 1]
+            data_seq = data_seq.repeat(C, 1)  # [C, 14]
+            data[idx_seq] = torch.cat([data_seq, data_chR], dim=1)  # [C, 15]
 
     return train_data, theta_value
 
@@ -100,6 +100,10 @@ def get_data_for_theta(train_dataset, idx_theta, chR=True):
 idx_theta = 0
 train_data, theta_value = get_data_for_theta(idx_theta, train_dataset)  # [MS, C, 15]
 valid_data, theta_value = get_data_for_theta(idx_theta, valid_dataset)  # [MS, C, 15]
+
+print("".center(50, "-"))
+print(f"==>> train_data.shape: {train_data.shape}")
+print(f"==>> valid_data.shape: {valid_data.shape}")
 
 
 # run posterior and plot

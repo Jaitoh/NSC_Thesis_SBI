@@ -9,8 +9,8 @@ defaults:
 
 pipeline_version: nle
 log_dir: ./src/train_nle/logs/nle-test-lstm
-data_path: /home/ubuntu/tmp/NSC/data/dataset-comb
-# data_path: /home/wehe/tmp/NSC/data/dataset-comb
+# data_path: /home/ubuntu/tmp/NSC/data/dataset-comb
+data_path: /home/wehe/tmp/NSC/data/dataset-comb
 seed: 42
 debug: True
 gpu: True

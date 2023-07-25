@@ -27,7 +27,7 @@ from train_nle.MyLikelihoodEstimator import CNLE
 
 
 class Solver:
-    def __init__(self, config):
+    def __init__(self, config, store_config=True):
         self.config = config
         self.log_dir = config.log_dir
         # gpu info
@@ -41,11 +41,12 @@ class Solver:
         self.M = len(self.config.experiment_settings.chosen_MS_list)
         self.l_theta = len(self.config["prior"]["prior_min"])
 
-        # save the config file using yaml
-        yaml_path = Path(self.log_dir) / "config.yaml"
-        with open(yaml_path, "w") as f:
-            f.write(OmegaConf.to_yaml(config))
-        print(f"config file saved to: {yaml_path}")
+        if store_config:
+            # save the config file using yaml
+            yaml_path = Path(self.log_dir) / "config.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(OmegaConf.to_yaml(config))
+            print(f"config file saved to: {yaml_path}")
 
         # set seed
         self.seed = config.seed
