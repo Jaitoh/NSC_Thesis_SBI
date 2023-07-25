@@ -22,7 +22,7 @@ from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 # def main(config: DictConfig):
 hydra.core.global_hydra.GlobalHydra.instance().clear()
 initialize(config_path="../config_nle", job_name="test_nle")
-config = compose(config_name="config-nle-test")
+config = compose(config_name="config-nle-test-t4")
 print(OmegaConf.to_yaml(config))
 
 model_path = (
@@ -52,26 +52,6 @@ solver.init_inference()
     config,
     continue_from_checkpoint=model_path,
     device="cuda" if torch.cuda.is_available() and config.gpu else "cpu",
-)
-
-# build MCMC posterior
-mcmc_parameters = dict(
-    warmup_steps=100,
-    thin=10,
-    num_chains=10,
-    num_workers=10,
-    init_strategy="sir",
-)
-
-posterior = solver.inference.build_posterior(
-    density_estimator=density_estimator,
-    prior=solver.inference._prior,
-    sample_with="mcmc",
-    mcmc_method="slice",
-    mcmc_parameters=mcmc_parameters,
-    # vi_method="rKL",
-    # vi_parameters={},
-    # rejection_sampling_parameters={},
 )
 
 
@@ -108,7 +88,36 @@ print(f"==>> train_data.shape: {train_data.shape}")
 print(f"==>> valid_data.shape: {valid_data.shape}")
 print("\n", "".center(50, "-"))
 
+
+# build MCMC posterior
+mcmc_parameters = dict(
+    warmup_steps=100,
+    thin=10,
+    num_chains=1,
+    num_workers=1,
+    init_strategy="sir",
+)
+
+posterior = solver.inference.build_posterior(
+    density_estimator=density_estimator,
+    prior=solver.inference._prior,
+    sample_with="mcmc",
+    mcmc_method="slice_np",
+    mcmc_parameters=mcmc_parameters,
+    # vi_method="rKL",
+    # vi_parameters={},
+    # rejection_sampling_parameters={},
+)
+
+
+# samples = posterior.sample(
+#     (2000,),
+#     x=train_data[0].reshape(-1, 15).to("cpu"),
+#     show_progress_bars=True,
+# )
+
 # run posterior and plot
+print(f"==>> train_data[0].shape: {train_data[0][0:2,:].reshape(-1, 15).shape}")
 fig_x, _ = plot_posterior_with_label(
     posterior=posterior,
     sample_num=config.posterior.sampling_num,
@@ -117,7 +126,7 @@ fig_x, _ = plot_posterior_with_label(
     limits=solver._get_limits(),
     prior_labels=config.prior.prior_labels,
 )
-print(f"==>> train_data[0].shape: {train_data[0].reshape(-1, 15).shape}")
+
 
 del solver
 clean_cache()
