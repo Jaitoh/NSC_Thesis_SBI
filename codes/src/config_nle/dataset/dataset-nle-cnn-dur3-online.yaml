@@ -1,6 +1,6 @@
-# # dataset:
+# dataset:
 
-# # ========== parameter settings for the seqC ==========
+# ========== parameter settings for the seqC ==========
 # seqC_process: 'norm'
 # nan2num: -1
 # # seqC_process: 'summary'
@@ -9,18 +9,20 @@
 
 
 # ========== parameter settings for the probR ==========
-num_max_theta      : 50
-num_chosen_theta   : 50
+num_max_theta      : 500
+num_chosen_theta   : 500
 
 chosen_dur_list    : [3]
 
 num_probR_sample   : 100 #25
-probR_sample_mode  : 'offline'
+probR_sample_mode  : 'online'
 
 
 # ========== data loader settings ==========
-batch_size                  : 35840 #lstm
-# batch_size                  : 81920 # conv
+# batch_size                  : 35840 #lstm
+# batch_size                  : 81920 # conv - snn 10G MEM
+batch_size                  : 160000 # conv - t4 
+
 pin_memory                  : True
 num_workers                 : 8
 prefetch_factor             : 2

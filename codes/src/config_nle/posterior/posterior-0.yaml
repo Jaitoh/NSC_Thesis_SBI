@@ -1,0 +1,4 @@
+posterior:
+  num_posterior_check   : 2
+  sampling_num          : 2000
+  step                  : 1     
