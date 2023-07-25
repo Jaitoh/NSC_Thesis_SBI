@@ -26,7 +26,8 @@ config = compose(config_name="config-nle-test")
 print(OmegaConf.to_yaml(config))
 
 model_path = (
-    Path(NSC_DIR) / "codes/src/train_nle/logs/nle-test-cnn/model/model_check_point.pt"
+    Path(NSC_DIR)
+    / "codes/src/train_nle/logs/L0-nle-cnn-dur3-online-copy/model/model_check_point.pt"
 )
 
 

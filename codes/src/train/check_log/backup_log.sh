@@ -3,6 +3,7 @@ DO_Gdrive=1
 
 TRAIN_ID=train_L0_p4a
 TRAIN_ID=train_L0_p5a
+# TRAIN_ID=L0-nle-cnn
 
 # "p4-5Fs-1D-cnn"
 # "p4-4Fs-1D-cnn"
@@ -33,15 +34,17 @@ TRAIN_ID=train_L0_p5a
 # "p4a-4Fs-cnn-Tnorm"
 # "p4a-4Fs-cnn-Tv2-0"
 # "p4a-4Fs-cnn-Tv2-1"
+# "p5a-conv_lstm-Tv2-0"
+# "p5a-conv_lstm-Tv2-0-ctd"
+# "p5a-conv_lstm-Tv2-1"
+# "p5a-conv_lstm-Tv2-1-ctd"
 EXP_IDS=(
-    "p5a-conv_lstm-Tv2-0"
-    "p5a-conv_lstm-Tv2-0-ctd"
-    "p5a-conv_lstm-Tv2-1"
-    "p5a-conv_lstm-Tv2-1-ctd"
+    "L0-nle-cnn-dur3-online-copy" # 1-ks3RF6l1SHib6a4npk65WC2d2sunaV_
 )
 
 # zip log files
 LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"
+# LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train_nle/logs"
 if [ ${DO_ZIP} -eq 1 ]; then
     for EXP_ID in "${EXP_IDS[@]}"; do
         cd ${LOG_DIR}/${TRAIN_ID}

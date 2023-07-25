@@ -20,8 +20,8 @@ CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0
 
-LOG_DIR="./src/train/logs/${RUN_ID}"
-PRINT_LOG="./src/train/logs/${RUN_ID}.log"
+LOG_DIR="./src/train_nle/logs/${RUN_ID}"
+PRINT_LOG="./src/train_nle/logs/${RUN_ID}.log"
 # rm -r ${LOG_DIR}
 mkdir -p ${LOG_DIR}
 
