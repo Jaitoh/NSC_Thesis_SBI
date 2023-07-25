@@ -146,7 +146,7 @@ def check_path(log_dir, data_path):
         os.makedirs(str(event_hist_dir))
 
     elif log_dir.exists():
-        remove_files_except_resource_log(log_dir)
+        # remove_files_except_resource_log(log_dir)
         if not model_dir.exists():
             os.makedirs(str(model_dir))
         if not posterior_dir.exists():

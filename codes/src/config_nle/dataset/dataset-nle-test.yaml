@@ -9,19 +9,18 @@ summary_type: 0
 
 
 # ========== parameter settings for the probR ==========
-num_max_sets                : 20 #101 in total
-num_max_theta_each_set      : 500 #5000 in total
+num_max_theta      : 50
+num_chosen_theta   : 50
 
-chosen_dur_list             : [3, 9, 15]
-crop_dur                    : True
+chosen_dur_list    : [3]
 
-permutation_mode            : 'online' # online, offline
-num_probR_sample            : 25 #25
+num_probR_sample   : 100 #25
+probR_sample_mode  : 'offline'
 
 
 # ========== data loader settings ==========
-# batch_size                  : 35840 #lstm
-batch_size                  : 81920 # conv
+batch_size                  : 35840 #lstm
+# batch_size                  : 81920 # conv
 pin_memory                  : True
 num_workers                 : 8
 prefetch_factor             : 2

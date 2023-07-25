@@ -135,7 +135,7 @@ def collate_fn_vec_high_dim(batch, config, shuffling_method=0, debug=False):
     return (
         x_batch[BC_range, DM_range, permutations],
         theta_batch[indices],
-    )  # TODO check the output shape and shuffling result and logic
+    )  # ! check the output shape and shuffling result and logic
 
     # return x_batch[indices[:, None], :, permutations, :], theta_batch[indices]
 

@@ -1,7 +1,7 @@
 # train:
 network:
   seqC_net:
-    type: cnn
+    type: lstm
     hidden_dim: 64
     lstm_layers: 3
     conv_filter_size: 3
@@ -10,7 +10,7 @@ network:
     num_layers: 4
   cat_net:
     hidden_dim: 256
-
+  
 training:
   learning_rate         : 5e-5
   clip_max_norm         : 1e-5

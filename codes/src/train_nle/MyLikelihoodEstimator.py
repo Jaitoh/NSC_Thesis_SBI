@@ -47,7 +47,6 @@ from sbi.inference.snle.snle_base import LikelihoodEstimator
 from sbi.neural_nets.mnle import MixedDensityEstimator
 from sbi.types import TensorboardSummaryWriter, TorchModule
 from sbi.utils import check_prior, del_entries
-from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 
 import sys
 from pathlib import Path
@@ -55,6 +54,7 @@ from pathlib import Path
 NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
 sys.path.append(f"{NSC_DIR}/codes/src")
 
+from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.set_seed import setup_seed, seed_worker
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
@@ -184,26 +184,24 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # )
 
         # --- train / valid set ---
-        data_dir = self.config.data_path
-        DS_config = self.config.dataset
-        num_train_set_T = DS_config.num_max_theta_each_set
-        num_valid_set_T = DS_config.num_max_theta_each_set
+        data_dir = config.data_path
+        DS_config = config.dataset
 
         print("".center(50, "="))
         print("[training] sets")
         # print("".center(50, "-"))
         train_dataset = chR_Comb_Dataset(
             data_dir=data_dir,
-            num_chosen_theta=500,  # TODO: change to variable
-            chosen_dur=[3],
-            part_each_dur=[0.9, 0.9, 0.9, 0.9, 0.9],
+            num_max_theta=config.dataset.num_max_theta,
+            num_chosen_theta=config.dataset.num_chosen_theta,
+            chosen_dur_list=config.dataset.chosen_dur_list,
+            part_each_dur=[0.9] * len(config.dataset.chosen_dur_list),
             last_part=False,
-            max_theta=500,
             theta_chosen_mode="random",
-            num_probR_sample=100,
-            chR_mode="offline",
+            num_probR_sample=config.dataset.num_probR_sample,
+            probR_sample_mode=config.dataset.probR_sample_mode,
             print_info=True,
-            config_theta=self.config.prior,
+            config_theta=config.prior,
         )
 
         print("".center(50, "="))
@@ -211,20 +209,20 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # print("".center(50, "-"))
         valid_dataset = chR_Comb_Dataset(
             data_dir=data_dir,
-            num_chosen_theta=500,  # TODO: change to variable
-            chosen_dur=[3],
-            part_each_dur=[0.1, 0.1, 0.1, 0.1, 0.1],
+            num_max_theta=config.dataset.num_max_theta,
+            num_chosen_theta=config.dataset.num_chosen_theta,
+            chosen_dur_list=config.dataset.chosen_dur_list,
+            part_each_dur=[0.1] * len(config.dataset.chosen_dur_list),
             last_part=True,
-            max_theta=500,
             theta_chosen_mode="random",
-            num_probR_sample=100,
-            chR_mode="offline",
+            num_probR_sample=config.dataset.num_probR_sample,
+            probR_sample_mode=config.dataset.probR_sample_mode,
             print_info=True,
-            config_theta=self.config.prior,
+            config_theta=config.prior,
         )
 
         # prepare train, val, test dataloader
-        config_dataset = self.config.dataset
+        config_dataset = config.dataset
         prefetch_factor = (
             config_dataset.prefetch_factor if config_dataset.num_workers > 0 else None
         )
@@ -245,30 +243,14 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         print(f"{loader_kwargs=}")
 
         g = torch.Generator()
-        g.manual_seed(self.config.seed)
+        g.manual_seed(config.seed)
 
         train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
         loader_kwargs["drop_last"] = True
         valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
 
-        # collect posterior sets
-        print(f"collect posterior sets...", end=" ")
-        tic = time.time()
-        self.seen_data_for_posterior = {"x": [], "theta": []}
-        self.unseen_data_for_posterior = {"x": [], "theta": []}
-
         x_train_batch, theta_train_batch = next(iter(train_dataloader))
-        x_valid_batch, theta_valid_batch = next(iter(valid_dataloader))
-
-        for i in range(self.config.train.posterior.num_posterior_check):
-            self.seen_data_for_posterior["x"].append(x_train_batch[i, :])
-            self.seen_data_for_posterior["theta"].append(theta_train_batch[i, :])
-
-            self.unseen_data_for_posterior["x"].append(x_valid_batch[i, :])
-            self.unseen_data_for_posterior["theta"].append(theta_valid_batch[i, :])
-        print(
-            f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes"
-        )
+        # x_valid_batch, theta_valid_batch = next(iter(valid_dataloader))
         print("".center(50, "-"))
         print("")
 
@@ -296,6 +278,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             train_dataloader,
             valid_dataloader,
             self._neural_net.to(self._device),
+            train_dataset,
+            valid_dataset,
         )
 
     def train(
@@ -346,7 +330,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         setup_seed(config.seed)
 
         # ========== 1. Prepare dataset and network ==========
-        train_dataloader, valid_dataloader, _ = self.prepare_dataset_network(
+        train_dataloader, valid_dataloader, _, _, _ = self.prepare_dataset_network(
             self.config,
             continue_from_checkpoint=continue_from_checkpoint,
             device=self._device,

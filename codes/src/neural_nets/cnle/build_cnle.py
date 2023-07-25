@@ -44,7 +44,7 @@ def build_cnle(
     Returns:
         MixedDensityEstimator: nn.Module for performing MNLE.
     """
-
+    config_net = kwargs["config"].train.network
     check_data_device(batch_x, batch_y)
     # if z_score_y == "independent":
     #     embedding = standardizing_net(batch_y)
@@ -52,23 +52,27 @@ def build_cnle(
     #     embedding = None
 
     # Separate continuous and discrete data.
-    seqC, chR = _separate_x(batch_x)
+    # seqC, chR = _separate_x(batch_x)
 
     # Infer input and output dims.
     dim_parameters = batch_y[0].numel()
-    num_categories = unique(chR).numel()
+    # num_categories = unique(chR).numel()
 
     # Set up a categorical RV neural net for modelling the discrete data.
-    disc_nle = CategoricalNet(  # TODO: change into variables
+    disc_nle = CategoricalNet(
+        # seqC net
+        seqC_net_type=config_net.seqC_net.type,
         input_dim_seqC=1,
-        hidden_dim_seqC=64,
-        num_layers_seqC=3,
-        num_input_theta=4,
-        num_hidden_theta=64,
-        num_layers_theta=4,
+        hidden_dim_seqC=config_net.seqC_net.hidden_dim,
+        lstm_layers_seqC=config_net.seqC_net.lstm_layers,
+        conv_filter_size_seqC=config_net.seqC_net.conv_filter_size,
+        # theta net
+        num_input_theta=dim_parameters,
+        num_hidden_theta=config_net.theta_net.hidden_dim,
+        num_layers_theta=config_net.theta_net.num_layers - 1,
+        # cat net
         num_categories=2,
-        num_hidden_category=256,
-        use_conv=True,
+        num_hidden_category=config_net.cat_net.hidden_dim,
     )
 
     return ConditionedDensityEstimator(conditioned_net=disc_nle)
@@ -208,16 +212,19 @@ class CategoricalNet(nn.Module):
 
     def __init__(
         self,
+        # seqC net
+        seqC_net_type="cnn",
         input_dim_seqC=1,
         hidden_dim_seqC=64,
-        num_layers_seqC=3,
-        filter_size_seqC=3,
+        lstm_layers_seqC=3,
+        conv_filter_size_seqC=3,
+        # theta net
         num_input_theta=4,
         num_hidden_theta=64,
         num_layers_theta=4,
+        # cat net
         num_categories=2,
         num_hidden_category=256,
-        use_conv=False,
     ):
         """Initialize the neural net.
 
@@ -225,7 +232,7 @@ class CategoricalNet(nn.Module):
             --- seqC net ---
             input_dim_seqC: dimension of the input seqC.
             hidden_dim_seqC: number of hidden units in the LSTM.
-            num_layers_seqC: number of layers in the LSTM.
+            lstm_layers_seqC: number of layers in the LSTM.
 
             --- theta net ---
             num_input_theta: dimension of the input theta.
@@ -238,26 +245,29 @@ class CategoricalNet(nn.Module):
         """
         super(CategoricalNet, self).__init__()
 
-        self.activation = Sigmoid()
-        # self.activation = nn.ReLU()
+        # self.activation = Sigmoid()
+        self.activation = nn.ReLU()
         self.softmax = Softmax(dim=1)
         self.num_input_theta = num_input_theta
 
         # --- seqC net ---
-
-        if use_conv:
+        if seqC_net_type == "cnn" or seqC_net_type == "conv":
             self.seqC_net = ConvNet(
                 input_dim=input_dim_seqC,
                 num_filters=hidden_dim_seqC,
-                filter_size=filter_size_seqC,
+                filter_size=conv_filter_size_seqC,
                 seqC_length=14,
             )
-        else:
+        elif seqC_net_type == "lstm":
             self.seqC_net = LSTMNet(
                 input_dim=input_dim_seqC,
                 hidden_dim=hidden_dim_seqC,
-                n_layers=num_layers_seqC,
+                n_layers=lstm_layers_seqC,
                 dropout=0.1,
+            )
+        else:
+            raise ValueError(
+                f"seqC_net_type must be one of 'cnn', 'conv', or 'lstm', but is {seqC_net_type}."
             )
 
         # --- theta net ---
@@ -276,12 +286,21 @@ class CategoricalNet(nn.Module):
         self.hidden_layers = nn.ModuleList()
         self.hidden_layers.append(
             nn.Linear(num_hidden_category, num_hidden_category // 2)
-        )
+        )  # 256 -> 128
         self.hidden_layers.append(
             nn.Linear(num_hidden_category // 2, num_hidden_category // 4)
-        )
+        )  # 128 -> 64
+        self.hidden_layers.append(
+            nn.Linear(num_hidden_category // 4, num_hidden_category // 8)
+        )  # 64 -> 32
+        self.hidden_layers.append(
+            nn.Linear(num_hidden_category // 8, num_hidden_category // 16)
+        )  # 32 -> 16
 
-        self.output_layer = nn.Linear(num_hidden_category // 4, num_categories)
+        self.ps_layer = nn.Linear(num_hidden_category // 16, num_hidden_category // 32)
+        # 16 -> 8
+
+        self.output_layer = nn.Linear(num_hidden_category // 32, num_categories)
 
     def forward(
         self,
@@ -311,6 +330,8 @@ class CategoricalNet(nn.Module):
         x = self.activation(self.input_layer(x))
         for layer in self.hidden_layers:
             x = self.activation(layer(x))
+
+        x = self.activation(self.ps_layer(x))
 
         return self.softmax(self.output_layer(x))
 

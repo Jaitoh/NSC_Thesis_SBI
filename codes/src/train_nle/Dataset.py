@@ -31,10 +31,10 @@ class probR_Comb_Dataset(Dataset):
         self,
         data_dir,
         num_chosen_theta=500,
-        chosen_dur=[3, 9, 15],
+        chosen_dur_list=[3, 9, 15],
         part_each_dur=[1, 1, 1],
         last_part=False,
-        max_theta=500,
+        num_max_theta=500,
         theta_chosen_mode="random",
         print_info=False,
         config_theta=None,
@@ -72,12 +72,12 @@ class probR_Comb_Dataset(Dataset):
 
         # define the final shape of the data
         chosen_theta_idx, num_chosen_theta = choose_theta(
-            num_chosen_theta, max_theta, theta_chosen_mode
+            num_chosen_theta, num_max_theta, theta_chosen_mode
         )
         self.T = num_chosen_theta
 
         self.S = 0
-        for dur, part in zip(chosen_dur, part_each_dur):
+        for dur, part in zip(chosen_dur_list, part_each_dur):
             f = h5py.File(Path(data_dir) / f"dataset-comb-dur{dur}-T500.h5", "r")
             _, self.M, S, self.L_seqC = f["seqC"].shape  # (1, M, S, L)
             _S = round(S * part)
@@ -91,7 +91,7 @@ class probR_Comb_Dataset(Dataset):
         self.total_samples = self.M * self.S * self.T
 
         S_cnt, counter = 0, 0
-        for dur, part in zip(chosen_dur, part_each_dur):
+        for dur, part in zip(chosen_dur_list, part_each_dur):
             print(counter, end=" ")  # if counter % 2 == 0 else None
 
             # load data # libver="latest",swmr=True
@@ -143,7 +143,7 @@ class probR_Comb_Dataset(Dataset):
         )
 
         if print_info:
-            self._print_info(chosen_dur, part_each_dur, start_loading_time)
+            self._print_info(chosen_dur_list, part_each_dur, start_loading_time)
 
     def _get_seqC_data(self, f, part, last_part=False):
         seqC_shape = f["seqC"].shape  # seqC: (1, M, S, L)
@@ -164,13 +164,13 @@ class probR_Comb_Dataset(Dataset):
             summary_type=0,  # 0 or 1
         )
 
-    def _print_info(self, chosen_dur, part_each_dur, start_loading_time):
+    def _print_info(self, chosen_dur_list, part_each_dur, start_loading_time):
         print(f" finished in: {time.time()-start_loading_time:.2f}s")
 
         print("".center(50, "="))
         print("[dataset info]")
         print(f"total # samples: {self.total_samples}")
-        print(f"dur of {list(chosen_dur)}")
+        print(f"dur of {list(chosen_dur_list)}")
         print(f"part of {list(part_each_dur)} are chosen")
 
         print("".center(50, "-"))
@@ -231,34 +231,34 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
     def __init__(
         self,
         data_dir,
+        num_max_theta=500,
         num_chosen_theta=500,
-        chosen_dur=[3, 9, 15],
+        chosen_dur_list=[3, 9, 15],
         part_each_dur=[1, 1, 1],
         last_part=False,
-        max_theta=500,
         theta_chosen_mode="random",
         num_probR_sample=100,
-        chR_mode="online",  # online or offline
+        probR_sample_mode="online",  # online or offline
         print_info=True,
         config_theta=None,
     ):
         start_loading_time = time.time()
         super().__init__(
             data_dir=data_dir,
+            num_max_theta=num_max_theta,
             num_chosen_theta=num_chosen_theta,
-            chosen_dur=chosen_dur,
+            chosen_dur_list=chosen_dur_list,
             part_each_dur=part_each_dur,
             last_part=last_part,
-            max_theta=max_theta,
             theta_chosen_mode=theta_chosen_mode,
             config_theta=config_theta,
         )
         self.C = num_probR_sample
         self.MS = self.seqC_all.shape[0]
         self.seqC_len = self.seqC_all.shape[-1]
-        self.chR_mode = chR_mode
+        self.probR_sample_mode = probR_sample_mode
 
-        if self.chR_mode == "offline":
+        if self.probR_sample_mode == "offline":
             print(f"\n('offline') Sampling C={self.C} times from probR ... ", end="")
 
             self.probR_all = self.probR_all.to(
@@ -276,21 +276,21 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
 
         self.total_samples = self.T * self.C * self.MS
         if print_info:
-            self._print_info(chosen_dur, part_each_dur, start_loading_time)
+            self._print_info(chosen_dur_list, part_each_dur, start_loading_time)
 
-    def _print_info(self, chosen_dur, part_each_dur, start_loading_time):
+    def _print_info(self, chosen_dur_list, part_each_dur, start_loading_time):
         print(f" in: {time.time()-start_loading_time:.2f}s")
 
         print("".center(50, "="))
         print("[dataset info]")
         print(f"total # samples: {self.total_samples}")
-        print(f"dur of {list(chosen_dur)}")
+        print(f"dur of {list(chosen_dur_list)}")
         print(f"part of {list(part_each_dur)} are chosen")
 
         print("".center(50, "-"))
         print("shapes:")
         print(f"[seqC] shape: {self.seqC_all.shape}")
-        if self.chR_mode == "offline":
+        if self.probR_sample_mode == "offline":
             print(f"[chR] shape: {self.chR_all.shape}")
         else:
             print(f"[probR] shape: {self.probR_all.shape}")
@@ -311,7 +311,7 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
     def __getitem__(self, idx):
         idx_seqC, idx_T, idx_C = unravel_index(idx, shape=(self.MS, self.T, self.C))
 
-        if self.chR_mode == "offline":
+        if self.probR_sample_mode == "offline":
             # slice the sampled choices
             seqC = self.seqC_all[idx_seqC, 1:]
             chR = self.chR_all[idx_seqC, idx_T, idx_C]
@@ -336,9 +336,9 @@ if __name__ == "__main__":
     Dataset = probR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
-        chosen_dur=[3, 9],
+        chosen_dur_list=[3, 9],
         part_each_dur=[1, 1],
-        max_theta=50,
+        num_max_theta=50,
         theta_chosen_mode="random",
         print_info=True,
     )
@@ -348,9 +348,9 @@ if __name__ == "__main__":
     Dataset = probR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=500,
-        chosen_dur=[3, 5, 7, 9],
+        chosen_dur_list=[3, 5, 7, 9],
         part_each_dur=[1, 0.5, 0.8, 0.2],
-        max_theta=500,
+        num_max_theta=500,
         theta_chosen_mode="random",
         print_info=True,
     )
@@ -360,12 +360,12 @@ if __name__ == "__main__":
     Dataset = chR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
-        chosen_dur=[3, 5, 7, 9],
+        chosen_dur_list=[3, 5, 7, 9],
         part_each_dur=[1, 1, 0.1, 0.1],
-        max_theta=50,
+        num_max_theta=50,
         theta_chosen_mode="random",
         num_probR_sample=100,
-        chR_mode="offline",
+        probR_sample_mode="offline",
         print_info=True,
     )
     x, theta = Dataset[0]
@@ -374,12 +374,12 @@ if __name__ == "__main__":
     Dataset = chR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
-        chosen_dur=[3, 9],
+        chosen_dur_list=[3, 9],
         part_each_dur=[1, 0.2],
-        max_theta=500,
+        num_max_theta=500,
         theta_chosen_mode="random",
         num_probR_sample=100,
-        chR_mode="online",
+        probR_sample_mode="online",
         print_info=True,
     )
     x, theta = Dataset[0]

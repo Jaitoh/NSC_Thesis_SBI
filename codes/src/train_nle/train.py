@@ -64,12 +64,7 @@ class Solver:
             model="cnle",
             embedding_net=embedding_net,
             **dict(
-                log_transform_x=False,
-                num_bins=5,
-                num_transforms=2,
-                tail_bound=10.0,
-                hidden_layers=1,
-                hidden_features=10,
+                config=self.config,
             ),
         )
 
@@ -153,7 +148,9 @@ class Solver:
         # )
 
 
-@hydra.main(config_path="../config", config_name="config-nle-test", version_base=None)
+@hydra.main(
+    config_path="../config_nle", config_name="config-nle-test", version_base=None
+)
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")

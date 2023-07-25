@@ -5,13 +5,13 @@ defaults:
   - x_o: x_o-0
   - simulator: model-0
   - dataset: dataset-nle-test
-  - train: train-p5-conv_lstm-mdn
+  - train: train-nle-cnn
 
 pipeline_version: nle
 log_dir: ./src/train_nle/logs/nle-test-lstm
 data_path: /home/ubuntu/tmp/NSC/data/dataset-comb
 # data_path: /home/wehe/tmp/NSC/data/dataset-comb
 seed: 42
-debug: False
+debug: True
 gpu: True
 continue_from_checkpoint: ""
