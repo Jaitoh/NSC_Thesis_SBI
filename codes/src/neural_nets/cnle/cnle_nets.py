@@ -15,6 +15,14 @@ from sbi.utils.sbiutils import match_theta_and_x_batch_shapes, standardizing_net
 from sbi.utils.torchutils import atleast_2d
 from sbi.utils.user_input_checks import check_data_device
 
+import sys
+from pathlib import Path
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent.as_posix()
+sys.path.append(f"{NSC_DIR}/codes/src")
+from utils.dataset.dataset import separate_x
+from utils.setup import clean_cache
+
 
 # Define the LSTM part of the model
 class LSTMNet(nn.Module):
@@ -292,6 +300,45 @@ class CategoricalNet(nn.Module):
         # Predict categorical ps and evaluate.
         ps = self.forward(seqC=seqC, theta=theta)
         return Categorical(probs=ps).log_prob(chR.squeeze())
+
+    def log_prob_iid(
+        self,
+        x: Tensor,
+        theta: Tensor,
+    ):
+        """Return categorical log probability of chR, given parameters theta conditioned on seqC.
+
+        x: [seqC, chR]
+            seqC:  (num_trials, seq_length)
+            chR:   (num_trials, 1)
+        theta: (batch_theta, theta_dim)
+
+        input would be repeated before computing the probability.
+
+        Returns:
+            ps: (num_trials * batch_theta, num_categories [2])
+            log_probs: (num_trials * batch_theta, )
+
+        """
+        # x iid trials: XaXbXc -> XaXaXa XbXbXb XcXcXc
+        # theta:        TaTbTc -> TaTbTc TaTbTc TaTbTc
+        # prob:                   papbpc papbpc papbpc
+
+        theta_repeated, x_repeated = match_theta_and_x_batch_shapes(theta, x)
+        del x, theta
+        x_repeated, chR_repeated = x_repeated.split(
+            [x_repeated.shape[-1] - 1, 1], dim=1
+        )
+        # x_repeated here is equivalent to seqC_repeated
+
+        ps = self.forward(seqC=x_repeated, theta=theta_repeated)
+        del theta_repeated, x_repeated
+
+        log_probs = Categorical(probs=ps).log_prob(chR_repeated.squeeze())
+        del ps, chR_repeated
+        clean_cache()
+
+        return log_probs
 
     def sample(
         self,

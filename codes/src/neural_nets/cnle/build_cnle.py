@@ -22,11 +22,14 @@ NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent.as_posix()
 sys.path.append(f"{NSC_DIR}/codes/src")
 
 from neural_nets.cnle.cnle_nets import *
+from utils.dataset.dataset import separate_x
+from utils.setup import clean_cache, report_memory, torch_var_size
 
 
 def build_cnle(
     batch_x: Tensor,
     batch_y: Tensor,
+    iid_batch_size_x=2,
     z_score_x: Optional[str] = None,
     z_score_y: Optional[str] = None,
     hidden_features: int = 50,
@@ -60,7 +63,7 @@ def build_cnle(
     #     embedding = None
 
     # Separate continuous and discrete data.
-    # seqC, chR = _separate_x(batch_x)
+    # seqC, chR = separate_x(batch_x)
 
     # Infer input and output dims.
     dim_parameters = batch_y[0].numel()
@@ -83,7 +86,10 @@ def build_cnle(
         num_hidden_category=config_net.cat_net.hidden_dim,
     )
 
-    return ConditionedDensityEstimator(conditioned_net=disc_nle)
+    return ConditionedDensityEstimator(
+        conditioned_net=disc_nle,
+        iid_batch_size_x=iid_batch_size_x,
+    )
 
 
 class ConditionedDensityEstimator(nn.Module):
@@ -96,6 +102,7 @@ class ConditionedDensityEstimator(nn.Module):
     def __init__(
         self,
         conditioned_net,
+        iid_batch_size_x=2,
     ):
         """Initialize class for combining density estimators for MNLE.
 
@@ -105,6 +112,7 @@ class ConditionedDensityEstimator(nn.Module):
         super(ConditionedDensityEstimator, self).__init__()
 
         self.conditioned_net = conditioned_net
+        self.iid_batch_size_x = iid_batch_size_x
 
     def forward(
         self,
@@ -169,7 +177,7 @@ class ConditionedDensityEstimator(nn.Module):
         """
         assert x.shape[0] == theta.shape[0], "x and theta must have same batch size."
 
-        seqC, chR = _separate_x(x)
+        seqC, chR = separate_x(x)
         num_parameters = theta.shape[0]
 
         conditioned_log_prob = self.conditioned_net.log_prob(
@@ -205,38 +213,51 @@ class ConditionedDensityEstimator(nn.Module):
         """
         theta = atleast_2d(theta)
         x = atleast_2d(x)
-        batch_size = theta.shape[0]
-        num_trials = x.shape[0]
-
-        # x iid trials: XaXbXc -> XaXaXa XbXbXb XcXcXc
-        # theta:        TaTbTc -> TaTbTc TaTbTc TaTbTc
-        theta_repeated, x_repeated = match_theta_and_x_batch_shapes(theta, x)
 
         net_device = next(self.conditioned_net.parameters()).device
         assert (
             net_device == x.device and x.device == theta.device
         ), f"device mismatch: net, x, theta: {net_device}, {x.device}, {theta.device}."
 
-        seqC_repeated, chR_repeated = _separate_x(x_repeated)
+        num_trials = x.shape[0]
+        batch_size_theta = theta.shape[0]
 
-        # compute the log probs for each oberseved data [seqC, chR] given each theta
-        log_probs_conditioned = self.conditioned_net.log_prob(
-            seqC=seqC_repeated,
-            theta=theta_repeated,
-            chR=chR_repeated,
-        ).reshape(num_trials, batch_size)
+        # seperate seqC_repeated into chunks of size self.iid_batch_size
+        x_chunks = torch.split(x, self.iid_batch_size_x)
+
+        log_probs_conditioned = torch.empty(num_trials, batch_size_theta)
+
+        counter = 0
+        self.conditioned_net.eval()
+        for i in range(len(x_chunks)):
+            x_ = x_chunks[i].to(net_device)
+
+            with torch.no_grad():
+                # compute the log probs for each oberseved data [seqC, chR] given each theta
+                log_probs_ = self.conditioned_net.log_prob_iid(
+                    x=x_,
+                    theta=theta,
+                ).reshape(x_.shape[0], batch_size_theta)
+
+            # log the log_probs
+            log_probs_conditioned[counter : counter + x_.shape[0], :] = log_probs_
+
+            counter += x_.shape[0]
+
+            del log_probs_, x_
+            clean_cache()
 
         # Return batch over trials as required by SBI potentials.
         return log_probs_conditioned
 
 
-def _separate_x(x: Tensor) -> Tuple[Tensor, Tensor]:
-    """Returns the seqC and chR part of the given x.
+# def separate_x(x: Tensor) -> Tuple[Tensor, Tensor]:
+#     """Returns the seqC and chR part of the given x.
 
-    Assumes the chR live in the last columns of x.
-    returns [seqC, chR]
-    """
+#     Assumes the chR live in the last columns of x.
+#     returns [seqC, chR]
+#     """
 
-    assert x.ndim == 2, f"x must have two dimensions but has {x.ndim}."
+#     assert x.ndim == 2, f"x must have two dimensions but has {x.ndim}."
 
-    return x[:, :-1], x[:, -1]
+#     return x[:, :-1], x[:, -1]

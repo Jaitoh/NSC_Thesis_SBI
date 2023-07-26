@@ -23,7 +23,7 @@ from torch.utils.tensorboard.writer import SummaryWriter
 
 from sbi import utils as utils
 from sbi.inference import NeuralInference
-from sbi.inference.posteriors import MCMCPosterior, RejectionPosterior, VIPosterior
+from sbi.inference.posteriors import RejectionPosterior, VIPosterior
 from sbi.types import TorchTransform
 from sbi.utils import (
     check_estimator_arg,
@@ -59,6 +59,7 @@ from utils.set_seed import setup_seed, seed_worker
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
 from train_nle.Dataset import chR_Comb_Dataset, probR_Comb_Dataset
+from posterior.My_MCMCPost import MyMCMCPosterior
 
 
 class MyLikelihoodEstimator(NeuralInference, ABC):
@@ -778,7 +779,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         )
 
         if sample_with == "mcmc":
-            self._posterior = MCMCPosterior(
+            self._posterior = MyMCMCPosterior(
                 potential_fn=potential_fn,
                 theta_transform=theta_transform,
                 proposal=prior,
@@ -969,8 +970,10 @@ class ConditionedLikelihoodBasedPotential(LikelihoodBasedPotential):
                 theta=theta.to(self.device),
             )
             # Reshape to (x-trials x parameters), sum over trial-log likelihoods.
-            log_likelihood_trial_sum = log_likelihood_trial_batch.reshape(
-                self.x_o.shape[0], -1
-            ).sum(0)
+            log_likelihood_trial_sum = (
+                log_likelihood_trial_batch.reshape(self.x_o.shape[0], -1)
+                .sum(0)
+                .to(self.device)
+            )
 
         return log_likelihood_trial_sum + self.prior.log_prob(theta)

@@ -22,6 +22,7 @@ def my_likelihood_nn(
     num_bins: int = 10,
     embedding_net: nn.Module = nn.Identity(),
     num_components: int = 10,
+    iid_batch_size_x=2,
     **kwargs,
 ) -> Callable:
     r"""
@@ -64,6 +65,7 @@ def my_likelihood_nn(
                 "num_bins",
                 "embedding_net",
                 "num_components",
+                "iid_batch_size_x",
             ),
             (
                 z_score_x,
@@ -73,6 +75,7 @@ def my_likelihood_nn(
                 num_bins,
                 embedding_net,
                 num_components,
+                iid_batch_size_x,
             ),
         ),
         **kwargs,

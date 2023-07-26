@@ -58,11 +58,13 @@ class WarmupScheduler(torch.optim.lr_scheduler._LRScheduler):
 
 
 def plot_posterior_with_label(
-    posterior, sample_num, x, true_params, limits, prior_labels
+    posterior, sample_num, x, true_params, limits, prior_labels, show_progress_bars=True
 ):
     """plot the posterior distribution of the seen data"""
 
-    samples = posterior.sample((sample_num,), x=x, show_progress_bars=False)
+    samples = posterior.sample(
+        (sample_num,), x=x, show_progress_bars=show_progress_bars
+    )
 
     fig, axes = analysis.pairplot(
         samples.cpu().numpy(),
