@@ -11,8 +11,7 @@ TRAIN_ID=L0-nle-cnn
 EXP_ID=L0-nle-cnn-dur3-offline
 FILE_ID=1X2JJLyS8DEgA7b4mrloWW_J2a2AXVxyp
 
-LOG_DIR="/home/wehe/tmp/NSC/codes/src/train_nle/logs"
-# LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train_nle/logs"
+LOG_DIR="$HOME/tmp/NSC/codes/src/train_nle/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
 
 cd ~
