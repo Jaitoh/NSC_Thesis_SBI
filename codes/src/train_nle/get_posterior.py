@@ -37,11 +37,14 @@ def main(config: DictConfig):
     print(f"PID: {PID}")
 
     log_dir = Path(config.log_dir)
-    data_path = Path(config.data_path)
+    # data_path = Path(config.data_path)
 
     # initialize solver and network
     solver = Solver(config, store_config=False)
-    solver.init_inference(iid_batch_size_x=100)
+    solver.init_inference(
+        iid_batch_size_x=100,
+        iid_batch_size_theta=-1,
+    )
 
     # get the training dataset, & trained network
     (

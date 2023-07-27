@@ -57,7 +57,7 @@ class Solver:
             return []
         return [[x, y] for x, y in zip(self.prior_min, self.prior_max)]
 
-    def get_neural_likelihood(self, iid_batch_size_x=2):
+    def get_neural_likelihood(self, iid_batch_size_x=2, iid_batch_size_theta=-1):
         # define embedding net
         embedding_net = nn.Identity()
 
@@ -72,7 +72,7 @@ class Solver:
 
         return neural_likelihood
 
-    def init_inference(self, iid_batch_size_x=2):
+    def init_inference(self, iid_batch_size_x=2, iid_batch_size_theta=2):
         """initialize inference
 
         iid_batch_size_x: used when doing the posterior inference
@@ -107,7 +107,8 @@ class Solver:
 
         # get neural posterior
         neural_likelihood = self.get_neural_likelihood(
-            iid_batch_size_x=iid_batch_size_x
+            iid_batch_size_x=iid_batch_size_x,
+            iid_batch_size_theta=iid_batch_size_theta,
         )
         self.inference = CNLE(
             prior=self.prior,

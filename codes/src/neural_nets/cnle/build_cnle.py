@@ -30,6 +30,7 @@ def build_cnle(
     batch_x: Tensor,
     batch_y: Tensor,
     iid_batch_size_x=2,
+    iid_batch_size_theta=-1,
     z_score_x: Optional[str] = None,
     z_score_y: Optional[str] = None,
     hidden_features: int = 50,
@@ -89,6 +90,7 @@ def build_cnle(
     return ConditionedDensityEstimator(
         conditioned_net=disc_nle,
         iid_batch_size_x=iid_batch_size_x,
+        iid_batch_size_theta=iid_batch_size_theta,
     )
 
 
@@ -103,6 +105,7 @@ class ConditionedDensityEstimator(nn.Module):
         self,
         conditioned_net,
         iid_batch_size_x=2,
+        iid_batch_size_theta=-1,
     ):
         """Initialize class for combining density estimators for MNLE.
 
@@ -113,6 +116,7 @@ class ConditionedDensityEstimator(nn.Module):
 
         self.conditioned_net = conditioned_net
         self.iid_batch_size_x = iid_batch_size_x
+        self.iid_batch_size_theta = iid_batch_size_theta
 
     def forward(
         self,
@@ -222,27 +226,46 @@ class ConditionedDensityEstimator(nn.Module):
         num_trials = x.shape[0]
         batch_size_theta = theta.shape[0]
 
-        # seperate seqC_repeated into chunks of size self.iid_batch_size
-        x_chunks = torch.split(x, self.iid_batch_size_x)
+        # seperate x, theta into chunks of size self.iid_batch_size_x/theta
+        if self.iid_batch_size_x == -1 or x.shape[0] <= self.iid_batch_size_x:
+            x_chunks = [x]
+        else:
+            x_chunks = torch.split(x, self.iid_batch_size_x)
+
+        if (
+            self.iid_batch_size_theta == -1
+            or theta.shape[0] <= self.iid_batch_size_theta
+        ):
+            theta_chunks = [theta]
+        else:
+            theta_chunks = torch.split(theta, self.iid_batch_size_theta)
 
         log_probs_conditioned = torch.empty(num_trials, batch_size_theta)
 
-        counter = 0
+        counter_x = 0
         self.conditioned_net.eval()
         for i in range(len(x_chunks)):
             x_ = x_chunks[i].to(net_device)
 
-            with torch.no_grad():
-                # compute the log probs for each oberseved data [seqC, chR] given each theta
-                log_probs_ = self.conditioned_net.log_prob_iid(
-                    x=x_,
-                    theta=theta,
-                ).reshape(x_.shape[0], batch_size_theta)
+            counter_theta = 0
+            for j in range(len(theta_chunks)):
+                theta_ = theta_chunks[j].to(net_device)
+                with torch.no_grad():
+                    # compute the log probs for each oberseved data [seqC, chR] given each theta
+                    log_probs_ = self.conditioned_net.log_prob_iid(
+                        x=x_,
+                        theta=theta_,
+                    ).reshape(x_.shape[0], theta_.shape[0])
 
-            # log the log_probs
-            log_probs_conditioned[counter : counter + x_.shape[0], :] = log_probs_
+                # log the log_probs
+                log_probs_conditioned[
+                    counter_x : counter_x + x_.shape[0],
+                    counter_theta : counter_theta + theta_.shape[0],
+                ] = log_probs_
 
-            counter += x_.shape[0]
+                counter_theta += theta_.shape[0]
+
+            counter_x += x_.shape[0]
 
             del log_probs_, x_
             clean_cache()
