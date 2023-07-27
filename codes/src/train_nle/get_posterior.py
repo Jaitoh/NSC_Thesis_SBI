@@ -46,10 +46,7 @@ def get_data_for_theta(idx_theta, dataset, chR=True):
 
 
 def get_posterior(idx_theta, config):
-    model_path = (
-        Path(NSC_DIR)
-        / "codes/src/train_nle/logs/L0-nle-cnn/L0-nle-cnn-dur3-online-copy/model/model_check_point.pt"
-    )
+    model_path = f"{config.log_dir}/model/model_check_point.pt"
 
     log_dir = Path(config.log_dir)
     # data_path = Path(config.data_path)
@@ -139,7 +136,7 @@ def get_posterior(idx_theta, config):
         # mcmc_method="slice_np",
         # mcmc_method="slice_np_vectorized",
         mcmc_parameters=mcmc_parameters,  #!
-        # sample_with="vi",  #!
+        # sample_with="vi",
         # vi_method="rKL",
         # vi_parameters={},
         # rejection_sampling_parameters={},
