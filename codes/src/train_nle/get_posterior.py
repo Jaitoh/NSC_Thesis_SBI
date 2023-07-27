@@ -95,9 +95,9 @@ def main(config: DictConfig):
     # build MCMC posterior
     mcmc_parameters = dict(
         warmup_steps=100,
-        thin=10,
-        # num_chains=min(os.cpu_count() - 1, 10),
-        num_chains=1,
+        thin=2,
+        num_chains=min(os.cpu_count() - 1, 10),
+        # num_chains=1,
         num_workers=1,
         init_strategy="sir",
     )
@@ -107,6 +107,8 @@ def main(config: DictConfig):
         prior=solver.inference._prior,
         sample_with="mcmc",
         mcmc_method="slice",
+        # mcmc_method="slice_np",
+        # mcmc_method="slice_np_vectorized",
         mcmc_parameters=mcmc_parameters,
         # vi_method="rKL",
         # vi_parameters={},
