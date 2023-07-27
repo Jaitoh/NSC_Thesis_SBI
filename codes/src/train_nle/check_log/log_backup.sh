@@ -2,10 +2,11 @@ DO_ZIP=1
 DO_Gdrive=1
 
 TRAIN_ID=L0-nle-cnn
-folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g
+folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs folder id
 
+# "L0-nle-cnn-dur3-online"
 EXP_IDS=(
-    "L0-nle-cnn-dur3-online-copy" # 1vukn9tNDBJPHEBakCcHr2i-NYTJVaftA
+    "L0-nle-cnn-dur3-offline"
 )
 
 # zip log files
