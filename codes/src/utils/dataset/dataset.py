@@ -2,6 +2,18 @@ import numpy as np
 import torch
 
 
+def separate_x(x):
+    """Returns the seqC and chR part of the given x.
+
+    Assumes the chR live in the last columns of x.
+    returns [seqC, chR]
+    """
+
+    assert x.ndim == 2, f"x must have two dimensions but has {x.ndim}."
+
+    return x[:, :-1], x[:, -1]
+
+
 def pad_seqC_with_nans_to_len15(seqC):
     """
     pad seq with nans to length 15, along the last dimension

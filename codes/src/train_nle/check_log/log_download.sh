@@ -13,12 +13,19 @@ FILE_ID=1X2JJLyS8DEgA7b4mrloWW_J2a2AXVxyp
 
 # LOG_DIR="/home/wehe/tmp/NSC/codes/src/train_nle/logs"
 LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train_nle/logs"
+mkdir ${LOG_DIR}/${TRAIN_ID}
 
+cd ~
 ./gdrive files download ${FILE_ID} \
     --destination ${LOG_DIR}/${TRAIN_ID}
 
 cd ${LOG_DIR}/${TRAIN_ID}
 tar -xzf ${EXP_ID}.tar.gz
-mv ${LOG_DIR}/${TRAIN_ID}/${EXP_ID} ./${EXP_ID}
+
+# move to current directory
+LOG_DIR="/home/wehe/tmp/NSC/codes/src/train_nle/logs"
+LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train_nle/logs"
+mv ./${LOG_DIR}/${TRAIN_ID}/${EXP_ID} ./${EXP_ID}
 rm -r ./home
 rm ${EXP_ID}.tar.gz
+echo "Done"

@@ -22,7 +22,7 @@ from neural_nets.embedding_nets_p5 import GRU3_FC, Conv_LSTM, Conv_Transformer
 from utils.dataset.dataset import update_prior_min_max
 
 
-from neural_nets.my_nn_models import my_likelihood_nn
+from neural_nets.my_likelihood_nn import my_likelihood_nn
 from train_nle.MyLikelihoodEstimator import CNLE
 
 
@@ -57,7 +57,7 @@ class Solver:
             return []
         return [[x, y] for x, y in zip(self.prior_min, self.prior_max)]
 
-    def get_neural_likelihood(self):
+    def get_neural_likelihood(self, iid_batch_size_x=2, iid_batch_size_theta=-1):
         # define embedding net
         embedding_net = nn.Identity()
 
@@ -66,13 +66,24 @@ class Solver:
             embedding_net=embedding_net,
             **dict(
                 config=self.config,
+                iid_batch_size_x=iid_batch_size_x,
             ),
         )
 
         return neural_likelihood
 
-    def init_inference(self):
-        writer = SummaryWriter(log_dir=str(self.log_dir))
+    def init_inference(
+        self, iid_batch_size_x=2, iid_batch_size_theta=2, sum_writer=True
+    ):
+        """initialize inference
+
+        iid_batch_size_x: used when doing the posterior inference
+
+        """
+        if sum_writer:
+            writer = SummaryWriter(log_dir=str(self.log_dir))
+        else:
+            writer = None
 
         # prior
         (
@@ -100,7 +111,10 @@ class Solver:
         print(f"prior max: {self.prior_max}")
 
         # get neural posterior
-        neural_likelihood = self.get_neural_likelihood()
+        neural_likelihood = self.get_neural_likelihood(
+            iid_batch_size_x=iid_batch_size_x,
+            iid_batch_size_theta=iid_batch_size_theta,
+        )
         self.inference = CNLE(
             prior=self.prior,
             density_estimator=neural_likelihood,
