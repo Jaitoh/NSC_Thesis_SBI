@@ -1,0 +1,34 @@
+num_posterior_check   : 2
+sampling_num          : 2000
+step                  : 1
+
+# xo_dataset_name          : train # train / valid / s1....s12 
+# n_seq                    : 1
+# n_chR                    : 50
+
+# xo_dataset_name          : train # train / valid / s1....s12 
+# n_seq                    : 1
+# n_chR                    : 100
+
+# xo_dataset_name          : train # train / valid / s1....s12 
+# n_seq                    : 10
+# n_chR                    : 100
+
+# xo_dataset_name          : train # train / valid / s1....s12 
+# n_seq                    : 24
+# n_chR                    : 100
+
+
+# xo_dataset_name          : valid # train / valid / s1....s12 
+# n_seq                    : 1
+# n_chR                    : 50
+
+xo_dataset_name          : valid # train / valid / s1....s12 
+n_seq                    : 1
+n_chR                    : 100
+
+# xo_dataset_name          : valid # train / valid / s1....s12 
+# n_seq                    : 3
+# n_chR                    : 100
+
+# xo_dataset_name          : s2 # train / valid / s1....s12 
