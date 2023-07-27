@@ -67,3 +67,5 @@ codes/outputs/2024-*
 codes/outputs/2025-*
 codes/outputs/2026-*
 *.hydra*
+
+*/codes/outputs/*
