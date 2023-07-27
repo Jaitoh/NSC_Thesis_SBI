@@ -72,13 +72,18 @@ class Solver:
 
         return neural_likelihood
 
-    def init_inference(self, iid_batch_size_x=2, iid_batch_size_theta=2):
+    def init_inference(
+        self, iid_batch_size_x=2, iid_batch_size_theta=2, sum_writer=True
+    ):
         """initialize inference
 
         iid_batch_size_x: used when doing the posterior inference
 
         """
-        writer = SummaryWriter(log_dir=str(self.log_dir))
+        if sum_writer:
+            writer = SummaryWriter(log_dir=str(self.log_dir))
+        else:
+            writer = None
 
         # prior
         (
