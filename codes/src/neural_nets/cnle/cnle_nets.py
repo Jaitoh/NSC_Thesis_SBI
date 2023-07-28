@@ -323,6 +323,8 @@ class CategoricalNet(nn.Module):
         # x iid trials: XaXbXc -> XaXaXa XbXbXb XcXcXc
         # theta:        TaTbTc -> TaTbTc TaTbTc TaTbTc
         # prob:                   papbpc papbpc papbpc
+        assert x.dim() == 2, "input needs to have a batch dimension."
+        assert theta.dim() == 2, "input needs to have a batch dimension."
 
         theta_repeated, x_repeated = match_theta_and_x_batch_shapes(theta, x)
         del x, theta

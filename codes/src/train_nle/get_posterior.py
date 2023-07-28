@@ -50,46 +50,7 @@ def get_data_for_theta(idx_theta, dataset, chR=True):
     return data, theta_value
 
 
-def get_posterior(idx_theta, config):
-    model_path = f"{config.log_dir}/model/model_check_point.pt"
-
-    log_dir = Path(config.log_dir)
-    # data_path = Path(config.data_path)
-
-    # initialize solver and network
-    solver = Solver(config, store_config=False)
-    solver.init_inference(
-        iid_batch_size_x=300,  #!
-        iid_batch_size_theta=-1,  #!
-        sum_writer=False,
-    )
-
-    # get the training dataset, & trained network
-    (
-        _,
-        _,
-        density_estimator,
-        train_dataset,
-        valid_dataset,
-    ) = solver.inference.prepare_dataset_network(
-        config,
-        continue_from_checkpoint=model_path,
-        device="cuda" if torch.cuda.is_available() and config.gpu else "cpu",
-    )
-
-    # get simulated data for a given theta
-    # data [MS, C, 15], theta_value [4]
-    train_data, theta_value = get_data_for_theta(idx_theta, train_dataset)
-    valid_data, theta_value = get_data_for_theta(idx_theta, valid_dataset)
-
-    print("".center(50, "-"), "\n")
-    print(f"==>> theta_value: {theta_value}")
-    print(f"==>> train_data.shape: {train_data.shape}")
-    print(f"==>> valid_data.shape: {valid_data.shape}")
-    print("\n", "".center(50, "-"))
-
-    # ========== get observed data ==========
-    from_dataset = config.posterior.xo_dataset_name
+def get_observed_data(idx_theta, config, solver, train_data, valid_data, from_dataset):
     if from_dataset == "train":
         n_seq = config.posterior.n_seq
         n_chR = config.posterior.n_chR
@@ -125,6 +86,59 @@ def get_posterior(idx_theta, config):
         x_obs = torch.cat([seqC, chR], dim=1).to(solver.inference._device)
         fig_name = f"posterior_theta{idx_theta}_obs_Subject{subj_id}.png"
         print(f"==>> fig_name: {fig_name}")
+    return n_seq, n_chR, x_obs, fig_name
+
+
+def get_trained_data(idx_theta, config, model_path):
+    solver = Solver(config, store_config=False)
+    solver.init_inference(
+        iid_batch_size_x=-1,  #!
+        iid_batch_size_theta=1000,  # + info: 10000 MCMC init, other time 1
+        sum_writer=False,
+    )
+
+    # get the training dataset, & trained network
+    (
+        _,
+        _,
+        density_estimator,
+        train_dataset,
+        valid_dataset,
+    ) = solver.inference.prepare_dataset_network(
+        config,
+        continue_from_checkpoint=model_path,
+        device="cuda" if torch.cuda.is_available() and config.gpu else "cpu",
+    )
+
+    # get simulated data for a given theta
+    # data [MS, C, 15], theta_value [4]
+    train_data, theta_value = get_data_for_theta(idx_theta, train_dataset)
+    valid_data, theta_value = get_data_for_theta(idx_theta, valid_dataset)
+
+    print("".center(50, "-"), "\n")
+    print(f"==>> theta_value: {theta_value}")
+    print(f"==>> train_data.shape: {train_data.shape}")
+    print(f"==>> valid_data.shape: {valid_data.shape}")
+    print("\n", "".center(50, "-"))
+    return solver, density_estimator, train_data, theta_value, valid_data
+
+
+def get_posterior(idx_theta, config):
+    model_path = f"{config.log_dir}/model/model_check_point.pt"
+
+    log_dir = Path(config.log_dir)
+    # data_path = Path(config.data_path)
+
+    # ========== initialize solver and network ==========
+    solver, density_estimator, train_data, theta_value, valid_data = get_trained_data(
+        idx_theta, config, model_path
+    )
+
+    # ========== get observed data ==========
+    from_dataset = config.posterior.xo_dataset_name
+    n_seq, n_chR, x_obs, fig_name = get_observed_data(
+        idx_theta, config, solver, train_data, valid_data, from_dataset
+    )
 
     # ========== build MCMC posterior ==========
     mcmc_parameters = dict(
@@ -132,7 +146,7 @@ def get_posterior(idx_theta, config):
         thin=1,  #!
         num_chains=min(os.cpu_count() - 1, 7),  #!
         # num_chains=1,
-        num_workers=1,  #!
+        num_workers=7,  #!
         init_strategy="sir",  #!
     )
     print(f"==>> mcmc_parameters: {mcmc_parameters}")
@@ -173,6 +187,7 @@ def get_posterior(idx_theta, config):
             prior_labels=config.prior.prior_labels,
             show_progress_bars=True,
         )
+        subj_id = int(from_dataset[1:])
         sample_name = f"posterior_samples_theta{idx_theta}_obs_Subject{subj_id}.npy"
 
     # save posterior samples
@@ -190,9 +205,7 @@ def get_posterior(idx_theta, config):
     del solver
 
 
-@hydra.main(
-    config_path="../config_nle", config_name="config-nle-snn", version_base=None
-)
+@hydra.main(config_path="../config_nle", config_name="config-nle", version_base=None)
 def main(config: DictConfig):
     # hydra.core.global_hydra.GlobalHydra.instance().clear()
     # initialize(config_path="../config_nle", job_name="test_nle")

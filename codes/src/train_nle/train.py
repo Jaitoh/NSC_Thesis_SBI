@@ -67,6 +67,7 @@ class Solver:
             **dict(
                 config=self.config,
                 iid_batch_size_x=iid_batch_size_x,
+                iid_batch_size_theta=iid_batch_size_theta,
             ),
         )
 
