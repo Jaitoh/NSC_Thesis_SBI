@@ -185,7 +185,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # )
 
         # --- train / valid set ---
-        data_dir = config.data_path
+        data_dir = Path(config.data_path).expanduser()
         DS_config = config.dataset
 
         print("".center(50, "="))
@@ -270,7 +270,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             # load network from state dict if specified
             if continue_from_checkpoint != None and continue_from_checkpoint != "":
                 self._neural_net = load_net(
-                    continue_from_checkpoint,
+                    Path(continue_from_checkpoint).expanduser(),
                     self._neural_net,
                     device=device,
                 )

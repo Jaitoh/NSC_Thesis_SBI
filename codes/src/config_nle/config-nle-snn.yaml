@@ -4,14 +4,13 @@ defaults:
   - prior: prior-3
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-nle-cnn-dur3-online
+  - dataset: dataset-nle-cnn-dur3-offline
   - train: train-nle-cnn
-  - posterior: posterior-dur3-t0
+  - posterior: posterior-dur3-s2
 
 pipeline_version: nle
-log_dir: ./src/train_nle/logs/L0-nle-cnn/L0-nle-cnn-dur3-online-copy
-# data_path: /home/ubuntu/tmp/NSC/data/dataset-comb
-data_path: /home/wehe/tmp/NSC/data/dataset-comb
+log_dir: ~/tmp/NSC/codes/src/train_nle/logs/L0-nle-cnn/L0-nle-cnn-dur3-offline
+data_path: ~/tmp/NSC/data/dataset-comb
 seed: 42
 debug: False
 gpu: True

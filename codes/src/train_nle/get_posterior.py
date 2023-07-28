@@ -85,9 +85,9 @@ def get_posterior(idx_theta, config):
 
     # ========== get observed data ==========
     from_dataset = config.posterior.xo_dataset_name
-    n_seq = config.posterior.n_seq
-    n_chR = config.posterior.n_chR
     if from_dataset == "train":
+        n_seq = config.posterior.n_seq
+        n_chR = config.posterior.n_chR
         x_obs = (
             train_data[:n_seq][:n_chR, :].reshape(-1, 15).to(solver.inference._device)
         )
@@ -95,6 +95,8 @@ def get_posterior(idx_theta, config):
         print(f"==>> fig_name: {fig_name}")
 
     elif from_dataset == "valid":
+        n_seq = config.posterior.n_seq
+        n_chR = config.posterior.n_chR
         x_obs = (
             valid_data[:n_seq][:n_chR, :].reshape(-1, 15).to(solver.inference._device)
         )
@@ -105,14 +107,16 @@ def get_posterior(idx_theta, config):
         # load subject data
         data_path = Path(config.data_path)
         trial_path = data_path / "../trials.mat"
+        trial_path = trial_path.expanduser()
         subj_id = int(from_dataset[1:])
         # load subject data
         seqC, chR = get_xo(
             trial_path,
-            subj_id=subj_id,
+            subj_ID=subj_id,
             dur_list=config.dataset.chosen_dur_list,
             MS_list=config.experiment_settings.chosen_MS_list,
         )
+
         x_obs = torch.cat([seqC, chR], dim=1).to(solver.inference._device)
         fig_name = f"posterior_theta{idx_theta}_obs_Subject{subj_id}.png"
         print(f"==>> fig_name: {fig_name}")

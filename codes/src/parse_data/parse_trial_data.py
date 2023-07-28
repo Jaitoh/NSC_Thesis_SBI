@@ -2,7 +2,16 @@ from pathlib import Path
 import numpy as np
 
 # import pandas as pd
+import torch
 import scipy.io as sio
+
+import sys
+from pathlib import Path
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
+from dataset.data_process import process_x_seqC_part
 
 
 def get_xo(
@@ -34,10 +43,14 @@ def get_xo(
         f"{sum(idx_chosen)} samples are chosen with subj_ID={subj_ID}, dur={dur_list}, MS={MS_list}"
     )
 
+    idx_chosen = idx_chosen.reshape(-1)
     seqC = seqCs[idx_chosen, :]
     chR = chRs[idx_chosen, :]
 
-    return seqC, chR
+    # process the data, and ignore the first element in seqC
+    seqC = process_x_seqC_part(seqC)[:, 1:]
+
+    return torch.from_numpy(seqC), torch.from_numpy(chR)
 
 
 def parse_trial_data(PathName: str):
