@@ -9,10 +9,10 @@ ROOT_DIR="$HOME/tmp/NSC"
 RUN_ID=L0-nle-cnn
 EXP_ID=L0-nle-cnn-dur3-offline
 CONFIG_DATASET=dataset-nle-cnn-dur3-offline
-CONFIG_POST=posterior-dur3-t0 #t4-1
+# CONFIG_POST=posterior-dur3-t0 #t4-1
 # CONFIG_POST=posterior-dur3-t1 #t4-1
 
-# CONFIG_POST=posterior-dur3-v0 #t4-2
+CONFIG_POST=posterior-dur3-v0 #t4-2
 # CONFIG_POST=posterior-dur3-v1 #t4-2
 
 # CONFIG_POST=posterior-dur3-t2 #snn
