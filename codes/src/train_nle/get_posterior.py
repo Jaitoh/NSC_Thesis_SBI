@@ -86,6 +86,10 @@ def get_observed_data(idx_theta, config, solver, train_data, valid_data, from_da
         x_obs = torch.cat([seqC, chR], dim=1).to(solver.inference._device)
         fig_name = f"posterior_theta{idx_theta}_obs_Subject{subj_id}.png"
         print(f"==>> fig_name: {fig_name}")
+
+        n_seq = x_obs.shape[0]
+        n_chR = n_seq
+
     return n_seq, n_chR, x_obs, fig_name
 
 
@@ -93,7 +97,7 @@ def get_trained_data(idx_theta, config, model_path):
     solver = Solver(config, store_config=False)
     solver.init_inference(
         iid_batch_size_x=-1,  #!
-        iid_batch_size_theta=1000,  # + info: 10000 MCMC init, other time 1
+        iid_batch_size_theta=config.MCMC_theta_batch,  # + info: 10000 MCMC init, other time 1
         sum_writer=False,
     )
 

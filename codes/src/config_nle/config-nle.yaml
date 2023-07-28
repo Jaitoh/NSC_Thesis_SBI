@@ -15,3 +15,4 @@ seed: 42
 debug: False
 gpu: True
 continue_from_checkpoint: ""
+MCMC_theta_batch: 1000
