@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
 source activate sbi
 
@@ -37,4 +37,4 @@ nice python3 -u ${SCRIPT_PATH} \
     data_path=${ROOT_DIR}/data/dataset-comb \
     dataset=${CONFIG_DATASET} \
     posterior=${CONFIG_POST} \
-    >${PRINT_LOG} 2>&1 &
+    >${PRINT_LOG} 2>&1
