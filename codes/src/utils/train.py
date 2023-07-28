@@ -79,16 +79,17 @@ def plot_posterior_with_label(
         diag=["kde"],
     )
 
-    del samples, x, posterior
-    torch.cuda.empty_cache()
-
-    return fig, axes
+    return fig, axes, samples
 
 
-def plot_posterior_unseen(posterior, sample_num, x, limits, prior_labels):
+def plot_posterior_unseen(
+    posterior, sample_num, x, limits, prior_labels, show_progress_bars=True
+):
     """plot the posterior distribution of the seen data"""
 
-    samples = posterior.sample((sample_num,), x=x, show_progress_bars=False)
+    samples = posterior.sample(
+        (sample_num,), x=x, show_progress_bars=show_progress_bars
+    )
 
     fig, axes = analysis.pairplot(
         samples.cpu().numpy(),
@@ -100,10 +101,7 @@ def plot_posterior_unseen(posterior, sample_num, x, limits, prior_labels):
         diag=["kde"],
     )
 
-    del samples
-    torch.cuda.empty_cache()
-
-    return fig, axes
+    return fig, axes, samples
 
 
 def choose_cat_validation_set(x, theta, val_set_size, post_val_set):

@@ -6,7 +6,7 @@ from omegaconf import DictConfig, OmegaConf
 from hydra import compose, initialize
 from omegaconf import OmegaConf
 import scipy.io as sio
-
+import numpy as np
 import sys
 from pathlib import Path
 
@@ -17,7 +17,12 @@ from train_nle.train import Solver
 
 # from train_nle.MyLikelihoodEstimator import MyLikelihoodEstimator
 from utils.setup import check_path, clean_cache
-from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
+from utils.train import (
+    WarmupScheduler,
+    plot_posterior_with_label,
+    plot_posterior_unseen,
+    load_net,
+)
 from parse_data.parse_trial_data import get_xo
 
 
@@ -146,16 +151,33 @@ def get_posterior(idx_theta, config):
         # rejection_sampling_parameters={},
     )
 
-    # run posterior and plot
-    fig_x, _ = plot_posterior_with_label(
-        posterior=posterior,
-        sample_num=config.posterior.sampling_num,
-        x=x_obs,
-        true_params=theta_value,
-        limits=solver._get_limits(),
-        prior_labels=config.prior.prior_labels,
-        show_progress_bars=True,
-    )
+    if from_dataset == "train" or from_dataset == "valid":
+        # run posterior and plot
+        fig_x, _, samples = plot_posterior_with_label(
+            posterior=posterior,
+            sample_num=config.posterior.sampling_num,
+            x=x_obs,
+            true_params=theta_value,
+            limits=solver._get_limits(),
+            prior_labels=config.prior.prior_labels,
+            show_progress_bars=True,
+        )
+        sample_name = f"posterior_samples_theta{idx_theta}_obs_{from_dataset}_seq{n_seq}_chR_{n_chR}.png"
+
+    elif from_dataset.startswith("s"):
+        fig_x, _, samples = plot_posterior_unseen(
+            posterior=posterior,
+            sample_num=config.posterior.sampling_num,
+            x=x_obs,
+            limits=solver._get_limits(),
+            prior_labels=config.prior.prior_labels,
+            show_progress_bars=True,
+        )
+        sample_name = f"posterior_samples_theta{idx_theta}_obs_Subject{subj_id}.npy"
+
+    # save posterior samples
+    samples = samples.cpu().numpy()
+    np.save(log_dir / sample_name, samples)
 
     # save figure
     fig_x.savefig(  # save figure

@@ -18,7 +18,7 @@ CONFIG_POST=posterior-dur3-t3 #snn
 # CONFIG_POST=posterior-dur3-v0 #snn
 # CONFIG_POST=posterior-dur3-v1 #snn
 # CONFIG_POST=posterior-dur3-v2 #t4-1
-# CONFIG_POST=posterior-dur3-s2 #t4-2
+# CONFIG_POST=posterior-dur3-s2 #snn
 CONFIG_POST=posterior-dur3-s3 #snn
 
 LOG_DIR="./src/train_nle/logs/${RUN_ID}/${EXP_ID}"
