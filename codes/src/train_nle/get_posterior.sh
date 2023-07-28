@@ -15,10 +15,11 @@ CONFIG_POST=posterior-dur3-t1 #snn
 CONFIG_POST=posterior-dur3-t2 #snn
 
 CONFIG_POST=posterior-dur3-t3 #snn
-CONFIG_POST=posterior-dur3-v0 #snn
-CONFIG_POST=posterior-dur3-v1 #snn
-CONFIG_POST=posterior-dur3-v2 #t4-1
-CONFIG_POST=posterior-dur3-s2 #t4-2
+# CONFIG_POST=posterior-dur3-v0 #snn
+# CONFIG_POST=posterior-dur3-v1 #snn
+# CONFIG_POST=posterior-dur3-v2 #t4-1
+# CONFIG_POST=posterior-dur3-s2 #t4-2
+CONFIG_POST=posterior-dur3-s3 #snn
 
 LOG_DIR="./src/train_nle/logs/${RUN_ID}/${EXP_ID}"
 PRINT_LOG="${LOG_DIR}/posterior-${RUN_ID}-${CONFIG_POST}.log"
@@ -37,4 +38,4 @@ nice python3 -u ${SCRIPT_PATH} \
     data_path=${ROOT_DIR}/data/dataset-comb \
     dataset=${CONFIG_DATASET} \
     posterior=${CONFIG_POST} \
-    >${PRINT_LOG} 2>&1 &
+    >${PRINT_LOG} 2>&1

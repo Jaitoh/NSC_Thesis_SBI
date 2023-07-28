@@ -54,7 +54,7 @@ def get_posterior(idx_theta, config):
     # initialize solver and network
     solver = Solver(config, store_config=False)
     solver.init_inference(
-        iid_batch_size_x=100,  #!
+        iid_batch_size_x=300,  #!
         iid_batch_size_theta=-1,  #!
         sum_writer=False,
     )
