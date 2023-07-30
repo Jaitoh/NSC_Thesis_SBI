@@ -165,7 +165,9 @@ class Solver:
 
 
 @hydra.main(
-    config_path="../config_nle", config_name="config-nle-test", version_base=None
+    config_path="../config_nle",
+    config_name="config-nle-test-offline_acc",
+    version_base=None,
 )
 def main(config: DictConfig):
     PID = os.getpid()

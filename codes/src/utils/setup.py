@@ -188,5 +188,5 @@ def check_path(log_dir, data_path):
             os.makedirs(str(event_hist_dir))
 
     # check data path, where to read the data from, exists
-    if not Path(data_path).exists():
+    if not Path(data_path).expanduser().exists():
         assert False, f"Data dir {str(data_path)} does not exist."

@@ -38,4 +38,5 @@ nice python3 -u ${SCRIPT_PATH} \
     data_path=${ROOT_DIR}/data/dataset-comb \
     dataset=${CONFIG_DATASET} \
     posterior=${CONFIG_POST} \
+    MCMC_theta_batch=1000 \
     >${PRINT_LOG} 2>&1

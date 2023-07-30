@@ -274,6 +274,37 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
             del self.probR_all
             clean_cache()
 
+        if self.probR_sample_mode == "offline_acc":
+            print(
+                f"\n('offline_acc') Sampling C={self.C} times from probR ... ", end=""
+            )
+
+            # # probR_all (MS, T, 1)
+            # self.chR_all = torch.zeros((self.MS, self.T, self.C, 1))
+            # for i in range(self.MS):
+            #     for j in range(self.T):
+            #         prob = self.probR_all[i, j, 0]
+            #         self.chR_all[i, j, : int(self.C) * prob, 0] = 1
+            # # chR_all (MS, T, C, 1)
+
+            # del self.probR_all
+            # clean_cache()
+
+            # Compute number of ones needed for each position (MS, T, 1)
+            num_ones = torch.round(self.probR_all * self.C)
+
+            # Generate a range tensor of size C (C,)
+            range_tensor = torch.arange(self.C).to(self.probR_all.device)
+
+            # Compare the range tensor with num_ones to generate a binary mask (broadcasting) (MS, T, C)
+            indices = range_tensor < num_ones
+
+            # Generate result tensor (MS, T, C, 1)
+            self.chR_all = indices.float().unsqueeze(-1)
+
+            del self.probR_all
+            clean_cache()
+
         self.total_samples = self.T * self.C * self.MS
         if print_info:
             self._print_info(chosen_dur_list, part_each_dur, start_loading_time)
@@ -290,7 +321,8 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
         print("".center(50, "-"))
         print("shapes:")
         print(f"[seqC] shape: {self.seqC_all.shape}")
-        if self.probR_sample_mode == "offline":
+
+        if "offline" in self.probR_sample_mode:
             print(f"[chR] shape: {self.chR_all.shape}")
         else:
             print(f"[probR] shape: {self.probR_all.shape}")
@@ -311,7 +343,7 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
     def __getitem__(self, idx):
         idx_seqC, idx_T, idx_C = unravel_index(idx, shape=(self.MS, self.T, self.C))
 
-        if self.probR_sample_mode == "offline":
+        if "offline" in self.probR_sample_mode:
             # slice the sampled choices
             seqC = self.seqC_all[idx_seqC, 1:]
             chR = self.chR_all[idx_seqC, idx_T, idx_C]
