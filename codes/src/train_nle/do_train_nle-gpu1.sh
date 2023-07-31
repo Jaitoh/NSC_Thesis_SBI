@@ -7,9 +7,9 @@ source activate sbi
 ROOT_DIR=~/tmp/NSC
 
 SET_ID=L0-nle-cnn
-RUN_ID=L0-nle-cnn-dur3-offline_acc
+RUN_ID=L0-nle-cnn-dur7-offline_acc
 CONFIG_PRIOR=prior-3
-CONFIG_DATASET=dataset-nle-cnn-dur3-offline_acc
+CONFIG_DATASET=dataset-nle-cnn-dur7-offline_acc
 CONFIG_TRAIN=train-nle-cnn
 
 TRAIN_FILE_NAME=train
