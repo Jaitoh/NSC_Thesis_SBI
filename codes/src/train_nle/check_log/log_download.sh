@@ -11,6 +11,10 @@ FILE_ID=1vX1rN9nDP8-hi2kVkXfYHgJOH-RhhI1z
 # EXP_ID=L0-nle-cnn-dur3-offline
 # FILE_ID=1X2JJLyS8DEgA7b4mrloWW_J2a2AXVxyp
 
+# TRAIN_ID=L0-nle-cnn
+# EXP_ID=L0-nle-cnn-dur3-offline_acc
+# FILE_ID=1jRg62XFF3OcPzIIYs-DbuXzrawriY50y
+
 LOG_DIR="$HOME/tmp/NSC/codes/src/train_nle/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
 

@@ -5,13 +5,14 @@ TRAIN_ID=L0-nle-cnn
 folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs folder id
 
 # "L0-nle-cnn-dur3-online"
+# "L0-nle-cnn-dur3-offline"
 EXP_IDS=(
-    "L0-nle-cnn-dur3-offline"
+    "L0-nle-cnn-dur3-offline_acc"
 )
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"
-LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train_nle/logs"
+LOG_DIR=~/tmp/NSC/codes/src/train_nle/logs
 if [ ${DO_ZIP} -eq 1 ]; then
     for EXP_ID in "${EXP_IDS[@]}"; do
         cd ${LOG_DIR}/${TRAIN_ID}
@@ -21,6 +22,7 @@ if [ ${DO_ZIP} -eq 1 ]; then
             echo "Error: ${EXP_DIR} does not exist"
             exit 1
         fi
+        cp ./${EXP_ID}.log ${EXP_DIR}/
         tar -zcf ${EXP_DIR}.tar.gz ${EXP_DIR}
     done
 fi
