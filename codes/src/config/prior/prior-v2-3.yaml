@@ -1,0 +1,7 @@
+# prior:
+num_prior_sample: 500
+prior_min       : [-0.6,   0,  0,  -1.2]
+prior_max       : [ 0.2,  13,  5,   1.8]
+prior_labels    : ['bias', 'sigma2a', 'sigma2s', 'L0']
+normalize       : True # true: normalize the prior to 0-1
+ignore_ss       : False  # true: ignore the sigma2a sigma2s parameter

@@ -19,7 +19,7 @@ import hydra
 sys.path.append("./src")
 sys.path.append("../../src")
 
-from train.train_L0_p4 import Solver
+from train.train_L0_p4a import Solver
 from features.features import Feature_Generator
 from simulator.model_sim_pR import DM_sim_for_seqCs_parallel_with_smaller_output
 from utils.set_seed import setup_seed
@@ -216,9 +216,7 @@ def main(_config):
         chR_estimated = probR_to_chR(probR_estimated, num_C, device)
 
         # compute the feature from seqC and chR_estimated
-        features_estimated = compute_feature_from_seqC_chR(
-            seqC, D, M, S, chR_estimated, chosen_features
-        )
+        features_estimated = compute_feature_from_seqC_chR(seqC, D, M, S, chR_estimated, chosen_features)
         print(f"==>> features_estimated.shape: {features_estimated.shape}")
         feature_estimated_collection.append(features_estimated)
 
@@ -234,23 +232,17 @@ def main(_config):
         # embedding to 2D
         tsne = TSNE(n_components=2, random_state=0, perplexity=5)
         reduced_features_true = tsne.fit_transform(features_true.squeeze().numpy())
-        reduced_features_estimated = tsne.fit_transform(
-            feature_estimated_collection[i].squeeze().numpy()
-        )
+        reduced_features_estimated = tsne.fit_transform(feature_estimated_collection[i].squeeze().numpy())
 
         # compute distances - inner distances
         distances_true = distance.pdist(reduced_features_true, "euclidean")
         distances_estimated = distance.pdist(reduced_features_estimated, "euclidean")
         distances_true_square = distance.squareform(distances_true)
         distances_estimated_square = distance.squareform(distances_estimated)
-        distances_inter = distance.cdist(
-            reduced_features_true, reduced_features_estimated, "euclidean"
-        )
+        distances_inter = distance.cdist(reduced_features_true, reduced_features_estimated, "euclidean")
 
         # Get upper triangular part without the diagonal (k=1)
-        upper_part_true = distances_true_square[
-            np.triu_indices(distances_true_square.shape[0], k=1)
-        ]
+        upper_part_true = distances_true_square[np.triu_indices(distances_true_square.shape[0], k=1)]
         upper_part_estimated = distances_estimated_square[
             np.triu_indices(distances_estimated_square.shape[0], k=1)
         ]
@@ -345,9 +337,7 @@ def main(_config):
 
         ax13.plot(features_true.squeeze()[0, :].numpy(), label="True")
         # ax13.plot(features_true.squeeze()[1, :].numpy())
-        ax13.plot(
-            feature_estimated_collection[i].squeeze()[0, :].numpy(), label="Estimated"
-        )
+        ax13.plot(feature_estimated_collection[i].squeeze()[0, :].numpy(), label="Estimated")
         # ax12.plot(feature_estimated_collection.squeeze()[1, :].numpy())
         ax13.set_title("Example of extracted feature")
         ax13.set_xlabel("feature index")

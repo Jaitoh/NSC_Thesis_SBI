@@ -133,9 +133,10 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
             "shuffle": True,
             "pin_memory": config_dataset.pin_memory,
             "num_workers": config_dataset.num_workers,
-            "prefetch_factor": config_dataset.prefetch_factor,
             "worker_init_fn": seed_worker,
         }
+        if config_dataset.prefetch_factor != 0:
+            loader_kwargs["prefetch_factor"] = config_dataset.prefetch_factor
         print(f"{loader_kwargs=}")
 
         g = torch.Generator()

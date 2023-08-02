@@ -16,11 +16,11 @@ chosen_dur_list             : [3, 9, 15]
 crop_dur                    : True
 
 permutation_mode            : 'online' # online, offline
-num_probR_sample            : 25 #25
+num_probR_sample            : 20 #25
 
 
 # ========== data loader settings ==========
-batch_size                  : 2048 #=32*100
-pin_memory                  : True
-num_workers                 : 4
+batch_size                  : 5120 #=32*100
+pin_memory                  : False
+num_workers                 : 8
 prefetch_factor             : 2
