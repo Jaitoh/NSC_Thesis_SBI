@@ -114,6 +114,64 @@ class Conv_LSTM(nn.Module):
         return out
 
 
+class Conv_NET(nn.Module):
+    def __init__(self, DMS):
+        super(Conv_NET, self).__init__()
+
+        # seqC network
+        self.conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=1024, out_channels=2048, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv1d(in_channels=2048, out_channels=1024, kernel_size=3, padding=1)
+
+        self.pool = nn.MaxPool1d(2)
+        self.activate = nn.ReLU()
+
+        self.fc1 = nn.Linear(1024, 512)
+        self.fc2 = nn.Linear(512, 256)
+
+        # chR network
+        self.chR_conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
+        self.chR_conv2 = nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=3, padding=1)
+        self.chR_fc_1 = nn.Linear(512, 512)
+        self.chR_fc_2 = nn.Linear(512, 256)
+
+        # output network
+        self.fc_out1 = nn.Linear(512, 512)
+        self.fc_out2 = nn.Linear(512, 256)
+
+        kaiming_weight_initialization(self.named_parameters())
+
+    def forward(self, x):
+        # (B, DMS, L + 1)
+        seqC = x[..., 1:-1]  # (B, DMS, 14) !removed the first signal
+        chR = x[..., -1].unsqueeze(-1)  # (B, DMS, 1)
+
+        seqC = self.activate(self.conv1(seqC))  # (B, 1024, 14)
+        seqC = self.pool(seqC)  # (B, 1024, 7)
+        seqC = self.activate(self.conv2(seqC))  # (B, 2048, 7)
+        seqC = self.pool(seqC)  # (B, 2048, 3)
+        seqC = self.activate(self.conv3(seqC))  # (B, 1024, 3)
+        seqC = self.pool(seqC)  # (B, 1024, 1)
+        seqC = seqC.squeeze(-1)  # (B, 1024)
+
+        seqC = self.activate(self.fc1(seqC))  # (B, 512)
+        seqC = self.activate(self.fc2(seqC))  # (B, 256)
+
+        chR = self.activate(self.chR_conv1(chR))  # (B, 1024, 1)
+        chR = self.activate(self.chR_conv2(chR))  # (B, 512, 1)
+
+        chR = chR.squeeze(-1)  # (B, 512)
+        chR = self.activate(self.chR_fc_1(chR))  # (B, 512)
+        chR = self.activate(self.chR_fc_2(chR))  # (B, 256)
+
+        out = torch.cat((seqC, chR), dim=1)  # (B, 512)
+
+        out = self.activate(self.fc_out1(out))  # (B, 512)
+        out = self.activate(self.fc_out2(out))  # (B, 256)
+
+        return out
+
+
 class GRU3_FC(nn.Module):
     def __init__(self, DMS):
         super(GRU3_FC, self).__init__()

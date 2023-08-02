@@ -19,7 +19,7 @@ from utils.dataset.dataset import (
     process_theta,
     generate_permutations,
     unravel_index,
-    get_L_seqC,
+    get_len_seqC,
     choose_theta,
 )
 
@@ -70,10 +70,8 @@ class probR_HighD_Sets(Dataset):
         # torch.cuda.manual_seed(config.seed)
 
         dur_list = [3, 5, 7, 9, 11, 13, 15]
-        print(
-            f"Loading {len(chosen_set_names)} dataset into memory... \n{chosen_set_names} ...",
-            end=" ",
-        )
+        info = f"Loading {len(chosen_set_names)} dataset into memory... \n{chosen_set_names} ..."
+        print(info, end=" ")
 
         start_loading_time = time.time()
         self.num_chosen_theta_each_set = num_chosen_theta_each_set
@@ -82,7 +80,7 @@ class probR_HighD_Sets(Dataset):
         f = h5py.File(data_path, "r", libver="latest", swmr=True)
 
         # get the shape of the data
-        L_seqC = get_L_seqC(seqC_process, summary_type)
+        L_seqC = get_len_seqC(seqC_process, summary_type)
         D, M, S, DMS = (
             *f[chosen_set_names[0]]["seqC"].shape[:-1],
             np.prod(f[chosen_set_names[0]]["seqC"].shape[:-1]),
@@ -96,19 +94,13 @@ class probR_HighD_Sets(Dataset):
         self.total_samples = num_chosen_theta_each_set * len(chosen_set_names)
         self.T = num_chosen_theta_each_set
 
-        chosen_dur_idx = [
-            dur_list.index(dur) for dur in chosen_dur
-        ]  # mapping from [3, 5, 7, 9, 11, 13, 15] to [0, 1, 2, 3, 4, 5, 6]
+        # mapping from [3, 5, 7, 9, 11, 13, 15] to [0, 1, 2, 3, 4, 5, 6]
+        chosen_dur_idx = [dur_list.index(dur) for dur in chosen_dur]
         chosen_D = len(chosen_dur) if crop_dur else D
-        self.seqC_all = np.empty(
-            (len(chosen_set_names), chosen_D, M, S, L_seqC)
-        )  # (n_set, D, M, S, L)
-        self.theta_all = np.empty(
-            (len(chosen_set_names), num_chosen_theta_each_set, 4)
-        )  # (n_set, T, 4)
-        self.probR_all = np.empty(
-            (len(chosen_set_names), chosen_D, M, S, num_chosen_theta_each_set, 1)
-        )  # (n_set, D, M, S, T, 1)
+        self.seqC_all = np.empty((len(chosen_set_names), chosen_D, M, S, L_seqC))  # (n_set, D, M, S, L)
+        self.theta_all = np.empty((len(chosen_set_names), num_chosen_theta_each_set, 4))  # (n_set, T, 4)
+        self.probR_all = np.empty((len(chosen_set_names), chosen_D, M, S, num_chosen_theta_each_set, 1))
+        # (n_set, D, M, S, T, 1)
 
         counter = 0
         for set_idx, set_name in enumerate(chosen_set_names):
@@ -124,9 +116,7 @@ class probR_HighD_Sets(Dataset):
                 else f[set_name]["probR"][:, :, :, chosen_theta_idx]
             )  # (D, M, S, T)
 
-            self.theta_all[set_idx] = f[set_name]["theta"][:][
-                chosen_theta_idx, :
-            ]  # (T, 4)
+            self.theta_all[set_idx] = f[set_name]["theta"][chosen_theta_idx, :]  # (T, 4)
             self.seqC_all[set_idx] = seqC_data
             self.probR_all[set_idx] = probR_data
             del seqC_data, probR_data
@@ -153,18 +143,11 @@ class probR_HighD_Sets(Dataset):
             .to(torch.float32)
             .contiguous()
         )  # (n_set, DM, S, T)
-        self.theta_all = (
-            torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
-        )  # (n_set, T, 4)
+        self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()  # (n_set, T, 4)
 
-    def _get_seqC_data(
-        self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name
-    ):
-        seqC = (
-            f[set_name]["seqC"][chosen_dur_idx, :, :, :]
-            if crop_dur
-            else f[set_name]["seqC"][:]
-        )  # (D, M, S, L)
+    def _get_seqC_data(self, crop_dur, f, seqC_process, summary_type, chosen_dur_idx, set_name):
+        seqC = f[set_name]["seqC"][chosen_dur_idx, :, :, :] if crop_dur else f[set_name]["seqC"][:]
+        # (D, M, S, L)
         return process_x_seqC_part(
             seqC=seqC,
             seqC_process=seqC_process,  # 'norm' or 'summary'
@@ -195,9 +178,7 @@ class probR_HighD_Sets(Dataset):
         probR   (DM, S, 1)
         """
 
-        set_idx, theta_idx = divmod(
-            idx, self.num_chosen_theta_each_set
-        )  # faset than unravel_index indexing
+        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set)  # faset than unravel_index indexing
 
         # set_idx, theta_idx = self.set_idxs[idx], self.theta_idxs[idx]
 
@@ -258,9 +239,7 @@ class probR_2D_Sets(probR_HighD_Sets):
         return self.total_samples
 
     def __getitem__(self, idx):
-        set_idx, theta_idx = divmod(
-            idx, self.num_chosen_theta_each_set
-        )  # faset than unravel_index indexing
+        set_idx, theta_idx = divmod(idx, self.num_chosen_theta_each_set)  # faset than unravel_index indexing
         # set_idx, theta_idx = self.set_idxs[idx], self.theta_idxs[idx]
 
         seqC = self.seqC_all[set_idx]
@@ -341,9 +320,7 @@ class chR_HighD_Dataset(probR_HighD_Sets):
             .repeat_interleave(self.C, dim=-1)
         )
         # chR_all (num_chosen_sets, DM, S, T, C, 1)
-        self.chR_all = (
-            torch.bernoulli(self.probR_all).unsqueeze(-1).to("cpu").contiguous()
-        )
+        self.chR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).to("cpu").contiguous()
         print(f"in {(time.time()-time_start)/60:.2f}min")
         del self.probR_all
         torch.cuda.empty_cache()
@@ -354,9 +331,7 @@ class chR_HighD_Dataset(probR_HighD_Sets):
         # self.permutations = generate_permutations(self.C*self.T*len(chosen_set_names)*self.DM, self.S).contiguous() # (C*T*Set*DM, S) #TODO use this way to shuffle
         # TODO: maybe wrong, current is (TC, s), different head share the same shuffling method
         if permutation_mode == "offline":
-            self.permutations = generate_permutations(
-                self.total_samples, self.S
-            ).contiguous()
+            self.permutations = generate_permutations(self.total_samples, self.S).contiguous()
 
         self.seqC_all = self.seqC_all.contiguous()  # (num_chosen_sets, DM, S, 15)
         self.theta_all = self.theta_all  # (num_chosen_sets, T, 4)
@@ -377,14 +352,10 @@ class chR_HighD_Dataset(probR_HighD_Sets):
         set_idx, T_idx, C_idx = self.set_idxs[idx], self.T_idxs[idx], self.C_idxs[idx]
         # set_idx, theta_idx, probR_sample_idx = self.set_idxs[idx], self.theta_idxs[idx], self.probR_sample_idxs[idx]
 
-        x = torch.empty(
-            (self.DM, self.S, self.seqC_all.shape[-1] + 1), dtype=torch.float32
-        )
+        x = torch.empty((self.DM, self.S, self.seqC_all.shape[-1] + 1), dtype=torch.float32)
         # TODO more complex shuffling methods? currently along S axis
         x[:, :, : self.seqC_all.shape[-1]] = self.seqC_all[set_idx]  # (DM, S, 15)
-        x[:, :, self.seqC_all.shape[-1] :] = self.chR_all[
-            set_idx, :, :, T_idx, C_idx, :
-        ]  # (DM, S, 1)
+        x[:, :, self.seqC_all.shape[-1] :] = self.chR_all[set_idx, :, :, T_idx, C_idx, :]  # (DM, S, 1)
 
         # shuffle along S
         if self.permutation_mode == "offline":
@@ -439,9 +410,7 @@ class chR_2D_Dataset(chR_HighD_Dataset):
         self.DMS = DM * S
 
         if permutation_mode == "offline":  # (nSets*TC, DMS)
-            self.permutations = generate_permutations(
-                self.total_samples, DM * S
-            ).contiguous()
+            self.permutations = generate_permutations(self.total_samples, DM * S).contiguous()
 
         self.permutation_mode = permutation_mode
 

@@ -24,7 +24,7 @@ from train.MyPosteriorEstimator_p5 import MySNPE_C_P5
 from utils.train import print_cuda_info
 from utils.setup import check_path, clean_cache
 from utils.set_seed import setup_seed
-from neural_nets.embedding_nets_p5 import GRU3_FC, Conv_LSTM, Conv_Transformer
+from neural_nets.embedding_nets_p5 import GRU3_FC, Conv_LSTM, Conv_Transformer, Conv_NET
 from utils.dataset.dataset import update_prior_min_max
 
 
@@ -73,6 +73,9 @@ class Solver:
 
             case "conv_lstm":
                 embedding_net = Conv_LSTM(self.DMS)
+
+            case "conv_net":
+                embedding_net = Conv_NET(self.DMS)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
@@ -152,7 +155,7 @@ class Solver:
         # )
 
 
-@hydra.main(config_path="../config", config_name="config-p5-test", version_base=None)
+@hydra.main(config_path="../config", config_name="config-p5-conv", version_base=None)
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")

@@ -1,0 +1,41 @@
+# train:
+density_estimator:
+  embedding_net:
+    type: conv_net    # gru_fc, multi_head_gru_fc
+    hidden_size: 1024
+    output_size: 256
+  posterior_nn:
+    model: mdn
+    hidden_features: 128
+    num_transforms: 2
+  
+
+training:
+  
+  learning_rate         : 5e-5
+  clip_max_norm         : 1e-5
+  weight_decay          : 1e-9
+  
+  stop_after_epochs     : 1000
+
+  min_num_epochs        : 100
+  max_num_epochs        : 2147483647
+  
+  warmup_epochs         : 5
+  initial_lr            : 1e-8
+  # scheduler             : 'ReduceLROnPlateau'
+  # scheduler_params      : {'patience': 3, 'factor': 0.5, 'min_lr': 0}
+  # scheduler             : 'CosineAnnealingWarmRestarts'
+  # scheduler_params      : {'T_0': 7, 'T_mult': 2}
+  scheduler             : 'None'
+  scheduler_params      : {}
+  
+  print_freq            : 2 # 2+1 records per epoch
+  num_atoms             : 10
+  use_combined_loss     : True
+  
+posterior:
+  num_posterior_check   : 2
+  sampling_num          : 2000
+  step                  : 1     
+  # 0: do not print posterior, the epoch steps to check posterior during training

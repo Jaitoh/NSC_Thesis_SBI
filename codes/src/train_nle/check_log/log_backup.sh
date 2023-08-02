@@ -7,7 +7,7 @@ folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs folder id
 # "L0-nle-cnn-dur3-online"
 # "L0-nle-cnn-dur3-offline"
 EXP_IDS=(
-    "L0-nle-cnn-dur3-offline_acc"
+    "L0-nle-cnn-dur7-offline_acc"
 )
 
 # zip log files

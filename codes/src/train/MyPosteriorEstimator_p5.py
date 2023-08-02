@@ -64,7 +64,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
     def prepare_dataset_network(self, config, continue_from_checkpoint, device="gpu"):
         # prepare train, val dataset and dataloader
         print("\n=== train, val dataset and dataloader ===")
-        data_path = self.config.data_path
+        data_path = Path(self.config.data_path).expanduser()
         with h5py.File(data_path, "r") as f:
             sets = list(f.keys())[: self.config.dataset.num_max_sets]
 
@@ -160,9 +160,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
 
             self.unseen_data_for_posterior["x"].append(x_valid_batch[i, :])
             self.unseen_data_for_posterior["theta"].append(theta_valid_batch[i, :])
-        print(
-            f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes"
-        )
+        print(f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes")
 
         # initialize the network
         if self._neural_net is None:
@@ -237,9 +235,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         )
 
         if config_training["scheduler"] == "ReduceLROnPlateau":
-            self.scheduler = ReduceLROnPlateau(
-                self.optimizer, **config_training["scheduler_params"]
-            )
+            self.scheduler = ReduceLROnPlateau(self.optimizer, **config_training["scheduler_params"])
         if config_training["scheduler"] == "CosineAnnealingWarmRestarts":
             self.scheduler = CosineAnnealingWarmRestarts(
                 self.optimizer, **config_training["scheduler_params"]
@@ -260,9 +256,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
 
         # train until no validation improvement for 'patience' epochs
         train_start_time = time.time()
-        print(
-            f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches"
-        )
+        print(f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches")
         while (
             epoch <= config_training.max_num_epochs
             and not self._converged(epoch, debug)
@@ -288,7 +282,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
                     masks_batch = torch.ones_like(theta[:, 0]).to(self._device)
 
                 train_data_size += len(x)
-                train_losses = self._loss(  # TODO: check loss computation
+                train_losses = self._loss(
                     theta,
                     x,
                     masks_batch,
@@ -304,9 +298,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
                 clean_cache()
                 clip_max_norm = config_training.clip_max_norm
                 if clip_max_norm is not None:
-                    clip_grad_norm_(
-                        self._neural_net.parameters(), max_norm=clip_max_norm
-                    )
+                    clip_grad_norm_(self._neural_net.parameters(), max_norm=clip_max_norm)
 
                 del x, theta, masks_batch, train_losses
                 clean_cache()
@@ -323,9 +315,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
                 elif train_batch_num % (len(train_dataloader) // print_freq) == 0:
                     print(batch_info)
 
-                self._summary_writer.add_scalar(
-                    "train_loss_batch", train_loss, batch_counter
-                )
+                self._summary_writer.add_scalar("train_loss_batch", train_loss, batch_counter)
 
                 train_batch_num += 1
                 batch_counter += 1
@@ -337,9 +327,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
             train_log_prob_average = train_log_probs_sum / train_data_size
             self._train_log_prob = train_log_prob_average
             self._summary["training_log_probs"].append(train_log_prob_average)
-            self._summary_writer.add_scalars(
-                "log_probs", {"training": train_log_prob_average}, epoch
-            )
+            self._summary_writer.add_scalars("log_probs", {"training": train_log_prob_average}, epoch)
 
             # epoch log - learning rate
             if epoch < config_training.warmup_epochs:
@@ -384,9 +372,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
                         x_valid,
                         masks_batch,
                         proposal=self._proposal_roundwise[-1],  # TODO: check proposal
-                        calibration_kernel=lambda x: ones(
-                            [len(x)], device=self._device
-                        ),
+                        calibration_kernel=lambda x: ones([len(x)], device=self._device),
                         force_first_round_loss=True,
                     )
 
@@ -401,9 +387,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
 
                 # epoch log - validation log prob
                 self._valid_log_prob = valid_log_prob_sum / valid_data_size
-                self._summary_writer.add_scalars(
-                    "log_probs", {"validation": self._valid_log_prob}, epoch
-                )
+                self._summary_writer.add_scalars("log_probs", {"validation": self._valid_log_prob}, epoch)
 
                 toc = time.time()
                 self._summary["validation_log_probs"].append(self._valid_log_prob)
@@ -526,32 +510,32 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
             for fig_idx in range(num_data):
                 print(f"{fig_idx}/{num_data-1}", end=" ")
                 # plot posterior - seen data
-                fig_x, _ = plot_posterior_with_label(
+                fig_x, _, _ = plot_posterior_with_label(
                     posterior=posterior,
                     sample_num=config.train.posterior.sampling_num,
                     x=self.seen_data_for_posterior["x"][fig_idx].to(self._device),
                     true_params=self.seen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
                     prior_labels=prior_labels,
+                    show_progress_bars=False,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
-                fig_path = (
-                    f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
-                )
+                fig_path = f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
                 plt.savefig(fig_path)
                 plt.close(fig_x)
                 del fig_x, _
                 clean_cache()
 
                 # plot posterior - unseen data
-                fig_x_val, _ = plot_posterior_with_label(
+                fig_x_val, _, _ = plot_posterior_with_label(
                     posterior=posterior,
                     sample_num=config.train.posterior.sampling_num,
                     x=self.unseen_data_for_posterior["x"][fig_idx].to(self._device),
                     true_params=self.unseen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
                     prior_labels=prior_labels,
+                    show_progress_bars=False,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
@@ -590,24 +574,8 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         ax0.set_title("training curve")
 
         ax1 = axes[1]
-        ax1.plot(
-            train_log_probs,
-            ".-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax1.plot(
-            valid_log_probs,
-            ".-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
+        ax1.plot(train_log_probs, ".-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax1.plot(valid_log_probs, ".-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
         ax1.plot(best_valid_log_prob_epoch, best_valid_log_prob, "v", color="red", lw=2)
         ax1.text(best_valid_log_prob_epoch, best_valid_log_prob, f"{best_valid_log_prob:.2f}", color="red", fontsize=10, ha="center", va="bottom")  # type: ignore
         # ax1.set_ylim(log_probs_lower_bound, max(valid_log_probs)+0.2)
@@ -628,24 +596,8 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
 
         ax3 = axes[2]
 
-        ax3.plot(
-            train_log_probs,
-            "o-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax3.plot(
-            valid_log_probs,
-            "o-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
+        ax3.plot(train_log_probs, "o-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax3.plot(valid_log_probs, "o-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
 
         all_probs = np.concatenate([train_log_probs, valid_log_probs])
         upper = np.max(all_probs)
@@ -708,9 +660,7 @@ class MySNPE_C_P5(SNPE_C, MyPosteriorEstimator_P5):
                 and isinstance(proposal.posterior_estimator._distribution, mdn)
                 and self._neural_net is not None
                 and isinstance(self._neural_net._distribution, mdn)
-                and check_dist_class(
-                    self._prior, class_to_check=(Uniform, MultivariateNormal)
-                )[0]
+                and check_dist_class(self._prior, class_to_check=(Uniform, MultivariateNormal))[0]
             )
 
             algorithm = "non-atomic" if self.use_non_atomic_loss else "atomic"

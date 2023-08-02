@@ -61,9 +61,7 @@ def choose_theta(
 
     # choose randomly num_chosen_theta_each_set from all the theta in the set
     if theta_chosen_mode == "random":
-        theta_idx = np.random.choice(
-            max_theta_in_a_set, num_chosen_theta_each_set, replace=False
-        )
+        theta_idx = np.random.choice(max_theta_in_a_set, num_chosen_theta_each_set, replace=False)
         return np.sort(theta_idx), len(theta_idx)
 
     # choose first 80% as training set from num_chosen_theta_each_set
@@ -75,9 +73,7 @@ def choose_theta(
     # choose last 20% as validation set from num_chosen_theta_each_set
     elif theta_chosen_mode.startswith("last"):  # last_20
         percentage = 1 - eval(theta_chosen_mode[-2:]) / 100
-        theta_idx = np.arange(
-            int(num_chosen_theta_each_set * percentage), num_chosen_theta_each_set
-        )
+        theta_idx = np.arange(int(num_chosen_theta_each_set * percentage), num_chosen_theta_each_set)
         return theta_idx, len(theta_idx)
 
     else:
@@ -144,10 +140,10 @@ def unravel_index(index, shape):
     total_elements = 1
     for dim in shape:
         total_elements *= dim
-    if index >= total_elements:
-        raise ValueError(
-            "Index out of bound. It should be less than total elements in shape."
-        )
+    # if index >= total_elements:
+    #     raise ValueError(
+    #         "Index out of bound. It should be less than total elements in shape."
+    #     )
 
     out = []
     for dim in reversed(shape):
@@ -207,9 +203,7 @@ def process_theta_2D(
 
 
 def apply_advanced_indexing_along_dim1(tensor, indices):
-    idx0 = torch.arange(tensor.size(0))[:, None].expand(
-        indices.size(0), indices.size(1)
-    )
+    idx0 = torch.arange(tensor.size(0))[:, None].expand(indices.size(0), indices.size(1))
     return tensor[idx0, indices]
 
 
