@@ -2,11 +2,11 @@
 # log p4-4Fs-1D-cnn.tar.gz
 Pipeline=train
 TRAIN_ID=train_L0_p5a
-EXP_ID=p5a-conv_net-old_net
-FILE_ID=1DN6hitwQ9JTI-GCAMW0vhs02osRbfLAa
+EXP_ID=p5a-conv_net-tmp
+FILE_ID=1ihauxr6Y-GvnPK0j8l1Qmt-srJQYWoE3
 
-EXP_ID=p5a-conv_net-Tv2-old_net
-FILE_ID=133nbNV9Ee9951eeG_23XOobc8wf953sm
+EXP_ID=p5a-conv_net-Tv2-tmp
+FILE_ID=19gOMVtqxC9hXlzDKF_6yjWUpEDPaU7cj
 
 # ===== train_nle =====
 # Pipeline=train_nle

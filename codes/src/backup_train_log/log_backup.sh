@@ -6,8 +6,8 @@ TRAIN_ID=train_L0_p5a
 folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 
 EXP_IDS=(
-    "p5a-conv_net-old_net"
-    "p5a-conv_net-Tv2-old_net"
+    "p5a-conv_net-tmp"
+    "p5a-conv_net-Tv2-tmp"
 )
 
 # Pipeline=train_nle
