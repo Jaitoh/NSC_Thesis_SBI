@@ -1,11 +1,22 @@
+# ===== train_npe =====
 # log p4-4Fs-1D-cnn.tar.gz
-TRAIN_ID=L0-nle-cnn
-EXP_ID=L0-nle-cnn-dur3-online-copy
-FILE_ID=1vukn9tNDBJPHEBakCcHr2i-NYTJVaftA
+Pipeline=train
+TRAIN_ID=train_L0_p5a
+EXP_ID=p5a-conv_net-old_net
+FILE_ID=1DN6hitwQ9JTI-GCAMW0vhs02osRbfLAa
 
-TRAIN_ID=L0-nle-cnn
-EXP_ID=L0-nle-cnn-dur3-online
-FILE_ID=1vX1rN9nDP8-hi2kVkXfYHgJOH-RhhI1z
+EXP_ID=p5a-conv_net-Tv2-old_net
+FILE_ID=133nbNV9Ee9951eeG_23XOobc8wf953sm
+
+# ===== train_nle =====
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-cnn
+# EXP_ID=L0-nle-cnn-dur3-online-copy
+# FILE_ID=1vukn9tNDBJPHEBakCcHr2i-NYTJVaftA
+
+# TRAIN_ID=L0-nle-cnn
+# EXP_ID=L0-nle-cnn-dur3-online
+# FILE_ID=1vX1rN9nDP8-hi2kVkXfYHgJOH-RhhI1z
 
 # TRAIN_ID=L0-nle-cnn
 # EXP_ID=L0-nle-cnn-dur3-offline
@@ -19,7 +30,7 @@ FILE_ID=1vX1rN9nDP8-hi2kVkXfYHgJOH-RhhI1z
 # EXP_ID=L0-nle-cnn-dur7-offline_acc
 # FILE_ID=1pd8OnzUk_rSXjxr1PGa4qo5HT3fhPK2m
 
-LOG_DIR="$HOME/tmp/NSC/codes/src/train_nle/logs"
+LOG_DIR="$HOME/tmp/NSC/codes/src/${Pipeline}/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
 
 cd ~
@@ -32,7 +43,8 @@ tar -xzf ${EXP_ID}.tar.gz
 echo "finished tar"
 
 # move to current directory
-MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train_nle/logs" # !
+MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
+# MACHINE_LOG_DIR="/wehe/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
 mv .${MACHINE_LOG_DIR}/${TRAIN_ID}/${EXP_ID} ./${EXP_ID}
 rm -r ./home
 rm ${EXP_ID}.tar.gz

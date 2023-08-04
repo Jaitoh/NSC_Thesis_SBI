@@ -1,18 +1,30 @@
 DO_ZIP=1
 DO_Gdrive=1
 
-TRAIN_ID=L0-nle-cnn
-folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs folder id
+Pipeline=train # npe
+TRAIN_ID=train_L0_p5a
+folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
+
+EXP_IDS=(
+    "p5a-conv_net-old_net"
+    "p5a-conv_net-Tv2-old_net"
+)
+
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-cnn
+# folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs folder id
 
 # "L0-nle-cnn-dur3-online"
 # "L0-nle-cnn-dur3-offline"
-EXP_IDS=(
-    "L0-nle-cnn-dur7-offline_acc"
-)
+# "L0-nle-cnn-dur7-offline_acc"
+# EXP_IDS=(
+#     "p5a-conv_net-old_net"
+#     "p5a-conv_net-Tv2-old_net"
+# )
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"
-LOG_DIR=~/tmp/NSC/codes/src/train_nle/logs
+LOG_DIR=~/tmp/NSC/codes/src/${Pipeline}/logs
 if [ ${DO_ZIP} -eq 1 ]; then
     for EXP_ID in "${EXP_IDS[@]}"; do
         cd ${LOG_DIR}/${TRAIN_ID}
