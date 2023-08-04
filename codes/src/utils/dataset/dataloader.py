@@ -1,6 +1,52 @@
+import gc
 import torch
 from time import time
-import gc
+from torch.utils import data
+
+from pathlib import Path
+import sys
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
+from utils.set_seed import seed_worker
+
+
+def get_dataloaders(
+    config,
+    train_dataset,
+    valid_dataset,
+    low_batch=0,
+):
+    config_dataset = config.dataset
+    loader_kwargs = {
+        "batch_size": min(
+            config_dataset.batch_size,
+            len(train_dataset),
+            len(valid_dataset),
+        ),
+        "drop_last": False,
+        "shuffle": True,
+        "pin_memory": config_dataset.pin_memory,
+        "num_workers": config_dataset.num_workers,
+        "worker_init_fn": seed_worker,
+    }
+    if config_dataset.prefetch_factor != 0:
+        loader_kwargs["prefetch_factor"] = config_dataset.prefetch_factor
+
+    if low_batch != 0:
+        loader_kwargs["batch_size"] = low_batch
+
+    print(f"{loader_kwargs=}")
+
+    g = torch.Generator()
+    g.manual_seed(config.seed)
+
+    train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
+    loader_kwargs["drop_last"] = True
+    valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
+
+    return train_dataloader, valid_dataloader
 
 
 class Data_Prefetcher:
@@ -85,9 +131,7 @@ def collate_fn_vec_high_dim(batch, config, shuffling_method=0, debug=False):
     seqC_batch, theta_batch, probR_batch = map(torch.stack, zip(*batch))
 
     if debug:
-        print(
-            f"collate_fn_vec_high_dim: dataloading {(time.time() - start_time_0)*1000:.2f} ms"
-        )
+        print(f"collate_fn_vec_high_dim: dataloading {(time.time() - start_time_0)*1000:.2f} ms")
 
     # del batch, seqC, theta, probR
 
@@ -101,16 +145,12 @@ def collate_fn_vec_high_dim(batch, config, shuffling_method=0, debug=False):
     probR_batch = probR_batch.repeat_interleave(C, dim=0)  # (C*B, DM, S, 1)
 
     # bernouli sampling choice, and concatenate x_seqC and x_choice
-    x_batch = torch.cat(
-        [seqC_batch, probR_batch.bernoulli_()], dim=-1
-    )  # (C*B, DM, S, 16)
+    x_batch = torch.cat([seqC_batch, probR_batch.bernoulli_()], dim=-1)  # (C*B, DM, S, 16)
     del probR_batch, seqC_batch
     gc.collect()
 
     if debug:
-        print(
-            f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms"
-        )
+        print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
         start_time = time.time()
 
     # Shuffle x along the 3rd axis S, using advanced indexing
@@ -195,16 +235,12 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # probR_batch.bernoulli_() # (C*B, D*M*S, 1)
 
         # Concatenate x_seqC and x_choice
-        x_batch = torch.cat(
-            [seqC_batch, probR_batch.bernoulli_()], dim=-1
-        )  # (C*B, D*M*S, 16)
+        x_batch = torch.cat([seqC_batch, probR_batch.bernoulli_()], dim=-1)  # (C*B, D*M*S, 16)
         del probR_batch, seqC_batch
         gc.collect()
 
         if debug:
-            print(
-                f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms"
-            )
+            print(f"\ncollate_fn_vec: get x_batch {(time.time() - start_time_0)*1000:.2f} ms")
             start_time = time.time()
 
         # Shuffle x along the 2nd axis
@@ -235,9 +271,7 @@ def collate_fn_vec(batch, config, shuffling_method=0, debug=False):
         # del x_batch
 
         if debug:
-            print(
-                f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms"
-            )
+            print(f"collate_fn_vec: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
             start_time = time.time()
 
             # permutations = torch.stack([torch.randperm(DMS) for _ in range(B*C)])
@@ -298,9 +332,7 @@ def collate_fn(batch, config, debug=False):
     )
     theta_batch = torch.empty((C * len(batch), batch[0][1].shape[0]))
 
-    for i, (seqC, theta, probR) in enumerate(
-        batch
-    ):  # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
+    for i, (seqC, theta, probR) in enumerate(batch):  # seqC: (D*M*S, 15), theta: (4,), probR: (D*M*S, 1)
         probR = probR.unsqueeze_(dim=0).repeat_interleave(C, dim=0)  # (C, D*M*S, 1)
         x_seqC = seqC.unsqueeze_(dim=0).repeat_interleave(C, dim=0)  # (C, D*M*S, 15)
         x_choice = torch.bernoulli(probR)  # (C, D*M*S, 1)
@@ -317,9 +349,7 @@ def collate_fn(batch, config, debug=False):
     if debug:
         start_time = time.time()
     # Shuffle x along the 2nd axis
-    x_batch = torch.stack(
-        [x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])]
-    )
+    x_batch = torch.stack([x_batch[i][torch.randperm(x_batch.shape[1])] for i in range(x_batch.shape[0])])
     if debug:
         print(f"collate_fn: shuffle x_batch {(time.time() - start_time)*1000:.2f} ms")
 
@@ -331,9 +361,7 @@ def collate_fn(batch, config, debug=False):
     theta_batch = theta_batch[indices]
     if debug:
         print(f"collate_fn: finish shuffle {(time.time() - start_time)*1000:.2f} ms")
-        print(
-            f"collate_fn: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms"
-        )
+        print(f"collate_fn: -- finish computation {(time.time() - start_time_0)*1000:.2f} ms")
 
     return x_batch.to(torch.float32), theta_batch.to(torch.float32)
 

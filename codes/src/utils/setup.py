@@ -5,6 +5,24 @@ import gc
 import torch
 
 
+def adapt_path(input_path):
+    """
+    input_path: str or Path
+        e.g. ~/tmp/NSC/data/dataset_L0_exp_set_0.h5
+        e.g. /home/username/tmp/NSC/data/dataset_L0_exp_set_0.h5
+        e.g. home/username/tmp/NSC/data/dataset_L0_exp_set_0.h5
+
+    output_path: replace with correct username
+    """
+    if "home" in str(input_path):
+        relative_path = input_path.split("home")[1].split("/")[2:]
+        output_path = Path("/".join(["~"] + relative_path)).expanduser()
+    else:
+        output_path = Path(input_path).expanduser()
+
+    return output_path
+
+
 def torch_var_size(var, unit="KB"):
     if unit == "KB":
         size_ = var.element_size() * var.nelement() // 1024
@@ -28,9 +46,7 @@ def report_memory():
     total_mem = 0
     for obj in gc.get_objects():
         try:
-            if torch.is_tensor(obj) or (
-                hasattr(obj, "data") and torch.is_tensor(obj.data)
-            ):
+            if torch.is_tensor(obj) or (hasattr(obj, "data") and torch.is_tensor(obj.data)):
                 mem = obj.element_size() * obj.nelement()
                 total_mem += mem
                 print(f"Object: {obj}, occupies {mem} bytes on GPU")
@@ -41,6 +57,8 @@ def report_memory():
 
 # def get_args_run_from_code():
 #     """
+
+
 #     Returns:
 #         args: Arguments
 #     """
@@ -113,9 +131,7 @@ def get_args(
         default=config_train_path,
         help="Path to config_train file",
     )
-    parser.add_argument(
-        "--data_path", type=str, default=data_path, help="simulated data store/load dir"
-    )
+    parser.add_argument("--data_path", type=str, default=data_path, help="simulated data store/load dir")
     parser.add_argument(
         "--log_dir",
         type=str,
@@ -125,9 +141,7 @@ def get_args(
     parser.add_argument("--gpu", action="store_false", help="Use GPU by default.")
     # parser.add_argument('--finetune', type=str, default=None, help='Load model from this job for finetuning.')
     parser.add_argument("--eval", action="store_true", help="Evaluation mode.")
-    parser.add_argument(
-        "-y", "--overwrite", action="store_false", help="Overwrite log dir by default."
-    )
+    parser.add_argument("-y", "--overwrite", action="store_false", help="Overwrite log dir by default.")
     parser.add_argument(
         "--continue_from_checkpoint",
         type=str,

@@ -29,7 +29,7 @@ from utils.dataset.dataset import update_prior_min_max
 
 
 class Solver:
-    def __init__(self, config):
+    def __init__(self, config, training_mode=True):
         self.config = config
         self.log_dir = config.log_dir
         # gpu info
@@ -46,10 +46,12 @@ class Solver:
         self.l_theta = len(self.config["prior"]["prior_min"])
 
         # save the config file using yaml
-        yaml_path = Path(self.log_dir) / "config.yaml"
-        with open(yaml_path, "w") as f:
-            f.write(OmegaConf.to_yaml(config))
-        print(f"config file saved to: {yaml_path}")
+        if training_mode:
+            yaml_path = Path(self.log_dir) / "config.yaml"
+            yaml_path = yaml_path.userexpand()
+            with open(yaml_path, "w") as f:
+                f.write(OmegaConf.to_yaml(config))
+            print(f"config file saved to: {yaml_path}")
 
         # set seed
         self.seed = config.seed
@@ -89,7 +91,7 @@ class Solver:
 
         return neural_posterior
 
-    def init_inference(self, ignore_ss=False):
+    def init_inference(self):
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # prior
@@ -128,9 +130,11 @@ class Solver:
             show_progress_bars=True,
         )
 
+        return self.inference
+
     def sbi_train(self, debug=False):
         # initialize inference
-        self.init_inference(ignore_ss=self.config.prior.ignore_ss)
+        self.init_inference()
 
         # initialize inference dataset
         self.inference.append_simulations(

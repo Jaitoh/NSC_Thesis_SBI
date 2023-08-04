@@ -6,7 +6,6 @@ import torch
 import numpy as np
 from copy import deepcopy
 import matplotlib.pyplot as plt
-from torch.utils import data
 from torch.distributions import Distribution, MultivariateNormal, Uniform
 from torch import nn, ones, optim
 from torch.optim.lr_scheduler import (
@@ -32,12 +31,14 @@ NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC
 sys.path.append(f"{NSC_DIR}/codes/src")
 
 from utils.set_seed import setup_seed, seed_worker
+from utils.setup import adapt_path
 
 # from train.Dataset_features import Feature_Dataset
 from train.Dataset_Classes import chR_2D_Dataset
 from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
+from utils.dataset.dataloader import get_dataloaders
 
 # set matplotlib, font of size 16, bold
 plt.rcParams.update({"font.size": 22})
@@ -61,26 +62,34 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
 
-    def prepare_dataset_network(self, config, continue_from_checkpoint, device="gpu"):
+    def prepare_dataset_network(
+        self,
+        config,
+        continue_from_checkpoint,
+        device="gpu",
+        low_batch=0,
+    ):
         # prepare train, val dataset and dataloader
         print("\n=== train, val dataset and dataloader ===")
-        data_path = Path(self.config.data_path).expanduser()
+        data_path = adapt_path(config.data_path)
         with h5py.File(data_path, "r") as f:
-            sets = list(f.keys())[: self.config.dataset.num_max_sets]
+            sets = list(f.keys())[: config.dataset.num_max_sets]
 
         train_set_names = sets[: int(len(sets) * 0.9)]
         valid_set_names = sets[int(len(sets) * 0.9) :]
+        print(f"{train_set_names=}")
+        print(f"{valid_set_names=}")
 
-        DS_config = self.config.dataset
+        DS_config = config.dataset
         num_train_set_T = DS_config.num_max_theta_each_set
         num_valid_set_T = DS_config.num_max_theta_each_set
 
         # get the original prior min and max for normalization
         _, _, unnormed_prior_min, unnormed_prior_max = update_prior_min_max(
-            prior_min=self.config.prior.prior_min,
-            prior_max=self.config.prior.prior_max,
-            ignore_ss=self.config.prior.ignore_ss,
-            normalize=self.config.prior.normalize,
+            prior_min=config.prior.prior_min,
+            prior_max=config.prior.prior_max,
+            ignore_ss=config.prior.ignore_ss,
+            normalize=config.prior.normalize,
         )
 
         print("[training] sets", end=" ")
@@ -122,29 +131,12 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         )
 
         # prepare train, val, test dataloader
-        config_dataset = self.config.dataset
-        loader_kwargs = {
-            "batch_size": min(
-                config_dataset.batch_size,
-                len(train_dataset),
-                len(valid_dataset),
-            ),
-            "drop_last": False,
-            "shuffle": True,
-            "pin_memory": config_dataset.pin_memory,
-            "num_workers": config_dataset.num_workers,
-            "worker_init_fn": seed_worker,
-        }
-        if config_dataset.prefetch_factor != 0:
-            loader_kwargs["prefetch_factor"] = config_dataset.prefetch_factor
-        print(f"{loader_kwargs=}")
-
-        g = torch.Generator()
-        g.manual_seed(self.config.seed)
-
-        train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
-        loader_kwargs["drop_last"] = True
-        valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
+        train_dataloader, valid_dataloader = get_dataloaders(
+            config=config,
+            train_dataset=train_dataset,
+            valid_dataset=valid_dataset,
+            low_batch=low_batch,
+        )
 
         # collect posterior sets
         print(f"\ncollect posterior sets...", end=" ")
@@ -155,7 +147,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         x_train_batch, theta_train_batch = next(iter(train_dataloader))
         x_valid_batch, theta_valid_batch = next(iter(valid_dataloader))
 
-        for i in range(self.config.train.posterior.num_posterior_check):
+        for i in range(config.train.posterior.num_posterior_check):
             self.seen_data_for_posterior["x"].append(x_train_batch[i, :])
             self.seen_data_for_posterior["theta"].append(theta_train_batch[i, :])
 

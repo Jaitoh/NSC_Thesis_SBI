@@ -36,6 +36,7 @@ from train.Dataset_features import Feature_Dataset
 from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
+from utils.dataset.dataloader import get_dataloaders
 
 # set matplotlib, font of size 16, bold
 plt.rcParams.update({"font.size": 22})
@@ -59,10 +60,16 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         super().__init__(**kwargs)
 
-    def prepare_dataset_network(self, config, continue_from_checkpoint, device="gpu"):
+    def prepare_dataset_network(
+        self,
+        config,
+        continue_from_checkpoint,
+        device="gpu",
+        low_batch=0,
+    ):
         # prepare train, valdataset and dataloader
         print("\n=== train, val dataset and dataloader ===")
-        data_path = config.data_path
+        data_path = Path(config.data_path).expanduser()
         with h5py.File(data_path, "r") as f:
             sets = list(f.keys())[: config.dataset.partial_sets]
 
@@ -112,28 +119,12 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         )
 
         # prepare train, val, test dataloader
-        config_dataset = config.dataset
-        loader_kwargs = {
-            "batch_size": min(
-                config_dataset.batch_size,
-                len(train_dataset),
-                len(valid_dataset),
-            ),
-            "drop_last": False,
-            "shuffle": True,
-            "pin_memory": config_dataset.pin_memory,
-            "num_workers": config_dataset.num_workers,
-            "prefetch_factor": config_dataset.prefetch_factor,
-            "worker_init_fn": seed_worker,
-        }
-        print(f"{loader_kwargs=}")
-
-        g = torch.Generator()
-        g.manual_seed(config.seed)
-
-        train_dataloader = data.DataLoader(train_dataset, generator=g, **loader_kwargs)
-        loader_kwargs["drop_last"] = True
-        valid_dataloader = data.DataLoader(valid_dataset, generator=g, **loader_kwargs)
+        train_dataloader, valid_dataloader = get_dataloaders(
+            config=config,
+            train_dataset=train_dataset,
+            valid_dataset=valid_dataset,
+            low_batch=low_batch,
+        )
 
         # collect posterior sets
         print(f"\ncollect posterior sets...", end=" ")
@@ -150,9 +141,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
             self.unseen_data_for_posterior["x"].append(x_valid_batch[i, :])
             self.unseen_data_for_posterior["theta"].append(theta_valid_batch[i, :])
-        print(
-            f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes"
-        )
+        print(f"takes {time.time() - tic:.2f} seconds = {(time.time() - tic) / 60:.2f} minutes")
 
         # initialize the network
         if self._neural_net is None:
@@ -227,9 +216,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         )
 
         if config_training["scheduler"] == "ReduceLROnPlateau":
-            self.scheduler = ReduceLROnPlateau(
-                self.optimizer, **config_training["scheduler_params"]
-            )
+            self.scheduler = ReduceLROnPlateau(self.optimizer, **config_training["scheduler_params"])
         if config_training["scheduler"] == "CosineAnnealingWarmRestarts":
             self.scheduler = CosineAnnealingWarmRestarts(
                 self.optimizer, **config_training["scheduler_params"]
@@ -250,9 +237,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         # train until no validation improvement for 'patience' epochs
         train_start_time = time.time()
-        print(
-            f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches"
-        )
+        print(f"\n{len(train_dataloader)} train batches, {len(valid_dataloader)} valid batches")
         while (
             epoch <= config_training.max_num_epochs
             and not self._converged(epoch, debug)
@@ -294,9 +279,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 clean_cache()
                 clip_max_norm = config_training.clip_max_norm
                 if clip_max_norm is not None:
-                    clip_grad_norm_(
-                        self._neural_net.parameters(), max_norm=clip_max_norm
-                    )
+                    clip_grad_norm_(self._neural_net.parameters(), max_norm=clip_max_norm)
 
                 del x, theta, masks_batch, train_losses
                 clean_cache()
@@ -313,9 +296,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 elif train_batch_num % (len(train_dataloader) // print_freq) == 0:
                     print(batch_info)
 
-                self._summary_writer.add_scalar(
-                    "train_loss_batch", train_loss, batch_counter
-                )
+                self._summary_writer.add_scalar("train_loss_batch", train_loss, batch_counter)
 
                 train_batch_num += 1
                 batch_counter += 1
@@ -327,9 +308,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             train_log_prob_average = train_log_probs_sum / train_data_size
             self._train_log_prob = train_log_prob_average
             self._summary["training_log_probs"].append(train_log_prob_average)
-            self._summary_writer.add_scalars(
-                "log_probs", {"training": train_log_prob_average}, epoch
-            )
+            self._summary_writer.add_scalars("log_probs", {"training": train_log_prob_average}, epoch)
 
             # epoch log - learning rate
             if epoch < config_training.warmup_epochs:
@@ -374,9 +353,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                         x_valid,
                         masks_batch,
                         proposal=self._proposal_roundwise[-1],  # TODO: check proposal
-                        calibration_kernel=lambda x: ones(
-                            [len(x)], device=self._device
-                        ),
+                        calibration_kernel=lambda x: ones([len(x)], device=self._device),
                         force_first_round_loss=True,
                     )
 
@@ -391,9 +368,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
                 # epoch log - validation log prob
                 self._valid_log_prob = valid_log_prob_sum / valid_data_size
-                self._summary_writer.add_scalars(
-                    "log_probs", {"validation": self._valid_log_prob}, epoch
-                )
+                self._summary_writer.add_scalars("log_probs", {"validation": self._valid_log_prob}, epoch)
 
                 toc = time.time()
                 self._summary["validation_log_probs"].append(self._valid_log_prob)
@@ -526,9 +501,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
-                fig_path = (
-                    f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
-                )
+                fig_path = f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
                 plt.savefig(fig_path)
                 plt.close(fig_x)
                 del fig_x, _
@@ -704,9 +677,7 @@ class MySNPE_C_P4(SNPE_C, MyPosteriorEstimator_P4):
                 and isinstance(proposal.posterior_estimator._distribution, mdn)
                 and self._neural_net is not None
                 and isinstance(self._neural_net._distribution, mdn)
-                and check_dist_class(
-                    self._prior, class_to_check=(Uniform, MultivariateNormal)
-                )[0]
+                and check_dist_class(self._prior, class_to_check=(Uniform, MultivariateNormal))[0]
             )
 
             algorithm = "non-atomic" if self.use_non_atomic_loss else "atomic"

@@ -40,7 +40,7 @@ from utils.dataset.dataset import update_prior_min_max
 
 
 class Solver:
-    def __init__(self, config):
+    def __init__(self, config, training_mode=True):
         self.config = config
         self.log_dir = config.log_dir
         # gpu info
@@ -56,11 +56,13 @@ class Solver:
         self.DMS = self.D * self.M * self.S
         self.l_theta = len(self.config["prior"]["prior_min"])
 
-        # save the config file using yaml
-        yaml_path = Path(self.log_dir) / "config.yaml"
-        with open(yaml_path, "w") as f:
-            f.write(OmegaConf.to_yaml(config))
-        print(f"config file saved to: {yaml_path}")
+        if training_mode:
+            # save the config file using yaml
+            yaml_path = Path(self.log_dir) / "config.yaml"
+            yaml_path = yaml_path.expanduser()
+            with open(yaml_path, "w") as f:
+                f.write(OmegaConf.to_yaml(config))
+            print(f"config file saved to: {yaml_path}")
 
         # set seed
         self.seed = config.seed
@@ -109,9 +111,7 @@ class Solver:
                 else:  # [B, F1+F2+F3 + F1+F2+F3 + F1+F2+F3 ..., 1]
                     feature_lengths = self.M * list(self.config.dataset.feature_lengths)
                 print(f"{len(feature_lengths)} heads")
-                embedding_net = Multi_Head_GRU_FC(
-                    feature_lengths, input_size, hidden_size, num_layers
-                )
+                embedding_net = Multi_Head_GRU_FC(feature_lengths, input_size, hidden_size, num_layers)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],
@@ -125,7 +125,7 @@ class Solver:
 
         return neural_posterior
 
-    def init_inference(self, ignore_ss=True):
+    def init_inference(self):
         writer = SummaryWriter(log_dir=str(self.log_dir))
 
         # prior
@@ -167,7 +167,7 @@ class Solver:
 
     def sbi_train(self, debug=False):
         # initialize inference
-        self.init_inference(ignore_ss=self.config.prior.ignore_ss)
+        self.init_inference()
 
         # initialize inference dataset
         self.inference.append_simulations(

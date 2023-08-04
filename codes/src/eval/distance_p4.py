@@ -1,5 +1,3 @@
-from pathlib import Path
-from omegaconf import OmegaConf
 import os
 import sys
 import torch
@@ -23,6 +21,8 @@ from train.train_L0_p4a import Solver
 from features.features import Feature_Generator
 from simulator.model_sim_pR import DM_sim_for_seqCs_parallel_with_smaller_output
 from utils.set_seed import setup_seed
+from utils.inference import load_stored_config as load_config
+from utils.inference import get_posterior
 
 setup_seed(0)
 
@@ -38,30 +38,6 @@ print(f"PID: {PID}")
 
 
 # === compute one example distance ===
-# load config
-def load_config(LOG_DIR, EXP_ID):
-    config_path = Path(LOG_DIR) / EXP_ID / "config.yaml"
-    print(f"==>> config_path: {config_path}")
-    config = OmegaConf.load(config_path)
-    config.log_dir = str(Path(LOG_DIR) / EXP_ID)
-
-    model_path = Path(LOG_DIR) / EXP_ID / "model" / "best_model.pt"
-    # check if model exists
-    if not model_path.exists():
-        model_path = Path(LOG_DIR) / EXP_ID / "model" / "model_check_point.pt"
-
-    return model_path, config
-
-
-# get the trained posterior
-def get_posterior(model_path, config, device):
-    solver = Solver(config)
-    solver.init_inference().prepare_dataset_network(config, model_path, device=device)
-    posterior = solver.inference.build_posterior(solver.inference._neural_net)
-    solver.inference._model_bank = []
-    return solver, posterior
-
-
 # load seqC, theta, probR
 def load_data(DATA_PATH, solver):
     # train_set = solver.inference.train_set_names[0]
@@ -174,7 +150,7 @@ def main(_config):
     chosen_features = config.dataset.concatenate_feature_types
 
     # get the trained posterior
-    solver, posterior = get_posterior(model_path, config, device)
+    solver, posterior = get_posterior(model_path, config, device, Solver=Solver)
 
     # load seqC, theta, probR
     prior_limits, seqC, D, M, S, theta, probR = load_data(DATA_PATH, solver)
@@ -300,11 +276,7 @@ def main(_config):
 
         # scatter plot
         ax11.scatter(
-            reduced_features_true[:, 0],
-            reduced_features_true[:, 1],
-            s=20,
-            color="b",
-            label="True embedding",
+            reduced_features_true[:, 0], reduced_features_true[:, 1], s=20, color="b", label="True embedding"
         )
         ax11.scatter(
             reduced_features_estimated[:, 0],
@@ -317,18 +289,8 @@ def main(_config):
         ax11.set_title("t-SNE 100 feature embedding")
 
         # Plot histogram
-        ax12.hist(
-            upper_part_true,
-            bins=30,
-            alpha=0.5,
-            label="True embedding's distances",
-        )
-        ax12.hist(
-            upper_part_estimated,
-            bins=30,
-            alpha=0.5,
-            label="Estimated embedding's distances",
-        )
+        ax12.hist(upper_part_true, bins=30, alpha=0.5, label="True embedding's distances")
+        ax12.hist(upper_part_estimated, bins=30, alpha=0.5, label="Estimated embedding's distances")
         ax12.set_title("Histogram of distances")
         ax12.set_xlabel("Distance")
         ax12.set_ylabel("Frequency")

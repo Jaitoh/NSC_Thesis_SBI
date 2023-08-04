@@ -4,9 +4,15 @@ from sbi import analysis
 import os
 import shutil
 from pathlib import Path
+import sys
 
 import os
 import torch.nn as nn
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
+from utils.setup import adapt_path
 
 
 def kaiming_weight_initialization(named_parameters):
@@ -26,15 +32,13 @@ def train_inference_helper(inference, **kwargs):
 
 def load_net(continue_from_checkpoint, neural_net, device):
     print(f"loading neural net from '{continue_from_checkpoint}'")
+    continue_from_checkpoint = adapt_path(continue_from_checkpoint)
+
     if str(continue_from_checkpoint).endswith("check_point.pt"):
-        neural_net.load_state_dict(
-            torch.load(continue_from_checkpoint, map_location=device).state_dict()
-        )
+        neural_net.load_state_dict(torch.load(continue_from_checkpoint, map_location=device).state_dict())
 
     else:
-        neural_net.load_state_dict(
-            torch.load(continue_from_checkpoint, map_location=device)
-        )
+        neural_net.load_state_dict(torch.load(continue_from_checkpoint, map_location=device))
     return neural_net
 
 
@@ -48,9 +52,7 @@ class WarmupScheduler(torch.optim.lr_scheduler._LRScheduler):
     def get_lr(self):
         if self.last_epoch < self.warmup_epochs:
             return [
-                self.init_lr
-                + (self.target_lr - self.init_lr)
-                * (self.last_epoch / self.warmup_epochs)
+                self.init_lr + (self.target_lr - self.init_lr) * (self.last_epoch / self.warmup_epochs)
                 for _ in self.base_lrs
             ]
         else:
@@ -62,9 +64,7 @@ def plot_posterior_with_label(
 ):
     """plot the posterior distribution of the seen data"""
 
-    samples = posterior.sample(
-        (sample_num,), x=x, show_progress_bars=show_progress_bars
-    )
+    samples = posterior.sample((sample_num,), x=x, show_progress_bars=show_progress_bars)
 
     fig, axes = analysis.pairplot(
         samples.cpu().numpy(),
@@ -82,14 +82,10 @@ def plot_posterior_with_label(
     return fig, axes, samples
 
 
-def plot_posterior_unseen(
-    posterior, sample_num, x, limits, prior_labels, show_progress_bars=True
-):
+def plot_posterior_unseen(posterior, sample_num, x, limits, prior_labels, show_progress_bars=True):
     """plot the posterior distribution of the seen data"""
 
-    samples = posterior.sample(
-        (sample_num,), x=x, show_progress_bars=show_progress_bars
-    )
+    samples = posterior.sample((sample_num,), x=x, show_progress_bars=show_progress_bars)
 
     fig, axes = analysis.pairplot(
         samples.cpu().numpy(),
@@ -131,9 +127,7 @@ def choose_cat_validation_set(x, theta, val_set_size, post_val_set):
 
     # append to the post validation set
     post_val_set["x"] = torch.cat((post_val_set["x"], x_val), dim=0)
-    post_val_set["x_shuffled"] = torch.cat(
-        (post_val_set["x_shuffled"], x_val_shuffled), dim=0
-    )
+    post_val_set["x_shuffled"] = torch.cat((post_val_set["x_shuffled"], x_val_shuffled), dim=0)
     post_val_set["theta"] = torch.cat((post_val_set["theta"], theta_val), dim=0)
 
     return post_val_set
