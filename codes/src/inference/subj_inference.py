@@ -5,6 +5,8 @@ load and process trial data
 inference with trial data
 """
 import torch
+import pickle
+import argparse
 from pathlib import Path
 import sys
 
@@ -19,6 +21,7 @@ from utils.inference import (
     convert_normed_theta,
 )
 from utils.train import plot_posterior_unseen
+from utils.setup import adapt_path
 
 
 def estimate_theta_for_usr_npe(subj_ID, exp_dir):
@@ -76,11 +79,35 @@ def estimate_theta_for_usr_npe(subj_ID, exp_dir):
     for label, estimate, range_ in zip(config.prior.prior_labels, theta_estimated, original_range_pair):
         print(f"{label:10}: {estimate:8.3f} from range [{range_[0]:.3f}, {range_[1]:.3f}]")
 
-    return theta_estimated
+    return theta_estimated, original_range_pair, config.prior.prior_labels
 
 
 if __name__ == "__main__":
-    subj_ID = 2
-    exp_dir = "~/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_net-tmp"
+    exp_dir = "~/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_net"
+    exp_dir = adapt_path(exp_dir)
 
-    theta_estimated = estimate_theta_for_usr_npe(subj_ID, exp_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--exp_dir", type=str, default=exp_dir, help="log directory")
+    args = parser.parse_args()
+
+    exp_dir = adapt_path(args.exp_dir)
+
+    subj_thetas = {}
+    subj_thetas["exp"] = str(exp_dir).split("/")[-2:]
+    for subj_ID in range(2, 13):
+        theta_estimated, range_, labels = estimate_theta_for_usr_npe(subj_ID, exp_dir)
+        subj_thetas["range_"] = range_
+        subj_thetas["labels"] = labels
+        subj_thetas[subj_ID] = theta_estimated
+
+    Path(f"{exp_dir}/inference").mkdir(parents=True, exist_ok=True)
+    # save pkl
+    with open(f"{exp_dir}/inference/subj_thetas.pkl", "wb") as f:
+        pickle.dump(subj_thetas, f)
+    # save txt
+    with open(f"{exp_dir}/inference/subj_thetas.txt", "w") as f:
+        for subj_ID in range(2, 13):
+            f.write(f"subj_ID={subj_ID}\n")
+            for label, estimate in zip(labels, subj_thetas[subj_ID]):
+                f.write(f"{label:10}: {estimate:8.3f}\n")
+            f.write("\n")

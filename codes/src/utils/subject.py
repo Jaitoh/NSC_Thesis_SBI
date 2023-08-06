@@ -126,6 +126,22 @@ def parse_trial_data(PathName: str):
     )
 
 
+def get_fitted_param_L0(param_path, subj_ID):
+    param_path += f"data_fitPars_S{subj_ID}.mat"
+    params = decode_mat_fitted_parameters(adapt_path(param_path))
+    # check where the L0 is in the list
+    idx_L0_model = params["allModelsList"].index("L0")
+    bias = params["bias"][idx_L0_model]
+    sigmas = params["sigmas"][idx_L0_model]
+    sigma2a = sigmas[0]
+    sigma2s = sigmas[2]
+    BGLS = params["BGLS"][idx_L0_model]
+    L0 = BGLS[2][0]
+
+    params_subj = [bias, sigma2a, sigma2s, L0]
+    return params_subj
+
+
 def decode_mat_fitted_parameters(filePath):
     """load fitted parameters from .mat file
 
