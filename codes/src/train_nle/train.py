@@ -74,7 +74,10 @@ class Solver:
         return neural_likelihood
 
     def init_inference(
-        self, iid_batch_size_x=2, iid_batch_size_theta=2, sum_writer=True
+        self,
+        iid_batch_size_x=2,
+        iid_batch_size_theta=2,
+        sum_writer=True,
     ):
         """initialize inference
 
@@ -124,6 +127,8 @@ class Solver:
             summary_writer=writer,
             show_progress_bars=True,
         )
+
+        return self.inference
 
     def sbi_train(self, debug=False):
         # initialize inference

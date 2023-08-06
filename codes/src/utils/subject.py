@@ -12,6 +12,7 @@ NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC
 sys.path.append(f"{NSC_DIR}/codes/src")
 
 from dataset.data_process import process_x_seqC_part
+from utils.setup import adapt_path
 
 
 def get_xo(
@@ -39,14 +40,16 @@ def get_xo(
     idx_subj = subj_IDs == subj_ID
     idx_MS = np.isin(MSs, MS_list)
     idx_chosen = idx_dur & idx_subj & idx_MS
+    print("".center(50, "-"))
     print(f"{sum(idx_chosen)} samples are chosen with subj_ID={subj_ID}, dur={dur_list}, MS={MS_list}")
+    print("".center(50, "-"))
 
     idx_chosen = idx_chosen.reshape(-1)
     seqC = seqCs[idx_chosen, :]
     chR = chRs[idx_chosen, :]
 
-    # process the data, and ignore the first element in seqC
-    seqC = process_x_seqC_part(seqC)[:, 1:]
+    # process the data, and not ignore the first element in seqC
+    seqC = process_x_seqC_part(seqC)[:, :]
 
     return torch.from_numpy(seqC), torch.from_numpy(chR)
 
@@ -77,7 +80,7 @@ def parse_trial_data(PathName: str):
             correct:            (214214,1)
     """
 
-    filePath = Path(PathName)
+    filePath = adapt_path(PathName)
     trials = sio.loadmat(filePath)
 
     data = trials["data"][0]

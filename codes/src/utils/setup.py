@@ -15,7 +15,7 @@ def adapt_path(input_path):
     output_path: replace with correct username
     """
     if "home" in str(input_path):
-        relative_path = input_path.split("home")[1].split("/")[2:]
+        relative_path = str(input_path).split("home")[1].split("/")[2:]
         output_path = Path("/".join(["~"] + relative_path)).expanduser()
     else:
         output_path = Path(input_path).expanduser()

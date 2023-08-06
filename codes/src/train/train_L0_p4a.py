@@ -125,8 +125,11 @@ class Solver:
 
         return neural_posterior
 
-    def init_inference(self):
-        writer = SummaryWriter(log_dir=str(self.log_dir))
+    def init_inference(self, sum_writer=True):
+        if sum_writer:
+            writer = SummaryWriter(log_dir=str(self.log_dir))
+        else:
+            writer = None
 
         # prior
         (

@@ -4,7 +4,7 @@ import torch
 import h5py
 import numpy as np
 from sbi import analysis
-from scipy.stats import gaussian_kde
+
 from tqdm import tqdm
 import pickle
 from sklearn.manifold import TSNE
@@ -14,15 +14,19 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import hydra
 
-sys.path.append("./src")
-sys.path.append("../../src")
+from pathlib import Path
+import sys
 
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
+# from scipy.stats import gaussian_kde
 from train.train_L0_p4a import Solver
 from features.features import Feature_Generator
 from simulator.model_sim_pR import DM_sim_for_seqCs_parallel_with_smaller_output
 from utils.set_seed import setup_seed
 from utils.inference import load_stored_config as load_config
-from utils.inference import get_posterior
+from utils.inference import get_posterior, estimate_theta_values
 
 setup_seed(0)
 
@@ -102,15 +106,15 @@ def compute_feature_from_seqC_chR(seqC, D, M, S, chR, chosen_features):
     return torch.cat(list(tqdm(loader)), dim=0)
 
 
-def estimate_theta_values(prior_limits, samples):
-    theta_estimated = []
-    for i in tqdm(range(len(prior_limits))):
-        kde = gaussian_kde(samples[:, i])
-        prior_range = np.linspace(prior_limits[i][0], prior_limits[i][1], 2500)
-        densities = kde.evaluate(prior_range)
-        theta_value = prior_range[np.argmax(densities)]
-        theta_estimated.append(theta_value)
-    return theta_estimated
+# def estimate_theta_values(prior_limits, samples):
+#     theta_estimated = []
+#     for i in tqdm(range(len(prior_limits))):
+#         kde = gaussian_kde(samples[:, i])
+#         prior_range = np.linspace(prior_limits[i][0], prior_limits[i][1], 2500)
+#         densities = kde.evaluate(prior_range)
+#         theta_value = prior_range[np.argmax(densities)]
+#         theta_estimated.append(theta_value)
+#     return theta_estimated
 
 
 def sampling_from_posterior(device, posterior, feature):
