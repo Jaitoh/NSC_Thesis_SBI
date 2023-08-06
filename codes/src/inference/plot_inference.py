@@ -35,21 +35,29 @@ mpl.rcParams["legend.frameon"] = False
 
 
 # %%
-inf_result_path = "~/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_net/inference/subj_thetas.pkl"
-# load pkl
-with open(adapt_path(inf_result_path), "rb") as f:
-    inf_result = pickle.load(f)
+exps = ["train_L0_p5a/p5a-conv_net", "train_L0_p5a/p5a-conv_net-Tv2"]
+bias_s, sigma2a_s, sigma2s_s, L0_s = [], [], [], []
+for exp in exps:
+    inf_result_path = f"~/tmp/NSC/codes/src/train/logs/{exp}/inference/subj_thetas.pkl"
+    # load pkl
+    with open(adapt_path(inf_result_path), "rb") as f:
+        inf_result = pickle.load(f)
+
+    subj_IDs = list(inf_result.keys())[3:]
+    exp = inf_result["exp"]
+    bias = [inf_result[subj_ID][0] for subj_ID in subj_IDs]
+    sigma2a = [inf_result[subj_ID][1] for subj_ID in subj_IDs]
+    sigma2s = [inf_result[subj_ID][2] for subj_ID in subj_IDs]
+    L0 = [inf_result[subj_ID][3] for subj_ID in subj_IDs]
+
+    bias_s.append(bias)
+    sigma2a_s.append(sigma2a)
+    sigma2s_s.append(sigma2s)
+    L0_s.append(L0)
 
 
-subj_IDs = list(inf_result.keys())[3:]
-exp = inf_result["exp"]
-bias = [inf_result[subj_ID][0] for subj_ID in subj_IDs]
-sigma2a = [inf_result[subj_ID][1] for subj_ID in subj_IDs]
-sigma2s = [inf_result[subj_ID][2] for subj_ID in subj_IDs]
-L0 = [inf_result[subj_ID][3] for subj_ID in subj_IDs]
-
-
-# parameters infer
+# %%
+# get fitted parameters
 param_path = "~/tmp/NSC/data/params/263 models fitPars/"
 bias_fitted, sigma2a_fitted, sigma2s_fitted, L0_fitted = [], [], [], []
 for subj_ID in subj_IDs:
@@ -71,7 +79,8 @@ fig.subplots_adjust(hspace=0.4, wspace=0.3)
 exp_label = "/".join(exp)
 
 ax = axes[0, 0]
-ax.plot(subj_IDs, bias, "ko-", label=exp_label)
+for i in range(len(exps)):
+    ax.plot(subj_IDs, bias_s[i], "o-", label=exps[i])
 ax.plot(subj_IDs, bias_fitted * 10, "ko--", label="fitted * 10", mfc="none")
 ax.legend()
 ax.set_xlabel("subj_ID")
@@ -80,8 +89,9 @@ ax.set_title("bias")
 ax.grid(alpha=0.2)
 
 ax = axes[0, 1]
-axes[0, 1].plot(subj_IDs, L0, "ko-", label=exp_label)
-axes[0, 1].plot(subj_IDs, L0_fitted * 1, "ko--", label="fitted", mfc="none")
+for i in range(len(exps)):
+    ax.plot(subj_IDs, L0_s[i], "o-", label=exps[i])
+ax.plot(subj_IDs, L0_fitted * 1, "ko--", label="fitted", mfc="none")
 ax.legend()
 ax.set_xlabel("subj_ID")
 ax.set_ylabel("L0")
@@ -89,8 +99,9 @@ ax.set_title("L0")
 ax.grid(alpha=0.2)
 
 ax = axes[1, 0]
-axes[1, 0].plot(subj_IDs, sigma2a, "ko-", label=exp_label)
-axes[1, 0].plot(subj_IDs, sigma2a_fitted * 1, "ko--", label="fitted", mfc="none")
+for i in range(len(exps)):
+    ax.plot(subj_IDs, sigma2a_s[i], "o-", label=exps[i])
+ax.plot(subj_IDs, sigma2a_fitted * 1, "ko--", label="fitted", mfc="none")
 ax.legend()
 ax.set_xlabel("subj_ID")
 ax.set_ylabel("sigma2a")
@@ -98,12 +109,82 @@ ax.set_title("sigma2a")
 ax.grid(alpha=0.2)
 
 ax = axes[1, 1]
-axes[1, 1].plot(subj_IDs, sigma2s, "ko-", label=exp_label)
-axes[1, 1].plot(subj_IDs, sigma2s_fitted * 1, "ko--", label="fitted", mfc="none")
+for i in range(len(exps)):
+    ax.plot(subj_IDs, sigma2s_s[i], "o-", label=exps[i])
+ax.plot(subj_IDs, sigma2s_fitted * 1, "ko--", label="fitted", mfc="none")
 ax.legend()
 ax.set_xlabel("subj_ID")
 ax.set_ylabel("sigma2s")
 ax.set_title("sigma2s")
 ax.grid(alpha=0.2)
+
+# %% t-SNE clustering for all parameters
+# project fitted parameters to 2D using t-SNE
+from sklearn.manifold import TSNE
+
+# X = np.vstack([bias_fitted, sigma2a_fitted, sigma2s_fitted, L0_fitted]).T
+X_embedded_s = []
+for i in range(len(exps)):
+    X = np.vstack([bias_s[i], sigma2a_s[i], sigma2s_s[i], L0_s[i]]).T
+    X_embedded = TSNE(n_components=2, perplexity=5, random_state=0).fit_transform(X)
+    X_embedded_s.append(X_embedded)
+
+plt.figure(figsize=(8, 8))
+for i in range(len(exps)):
+    plt.scatter(X_embedded_s[i][:, 0], X_embedded_s[i][:, 1], s=50, label=exps[i])
+
+    for j, subj_ID in enumerate(subj_IDs):
+        plt.text(
+            X_embedded_s[i][j, 0] + 0.5,
+            X_embedded_s[i][j, 1] + 0,
+            subj_ID,
+            fontsize=16,
+            color="k",
+            alpha=0.5,
+            verticalalignment="center",
+        )
+
+plt.legend()
+plt.title(f"t-SNE clustering of subjects")
+plt.grid(alpha=0.2)
+plt.xlabel("t-SNE 1")
+plt.ylabel("t-SNE 2")
+plt.show()
+
+# %% bias and L0 clustering
+plt.figure(figsize=(8, 8))
+plt.scatter(bias_s[0], L0_s[0], s=50, label=exps[0])
+plt.scatter(bias_s[1], L0_s[1], s=50, label=exps[1])
+for i, subj_ID in enumerate(subj_IDs):
+    plt.text(
+        bias_s[0][i] + 0.01,
+        L0_s[0][i] + 0.01,
+        subj_ID,
+        fontsize=16,
+        color="k",
+        alpha=0.5,
+        verticalalignment="center",
+        # horizontalalignment="center",
+    )
+
+for i, subj_ID in enumerate(subj_IDs):
+    plt.text(
+        bias_s[1][i] + 0.01,
+        L0_s[1][i] + 0.01,
+        subj_ID,
+        fontsize=16,
+        color="k",
+        alpha=0.5,
+        verticalalignment="center",
+        # horizontalalignment="center",
+    )
+
+plt.legend()
+
+plt.title(f"L0&bias clustering of subjects")
+plt.grid(alpha=0.2)
+plt.xlabel("bias")
+plt.ylabel("L0")
+plt.show()
 
 # %%
