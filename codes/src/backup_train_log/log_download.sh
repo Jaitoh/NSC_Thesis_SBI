@@ -49,8 +49,8 @@ tar -xzf ${EXP_ID}.tar.gz
 echo "finished tar"
 
 # move to current directory
-MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
-# MACHINE_LOG_DIR="/wehe/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
+# MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
+MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 mv .${MACHINE_LOG_DIR}/${TRAIN_ID}/${EXP_ID} ./${EXP_ID}
 rm -r ./home
 rm ${EXP_ID}.tar.gz
