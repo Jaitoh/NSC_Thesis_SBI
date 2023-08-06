@@ -138,10 +138,11 @@ for i in range(len(exps)):
             X_embedded_s[i][j, 0] + 0.5,
             X_embedded_s[i][j, 1] + 0,
             subj_ID,
-            fontsize=16,
+            fontsize=10,
             color="k",
             alpha=0.5,
             verticalalignment="center",
+            horizontalalignment="left",
         )
 
 plt.legend()
@@ -153,31 +154,20 @@ plt.show()
 
 # %% bias and L0 clustering
 plt.figure(figsize=(8, 8))
-plt.scatter(bias_s[0], L0_s[0], s=50, label=exps[0])
-plt.scatter(bias_s[1], L0_s[1], s=50, label=exps[1])
-for i, subj_ID in enumerate(subj_IDs):
-    plt.text(
-        bias_s[0][i] + 0.01,
-        L0_s[0][i] + 0.01,
-        subj_ID,
-        fontsize=16,
-        color="k",
-        alpha=0.5,
-        verticalalignment="center",
-        # horizontalalignment="center",
-    )
+for i in range(len(exps)):
+    plt.scatter(bias_s[i], L0_s[i], s=50, label=exps[i])
+    for j, subj_ID in enumerate(subj_IDs):
+        plt.text(
+            bias_s[i][j] + 0.01,
+            L0_s[i][j] + 0.01,
+            subj_ID,
+            fontsize=10,
+            color="k",
+            alpha=0.5,
+            verticalalignment="center",
+            # horizontalalignment="center",
+        )
 
-for i, subj_ID in enumerate(subj_IDs):
-    plt.text(
-        bias_s[1][i] + 0.01,
-        L0_s[1][i] + 0.01,
-        subj_ID,
-        fontsize=16,
-        color="k",
-        alpha=0.5,
-        verticalalignment="center",
-        # horizontalalignment="center",
-    )
 
 plt.legend()
 
