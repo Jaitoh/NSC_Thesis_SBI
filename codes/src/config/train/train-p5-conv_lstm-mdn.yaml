@@ -18,7 +18,7 @@ training:
   
   stop_after_epochs     : 1000
 
-  min_num_epochs        : 100
+  min_num_epochs        : 5000
   max_num_epochs        : 2147483647
   
   warmup_epochs         : 5
