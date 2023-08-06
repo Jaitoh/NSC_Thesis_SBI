@@ -5,10 +5,11 @@ Pipeline=train # npe
 TRAIN_ID=train_L0_p5a
 folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 
+# "p5a-conv_net"
 EXP_IDS=(
-    "p5a-conv_net-tmp"
-    "p5a-conv_net-Tv2-tmp"
+    "p5a-conv_net-Tv2"
 )
+# "p5a-conv_net-Tv2-tmp"
 
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn

@@ -8,6 +8,12 @@ FILE_ID=1ihauxr6Y-GvnPK0j8l1Qmt-srJQYWoE3
 EXP_ID=p5a-conv_net-Tv2-tmp
 FILE_ID=19gOMVtqxC9hXlzDKF_6yjWUpEDPaU7cj
 
+EXP_ID=p5a-conv_net
+FILE_ID=1tVreiCIajqnBoo2M1_PuSRRCslaR3otb
+
+EXP_ID=p5a-conv_net-Tv2
+FILE_ID=12MMpnNYByUDU6XWjcDFM1_GWsRnyCcD7
+
 # ===== train_nle =====
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn
