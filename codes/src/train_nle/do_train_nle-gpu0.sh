@@ -6,13 +6,13 @@ source activate sbi
 
 ROOT_DIR=~/tmp/NSC
 
+TRAIN_FILE_NAME=train_p2
 EXP_ID=L0-nle-p2-cnn
 RUN_ID=L0-nle-p2-cnn-dur3
 
 CONFIG_PRIOR=prior-3
 CONFIG_DATASET=dataset-p2-dur3
 CONFIG_TRAIN=train-nle-cnn
-TRAIN_FILE_NAME=train_p2
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH=${ROOT_DIR}/data/dataset-comb

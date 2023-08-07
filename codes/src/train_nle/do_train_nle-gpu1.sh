@@ -6,13 +6,14 @@ source activate sbi
 
 ROOT_DIR=~/tmp/NSC
 
-EXP_ID=L0-nle-cnn
-RUN_ID=L0-nle-cnn-dur7-offline_acc
+TRAIN_FILE_NAME=train_p2
+EXP_ID=L0-nle-p2-cnn
+RUN_ID=L0-nle-p2-cnn-dur3to7
+
 CONFIG_PRIOR=prior-3
-CONFIG_DATASET=dataset-nle-cnn-dur7-offline_acc
+CONFIG_DATASET=dataset-p2-dur3to7
 CONFIG_TRAIN=train-nle-cnn
 
-TRAIN_FILE_NAME=train
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH=${ROOT_DIR}/data/dataset-comb
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
@@ -21,7 +22,7 @@ CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0
 
 LOG_DIR=./src/train_nle/logs/${EXP_ID}/${RUN_ID}
-PRINT_LOG=./src/train_nle/logs/${EXP_ID}/${RUN_ID}.log
+PRINT_LOG=./src/train_nle/logs/${EXP_ID}/${RUN_ID}/${RUN_ID}.log
 
 mkdir -p ${LOG_DIR}
 
