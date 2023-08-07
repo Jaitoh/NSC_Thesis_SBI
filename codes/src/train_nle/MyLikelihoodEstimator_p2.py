@@ -58,7 +58,7 @@ from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.set_seed import setup_seed, seed_worker
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
-from train_nle.Dataset import chR_Comb_Dataset, probR_Comb_Dataset
+from train_nle.Dataset_p2 import x1pR_theta_Dataset
 from posterior.My_MCMCPost import MyMCMCPosterior
 from utils.setup import adapt_path
 
@@ -188,7 +188,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         print("".center(50, "="))
         print("[training] sets")
         # print("".center(50, "-"))
-        train_dataset = chR_Comb_Dataset(
+        train_dataset = x1pR_theta_Dataset(
             data_dir=data_dir,
             num_max_theta=config.dataset.num_max_theta,
             num_chosen_theta=config.dataset.num_chosen_theta,
@@ -196,8 +196,6 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             part_each_dur=[0.9] * len(config.dataset.chosen_dur_list),
             last_part=False,
             theta_chosen_mode="random",
-            num_probR_sample=config.dataset.num_probR_sample,
-            probR_sample_mode=config.dataset.probR_sample_mode,
             print_info=print_info,
             config_theta=config.prior,
         )
@@ -205,7 +203,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         print("".center(50, "="))
         print("[validation] sets")
         # print("".center(50, "-"))
-        valid_dataset = chR_Comb_Dataset(
+        valid_dataset = x1pR_theta_Dataset(
             data_dir=data_dir,
             num_max_theta=config.dataset.num_max_theta,
             num_chosen_theta=config.dataset.num_chosen_theta,
@@ -213,8 +211,6 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             part_each_dur=[0.1] * len(config.dataset.chosen_dur_list),
             last_part=True,
             theta_chosen_mode="random",
-            num_probR_sample=config.dataset.num_probR_sample,
-            probR_sample_mode=config.dataset.probR_sample_mode,
             print_info=print_info,
             config_theta=config.prior,
         )
@@ -284,17 +280,6 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
     def train(
         self,
-        # training_batch_size: int = 50,
-        # learning_rate: float = 5e-4,
-        # validation_fraction: float = 0.1,
-        # stop_after_epochs: int = 20,
-        # max_num_epochs: int = 2**31 - 1,
-        # clip_max_norm: Optional[float] = 5.0,
-        # resume_training: bool = False,
-        # discard_prior_samples: bool = False,
-        # retrain_from_scratch: bool = False,
-        # show_train_summary: bool = False,
-        # dataloader_kwargs: Optional[Dict] = None,
         config,
         prior_limits,
         continue_from_checkpoint=None,
@@ -323,7 +308,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # Load data from most recent round.
         self._round = max(self._data_round_index)
         self.config = config
-        self.log_dir = config.log_dir
+        self.log_dir = adapt_path(config.log_dir)
         self.prior_limits = prior_limits
         self.dataset_kwargs = self.config.dataset
         self.training_kwargs = self.config.train.training
@@ -368,12 +353,12 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # initialize values
         epoch = 0
         batch_counter = 0
-        self._valid_log_prob = float("-Inf")
-        self._best_valid_log_prob = float("-Inf")
+        self._valid_loss = float("Inf")
+        self._best_valid_loss = float("Inf")
         # self._best_model_from_epoch = -1
-        self._summary["training_log_probs"] = []
+        self._summary["training_loss"] = []
         self._summary["learning_rates"] = []
-        self._summary["validation_log_probs"] = []
+        self._summary["validation_loss"] = []
         self._summary["epoch_durations_sec"] = []
 
         # train until no validation improvement for 'patience' epochs
@@ -395,7 +380,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             batch_timer = time.time()
 
             train_data_size = 0
-            train_log_probs_sum = 0
+            train_loss_sum = 0
             train_batch_num = 0
 
             for x, theta in train_dataloader:
@@ -410,12 +395,14 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     theta = theta.to(self._device)
 
                 # Evaluate on x with theta as context. TODO: the sign of loss +?-?
-                train_data_size += len(x)
-                train_losses = self._loss(theta=theta, x=x)
-                train_loss = torch.mean(train_losses)
-                train_log_probs_sum -= train_losses.sum().item()
-
+                seqC = x[:, :-1]
+                pR = x[:, -1]
+                train_loss = self._loss(theta=theta, x=seqC, pR=pR)
                 train_loss.backward()
+
+                # update loss for epoch
+                train_data_size += len(x)
+                train_loss_sum += train_loss * len(x)
 
                 # clip gradients
                 clean_cache()
@@ -426,7 +413,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                         max_norm=clip_max_norm,
                     )
 
-                del x, theta, train_losses
+                # clean cache
+                del x, theta, pR
                 clean_cache()
 
                 self.optimizer.step()
@@ -450,10 +438,10 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     break
 
             # self.epoch += 1
-            train_log_prob_average = train_log_probs_sum / train_data_size
-            self._train_log_prob = train_log_prob_average
-            self._summary["training_log_probs"].append(train_log_prob_average)
-            self._summary_writer.add_scalars("log_probs", {"training": train_log_prob_average}, epoch)
+            train_loss_average = (train_loss_sum / train_data_size).item()
+            self._train_loss = train_loss_average
+            self._summary["training_loss"].append(train_loss_average)
+            self._summary_writer.add_scalars("loss", {"training": train_loss_average}, epoch)
 
             # epoch log - learning rate
             if epoch < config_training.warmup_epochs:
@@ -470,7 +458,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
                 # initialize values
                 valid_data_size = 0
-                valid_log_prob_sum = 0
+                valid_loss_sum = 0
 
                 # do validate and log
                 for x_valid, theta_valid in valid_dataloader:
@@ -478,29 +466,34 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     theta_valid = theta_valid.to(self._device)
 
                     # Evaluate on x with theta as context.
-                    valid_losses = self._loss(theta=theta_valid, x=x_valid)
-                    valid_log_prob_sum -= valid_losses.sum().item()
-                    valid_data_size += len(x_valid)
+                    seqC_valid = x_valid[:, :-1]
+                    pR_valid = x_valid[:, -1]
+                    valid_loss = self._loss(theta=theta_valid, x=seqC_valid, pR=pR_valid)
 
-                    del x_valid, theta_valid, valid_losses
+                    valid_data_size += len(x_valid)
+                    valid_loss_sum += valid_loss * len(x_valid)
+
+                    del x_valid, theta_valid, pR_valid
                     clean_cache()
 
                     if self.config.debug:
                         break
 
                 # Take mean over all validation samples.
-                self._valid_log_prob = valid_log_prob_sum / valid_data_size
-                self._summary_writer.add_scalars("log_probs", {"validation": self._valid_log_prob}, epoch)
+                self._valid_loss = (valid_loss_sum / valid_data_size).item()
+                self._summary_writer.add_scalars("loss", {"validation": self._valid_loss}, epoch)
 
                 toc = time.time()
-                self._summary["validation_log_probs"].append(self._valid_log_prob)
+                self._summary["validation_loss"].append(self._valid_loss)
                 self._summary["epoch_durations_sec"].append(toc - train_start_time)
 
-                valid_info = f"valid_log_prob: {self._valid_log_prob:.2f} in {(time.time() - valid_start_time)/60:.2f} min"
-                print(valid_info)
+                # valid_info = (
+                #     f"valid_loss: {self._valid_loss:.2f} in {(time.time() - valid_start_time)/60:.2f} min"
+                # )
+                # print(valid_info)
 
             # update epoch info and counter
-            epoch_info = f"Epochs trained: {epoch:4} | log_prob train: {self._train_log_prob:.2f} | log_prob val: {self._valid_log_prob:.2f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
+            epoch_info = f"Epochs trained: {epoch:4} | loss train: {self._train_loss:.2f} | loss val: {self._valid_loss:.2f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
             print("".center(50, "-"))
             print(epoch_info)
             print("".center(50, "-"))
@@ -510,17 +503,15 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             if epoch < config_training["warmup_epochs"]:
                 self.scheduler_warmup.step()
             elif config_training["scheduler"] == "ReduceLROnPlateau":
-                self.scheduler.step(self._valid_log_prob)
+                self.scheduler.step(self._valid_loss)
             else:
                 self.scheduler.step()
 
-            # if debug and epoch > 3:
-            #     break
             epoch += 1
 
         # Update summary.
         self._summary["epochs_trained"].append(epoch)
-        self._summary["best_validation_log_prob"].append(self._best_valid_log_prob)
+        self._summary["best_validation_loss"].append(self._best_valid_loss)
 
         # Update TensorBoard and summary dict.
         self._summarize(round_=self._round)
@@ -533,7 +524,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         ||||| STATS |||||:
         -------------------------
         Total epochs trained: {epoch-1}
-        Best validation performance: {self._best_valid_log_prob:.4f}, from epoch {self._best_model_from_epoch:5}
+        Best validation performance: {self._best_valid_loss:.4f}, from epoch {self._best_model_from_epoch:5}
         Model from best epoch {self._best_model_from_epoch} is loaded for further training
         -------------------------
         """
@@ -555,40 +546,38 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         return self, deepcopy(self._neural_net)
 
-    def _loss(self, theta: Tensor, x: Tensor) -> Tensor:
-        r"""Return loss for SNLE, which is the likelihood of $-\log q(x_i | \theta_i)$.
+    def _loss(self, theta: Tensor, x: Tensor, pR: Tensor) -> Tensor:
+        r"""Return loss for SNLE, which is MSE of log(pR) and the computed log_prob.
 
         Returns:
             Negative log prob.
         """
-        return -self._neural_net.log_prob(x=x, theta=theta)
+        log_prob = self._neural_net.log_prob(x=x, theta=theta)
+        # loss: ms error of ln(pR) and the computed log_prob
+        return nn.MSELoss()(torch.log(pR), log_prob)
 
     def _converged(self, epoch, debug):
         converged = False
         epoch = epoch - 1
         assert self._neural_net is not None
 
-        if epoch != -1:
-            self._plot_training_curve()
-
-        if epoch == -1 or (self._valid_log_prob > self._best_valid_log_prob):
+        # improved validation performance
+        if epoch == -1 or (self._valid_loss < self._best_valid_loss):
             self._epochs_since_last_improvement = 0
-            self._best_valid_log_prob = self._valid_log_prob
+            self._best_valid_loss = self._valid_loss
             self._best_model_state_dict = deepcopy(self._neural_net.state_dict())
             self._best_model_from_epoch = epoch
-
-            # posterior_step = self.config.train.posterior.step
-            # plot posterior behavior when best model is updated
-            # if epoch != -1 and posterior_step != 0 and epoch % posterior_step == 0:
-            #     self.posterior_behavior_log(self.prior_limits, epoch)
 
             # save the model
             torch.save(
                 self._neural_net,
-                os.path.join(self.config.log_dir, f"model/model_check_point.pt"),
+                adapt_path(os.path.join(adapt_path(self.config.log_dir), f"model/model_check_point.pt")),
             )
         else:
             self._epochs_since_last_improvement += 1
+
+        if epoch != -1 and epoch != 0:
+            self._plot_training_curve()
 
         # If no validation improvement over many epochs, stop training.
         stop_after_epochs = self.config.train.training.stop_after_epochs
@@ -600,19 +589,19 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         ):
             converged = True
             self._neural_net.load_state_dict(self._best_model_state_dict)
-            self._val_log_prob = self._best_valid_log_prob
+            self._val_loss = self._best_valid_loss
             self._epochs_since_last_improvement = 0
 
         return converged
 
     def _plot_training_curve(self):
-        log_dir = self.config.log_dir
+        log_dir = adapt_path(self.config.log_dir)
         duration = np.array(self._summary["epoch_durations_sec"])
-        train_log_probs = self._summary["training_log_probs"]
-        valid_log_probs = self._summary["validation_log_probs"]
+        train_losss = self._summary["training_loss"]
+        valid_losss = self._summary["validation_loss"]
         learning_rates = self._summary["learning_rates"]
-        best_valid_log_prob = self._best_valid_log_prob
-        best_valid_log_prob_epoch = self._best_model_from_epoch
+        best_valid_loss = self._best_valid_loss
+        best_valid_loss_epoch = self._best_model_from_epoch
 
         plt.tight_layout()
 
@@ -622,7 +611,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # plot learning rate
         ax0 = axes[0]
         ax0.plot(learning_rates, "-", label="lr", lw=2)
-        ax0.plot(best_valid_log_prob_epoch, learning_rates[best_valid_log_prob_epoch], "v", color="tab:red", lw=2)  # type: ignore
+        ax0.plot(best_valid_loss_epoch, learning_rates[best_valid_loss_epoch], "v", color="tab:red", lw=2)  # type: ignore
 
         ax0.set_xlabel("epochs")
         ax0.set_ylabel("learning rate")
@@ -630,37 +619,21 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         ax0.set_title("training curve")
 
         ax1 = axes[1]
-        ax1.plot(
-            train_log_probs,
-            ".-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax1.plot(
-            valid_log_probs,
-            ".-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
-        ax1.plot(best_valid_log_prob_epoch, best_valid_log_prob, "v", color="red", lw=2)
-        ax1.text(best_valid_log_prob_epoch, best_valid_log_prob, f"{best_valid_log_prob:.2f}", color="red", fontsize=10, ha="center", va="bottom")  # type: ignore
-        # ax1.set_ylim(log_probs_lower_bound, max(valid_log_probs)+0.2)
+        ax1.plot(train_losss, ".-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax1.plot(valid_losss, ".-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
+        ax1.plot(best_valid_loss_epoch, best_valid_loss, "v", color="red", lw=2)
+        ax1.text(best_valid_loss_epoch, best_valid_loss, f"{best_valid_loss:.2f}", color="red", fontsize=10, ha="center", va="bottom")  # type: ignore
+        # ax1.set_ylim(losss_lower_bound, max(valid_losss)+0.2)
 
         ax1.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
         ax1.set_xlabel("epochs")
-        ax1.set_ylabel("log_prob")
+        ax1.set_ylabel("loss")
         ax1.grid(alpha=0.2)
 
         ax2 = ax1.twiny()
         ax2.plot(
             (duration - duration[0]) / 60 / 60,
-            max(valid_log_probs) * np.ones_like(valid_log_probs),
+            max(valid_losss) * np.ones_like(valid_losss),
             "-",
             alpha=0,
         )
@@ -668,36 +641,20 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         ax3 = axes[2]
 
-        ax3.plot(
-            train_log_probs,
-            "o-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax3.plot(
-            valid_log_probs,
-            "o-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
+        ax3.plot(train_losss, "o-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax3.plot(valid_losss, "o-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
 
-        all_probs = np.concatenate([train_log_probs, valid_log_probs])
-        upper = np.max(all_probs)
-        lower = np.percentile(all_probs, 10)
+        all_probs = np.concatenate([train_losss, valid_losss])
+        lower = np.min(all_probs)
+        upper = np.percentile(all_probs, 90)
         ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
         ax3.set_xlabel("epochs")
-        ax3.set_ylabel("log_prob")
+        ax3.set_ylabel("loss")
         ax3.set_ylim(lower, upper)
         ax3.grid(alpha=0.2)
 
         # save the figure
-        plt.savefig(f"{log_dir}/training_curve.png")
+        plt.savefig(adapt_path(f"{log_dir}/training_curve.png"))
         plt.close()
 
     def build_posterior(
@@ -844,9 +801,9 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     prior_labels=prior_labels,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
-                plt.savefig(fig_path)
+                plt.savefig(adapt_path(fig_path))
                 fig_path = f"{self.log_dir}/posterior/posterior_seen_{fig_idx}_up_to_date.png"
-                plt.savefig(fig_path)
+                plt.savefig(adapt_path(fig_path))
                 plt.close(fig_x)
                 del fig_x, _
                 clean_cache()
@@ -861,9 +818,9 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                     prior_labels=prior_labels,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
-                plt.savefig(fig_path)
+                plt.savefig(adapt_path(fig_path))
                 fig_path = f"{self.log_dir}/posterior/posterior_unseen_{fig_idx}_up_to_date.png"
-                plt.savefig(fig_path)
+                plt.savefig(adapt_path(fig_path))
                 plt.close(fig_x_val)
                 del fig_x_val, _
                 clean_cache()

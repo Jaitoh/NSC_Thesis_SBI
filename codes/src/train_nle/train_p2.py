@@ -23,7 +23,7 @@ from utils.dataset.dataset import update_prior_min_max
 
 
 from neural_nets.my_likelihood_nn import my_likelihood_nn
-from train_nle.MyLikelihoodEstimator import CNLE
+from train_nle.MyLikelihoodEstimator_p2 import CNLE
 
 
 class Solver:
@@ -171,15 +171,15 @@ class Solver:
 
 @hydra.main(
     config_path="../config_nle",
-    config_name="config-nle-test-offline_acc",
+    config_name="config-nle-p2",
     version_base=None,
 )
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")
 
-    log_dir = Path(config.log_dir)
-    data_path = Path(config.data_path)
+    log_dir = adapt_path(config.log_dir)
+    data_path = adapt_path(config.data_path)
     check_path(log_dir, data_path)
 
     solver = Solver(config)

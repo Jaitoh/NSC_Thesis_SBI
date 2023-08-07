@@ -18,10 +18,10 @@ training:
   
   stop_after_epochs     : 1000
 
-  min_num_epochs        : 100
+  min_num_epochs        : 5000
   max_num_epochs        : 2147483647
   
-  warmup_epochs         : 5
+  warmup_epochs         : 20
   initial_lr            : 1e-8
   # scheduler             : 'ReduceLROnPlateau'
   # scheduler_params      : {'patience': 3, 'factor': 0.5, 'min_lr': 0}
@@ -30,6 +30,6 @@ training:
   scheduler             : 'None'
   scheduler_params      : {}
   
-  print_freq            : 2 # 2+1 records per epoch
+  print_freq            : 0 # 2+1 records per epoch
   # num_atoms             : 10
   # use_combined_loss     : True

@@ -22,6 +22,7 @@ NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent.as_posix()
 sys.path.append(f"{NSC_DIR}/codes/src")
 from utils.dataset.dataset import separate_x
 from utils.setup import clean_cache
+from utils.train import kaiming_weight_initialization
 
 
 # Define the LSTM part of the model
@@ -44,6 +45,8 @@ class LSTMNet(nn.Module):
             dropout=dropout if n_layers > 1 else 0,
         )
         self.dropout = nn.Dropout(dropout)
+
+        kaiming_weight_initialization(self.named_parameters())
 
     def forward(self, x):
         # x: (batch_size, seq_length)
@@ -78,15 +81,15 @@ class ConvNet(nn.Module):
         )
         self.pool = nn.MaxPool1d(filter_size)
 
-        num_features = (
-            seqC_length // filter_size // filter_size * 2 * num_filters
-        )  # 512
+        num_features = seqC_length // filter_size // filter_size * 2 * num_filters  # 512
 
         self.fc1 = nn.Linear(num_features, num_filters * 16)  # 1024
         self.fc2 = nn.Linear(num_filters * 16, num_filters * 4)  # 256
         self.fc3 = nn.Linear(num_filters * 4, num_filters)  # 64
         self.activation = nn.ReLU()
         self.dropout = nn.Dropout(p=0.1)
+
+        kaiming_weight_initialization(self.named_parameters())
 
     def forward(self, x):
         # x.shape: (batch_size, seq_length)
@@ -111,7 +114,7 @@ class ConvNet(nn.Module):
         # x.shape: (batch_size, num_features * 4)
         x = F.relu(self.fc3(x))
         # x.shape: (batch_size, num_features)
-        x = self.dropout(x)
+        # x = self.dropout(x)
         return x
 
 
@@ -134,6 +137,8 @@ class MLP(nn.Module):
         self.hidden_layers = nn.ModuleList()
         for _ in range(num_layers):
             self.hidden_layers.append(nn.Linear(num_hidden, num_hidden))
+
+        kaiming_weight_initialization(self.named_parameters())
 
     def forward(self, x):
         # x shape (batch_size, num_input)
@@ -224,30 +229,22 @@ class CategoricalNet(nn.Module):
         )
 
         # --- categorical net ---
-        self.input_layer = nn.Linear(
-            num_hidden_theta + hidden_dim_seqC, num_hidden_category
-        )
+        self.input_layer = nn.Linear(num_hidden_theta + hidden_dim_seqC, num_hidden_category)
 
         # Repeat hidden units hidden layers times.
         self.hidden_layers = nn.ModuleList()
-        self.hidden_layers.append(
-            nn.Linear(num_hidden_category, num_hidden_category // 2)
-        )  # 256 -> 128
+        self.hidden_layers.append(nn.Linear(num_hidden_category, num_hidden_category // 2))  # 256 -> 128
 
-        self.hidden_layers.append(
-            nn.Linear(num_hidden_category // 2, num_hidden_category // 4)
-        )  # 128 -> 64
+        self.hidden_layers.append(nn.Linear(num_hidden_category // 2, num_hidden_category // 4))  # 128 -> 64
 
-        self.hidden_layers.append(
-            nn.Linear(num_hidden_category // 4, num_hidden_category // 8)
-        )  # 64 -> 32
-        self.hidden_layers.append(
-            nn.Linear(num_hidden_category // 8, num_hidden_category // 16)
-        )  # 32 -> 16
+        self.hidden_layers.append(nn.Linear(num_hidden_category // 4, num_hidden_category // 8))  # 64 -> 32
+        self.hidden_layers.append(nn.Linear(num_hidden_category // 8, num_hidden_category // 16))  # 32 -> 16
         self.ps_layer = nn.Linear(num_hidden_category // 16, num_hidden_category // 32)
         # 16 -> 8
         self.output_layer = nn.Linear(num_hidden_category // 32, num_categories)
         # 8 -> 2
+
+        kaiming_weight_initialization(self.named_parameters())
 
     def forward(
         self,
@@ -328,9 +325,7 @@ class CategoricalNet(nn.Module):
 
         theta_repeated, x_repeated = match_theta_and_x_batch_shapes(theta, x)
         del x, theta
-        x_repeated, chR_repeated = x_repeated.split(
-            [x_repeated.shape[-1] - 1, 1], dim=1
-        )
+        x_repeated, chR_repeated = x_repeated.split([x_repeated.shape[-1] - 1, 1], dim=1)
         # x_repeated here is equivalent to seqC_repeated
 
         ps = self.forward(seqC=x_repeated, theta=theta_repeated)
@@ -361,8 +356,4 @@ class CategoricalNet(nn.Module):
 
         # Predict Categorical ps and sample.
         ps = self.forward(seqC, theta)
-        return (
-            Categorical(probs=ps)
-            .sample(torch.Size((num_samples,)))
-            .reshape(num_samples, -1)
-        )
+        return Categorical(probs=ps).sample(torch.Size((num_samples,))).reshape(num_samples, -1)

@@ -1,0 +1,126 @@
+import time
+import h5py
+import torch
+import numpy as np
+import torch.utils.data as data
+from torch.utils.data import Dataset, DataLoader
+from copy import deepcopy
+import gc
+from pathlib import Path
+
+# from dataset.data_process import process_x_seqC_part
+import sys
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+
+from dataset.data_process import process_x_seqC_part
+from utils.dataset.dataset import (
+    process_theta_2D,
+    unravel_index,
+    generate_permutations,
+    get_len_seqC,
+    choose_theta,
+)
+from utils.setup import clean_cache
+from utils.set_seed import setup_seed
+from train_nle.Dataset import probR_Comb_Dataset
+
+
+class x1pR_theta_Dataset(probR_Comb_Dataset):
+    """
+    dataset consisting of x and theta:
+    - x consists: (seqC, 1, pR)
+    - theta consists: (theta)
+
+    ---
+    original data:
+    seqC            of shape:(1, M, _S, L)  - (1, 3, 3^n-1, 15)
+    probR           of shape:(1, M, _S, T)  - (1, 3, 3^n-1, 500)
+    theta           of shape:(T, 4)         - (500, 4)
+
+    ---
+    loaded into memory:
+    seqC_normed     of shape (M*_S, L)    - (3*S, 15)
+    probR           of shape (M*_S, T, 1) - (3*S, 500, 1)
+    theta           of shape (T, 4)       - (500, 4)
+
+    ===
+    get item:
+    x (seqC_normed[:-1], 1, pR)  of shape (15-1+1+1,) - (16)
+    theta                   of shape (4) - (4)
+
+    """
+
+    def __init__(
+        self,
+        data_dir,
+        num_chosen_theta=500,
+        chosen_dur_list=[3, 9, 15],
+        part_each_dur=[1, 1, 1],
+        last_part=False,
+        num_max_theta=500,
+        theta_chosen_mode="random",
+        print_info=False,
+        config_theta=None,
+    ):
+        """
+        theta_chosen_mode:
+        'random'   - randomly choose 'num_chosen_theta' theta from all the theta in the set
+        'first_80' - choose first 80% from 'num_chosen_theta' (normally as training set)
+        'last_20'  - choose first 20% from 'num_chosen_theta' (normally as validation set)
+        """
+        super().__init__(
+            data_dir=data_dir,
+            num_max_theta=num_max_theta,
+            num_chosen_theta=num_chosen_theta,
+            chosen_dur_list=chosen_dur_list,
+            part_each_dur=part_each_dur,
+            last_part=last_part,
+            theta_chosen_mode=theta_chosen_mode,
+            config_theta=config_theta,
+        )
+
+        # set self.probR_all zero values to 1e-8
+        self.probR_all[self.probR_all == 0] = 1e-8
+
+        if print_info:
+            print("".center(50, "="))
+            print("[dataset info]")
+            print(f"total # samples: {self.total_samples}")
+            print(f"dur of {list(chosen_dur_list)}")
+            print(f"part of {list(part_each_dur)} are chosen")
+
+            print("".center(50, "-"))
+            print("shapes:")
+            print(f"[seqC] shape: {self.seqC_all.shape}")
+            print(f"[theta] shape: {self.theta_all.shape}")
+            print(f"[probR] shape: {self.probR_all.shape}")
+
+            print("".center(50, "-"))
+            print("example:")
+            start_loading_time = time.time()
+            print(f"[x] e.g. {self.__getitem__(0)[0]}")
+            print(f"[theta] e.g. {self.__getitem__(0)[1]}")
+            print(f"loading one data time: {1000*(time.time()-start_loading_time):.2f}ms")
+            print("".center(50, "="))
+
+    def __getitem__(self, idx):
+        """
+        get a sample from the dataset of length M*S*T
+        x: (seqC_normed[:-1], 1, pR)  of shape (15-1, pR) - (1, 500)
+        theta: of shape (4) - (4)
+
+        """
+        # get the index
+        seqC_idx, theta_idx = divmod(idx, self.T)
+
+        # get x
+        seqC = self.seqC_all[seqC_idx, 1:]
+        probR = self.probR_all[seqC_idx, theta_idx]
+        x = torch.cat((seqC, torch.tensor([1], dtype=seqC.dtype), probR), dim=0)
+
+        # get theta
+        theta = self.theta_all[theta_idx, :]
+
+        return x, theta

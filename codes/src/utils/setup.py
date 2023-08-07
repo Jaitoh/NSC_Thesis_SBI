@@ -170,37 +170,44 @@ def check_path(log_dir, data_path):
     """
     check the path of log_dir and data_dir
     """
+    log_dir = adapt_path(log_dir)
+    data_path = adapt_path(data_path)
 
-    print(f"\n--- dir settings ---\nlog dir: {str(log_dir)}")
+    print(f"\n--- dir settings ---")
+    print(f"log dir: {str(log_dir)}")
     print(f"data dir: {str(data_path)}")
 
     model_dir = log_dir / "model"
     posterior_dir = log_dir / "posterior"
     posterior_figures_dir = log_dir / "posterior" / "figures"
-    event_fig_dir = log_dir / "event_fig"
-    event_hist_dir = log_dir / "event_hist"
+    # event_fig_dir = log_dir / "event_fig"
+    # event_hist_dir = log_dir / "event_hist"
 
+    # make dirs
     if not log_dir.exists():
-        os.makedirs(str(log_dir))
-        os.makedirs(str(model_dir))
-        os.makedirs(str(posterior_dir))
-        os.makedirs(str(posterior_figures_dir))
-        os.makedirs(str(event_fig_dir))
-        os.makedirs(str(event_hist_dir))
+        log_dir.mkdir(parents=True, exist_ok=True)
+    if not adapt_path(model_dir).exists():
+        model_dir.mkdir(parents=True, exist_ok=True)
+    if not adapt_path(posterior_dir).exists():
+        posterior_dir.mkdir(parents=True, exist_ok=True)
+    if not adapt_path(posterior_figures_dir).exists():
+        posterior_figures_dir.mkdir(parents=True, exist_ok=True)
+        # event_fig_dir.mkdir(parents=True, exist_ok=True)
+        # event_hist_dir.mkdir(parents=True, exist_ok=True)
 
-    elif log_dir.exists():
-        # remove_files_except_resource_log(log_dir)
-        if not model_dir.exists():
-            os.makedirs(str(model_dir))
-        if not posterior_dir.exists():
-            os.makedirs(str(posterior_dir))
-        if not posterior_figures_dir.exists():
-            os.makedirs(str(posterior_figures_dir))
-        if not event_fig_dir.exists():
-            os.makedirs(str(event_fig_dir))
-        if not event_hist_dir.exists():
-            os.makedirs(str(event_hist_dir))
+    # elif log_dir.exists():
+    #     remove_files_except_resource_log(log_dir)
+    #     if not model_dir.exists():
+    #         os.makedirs(str(model_dir))
+    #     if not posterior_dir.exists():
+    #         os.makedirs(str(posterior_dir))
+    #     if not posterior_figures_dir.exists():
+    #         os.makedirs(str(posterior_figures_dir))
+    #     if not event_fig_dir.exists():
+    #         os.makedirs(str(event_fig_dir))
+    #     if not event_hist_dir.exists():
+    #         os.makedirs(str(event_hist_dir))
 
     # check data path, where to read the data from, exists
-    if not Path(data_path).expanduser().exists():
+    if not data_path.exists():
         assert False, f"Data dir {str(data_path)} does not exist."

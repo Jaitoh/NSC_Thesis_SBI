@@ -71,11 +71,8 @@ class probR_Comb_Dataset(Dataset):
         self.num_chosen_theta = num_chosen_theta
 
         # define the final shape of the data
-        chosen_theta_idx, num_chosen_theta = choose_theta(
-            num_chosen_theta, num_max_theta, theta_chosen_mode
-        )
+        chosen_theta_idx, num_chosen_theta = choose_theta(num_chosen_theta, num_max_theta, theta_chosen_mode)
         self.T = num_chosen_theta
-
         self.S = 0
         for dur, part in zip(chosen_dur_list, part_each_dur):
             f = h5py.File(Path(data_dir) / f"dataset-comb-dur{dur}-T500.h5", "r")
@@ -132,14 +129,12 @@ class probR_Comb_Dataset(Dataset):
 
         # process theta [nSets, TC, 4]
         self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
-        self.theta_all = (
-            process_theta_2D(  # normalize and processing of the theta values
-                self.theta_all,
-                ignore_ss=config_theta.ignore_ss,
-                normalize_theta=config_theta.normalize,
-                unnormed_prior_min=config_theta.prior_min,
-                unnormed_prior_max=config_theta.prior_max,
-            )
+        self.theta_all = process_theta_2D(  # normalize and processing of the theta values
+            self.theta_all,
+            ignore_ss=config_theta.ignore_ss,
+            normalize_theta=config_theta.normalize,
+            unnormed_prior_min=config_theta.prior_min,
+            unnormed_prior_max=config_theta.prior_max,
         )
 
         if print_info:
@@ -150,11 +145,7 @@ class probR_Comb_Dataset(Dataset):
         S = seqC_shape[2]
         S_part = round(S * part)
         # take partial of S
-        seqC = (
-            f["seqC"][:, :, -S_part:, :][0]
-            if last_part
-            else f["seqC"][:, :, :S_part, :][0]
-        )
+        seqC = f["seqC"][:, :, -S_part:, :][0] if last_part else f["seqC"][:, :, :S_part, :][0]
         # seqC: (M, S, L)
 
         return process_x_seqC_part(
@@ -266,18 +257,14 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
             ).repeat_interleave(self.C, dim=-1)
             # probR_all (MS, T, C)
 
-            self.chR_all = (
-                torch.bernoulli(self.probR_all).unsqueeze(-1).to("cpu").contiguous()
-            )
+            self.chR_all = torch.bernoulli(self.probR_all).unsqueeze(-1).to("cpu").contiguous()
             # chR_all (MS, T, C, 1)
 
             del self.probR_all
             clean_cache()
 
         if self.probR_sample_mode == "offline_acc":
-            print(
-                f"\n('offline_acc') Sampling C={self.C} times from probR ... ", end=""
-            )
+            print(f"\n('offline_acc') Sampling C={self.C} times from probR ... ", end="")
 
             # # probR_all (MS, T, 1)
             # self.chR_all = torch.zeros((self.MS, self.T, self.C, 1))

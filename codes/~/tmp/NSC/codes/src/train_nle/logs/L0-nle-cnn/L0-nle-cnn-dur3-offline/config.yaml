@@ -1,0 +1,88 @@
+pipeline_version: nle
+log_dir: ~/tmp/NSC/codes/src/train_nle/logs/L0-nle-cnn/L0-nle-cnn-dur3-offline
+data_path: ~/tmp/NSC/data/dataset-comb
+seed: 42
+debug: true
+gpu: true
+continue_from_checkpoint: ''
+MCMC_theta_batch: 1000
+experiment_settings:
+  chosen_dur_list:
+  - 3
+  - 5
+  - 7
+  - 9
+  - 11
+  - 13
+  - 15
+  chosen_MS_list:
+  - 0.2
+  - 0.4
+  - 0.8
+  seqC_sample_per_MS: 700
+prior:
+  num_prior_sample: 500
+  prior_min:
+  - -2.5
+  - 0
+  - 0
+  - -11
+  prior_max:
+  - 2.5
+  - 77
+  - 18
+  - 10
+  prior_labels:
+  - bias
+  - sigma2a
+  - sigma2s
+  - L0
+  normalize: true
+  ignore_ss: false
+x_o:
+  trial_data_path: ../data/trials.mat
+  subject_id: 2
+simulator:
+  model_name: B-G-L0S-O-N-
+dataset:
+  num_max_theta: 500
+  num_chosen_theta: 500
+  chosen_dur_list:
+  - 3
+  num_probR_sample: 100
+  probR_sample_mode: offline_acc
+  batch_size: 409600
+  pin_memory: true
+  num_workers: 8
+  prefetch_factor: 2
+train:
+  network:
+    seqC_net:
+      type: cnn
+      hidden_dim: 64
+      lstm_layers: 3
+      conv_filter_size: 3
+    theta_net:
+      hidden_dim: 64
+      num_layers: 4
+    cat_net:
+      hidden_dim: 256
+  training:
+    learning_rate: 5.0e-05
+    clip_max_norm: 1.0e-05
+    weight_decay: 1.0e-09
+    stop_after_epochs: 1000
+    min_num_epochs: 100
+    max_num_epochs: 2147483647
+    warmup_epochs: 5
+    initial_lr: 1.0e-08
+    scheduler: None
+    scheduler_params: {}
+    print_freq: 2
+posterior:
+  num_posterior_check: 2
+  sampling_num: 2000
+  step: 1
+  xo_dataset_name: train
+  n_seq: 1
+  n_chR: 50
