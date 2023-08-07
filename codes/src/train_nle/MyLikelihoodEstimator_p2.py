@@ -598,6 +598,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             self._neural_net.load_state_dict(self._best_model_state_dict)
             self._val_loss = self._best_valid_loss
             self._epochs_since_last_improvement = 0
+            self._plot_training_curve()
 
         return converged
 
