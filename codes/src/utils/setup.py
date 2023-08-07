@@ -208,6 +208,13 @@ def check_path(log_dir, data_path):
     #     if not event_hist_dir.exists():
     #         os.makedirs(str(event_hist_dir))
 
+    # remove events.out.tfevents files from log_dir
+    for root, dirs, files in os.walk(log_dir):
+        for name in files:
+            if name.startswith("events.out.tfevents"):
+                file_path = os.path.join(root, name)
+                os.remove(file_path)
+
     # check data path, where to read the data from, exists
     if not data_path.exists():
         assert False, f"Data dir {str(data_path)} does not exist."

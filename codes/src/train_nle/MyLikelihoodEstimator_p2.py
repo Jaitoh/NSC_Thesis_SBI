@@ -368,6 +368,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # ========== 2. Train network ==========
         # train until no validation improvement for 'patience' epochs
         train_start_time = time.time()
+        self._last_plot_time = train_start_time
         while (
             epoch <= config_training.max_num_epochs
             and not self._converged(epoch, debug)
@@ -576,8 +577,14 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         else:
             self._epochs_since_last_improvement += 1
 
-        if epoch != -1 and epoch != 0:
+        # plot training curve every 60 seconds
+        if (
+            epoch != -1
+            and epoch != 0
+            and time.time() - self._last_plot_time > self.config.train.training.plot_time_interval_s
+        ):
             self._plot_training_curve()
+            self._last_plot_time = time.time()
 
         # If no validation improvement over many epochs, stop training.
         stop_after_epochs = self.config.train.training.stop_after_epochs
