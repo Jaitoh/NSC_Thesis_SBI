@@ -14,13 +14,13 @@ RUN_ID=L0-nle-p2-cnn-dur3
 CONFIG_DATASET=dataset-p2-dur3
 CONFIG_TRAIN=train-nle-cnn
 
-RUN_ID=L0-nle-p2-cnn-dur3to7
-CONFIG_DATASET=dataset-p2-dur3to7
-CONFIG_TRAIN=train-nle-cnn
+# RUN_ID=L0-nle-p2-cnn-dur3to7
+# CONFIG_DATASET=dataset-p2-dur3to7
+# CONFIG_TRAIN=train-nle-cnn
 
-RUN_ID=L0-nle-p2-cnn-dur3to11
-CONFIG_DATASET=dataset-p2-dur3to11
-CONFIG_TRAIN=train-nle-cnn
+# RUN_ID=L0-nle-p2-cnn-dur3to11
+# CONFIG_DATASET=dataset-p2-dur3to11
+# CONFIG_TRAIN=train-nle-cnn
 
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH=${ROOT_DIR}/data/dataset-comb

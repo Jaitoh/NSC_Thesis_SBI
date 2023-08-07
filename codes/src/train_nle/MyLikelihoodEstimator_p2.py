@@ -655,7 +655,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         all_probs = np.concatenate([train_losss, valid_losss])
         lower = np.min(all_probs)
-        upper = np.percentile(all_probs, 90)
+        upper = np.percentile(all_probs, 60)
         ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
         ax3.set_xlabel("epochs")
         ax3.set_ylabel("loss")
