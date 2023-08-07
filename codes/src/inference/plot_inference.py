@@ -59,6 +59,7 @@ for exp in exps:
 # %%
 # get fitted parameters
 param_path = "~/tmp/NSC/data/params/263 models fitPars/"
+param_path = adapt_path(param_path)
 bias_fitted, sigma2a_fitted, sigma2s_fitted, L0_fitted = [], [], [], []
 for subj_ID in subj_IDs:
     params_fitted = get_fitted_param_L0(param_path, subj_ID)
@@ -118,6 +119,9 @@ ax.set_ylabel("sigma2s")
 ax.set_title("sigma2s")
 ax.grid(alpha=0.2)
 
+fig_path = adapt_path("~/tmp/NSC/codes/src/inference/figures/L0-conv_net-subjects-params.png")
+plt.savefig(fig_path, dpi=300)
+
 # %% t-SNE clustering for all parameters
 # project fitted parameters to 2D using t-SNE
 from sklearn.manifold import TSNE
@@ -150,6 +154,9 @@ plt.title(f"t-SNE clustering of subjects")
 plt.grid(alpha=0.2)
 plt.xlabel("t-SNE 1")
 plt.ylabel("t-SNE 2")
+# save fig
+fig_path = adapt_path("~/tmp/NSC/codes/src/inference/figures/L0-conv_net-tSNE.png")
+plt.savefig(fig_path, dpi=300)
 plt.show()
 
 # %% bias and L0 clustering
@@ -175,6 +182,9 @@ plt.title(f"L0&bias clustering of subjects")
 plt.grid(alpha=0.2)
 plt.xlabel("bias")
 plt.ylabel("L0")
+
+fig_path = adapt_path("~/tmp/NSC/codes/src/inference/figures/L0-conv_net-L0_bias-clustering.png")
+plt.savefig(fig_path, dpi=300)
 plt.show()
 
 # %%

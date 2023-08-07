@@ -127,7 +127,7 @@ def parse_trial_data(PathName: str):
 
 
 def get_fitted_param_L0(param_path, subj_ID):
-    param_path += f"data_fitPars_S{subj_ID}.mat"
+    param_path = param_path / f"data_fitPars_S{subj_ID}.mat"
     params = decode_mat_fitted_parameters(adapt_path(param_path))
     # check where the L0 is in the list
     idx_L0_model = params["allModelsList"].index("L0")
