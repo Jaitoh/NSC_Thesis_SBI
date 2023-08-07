@@ -193,8 +193,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             num_max_theta=config.dataset.num_max_theta,
             num_chosen_theta=config.dataset.num_chosen_theta,
             chosen_dur_list=config.dataset.chosen_dur_list,
-            part_each_dur=[0.9] * len(config.dataset.chosen_dur_list),
-            last_part=False,
+            num_max_seqC_each_dur=config.dataset.num_seqC_train,
+            last_seqC_part=False,
             theta_chosen_mode="random",
             print_info=print_info,
             config_theta=config.prior,
@@ -208,8 +208,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             num_max_theta=config.dataset.num_max_theta,
             num_chosen_theta=config.dataset.num_chosen_theta,
             chosen_dur_list=config.dataset.chosen_dur_list,
-            part_each_dur=[0.1] * len(config.dataset.chosen_dur_list),
-            last_part=True,
+            num_max_seqC_each_dur=config.dataset.num_seqC_valid,
+            last_seqC_part=True,
             theta_chosen_mode="random",
             print_info=print_info,
             config_theta=config.prior,
@@ -360,6 +360,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         self._summary["learning_rates"] = []
         self._summary["validation_loss"] = []
         self._summary["epoch_durations_sec"] = []
+        self._summary["best_validation_loss"] = []
 
         # train until no validation improvement for 'patience' epochs
         train_start_time = time.time()
@@ -494,7 +495,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                 # print(valid_info)
 
             # update epoch info and counter
-            epoch_info = f"Epochs trained: {epoch:4} | loss train: {self._train_loss:.2f} | loss val: {self._valid_loss:.2f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
+            epoch_info = f"Epochs trained: {epoch:4} | loss train: {self._train_loss:.3f} | loss val: {self._valid_loss:.3f} | . Time elapsed {(time.time()-epoch_start_time)/ 60:6.2f}min, trained in total {(time.time() - train_start_time)/60:6.2f}min"
             print("".center(50, "-"))
             print(epoch_info)
             print("".center(50, "-"))
@@ -515,7 +516,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         self._summary["best_validation_loss"].append(self._best_valid_loss)
 
         # Update TensorBoard and summary dict.
-        self._summarize(round_=self._round)
+        # self._summarize(round_=self._round)
 
         del train_dataloader  # , train_dataset
         clean_cache()

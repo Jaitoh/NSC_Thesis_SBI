@@ -24,7 +24,7 @@ from utils.dataset.dataset import (
 )
 from utils.setup import clean_cache
 from utils.set_seed import setup_seed
-from train_nle.Dataset import probR_Comb_Dataset
+from train_nle.Dataset import probR_Comb_Dataset, BaseDataset
 
 
 class x1pR_theta_Dataset(probR_Comb_Dataset):
@@ -57,8 +57,8 @@ class x1pR_theta_Dataset(probR_Comb_Dataset):
         data_dir,
         num_chosen_theta=500,
         chosen_dur_list=[3, 9, 15],
-        part_each_dur=[1, 1, 1],
-        last_part=False,
+        num_max_seqC_each_dur=[1, 1, 1],
+        last_seqC_part=False,
         num_max_theta=500,
         theta_chosen_mode="random",
         print_info=False,
@@ -75,8 +75,8 @@ class x1pR_theta_Dataset(probR_Comb_Dataset):
             num_max_theta=num_max_theta,
             num_chosen_theta=num_chosen_theta,
             chosen_dur_list=chosen_dur_list,
-            part_each_dur=part_each_dur,
-            last_part=last_part,
+            num_max_seqC_each_dur=num_max_seqC_each_dur,
+            last_seqC_part=last_seqC_part,
             theta_chosen_mode=theta_chosen_mode,
             config_theta=config_theta,
         )
@@ -89,7 +89,7 @@ class x1pR_theta_Dataset(probR_Comb_Dataset):
             print("[dataset info]")
             print(f"total # samples: {self.total_samples}")
             print(f"dur of {list(chosen_dur_list)}")
-            print(f"part of {list(part_each_dur)} are chosen")
+            print(f"part of {list(num_max_seqC_each_dur)} are chosen")
 
             print("".center(50, "-"))
             print("shapes:")
@@ -124,3 +124,110 @@ class x1pR_theta_Dataset(probR_Comb_Dataset):
         theta = self.theta_all[theta_idx, :]
 
         return x, theta
+
+
+# class x1pR_theta_Dataset_Complex_Partition(BaseDataset):
+
+#     def __init__(
+#         self,
+#         data_dir,
+#         chosen_dur_list=[3, 9, 15],
+#         num_max_seqC_each_dur=[1, 1, 1],
+#         num_max_theta=500,
+#         config_theta=None,  # configurations for the theta values, norm / ignore_ss
+#         training_set=True,
+#         print_info=False,
+#     ):
+#         """
+#         training_set:
+#         True:   choose the first 90% of the seqCs, first  90% of the thetas
+#         False:  choose the first 90% of the seqCs, last   10% of the thetas &
+#                 choose the last  10% of the seqCs, first 100% of the thetas
+#         """
+
+#         super().__init__(
+#             data_dir=data_dir,
+#             chosen_dur_list=chosen_dur_list,
+#             num_max_seqC_each_dur=num_max_seqC_each_dur,
+#             num_max_theta=num_max_theta,
+#             num_chosen_theta=num_max_theta,  # choose all the theta
+#         )
+
+#     def split_data(
+#         self,
+#         training_set=True,
+#         chosen_dur_list=[3, 9, 15],
+#         config_theta=None,
+#     ):
+#         # split the data accordingly
+#         # self.seqC_all [M, S, 15]
+#         # self.probR_all [M, S, T, 1]
+#         # self.theta_all [T, 4]
+
+#         train_seqC_idx, rest_seqC_idx = self._get_train_seqC_idx()
+#         train_theta_idx, rest_theta_idx = self._get_train_theta_idx()
+
+#         if training_set:
+#             # slice the data
+#             self.seqC_all = self.seqC_all[:, train_seqC_idx, :]  # [M, S, 15]
+#             self.probR_all = self.probR_all[:, train_seqC_idx, train_theta_idx]  # [M, S, T]
+#             self.theta_all = self.theta_all[train_theta_idx, :]  # [T, 4]
+#             self.M, self.S, self.T = self.probR_all.shape
+#             self.total_samples = self.M * self.S * self.T
+
+#             # reshape the data
+#             self.seqC_all = (
+#                 torch.from_numpy(self.seqC_all)
+#                 .reshape(self.M * self.S, self.L_seqC)
+#                 .to(torch.float32)
+#                 .contiguous()
+#             )
+#             self.probR_all = (
+#                 torch.from_numpy(self.probR_all)
+#                 .reshape(self.M * self.S, self.T)
+#                 .unsqueeze(-1)
+#                 .to(torch.float32)
+#                 .contiguous()
+#             )
+#             self.theta_all = torch.from_numpy(self.theta_all).to(torch.float32).contiguous()
+#             self.theta_all = process_theta_2D(  # normalize and processing of the theta values
+#                 self.theta_all,
+#                 ignore_ss=config_theta.ignore_ss,
+#                 normalize_theta=config_theta.normalize,
+#                 unnormed_prior_min=config_theta.prior_min,
+#                 unnormed_prior_max=config_theta.prior_max,
+#             )
+
+#         else:
+#             ...
+
+#     def _get_train_seqC_idx(self):
+#         starting_seqC_idx = 0
+#         starting_seqC_idx_collection = []
+#         ending_seqC_idx_collection = []
+#         for S in self.S_each_dur:
+#             starting_seqC_idx_collection.append(starting_seqC_idx)
+#             num_seqC = np.floor(0.9 * S)
+#             ending_seqC_idx = starting_seqC_idx + num_seqC
+#             ending_seqC_idx_collection.append(ending_seqC_idx)
+#             starting_seqC_idx += S
+
+#         merged_idx = [
+#             i
+#             for start, end in zip(starting_seqC_idx_collection, ending_seqC_idx_collection)
+#             for i in range(start, end)
+#         ]
+
+#         all_seqC_idx = set(range(self.S))
+#         rest_idx = all_seqC_idx.difference(merged_idx)
+
+#         return merged_idx, rest_idx
+
+#     def _get_train_theta_idx(self):
+#         full_list = list(range(self.T))
+#         split_point = int(0.9 * self.T)
+
+#         return full_list[:split_point], full_list[split_point:]
+
+#     def __getitem__(self, idx):
+#         return super().__getitem__(idx)

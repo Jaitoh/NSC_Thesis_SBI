@@ -9,11 +9,12 @@
 
 
 # ========== parameter settings for the probR ==========
-num_max_theta      : 500
-num_chosen_theta   : 500
+num_max_theta       : 500
+num_chosen_theta    : 500
 
-chosen_dur_list    : [3]
-
+chosen_dur_list     : [3]
+num_seqC_train      : [0.9]
+num_seqC_valid      : [0.1]
 
 # ========== data loader settings ==========
 # batch_size                  : 35840 #lstm

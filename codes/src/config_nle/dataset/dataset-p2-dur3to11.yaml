@@ -12,9 +12,13 @@
 num_max_theta       : 500
 num_chosen_theta    : 500
 
-chosen_dur_list     : [3, 5, 7]
-num_seqC_train      : [0.9, 0.9, 0.9]
-num_seqC_valid      : [0.1, 0.1, 0.1]
+chosen_dur_list     : [  3,   5,   7,     9,    11]
+#                     [  9,  81, 729,  6561, 59049]
+num_seqC_train      : [0.9, 0.9, 0.7,   0.2,  0.04]
+#                     [  1,  73, 510,  1312,  2362]
+num_seqC_valid      : [0.1, 0.1,0.02, 0.005, 0.001]
+#                     [  1,   8,  15,    32,    59]
+# ! sum should be less than 1 for each column
 
 # ========== data loader settings ==========
 # batch_size                  : 35840 #lstm
