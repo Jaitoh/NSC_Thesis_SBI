@@ -1,4 +1,4 @@
-sampling_num          : 2000
+sampling_num             : 2000
 idx_theta                : 0
 
 warmup_steps             : 20
