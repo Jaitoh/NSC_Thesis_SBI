@@ -138,11 +138,12 @@ def get_observed_data(
             MS_list=config.experiment_settings.chosen_MS_list,
         )
 
-        x_obs = torch.cat([seqC, chR], dim=1).to(solver.inference._device)
+        x_obs = torch.cat([seqC[:, 1:], chR], dim=1).to(solver.inference._device)
         # shuffle along the first dimension
         x_obs = x_obs[torch.randperm(x_obs.shape[0])]
 
         fig_name = f"posterior/obs_Subject{subj_id}.png"
+        print(f"==>> x_obs.shape: {x_obs.shape}")
         print(f"==>> fig_name: {fig_name}")
 
         theta_value = None
@@ -203,7 +204,6 @@ def get_posterior(config):
     )
 
     # ========== build MCMC posterior ==========
-    p_seq, n_chR, idx_theta = get_params(config)
     mcmc_parameters = dict(
         warmup_steps=config.posterior.warmup_steps,  #!
         thin=config.posterior.thin,  #!
@@ -230,6 +230,7 @@ def get_posterior(config):
     )
 
     if from_dataset == "train" or from_dataset == "valid":
+        p_seq, n_chR, idx_theta = get_params(config)
         # run posterior and plot
         fig_x, _, samples = plot_posterior_with_label(
             posterior=posterior,

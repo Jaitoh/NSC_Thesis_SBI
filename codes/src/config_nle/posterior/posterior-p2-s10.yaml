@@ -16,4 +16,4 @@ MCMC_iid_batch_size_theta: 20
 # p_seq                    : 1
 # n_chR                    : 50
 
-xo_dataset_name          : s2 # train / valid / s1....s12
+xo_dataset_name          : s10 # train / valid / s1....s12
