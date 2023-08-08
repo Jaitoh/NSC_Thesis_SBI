@@ -61,8 +61,7 @@ class Feature_Dataset(Dataset):
         with h5py.File(data_path, "r") as f:
             # get the length of each feature type
             len_feature_each_type = [
-                f[set_names[0]][f"feature_{i}"].shape[-1]
-                for i in concatenate_feature_types
+                f[set_names[0]][f"feature_{i}"].shape[-1] for i in concatenate_feature_types
             ]
             print(f"{len_feature_each_type=}")
 
@@ -79,30 +78,27 @@ class Feature_Dataset(Dataset):
             self.x = torch.empty((n_sets, n_T, C, M, n_features))
             self.theta = torch.empty((n_sets, n_T, n_theta))
 
-            print(
-                f"loading {n_sets}sets T{(set_T_part[1]-set_T_part[0])*100:.2f}% C{C}..."
-            )
-            for idx_set, set_name in tqdm(
-                enumerate(set_names), total=n_sets, miniters=n_sets // 5
-            ):
+            print(f"loading {n_sets}sets T{(set_T_part[1]-set_T_part[0])*100:.2f}% C{C}...")
+            for idx_set, set_name in tqdm(enumerate(set_names), total=n_sets, miniters=n_sets // 5):
                 # for each selected set
                 # extract feature of partial T from range_T[0] to range_T[1]
                 # concatenate selected different features along the last dimension
-                chosen_feature_data = [
-                    torch.from_numpy(
-                        f[set_name][f"feature_{i}"][
-                            range_T[0] : range_T[1], :partial_C, :, :
-                        ]
+                chosen_feature_data = []
+                for i in concatenate_feature_types:
+                    feature_data = torch.from_numpy(
+                        f[set_name][f"feature_{i}"][range_T[0] : range_T[1], :partial_C, :, :]
                     )
-                    for i in concatenate_feature_types
-                ]
+                    if i == 5:
+                        # mapping the value from -1 to 1 to 0 to 1
+                        feature_data = (feature_data + 1) / 2
+
+                    chosen_feature_data.append(feature_data)
+
                 concatenated_features = torch.cat(chosen_feature_data, dim=-1)
                 self.x[idx_set] = concatenated_features
 
                 # extract theta of partial T from range_T[0] to range_T[1]
-                self.theta[idx_set] = torch.from_numpy(
-                    f[set_name]["theta"][range_T[0] : range_T[1], :]
-                )
+                self.theta[idx_set] = torch.from_numpy(f[set_name]["theta"][range_T[0] : range_T[1], :])
         if ignore_ss:
             self.theta = torch.cat((self.theta[:, :, :1], self.theta[:, :, 3:]), dim=-1)
 
@@ -118,15 +114,11 @@ class Feature_Dataset(Dataset):
         else:
             self.x = self.x.transpose(-1, -2)  # (n_sets, n_T, C, n_features, M)
 
-        print(
-            f"dataset info: ==> {self.total_samples=} => {self.x.shape=} {self.theta.shape=}"
-        )
+        print(f"dataset info: ==> {self.total_samples=} => {self.x.shape=} {self.theta.shape=}")
 
         # get the idxs for each sample
         indices = torch.arange(self.total_samples)
-        self.set_idxs, self.T_idxs, self.C_idxs = unravel_index(
-            indices, (n_sets, n_T, C)
-        )
+        self.set_idxs, self.T_idxs, self.C_idxs = unravel_index(indices, (n_sets, n_T, C))
 
     def __len__(self):
         return self.total_samples
@@ -138,9 +130,7 @@ class Feature_Dataset(Dataset):
 
 def main(concatenate_feature_types=[3], num_train_sets=90):
     data_path = "/mnt/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-    data_path = (
-        "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-    )
+    data_path = "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     data_path = "/home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
     f = h5py.File(data_path, "r")
     sets = list(f.keys())
@@ -237,9 +227,7 @@ if __name__ == "__main__":
     concatenate_feature_types = [3, 4]
     _, _ = main(concatenate_feature_types=concatenate_feature_types)
     concatenate_feature_types = [1, 2, 3, 4, 5]
-    Feature, _ = main(
-        concatenate_feature_types=concatenate_feature_types, num_train_sets=45
-    )
+    Feature, _ = main(concatenate_feature_types=concatenate_feature_types, num_train_sets=45)
 
     Feature.theta.shape
     # plot the distribution of theta

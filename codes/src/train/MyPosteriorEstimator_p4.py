@@ -491,13 +491,14 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             for fig_idx in range(num_data):
                 print(f"{fig_idx}/{num_data-1}", end=" ")
                 # plot posterior - seen data
-                fig_x, _ = plot_posterior_with_label(
+                fig_x, _, _ = plot_posterior_with_label(
                     posterior=posterior,
                     sample_num=config.train.posterior.sampling_num,
                     x=self.seen_data_for_posterior["x"][fig_idx].to(self._device),
                     true_params=self.seen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
                     prior_labels=prior_labels,
+                    show_progress_bars=False,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
@@ -508,13 +509,14 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                 clean_cache()
 
                 # plot posterior - unseen data
-                fig_x_val, _ = plot_posterior_with_label(
+                fig_x_val, _, _ = plot_posterior_with_label(
                     posterior=posterior,
                     sample_num=config.train.posterior.sampling_num,
                     x=self.unseen_data_for_posterior["x"][fig_idx].to(self._device),
                     true_params=self.unseen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
                     prior_labels=prior_labels,
+                    show_progress_bars=False,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
@@ -553,31 +555,9 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
         ax0.set_title("training curve")
 
         ax1 = axes[1]
-        ax1.plot(
-            train_log_probs,
-            ".-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax1.plot(
-            valid_log_probs,
-            ".-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
-        ax1.plot(
-            best_valid_log_prob_epoch,
-            best_valid_log_prob,
-            "v",
-            color="red",
-            lw=2,
-        )
+        ax1.plot(train_log_probs, ".-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax1.plot(valid_log_probs, ".-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
+        ax1.plot(best_valid_log_prob_epoch, best_valid_log_prob, "v", color="red", lw=2)
         ax1.text(best_valid_log_prob_epoch, best_valid_log_prob, f"{best_valid_log_prob:.2f}", color="red", fontsize=10, ha="center", va="bottom")  # type: ignore
         # ax1.set_ylim(log_probs_lower_bound, max(valid_log_probs)+0.2)
 
@@ -597,24 +577,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         ax3 = axes[2]
 
-        ax3.plot(
-            train_log_probs,
-            "o-",
-            label="training",
-            alpha=0.8,
-            lw=2,
-            color="tab:blue",
-            ms=0.1,
-        )
-        ax3.plot(
-            valid_log_probs,
-            "o-",
-            label="validation",
-            alpha=0.8,
-            lw=2,
-            color="tab:orange",
-            ms=0.1,
-        )
+        ax3.plot(train_log_probs, "o-", label="training", alpha=0.8, lw=2, color="tab:blue", ms=0.1)
+        ax3.plot(valid_log_probs, "o-", label="validation", alpha=0.8, lw=2, color="tab:orange", ms=0.1)
 
         all_probs = np.concatenate([train_log_probs, valid_log_probs])
         upper = np.max(all_probs)
