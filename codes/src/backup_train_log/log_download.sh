@@ -36,6 +36,23 @@ FILE_ID=12MMpnNYByUDU6XWjcDFM1_GWsRnyCcD7
 # EXP_ID=L0-nle-cnn-dur7-offline_acc
 # FILE_ID=1pd8OnzUk_rSXjxr1PGa4qo5HT3fhPK2m
 
+# ===== train_nle p2 =====
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3
+# FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
+
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3to7-old
+# FILE_ID=1xmXjzgAZ3t9BeaKdBTG83j_MuVYgEi3a (t1 old version)
+
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3to7
+# FILE_ID=1JUG1BFCZbtZ5T_yf1scPNnYM4JIKd5rg
+
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3to11
+# FILE_ID=1GAO0HS3tnh3ytZHVZKFUevHEGhsOTcvw
+
 LOG_DIR="$HOME/tmp/NSC/codes/src/${Pipeline}/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
 

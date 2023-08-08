@@ -28,10 +28,10 @@ TRAIN_ID=L0-nle-p2-cnn
 folder_id=1wJE5wfoMCi-hUZAGNsiIE4QLFsVCIqsu # logs gdrive folder id
 
 # "L0-nle-p2-cnn-dur3"
+# "L0-nle-p2-cnn-dur3to7"
 EXP_IDS=(
-    "L0-nle-p2-cnn-dur3to7-old"
+    "L0-nle-p2-cnn-dur3to11"
 )
-# "L0-nle-p2-cnn-dur3to11"
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"
