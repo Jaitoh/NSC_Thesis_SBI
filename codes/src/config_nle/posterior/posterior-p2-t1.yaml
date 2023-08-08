@@ -1,0 +1,30 @@
+sampling_num          : 2000
+
+MCMC_iid_batch_size_x    : -1
+MCMC_iid_batch_size_theta: 1000
+
+idx_theta                : 0
+
+# xo_dataset_name          : train # train / valid / s1....s12 
+# p_seq                    : 0.1
+# n_chR                    : 50
+
+xo_dataset_name          : train # train / valid / s1....s12 
+p_seq                    : 0.1
+n_chR                    : 100
+
+# xo_dataset_name          : train # train / valid / s1....s12 
+# p_seq                    : 1
+# n_chR                    : 100
+
+
+# xo_dataset_name          : valid # train / valid / s1....s12 
+# n_seq                    : 1
+
+# xo_dataset_name          : valid # train / valid / s1....s12 
+# n_seq                    : 1
+
+# xo_dataset_name          : valid # train / valid / s1....s12 
+# n_seq                    : 3
+
+# xo_dataset_name          : s2 # train / valid / s1....s12 

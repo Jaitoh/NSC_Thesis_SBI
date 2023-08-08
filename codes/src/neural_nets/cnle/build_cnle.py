@@ -232,10 +232,7 @@ class ConditionedDensityEstimator(nn.Module):
         else:
             x_chunks = torch.split(x, self.iid_batch_size_x)
 
-        if (
-            self.iid_batch_size_theta == -1
-            or theta.shape[0] <= self.iid_batch_size_theta
-        ):
+        if self.iid_batch_size_theta == -1 or theta.shape[0] <= self.iid_batch_size_theta:
             theta_chunks = [theta]
         else:
             theta_chunks = torch.split(theta, self.iid_batch_size_theta)

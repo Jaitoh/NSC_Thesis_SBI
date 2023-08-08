@@ -11,9 +11,9 @@ EXP_IDS=(
 )
 # "p5a-conv_net-Tv2-tmp"
 
-# Pipeline=train_nle
-# TRAIN_ID=L0-nle-cnn
-# folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs folder id
+Pipeline=train_nle
+TRAIN_ID=L0-nle-cnn
+folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs gdrive folder id
 
 # "L0-nle-cnn-dur3-online"
 # "L0-nle-cnn-dur3-offline"
@@ -22,6 +22,16 @@ EXP_IDS=(
 #     "p5a-conv_net-old_net"
 #     "p5a-conv_net-Tv2-old_net"
 # )
+
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p2-cnn
+folder_id=1wJE5wfoMCi-hUZAGNsiIE4QLFsVCIqsu # logs gdrive folder id
+
+# "L0-nle-p2-cnn-dur3"
+EXP_IDS=(
+    "L0-nle-p2-cnn-dur3to7-old"
+)
+# "L0-nle-p2-cnn-dur3to11"
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"
@@ -35,7 +45,7 @@ if [ ${DO_ZIP} -eq 1 ]; then
             echo "Error: ${EXP_DIR} does not exist"
             exit 1
         fi
-        cp ./${EXP_ID}.log ${EXP_DIR}/
+        # cp ./${EXP_ID}.log ${EXP_DIR}/
         tar -zcf ${EXP_DIR}.tar.gz ${EXP_DIR}
     done
 fi

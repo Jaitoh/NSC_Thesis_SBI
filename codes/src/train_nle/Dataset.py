@@ -24,6 +24,7 @@ from utils.dataset.dataset import (
 )
 from utils.setup import clean_cache
 from utils.set_seed import setup_seed
+from utils.dataset.dataset import pR2cR_acc
 
 
 class BaseDataset(Dataset):
@@ -303,17 +304,19 @@ class chR_Comb_Dataset(probR_Comb_Dataset):
             # del self.probR_all
             # clean_cache()
 
+            self.chR_all = pR2cR_acc(self.probR_all, self.C)
+
             # Compute number of ones needed for each position (MS, T, 1)
-            num_ones = torch.round(self.probR_all * self.C)
+            # num_ones = torch.round(self.probR_all * self.C)
 
-            # Generate a range tensor of size C (C,)
-            range_tensor = torch.arange(self.C).to(self.probR_all.device)
+            # # Generate a range tensor of size C (C,)
+            # range_tensor = torch.arange(self.C).to(self.probR_all.device)
 
-            # Compare the range tensor with num_ones to generate a binary mask (broadcasting) (MS, T, C)
-            indices = range_tensor < num_ones
+            # # Compare the range tensor with num_ones to generate a binary mask (broadcasting) (MS, T, C)
+            # indices = range_tensor < num_ones
 
-            # Generate result tensor (MS, T, C, 1)
-            self.chR_all = indices.float().unsqueeze(-1)
+            # # Generate result tensor (MS, T, C, 1)
+            # self.chR_all = indices.float().unsqueeze(-1)
 
             del self.probR_all
             clean_cache()

@@ -23,7 +23,7 @@ from utils.train import (
     plot_posterior_unseen,
     load_net,
 )
-from parse_data.parse_trial_data import get_xo
+from utils.subject import get_xo
 
 
 # prepare data for posterior
@@ -54,18 +54,14 @@ def get_observed_data(idx_theta, config, solver, train_data, valid_data, from_da
     if from_dataset == "train":
         n_seq = config.posterior.n_seq
         n_chR = config.posterior.n_chR
-        x_obs = (
-            train_data[:n_seq][:n_chR, :].reshape(-1, 15).to(solver.inference._device)
-        )
+        x_obs = train_data[:n_seq][:n_chR, :].reshape(-1, 15).to(solver.inference._device)
         fig_name = f"posterior_theta{idx_theta}_obs_Train_seq{n_seq}_chR_{n_chR}.png"
         print(f"==>> fig_name: {fig_name}")
 
     elif from_dataset == "valid":
         n_seq = config.posterior.n_seq
         n_chR = config.posterior.n_chR
-        x_obs = (
-            valid_data[:n_seq][:n_chR, :].reshape(-1, 15).to(solver.inference._device)
-        )
+        x_obs = valid_data[:n_seq][:n_chR, :].reshape(-1, 15).to(solver.inference._device)
         fig_name = f"posterior_theta{idx_theta}_obs_Valid_seq{n_seq}_chR_{n_chR}.png"
         print(f"==>> fig_name: {fig_name}")
 

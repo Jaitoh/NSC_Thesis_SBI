@@ -168,7 +168,14 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         return self
 
-    def prepare_dataset_network(self, config, continue_from_checkpoint=None, device="cuda", print_info=True):
+    def prepare_dataset_network(
+        self,
+        config,
+        continue_from_checkpoint=None,
+        device="cuda",
+        print_info=True,
+        inference_mode=False,
+    ):
         # prepare train, val dataset and dataloader
         print("".center(50, "="))
         print("prepare train, val dataset and dataloader")
@@ -253,6 +260,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         # initialize the network
         if self._neural_net is None:
             # Use only training data for building the neural net (z-scoring transforms)
+            if inference_mode:  # remove the last pR from x
+                x_train_batch = x_train_batch[:, :-1]
             self._neural_net = self._build_neural_net(
                 theta_train_batch[:3].to("cpu"),
                 x_train_batch[:3].to("cpu"),
@@ -265,7 +274,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             # load network from state dict if specified
             if continue_from_checkpoint != None and continue_from_checkpoint != "":
                 self._neural_net = load_net(
-                    Path(continue_from_checkpoint).expanduser(),
+                    adapt_path(continue_from_checkpoint),
                     self._neural_net,
                     device=device,
                 )

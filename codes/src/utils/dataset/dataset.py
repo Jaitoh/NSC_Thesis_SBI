@@ -2,6 +2,34 @@ import numpy as np
 import torch
 
 
+def pR2cR_acc(pR, C):
+    """
+    expand probR to chR with C sampling numbers
+    pR should be tensor, dim > 1 for broadcasting purpose
+
+    probR can be of shape [MS, T, 1] or [..., 1]
+    resulting chR will be of shape [MS, T, C, 1] or [..., C, 1]
+    """
+
+    # convert pR to tensor if not
+    if not isinstance(pR, torch.Tensor):
+        pR = torch.tensor(pR)
+    assert pR.ndim > 1, f"pR should have dim > 1, but has {pR.ndim}."
+
+    num_ones = torch.round(pR * C)  # [MS, T, 1]
+
+    # Generate a range tensor of size n_chR (n_chR,)
+    range_tensor = torch.arange(C).to(pR.device)  # [n_chR]
+
+    # Compare the range tensor with num_ones to generate a binary mask (broadcasting) (MS, T, C)
+    indices = range_tensor < num_ones  # [MS, T, C]
+
+    # Generate result tensor (MS, T, C, 1)
+    cR = indices.float().unsqueeze(-1)
+
+    return cR
+
+
 def separate_x(x):
     """Returns the seqC and chR part of the given x.
 
