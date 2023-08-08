@@ -12,12 +12,16 @@ CONFIG_PRIOR=prior-v2-0
 RUN_ID=p4a-4Fs-cnn-Tv2-1-noZ
 CONFIG_PRIOR=prior-v2-1
 
-CONFIG_DATASET=dataset-p4-4Fs-size0
+RUN_ID=p4a-F1345-cnn
+CONFIG_PRIOR=prior-3
+
+CONFIG_DATASET=dataset-p4-F1345-size0
 CONFIG_TRAIN=train-p4-cnn-mdn
 
 TRAIN_FILE_NAME=train_L0_p4a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-98sets-T500v2-C100.h5"
+# DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-98sets-T500v2-C100.h5"
+DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0

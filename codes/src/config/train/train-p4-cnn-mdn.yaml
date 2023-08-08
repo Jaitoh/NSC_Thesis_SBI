@@ -16,9 +16,9 @@ training:
   clip_max_norm         : 1e-5
   weight_decay          : 1e-9
   
-  stop_after_epochs     : 100
+  stop_after_epochs     : 1000
 
-  min_num_epochs        : 100
+  min_num_epochs        : 5000
   max_num_epochs        : 2147483647
   
   warmup_epochs         : 5
