@@ -6,12 +6,6 @@ source activate sbi
 
 ROOT_DIR=~/tmp/NSC
 
-RUN_ID=p4a-4Fs-cnn-Tv2-0-noZ
-CONFIG_PRIOR=prior-v2-0
-
-RUN_ID=p4a-4Fs-cnn-Tv2-1-noZ
-CONFIG_PRIOR=prior-v2-1
-
 RUN_ID=p4a-F1345-cnn
 CONFIG_PRIOR=prior-3
 

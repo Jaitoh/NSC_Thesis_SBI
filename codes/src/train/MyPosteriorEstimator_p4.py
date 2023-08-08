@@ -498,6 +498,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                     true_params=self.seen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
                     prior_labels=prior_labels,
+                    show_progress_bars=False,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_seen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
@@ -515,6 +516,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
                     true_params=self.unseen_data_for_posterior["theta"][fig_idx],
                     limits=limits,
                     prior_labels=prior_labels,
+                    show_progress_bars=False,
                 )
                 fig_path = f"{self.log_dir}/posterior/figures/posterior_unseen_{fig_idx}_epoch_{epoch}.png"
                 plt.savefig(fig_path)
