@@ -37,9 +37,10 @@ FILE_ID=12MMpnNYByUDU6XWjcDFM1_GWsRnyCcD7
 # FILE_ID=1pd8OnzUk_rSXjxr1PGa4qo5HT3fhPK2m
 
 # ===== train_nle p2 =====
-# TRAIN_ID=L0-nle-p2-cnn
-# EXP_ID=L0-nle-p2-cnn-dur3
-# FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p2-cnn
+EXP_ID=L0-nle-p2-cnn-dur3
+FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
 
 # TRAIN_ID=L0-nle-p2-cnn
 # EXP_ID=L0-nle-p2-cnn-dur3to7-old
@@ -66,8 +67,8 @@ tar -xzf ${EXP_ID}.tar.gz
 echo "finished tar"
 
 # move to current directory
-# MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
-MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
+MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
+# MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 mv .${MACHINE_LOG_DIR}/${TRAIN_ID}/${EXP_ID} ./${EXP_ID}
 rm -r ./home
 rm ${EXP_ID}.tar.gz
