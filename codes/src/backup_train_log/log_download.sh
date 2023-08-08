@@ -41,18 +41,22 @@ Pipeline=train_nle
 TRAIN_ID=L0-nle-p2-cnn
 EXP_ID=L0-nle-p2-cnn-dur3
 FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
+MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
 # TRAIN_ID=L0-nle-p2-cnn
 # EXP_ID=L0-nle-p2-cnn-dur3to7-old
 # FILE_ID=1xmXjzgAZ3t9BeaKdBTG83j_MuVYgEi3a (t1 old version)
+# MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
-TRAIN_ID=L0-nle-p2-cnn
-EXP_ID=L0-nle-p2-cnn-dur3to7
-FILE_ID=1JUG1BFCZbtZ5T_yf1scPNnYM4JIKd5rg
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3to7
+# FILE_ID=1JUG1BFCZbtZ5T_yf1scPNnYM4JIKd5rg
+# MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
-TRAIN_ID=L0-nle-p2-cnn
-EXP_ID=L0-nle-p2-cnn-dur3to11
-FILE_ID=1GAO0HS3tnh3ytZHVZKFUevHEGhsOTcvw
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3to11
+# FILE_ID=1GAO0HS3tnh3ytZHVZKFUevHEGhsOTcvw
+# MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs"   # !
 
 LOG_DIR="$HOME/tmp/NSC/codes/src/${Pipeline}/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
@@ -67,8 +71,6 @@ tar -xzf ${EXP_ID}.tar.gz
 echo "finished tar"
 
 # move to current directory
-MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
-MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs"   # !
 mv .${MACHINE_LOG_DIR}/${TRAIN_ID}/${EXP_ID} ./${EXP_ID}
 rm -r ./home
 rm ${EXP_ID}.tar.gz

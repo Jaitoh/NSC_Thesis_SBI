@@ -31,6 +31,7 @@ CONFIG_DATASET=dataset-p2-dur3
 CONFIG_TRAIN=train-nle-cnn
 CONFIG_POST=posterior-p2-t0 #snn-0
 CONFIG_POST=posterior-p2-t1 #t4-1
+CONFIG_POST=posterior-p2-t2 #t4-2
 
 DATA_PATH=${ROOT_DIR}/data/dataset-comb
 CONFIG_SIMULATOR=model-0
