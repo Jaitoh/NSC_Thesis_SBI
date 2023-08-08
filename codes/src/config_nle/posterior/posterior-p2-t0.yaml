@@ -10,7 +10,7 @@ MCMC_iid_batch_size_theta: 1000
 
 xo_dataset_name          : train # train / valid / s1....s12 
 p_seq                    : 0.1
-n_chR                    : 3
+n_chR                    : 20
 
 # xo_dataset_name          : train # train / valid / s1....s12 
 # p_seq                    : 0.1
