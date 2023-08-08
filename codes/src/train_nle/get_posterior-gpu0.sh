@@ -39,7 +39,7 @@ EXP_ID=L0-nle-p2-cnn-dur3to11
 CONFIG_DATASET=dataset-p2-dur3to11
 CONFIG_TRAIN=train-nle-cnn
 CONFIG_POST=posterior-p2-t0 #t4-1
-# CONFIG_POST=posterior-p2-t1 #
+CONFIG_POST=posterior-p2-t1 #t4-2
 # CONFIG_POST=posterior-p2-t2 #
 # CONFIG_POST=posterior-p2-t3 #
 
