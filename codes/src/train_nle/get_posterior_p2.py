@@ -90,6 +90,8 @@ def get_observed_data(
             n_chR=n_chR,
         )
         x_obs = train_data.reshape(-1, train_data.shape[-1]).to(solver.inference._device)
+        # shuffle along the first dimension
+        x_obs = x_obs[torch.randperm(x_obs.shape[0])]
 
         fig_name = f"posterior/obs_Train_theta{idx_theta}_pseq{p_seq}_nchR_{n_chR}.png"
 
@@ -111,6 +113,8 @@ def get_observed_data(
             n_chR=n_chR,
         )
         x_obs = valid_data.reshape(-1, valid_data.shape[-1]).to(solver.inference._device)
+        # shuffle along the first dimension
+        x_obs = x_obs[torch.randperm(x_obs.shape[0])]
 
         fig_name = f"posterior/obs_Valid_theta{idx_theta}_pseq{p_seq}_nchR_{n_chR}.png"
 
@@ -135,6 +139,9 @@ def get_observed_data(
         )
 
         x_obs = torch.cat([seqC, chR], dim=1).to(solver.inference._device)
+        # shuffle along the first dimension
+        x_obs = x_obs[torch.randperm(x_obs.shape[0])]
+
         fig_name = f"posterior/obs_Subject{subj_id}.png"
         print(f"==>> fig_name: {fig_name}")
 
