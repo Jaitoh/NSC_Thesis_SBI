@@ -7,13 +7,13 @@ folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 
 # "p5a-conv_net"
 EXP_IDS=(
-    "p5a-conv_net-Tv2"
+    "p5a-conv_lstm-tmp"
 )
 # "p5a-conv_net-Tv2-tmp"
 
-Pipeline=train_nle
-TRAIN_ID=L0-nle-cnn
-folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs gdrive folder id
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-cnn
+# folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs gdrive folder id
 
 # "L0-nle-cnn-dur3-online"
 # "L0-nle-cnn-dur3-offline"
@@ -23,15 +23,15 @@ folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs gdrive folder id
 #     "p5a-conv_net-Tv2-old_net"
 # )
 
-Pipeline=train_nle
-TRAIN_ID=L0-nle-p2-cnn
-folder_id=1wJE5wfoMCi-hUZAGNsiIE4QLFsVCIqsu # logs gdrive folder id
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-p2-cnn
+# folder_id=1wJE5wfoMCi-hUZAGNsiIE4QLFsVCIqsu # logs gdrive folder id
 
 # "L0-nle-p2-cnn-dur3"
 # "L0-nle-p2-cnn-dur3to7"
-EXP_IDS=(
-    "L0-nle-p2-cnn-dur3to11"
-)
+# EXP_IDS=(
+#     "L0-nle-p2-cnn-dur3to11"
+# )
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"

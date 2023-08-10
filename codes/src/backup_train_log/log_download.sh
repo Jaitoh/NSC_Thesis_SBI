@@ -14,6 +14,9 @@ FILE_ID=1tVreiCIajqnBoo2M1_PuSRRCslaR3otb
 EXP_ID=p5a-conv_net-Tv2
 FILE_ID=12MMpnNYByUDU6XWjcDFM1_GWsRnyCcD7
 
+EXP_ID=p5a-conv_lstm-tmp
+FILE_ID=1gf2VXQRQH_teEqGIW7-CJ7rRQYyf5_9l
+
 # ===== train_nle =====
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn

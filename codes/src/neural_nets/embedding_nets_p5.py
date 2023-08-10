@@ -12,6 +12,7 @@ from utils.train import kaiming_weight_initialization
 class Conv_Transformer(nn.Module):
     def __init__(self, DMS, nhead=8, num_encoder_layers=6):
         super(Conv_Transformer, self).__init__()
+        # TODO: add relu
 
         self.conv1 = nn.Conv1d(in_channels=DMS, out_channels=1024, kernel_size=3, padding=1)
         self.conv2 = nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=3, padding=1)
@@ -80,6 +81,8 @@ class Conv_LSTM(nn.Module):
         self.fc_out1 = nn.Linear(512, 512)
         self.fc_out2 = nn.Linear(512, 256)
 
+        self.activation = nn.ReLU()
+
         kaiming_weight_initialization(self.named_parameters())
 
     def forward(self, x):
@@ -87,8 +90,8 @@ class Conv_LSTM(nn.Module):
         seqC = x[..., 1:-1]  # (B, DMS, L) !removed the first signal
         chR = x[..., -1].unsqueeze(-1)  # (B, DMS, 1)
 
-        seqC = self.conv1(seqC)  # (B, 1024, L)
-        seqC = self.conv2(seqC)  # (B, 512, L)
+        seqC = self.activation(self.conv1(seqC))  # (B, 1024, L)
+        seqC = self.activation(self.conv2(seqC))  # (B, 512, L)
 
         seqC = seqC.permute(0, 2, 1)  # (B, L, 512)
         seqC, _ = self.lstm1(seqC)  # (B, L, 1024)
@@ -96,20 +99,20 @@ class Conv_LSTM(nn.Module):
 
         seqC = seqC[:, -1, :]  # (B, 512)
 
-        seqC = self.fc1(seqC)  # (B, 512)
-        seqC = self.fc2(seqC)  # (B, 256)
+        seqC = self.activation(self.fc1(seqC))  # (B, 512)
+        seqC = self.activation(self.fc2(seqC))  # (B, 256)
 
-        chR = self.chR_conv1(chR)  # (B, 1024, 1)
-        chR = self.chR_conv2(chR)  # (B, 512, 1)
+        chR = self.activation(self.chR_conv1(chR))  # (B, 1024, 1)
+        chR = self.activation(self.chR_conv2(chR))  # (B, 512, 1)
 
         chR = chR.squeeze(-1)  # (B, 512)
-        chR = self.chR_fc_1(chR)  # (B, 512)
-        chR = self.chR_fc_2(chR)  # (B, 256)
+        chR = self.activation(self.chR_fc_1(chR))  # (B, 512)
+        chR = self.activation(self.chR_fc_2(chR))  # (B, 256)
 
         out = torch.cat((seqC, chR), dim=1)  # (B, 512)
 
-        out = self.fc_out1(out)  # (B, 512)
-        out = self.fc_out2(out)  # (B, 256)
+        out = self.activation(self.fc_out1(out))  # (B, 512)
+        out = self.activation(self.fc_out2(out))  # (B, 256)
 
         return out
 

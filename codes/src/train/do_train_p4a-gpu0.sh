@@ -7,9 +7,12 @@ source activate sbi
 ROOT_DIR=~/tmp/NSC
 
 RUN_ID=p4a-F1345-cnn
-CONFIG_PRIOR=prior-3
-
 CONFIG_DATASET=dataset-p4-F1345-size0
+
+RUN_ID=p4a-F134-cnn
+CONFIG_DATASET=dataset-p4-F134-size0
+
+CONFIG_PRIOR=prior-3
 CONFIG_TRAIN=train-p4-cnn-mdn
 
 TRAIN_FILE_NAME=train_L0_p4a
