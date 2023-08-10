@@ -38,10 +38,28 @@ RUN_ID=L0-nle-p2-cnn
 EXP_ID=L0-nle-p2-cnn-dur3to11
 CONFIG_DATASET=dataset-p2-dur3to11
 CONFIG_TRAIN=train-nle-cnn
-CONFIG_POST=posterior-p2-t0 #t4-1
-# CONFIG_POST=posterior-p2-t1 #
-# CONFIG_POST=posterior-p2-t2 #
-# CONFIG_POST=posterior-p2-t3 #
+# CONFIG_POST=posterior-p2-s1 #t4-1
+# CONFIG_POST=posterior-p2-s2 #t4-1
+# CONFIG_POST=posterior-p2-s3 #t4-1
+# CONFIG_POST=posterior-p2-s4 #t4-1
+# CONFIG_POST=posterior-p2-s5 #t4-1
+# CONFIG_POST=posterior-p2-s6 #t4-1
+# CONFIG_POST=posterior-p2-s7 #t4-1
+# CONFIG_POST=posterior-p2-s8 #t4-1
+# CONFIG_POST=posterior-p2-s9 #t4-2
+# CONFIG_POST=posterior-p2-s10 #t4-2
+# CONFIG_POST=posterior-p2-s11 #t4-2
+# CONFIG_POST=posterior-p2-s12 #t4-2
+
+# CONFIG_POST=posterior-p2-v0 #t4-1
+# CONFIG_POST=posterior-p2-v1 #t4-1
+# CONFIG_POST=posterior-p2-v2 #t4-1
+
+# CONFIG_POST=posterior-p2-t0 #t4-1
+# CONFIG_POST=posterior-p2-t1 #t4-2
+
+# CONFIG_POST=posterior-p2-t2 #t4-2
+# CONFIG_POST=posterior-p2-t3 #t4-2
 
 DATA_PATH=${ROOT_DIR}/data/dataset-comb
 CONFIG_SIMULATOR=model-0

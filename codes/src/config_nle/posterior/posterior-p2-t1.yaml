@@ -3,10 +3,10 @@ idx_theta                : 0
 
 warmup_steps             : 20
 thin                     : 1
-num_chains               : 7
-num_workers              : 7
+num_chains               : 4
+num_workers              : 2
 MCMC_iid_batch_size_x    : -1
-MCMC_iid_batch_size_theta: 1000
+MCMC_iid_batch_size_theta: 8
 
 xo_dataset_name          : train # train / valid / s1....s12 
 p_seq                    : 0.1
