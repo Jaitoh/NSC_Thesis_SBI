@@ -11,6 +11,14 @@ EXP_IDS=(
 )
 # "p5a-conv_net-Tv2-tmp"
 
+Pipeline=train # npe
+TRAIN_ID=train_L0_p4a
+folder_id=1SiXpFibwBr9OXA6Oi7tdj4PaX_UcgCbg
+
+EXP_IDS=(
+    "p4a-F1345-cnn-tmp"
+)
+
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn
 # folder_id=186igxRFGFbwz23Z3KAu_EQr-rl3Syz0g # logs gdrive folder id
