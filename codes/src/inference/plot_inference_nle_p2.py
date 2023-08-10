@@ -1,5 +1,7 @@
 # %%
 import numpy as np
+import yaml
+import torch
 import pickle
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -10,7 +12,7 @@ sys.path.append(f"{NSC_DIR}/codes/src")
 
 from utils.setup import adapt_path
 from utils.subject import decode_mat_fitted_parameters, get_fitted_param_L0
-
+from utils.inference import estimate_theta_from_post_samples, convert_normed_theta
 import matplotlib as mpl
 
 # remove top and right axis from plots
@@ -33,17 +35,16 @@ mpl.rcParams["legend.title_fontsize"] = 16
 mpl.rcParams["legend.frameon"] = False
 # set legend font to not bold
 
+# %%
+
 
 # %%
 # exps = ["train_L0_p5a/p5a-conv_lstm"]
-train_folder = "train"
-train_folder = "train_nle"
-# exps = ["train_L0_p5a/p5a-conv_net"]
-exps = ["L0-nle-p2-cnn/L0-nle-p2-cnn-dur3to11-post"]
+exps = ["train_L0_p5a/p5a-conv_net"]
 
 bias_s, sigma2a_s, sigma2s_s, L0_s = [], [], [], []
 for exp in exps:
-    inf_result_path = f"~/tmp/NSC/codes/src/{train_folder}/logs/{exp}/inference/subj_thetas.pkl"
+    inf_result_path = f"~/tmp/NSC/codes/src/train/logs/{exp}/inference/subj_thetas.pkl"
     # load pkl
     with open(adapt_path(inf_result_path), "rb") as f:
         inf_result = pickle.load(f)

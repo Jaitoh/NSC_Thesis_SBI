@@ -16,7 +16,7 @@ FILE_ID=12MMpnNYByUDU6XWjcDFM1_GWsRnyCcD7
 
 EXP_ID=p5a-conv_lstm-tmp
 FILE_ID=1gf2VXQRQH_teEqGIW7-CJ7rRQYyf5_9l
-
+MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # ===== train_nle =====
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn
@@ -40,11 +40,11 @@ FILE_ID=1gf2VXQRQH_teEqGIW7-CJ7rRQYyf5_9l
 # FILE_ID=1pd8OnzUk_rSXjxr1PGa4qo5HT3fhPK2m
 
 # ===== train_nle p2 =====
-Pipeline=train_nle
-TRAIN_ID=L0-nle-p2-cnn
-EXP_ID=L0-nle-p2-cnn-dur3
-FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
-MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3
+# FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
+# MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
 # TRAIN_ID=L0-nle-p2-cnn
 # EXP_ID=L0-nle-p2-cnn-dur3to7-old

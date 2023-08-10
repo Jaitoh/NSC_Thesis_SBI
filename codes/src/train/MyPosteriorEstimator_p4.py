@@ -84,10 +84,10 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
 
         # get the original prior min and max for normalization
         _, _, unnormed_prior_min, unnormed_prior_max = update_prior_min_max(
-            prior_min=self.config.prior.prior_min,
-            prior_max=self.config.prior.prior_max,
-            ignore_ss=self.config.prior.ignore_ss,
-            normalize=self.config.prior.normalize,
+            prior_min=config.prior.prior_min,
+            prior_max=config.prior.prior_max,
+            ignore_ss=config.prior.ignore_ss,
+            normalize=config.prior.normalize,
         )
 
         print("[training] sets", end=" ")

@@ -24,43 +24,16 @@ from utils.train import plot_posterior_unseen
 from utils.setup import adapt_path
 
 
-def estimate_theta_for_usr_npe(subj_ID, exp_dir, pipeline_version="p4a"):
+def estimate_theta_for_usr_npe(subj_ID, exp_dir):
     # load config
     config, model_path = load_stored_config(exp_dir=exp_dir)
-    if "p4" in pipeline_version:
-        from train.train_L0_p4a import Solver
-    if "p5" in pipeline_version:
-        from train.train_L0_p5a import Solver
+    subj_post_samples_path = f"{exp_dir}/posterior/samples_obs_Subject{subj_ID}.pt"
 
-    # load trained posterior model
-    solver, posterior = get_posterior(
-        model_path=model_path,
-        config=config,
-        device="cuda",
-        Solver=Solver,
-        low_batch=10,
-    )
+    prior_min = config.prior.prior_min
+    prior_max = config.prior.prior_max
+    prior_limits = [[x, y] for x, y in zip(prior_min, prior_max)]
 
-    # load and process trial data
-    data_path = Path(NSC_DIR) / "data/trials.mat"
-    seqC, chR = get_xo(
-        data_path,
-        subj_ID=subj_ID,
-        dur_list=config.dataset.chosen_dur_list,
-        MS_list=[0.2, 0.4, 0.8],
-    )
-    xo = torch.cat((seqC, chR), dim=1).float().to("cuda")
-
-    # inference with trial data
-    prior_limits = solver._get_limits()
-    fig, axes, samples = plot_posterior_unseen(
-        posterior=posterior,
-        sample_num=2000,
-        x=xo,
-        limits=prior_limits,
-        prior_labels=config.prior.prior_labels,
-        show_progress_bars=True,
-    )
+    samples = torch.load(subj_post_samples_path)
 
     # estimate with posterior samples
     theta_estimated_normed = estimate_theta_from_post_samples(
@@ -88,20 +61,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_dir", type=str, default=exp_dir, help="log directory")
-    parser.add_argument("-p", "--pipeline_version", type=str, default="p4a", help="pipeline version")
     args = parser.parse_args()
 
     exp_dir = adapt_path(args.exp_dir)
-    pipeline_version = args.pipeline_version
 
     subj_thetas = {}
     subj_thetas["exp"] = str(exp_dir).split("/")[-2:]
     for subj_ID in range(2, 13):
-        theta_estimated, range_, labels = estimate_theta_for_usr_npe(
-            subj_ID,
-            exp_dir,
-            pipeline_version,
-        )
+        theta_estimated, range_, labels = estimate_theta_for_usr_npe(subj_ID, exp_dir)
         subj_thetas["range_"] = range_
         subj_thetas["labels"] = labels
         subj_thetas[subj_ID] = theta_estimated
