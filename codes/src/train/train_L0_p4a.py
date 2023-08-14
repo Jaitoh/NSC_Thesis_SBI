@@ -24,7 +24,7 @@ sys.path.append(f"{NSC_DIR}/codes/src")
 
 from train.MyPosteriorEstimator_p4 import MySNPE_C_P4
 from utils.train import print_cuda_info
-from utils.setup import check_path, clean_cache
+from utils.setup import check_path, clean_cache, adapt_path
 from utils.set_seed import setup_seed
 from neural_nets.embedding_nets_p4 import (
     GRU_FC,
@@ -58,8 +58,7 @@ class Solver:
 
         if training_mode:
             # save the config file using yaml
-            yaml_path = Path(self.log_dir) / "config.yaml"
-            yaml_path = yaml_path.expanduser()
+            yaml_path = adapt_path(Path(self.log_dir) / "config.yaml")
             with open(yaml_path, "w") as f:
                 f.write(OmegaConf.to_yaml(config))
             print(f"config file saved to: {yaml_path}")

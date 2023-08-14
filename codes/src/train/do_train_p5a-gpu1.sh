@@ -12,10 +12,10 @@ ROOT_DIR=~/tmp/NSC
 # CONFIG_TRAIN=train-p5-conv_net-mdn
 
 # aug-06
-RUN_ID=p5a-conv_lstm
+RUN_ID=p5a-conv_lstm-maf3
 CONFIG_PRIOR=prior-3
 CONFIG_DATASET=dataset-p5
-CONFIG_TRAIN=train-p5-conv_lstm-mdn
+CONFIG_TRAIN=train-p5-conv_lstm-maf3
 
 TRAIN_FILE_NAME=train_L0_p5a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"

@@ -5,7 +5,7 @@ density_estimator:
     hidden_size: 1024
     output_size: 256
   posterior_nn:
-    model: mdn
+    model: maf
     hidden_features: 128
     num_transforms: 2
   
@@ -16,7 +16,7 @@ training:
   clip_max_norm         : 1e-5
   weight_decay          : 1e-9
   
-  stop_after_epochs     : 2000
+  stop_after_epochs     : 1000
 
   min_num_epochs        : 10000
   max_num_epochs        : 2147483647
