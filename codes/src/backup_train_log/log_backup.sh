@@ -7,17 +7,17 @@ folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 
 # "p5a-conv_net"
 EXP_IDS=(
-    "p5a-conv_lstm-tmp"
+    "p5a-conv_lstm"
 )
 # "p5a-conv_net-Tv2-tmp"
 
-Pipeline=train # npe
-TRAIN_ID=train_L0_p4a
-folder_id=1SiXpFibwBr9OXA6Oi7tdj4PaX_UcgCbg
+# Pipeline=train # npe
+# TRAIN_ID=train_L0_p4a
+# folder_id=1SiXpFibwBr9OXA6Oi7tdj4PaX_UcgCbg
 
-EXP_IDS=(
-    "p4a-F1345-cnn-tmp"
-)
+# EXP_IDS=(
+#     "p4a-F1345-cnn-tmp"
+# )
 
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn

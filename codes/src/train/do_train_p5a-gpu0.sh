@@ -12,16 +12,22 @@ ROOT_DIR=~/tmp/NSC
 # CONFIG_TRAIN=train-p5-conv_net-mdn
 
 # aug-06
-RUN_ID=p5a-conv_lstm-Tv2
-CONFIG_PRIOR=prior-v2-3
+# RUN_ID=p5a-conv_lstm-Tv2
+# CONFIG_PRIOR=prior-v2-3
+# CONFIG_DATASET=dataset-p5
+# CONFIG_TRAIN=train-p5-conv_lstm-mdn
+
+# aug-14
+RUN_ID=p5a-conv_lstm-corr_conv
+CONFIG_PRIOR=prior-3
 CONFIG_DATASET=dataset-p5
 CONFIG_TRAIN=train-p5-conv_lstm-mdn
 
 TRAIN_FILE_NAME=train_L0_p5a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 # DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-# DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T500.h5"
-DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-98sets-T500v2.h5"
+DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T500.h5"
+# DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-98sets-T500v2.h5"
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
@@ -29,7 +35,7 @@ CONFIG_X_O=x_o-0
 
 LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${RUN_ID}.log"
-rm -r ${LOG_DIR}/events.out.tfevents*
+# rm -r ${LOG_DIR}/events.out.tfevents*
 mkdir -p ${LOG_DIR}
 
 echo "file name: ${TRAIN_FILE_NAME}"
