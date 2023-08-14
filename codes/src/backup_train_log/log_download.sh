@@ -48,11 +48,11 @@ FILE_ID=1MWRK-e7Atk2KPs3sfRbWnKEJWOLAPSMk
 # FILE_ID=1pd8OnzUk_rSXjxr1PGa4qo5HT3fhPK2m
 
 # ===== train_nle p2 =====
-Pipeline=train_nle
-TRAIN_ID=L0-nle-p2-cnn
-EXP_ID=L0-nle-p2-cnn-dur3
-FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
-MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-p2-cnn
+# EXP_ID=L0-nle-p2-cnn-dur3
+# FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
+# MACHINE_LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
 # TRAIN_ID=L0-nle-p2-cnn
 # EXP_ID=L0-nle-p2-cnn-dur3to7-old

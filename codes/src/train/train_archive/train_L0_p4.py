@@ -34,7 +34,7 @@ from neural_nets.embedding_nets_p4 import (
 
 
 class Solver:
-    def __init__(self, config):
+    def __init__(self, config, training_mode=True):
         self.config = config
         self.log_dir = config.log_dir
         # gpu info
@@ -103,9 +103,7 @@ class Solver:
                 else:  # [B, F1+F2+F3 + F1+F2+F3 + F1+F2+F3 ..., 1]
                     feature_lengths = self.M * list(self.config.dataset.feature_lengths)
                 print(f"{len(feature_lengths)} heads")
-                embedding_net = Multi_Head_GRU_FC(
-                    feature_lengths, input_size, hidden_size, num_layers
-                )
+                embedding_net = Multi_Head_GRU_FC(feature_lengths, input_size, hidden_size, num_layers)
 
         neural_posterior = posterior_nn(
             model=config_density["posterior_nn"]["model"],

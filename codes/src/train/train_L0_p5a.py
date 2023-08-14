@@ -97,6 +97,12 @@ class Solver:
         else:
             writer = None
 
+        # if ingnore_ss not in config, set it to False
+        if "ignore_ss" not in self.config.prior:
+            self.config.prior.ignore_ss = False
+        if "normalize" not in self.config.prior:
+            self.config.prior.normalize = False
+
         # prior
         (
             self.prior_min,

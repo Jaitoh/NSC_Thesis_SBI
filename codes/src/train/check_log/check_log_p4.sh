@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CLUSTER=snn
+TRAIN_FILE_NAME=train_L0_p4
 # RUN_ID=p4-5Fs-1D-mh_gru-mdn
 # RUN_ID=p4-5Fs-2D-mh_gru-mdn
 # RUN_ID=p4-5Fs-1D-gru-mdn
@@ -16,17 +17,13 @@ RUN_ID=p4-F3-1D-gru3-mdn
 RUN_ID=p4-F4-1D-gru3-mdn
 RUN_ID=p4-F5-1D-gru3-mdn
 
-TRAIN_FILE_NAME=train_L0_p4
-
-if [ "${CLUSTER}" == "t4" ]; then
-    LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
-elif [ "${CLUSTER}" == "snn" ]; then
-    LOG_DIR="/home/wehe/tmp/NSC/codes/src/train/logs//${TRAIN_FILE_NAME}/${RUN_ID}"
-fi
+TRAIN_FILE_NAME=train_L0_p5a
+RUN_ID=p5a-conv_lstm
 
 cd ~/tmp/NSC/codes
 source activate sbi
 
+LOG_DIR=$HOME/tmp/NSC/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}
 echo "log_dir: ${LOG_DIR}"
 
 # --run ${SLURM_ARRAY_TASK_ID} \
