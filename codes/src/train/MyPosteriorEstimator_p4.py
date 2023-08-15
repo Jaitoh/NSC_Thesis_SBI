@@ -37,6 +37,7 @@ from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
 from utils.dataset.dataloader import get_dataloaders
+from utils.setup import adapt_path
 
 # set matplotlib, font of size 16, bold
 plt.rcParams.update({"font.size": 22})
@@ -69,7 +70,7 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
     ):
         # prepare train, valdataset and dataloader
         print("\n=== train, val dataset and dataloader ===")
-        data_path = Path(config.data_path).expanduser()
+        data_path = adapt_path(config.data_path)
         with h5py.File(data_path, "r") as f:
             sets = list(f.keys())[: config.dataset.partial_sets]
 

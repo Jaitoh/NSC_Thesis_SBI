@@ -4,8 +4,9 @@ exp_id=train_L0_p5a/p5a-conv_net
 exp_id=train_L0_p5a/p5a-conv_net-Tv2
 exp_id=train_L0_p5a/p5a-conv_lstm-tmp
 
-pipeline=p4
+pipeline=p4a
 exp_id=train_L0_p4/p4-5Fs-1D-cnn
+exp_id=train_L0_p4a/p4a-F1345-cnn-tmp
 
 exp_dir=~/tmp/NSC/codes/src/train/logs/$exp_id
 mkdir -p $exp_dir/inference
