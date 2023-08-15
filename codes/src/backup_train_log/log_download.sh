@@ -17,13 +17,25 @@ FILE_ID=12MMpnNYByUDU6XWjcDFM1_GWsRnyCcD7
 EXP_ID=p5a-conv_lstm-tmp
 FILE_ID=1gf2VXQRQH_teEqGIW7-CJ7rRQYyf5_9l
 
+EXP_ID=p5a-conv_lstm
+FILE_ID=1mQtjwMaqjCNdIMUlgdYhNADKLTCgCmsh
+
+EXP_ID=p5a-conv_lstm-Tv2
+FILE_ID=1x-uvyoAI3Fm14HumXi4V3D0WBu3oRWcd
+
 # ===== train_npe =====
 # log p4-4Fs-1D-cnn.tar.gz
-Pipeline=train
-TRAIN_ID=train_L0_p4a
+# Pipeline=train
+# TRAIN_ID=train_L0_p4a
 
-EXP_ID=p4a-F1345-cnn-tmp
-FILE_ID=1MWRK-e7Atk2KPs3sfRbWnKEJWOLAPSMk
+# EXP_ID=p4a-F1345-cnn-tmp
+# FILE_ID=1MWRK-e7Atk2KPs3sfRbWnKEJWOLAPSMk
+
+# EXP_ID=p4a-F1345-cnn
+# FILE_ID=180cRi0KcRcGXjx6w0920Y_9pp8Cw4Ox4
+
+# EXP_ID=p4a-F134-cnn
+# FILE_ID=1Ln7T3O42GCnKsBI67iPRU-aJ3mPTllA6
 
 MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # ===== train_nle =====
