@@ -7,7 +7,7 @@ density_estimator:
   posterior_nn:
     model: maf
     hidden_features: 128
-    num_transforms: 2
+    num_transforms: 3
   
 
 training:
@@ -16,9 +16,9 @@ training:
   clip_max_norm         : 1e-5
   weight_decay          : 1e-9
   
-  stop_after_epochs     : 100
+  stop_after_epochs     : 2000
 
-  min_num_epochs        : 100
+  min_num_epochs        : 10000
   max_num_epochs        : 2147483647
   
   warmup_epochs         : 5

@@ -6,14 +6,14 @@ source activate sbi
 
 ROOT_DIR=~/tmp/NSC
 
-RUN_ID=p4a-F1345-cnn
+RUN_ID=p4a-F1345-cnn-maf3
 CONFIG_DATASET=dataset-p4-F1345-size0
 
-RUN_ID=p4a-F134-cnn
-CONFIG_DATASET=dataset-p4-F134-size0
+RUN_ID=p4a-F134-cnn-maf3
+CONFIG_DATASET=dataset-p4-F134-size1
 
 CONFIG_PRIOR=prior-3
-CONFIG_TRAIN=train-p4-cnn-mdn
+CONFIG_TRAIN=train-p4-cnn-maf3
 
 TRAIN_FILE_NAME=train_L0_p4a
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
@@ -26,7 +26,7 @@ CONFIG_X_O=x_o-0
 
 LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${RUN_ID}.log"
-rm -r ${LOG_DIR}/events.out.tfevents*
+# rm -r ${LOG_DIR}/events.out.tfevents*
 mkdir -p ${LOG_DIR}
 
 echo "file name: ${TRAIN_FILE_NAME}"

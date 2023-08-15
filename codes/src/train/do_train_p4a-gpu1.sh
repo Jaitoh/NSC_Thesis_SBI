@@ -23,7 +23,7 @@ CONFIG_X_O=x_o-0
 
 LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${RUN_ID}.log"
-rm -r ${LOG_DIR}/events.out.tfevents*
+# rm -r ${LOG_DIR}/events.out.tfevents*
 mkdir -p ${LOG_DIR}
 
 echo "file name: ${TRAIN_FILE_NAME}"
