@@ -26,7 +26,7 @@ from features.features import Feature_Generator
 from simulator.model_sim_pR import DM_sim_for_seqCs_parallel_with_smaller_output
 from utils.set_seed import setup_seed
 from utils.inference import load_stored_config as load_config
-from utils.inference import get_posterior, estimate_theta_values
+from utils.inference import get_posterior, estimate_theta_values, sampling_from_posterior
 
 setup_seed(0)
 
@@ -115,18 +115,6 @@ def compute_feature_from_seqC_chR(seqC, D, M, S, chR, chosen_features):
 #         theta_value = prior_range[np.argmax(densities)]
 #         theta_estimated.append(theta_value)
 #     return theta_estimated
-
-
-def sampling_from_posterior(device, posterior, feature):
-    return (
-        posterior.sample(
-            (20000,),
-            x=feature.cuda() if device == "cuda" else feature,
-            show_progress_bars=True,
-        )
-        .cpu()
-        .numpy()
-    )
 
 
 # LOG_DIR = "/home/ubuntu/tmp/NSC/codes/src/train/logs"

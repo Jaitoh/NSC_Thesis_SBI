@@ -20,6 +20,7 @@ pip install torch_tb_profiler
 pip install hydra-core --upgrade
 pip install spyder-kernels
 pip install tables
+pip install seaborn
 conda activate sbi
 ####
 conda clean --all

@@ -34,11 +34,29 @@ def load_net(continue_from_checkpoint, neural_net, device):
     print(f"loading neural net from '{continue_from_checkpoint}'")
     continue_from_checkpoint = adapt_path(continue_from_checkpoint)
 
-    if str(continue_from_checkpoint).endswith("check_point.pt"):
-        neural_net.load_state_dict(torch.load(continue_from_checkpoint, map_location=device).state_dict())
+    checkpoint = torch.load(continue_from_checkpoint, map_location=device)
 
+    if str(continue_from_checkpoint).endswith("check_point.pt"):
+        loaded_state_dict = checkpoint.state_dict()
     else:
-        neural_net.load_state_dict(torch.load(continue_from_checkpoint, map_location=device))
+        loaded_state_dict = checkpoint
+
+    # check the original model
+    # print("original model")
+    # for key, value in neural_net.state_dict().items():
+    #     # print(f"Key: {key}, Shape: {value.shape}")
+    #     print(f"Key: {key}, Shape: {value.shape}, Value: {value[0]}")
+
+    # Load the state dict
+    neural_net.load_state_dict(loaded_state_dict)
+
+    # print("loaded model")
+    # # Check the keys and shapes of the checkpoint
+    # for key, value in loaded_state_dict.items():
+    #     # print(f"Key: {key}, Shape: {value.shape}")
+    #     print(f"Key: {key}, Shape: {value.shape}, Value: {value[0]}")
+
+    print("done")
     return neural_net
 
 
@@ -167,3 +185,9 @@ def print_cuda_info(device):
         print("Cached:   ", round(torch.cuda.memory_reserved(0) / 1024**3, 1), "GB")
         print("--- CUDA info ---\n")
         torch.cuda.memory_summary(device=None, abbreviated=False)
+
+
+def get_limits(prior_min, prior_max):
+    if prior_min is None or prior_max is None:
+        return []
+    return [[x, y] for x, y in zip(prior_min, prior_max)]
