@@ -30,9 +30,7 @@ cmaps = ["tab:blue", "tab:red", "tab:orange", "tab:purple"]
 
 
 def get_boxUni_prior(prior_min: np.ndarray, prior_max: np.ndarray):
-    prior = utils.torchutils.BoxUniform(
-        low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max)
-    )
+    prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max))
     return prior
 
 
@@ -131,9 +129,7 @@ def DM_sim_for_seqCs_parallel(
 
     """
 
-    print(
-        f"\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}"
-    )
+    print(f"\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}")
     if not privided_prior:
         params = prior.sample((num_prior_sample,)).cpu().numpy()
     else:
@@ -161,9 +157,7 @@ def DM_sim_for_seqCs_parallel(
         num_workers = available_workers
 
     results = Parallel(n_jobs=num_workers, verbose=1)(
-        delayed(one_DM_simulation)(
-            seqCs[i, j, k, :], params[l, :], model_name, i, j, k, l
-        )
+        delayed(one_DM_simulation)(seqCs[i, j, k, :], params[l, :], model_name, i, j, k, l)
         for i in range(seqCs.shape[0])
         for j in range(seqCs.shape[1])
         for k in range(seqCs.shape[2])
@@ -184,9 +178,7 @@ def DM_sim_for_seqCs_parallel(
         probR[i, j, k, l, 0] = probR_
     print("done stacking the results")
 
-    print(
-        f"\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}"
-    )
+    print(f"\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}")
 
     if save_data_path != None:
         f = h5py.File(save_data_path, "w")
@@ -227,29 +219,20 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
 
     """
 
-    print(
-        f"\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}"
-    )
+    print(f"\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}")
 
-    params = (
-        prior if privided_prior else prior.sample((num_prior_sample,)).cpu().numpy()
-    )
+    params = prior if privided_prior else prior.sample((num_prior_sample,)).cpu().numpy()
 
-    probR = np.empty(
-        (*seqCs.shape[:-1], params.shape[0], 1)
-    )  # [dur_len, MS_len, sample_size, num_prior_sample, 1]
-    print(
-        f"total number of simulations {np.product(probR.shape)} with {num_workers} workers ...\n"
-    )
+    probR = np.empty((*seqCs.shape[:-1], params.shape[0], 1))
+    # [dur_len, MS_len, sample_size, num_prior_sample, 1]
+    print(f"total number of simulations {np.product(probR.shape)} with {num_workers} workers ...\n")
 
     # limit the number of workers to the number of available cores
     tic = time.time()
     num_workers = min(num_workers, os.cpu_count())
 
     results = Parallel(n_jobs=num_workers, verbose=1)(
-        delayed(one_DM_simulation_simple)(
-            seqCs[i, j, k, :], params[l, :], model_name, i, j, k, l
-        )
+        delayed(one_DM_simulation_simple)(seqCs[i, j, k, :], params[l, :], model_name, i, j, k, l)
         for i in range(seqCs.shape[0])
         for j in range(seqCs.shape[1])
         for k in range(seqCs.shape[2])
@@ -263,9 +246,7 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
         probR[i, j, k, l, 0] = probR_
     print("done stacking the results")
 
-    print(
-        f"\nseqC.shape: {seqCs.shape}, params.shape: {params.shape}, probR.shape: {probR.shape}"
-    )
+    print(f"\nseqC.shape: {seqCs.shape}, params.shape: {params.shape}, probR.shape: {probR.shape}")
 
     return params, probR
 
@@ -310,9 +291,7 @@ def seqC_gen_and_DM_simulate(
     seqC_dur_max = 15
 
     # generate prior distribution
-    prior = utils.torchutils.BoxUniform(
-        low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max)
-    )
+    prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), high=torch.as_tensor(prior_max))
     print(f"prior sample size", num_prior_sample)
 
     # # print('---\nsetting random seed to 0')
@@ -327,9 +306,7 @@ def seqC_gen_and_DM_simulate(
         save_data_path = Path(save_data_dir) / (save_data_name)
         with h5py.File(save_data_path, "w") as f:
             f.create_dataset("test", data="test")
-        print(
-            f"folder/file {save_data_path} exists, it can be used to store the dataset"
-        )
+        print(f"folder/file {save_data_path} exists, it can be used to store the dataset")
 
         f = h5py.File(save_data_path, "w")
         data_group = f.create_group("/data_group")
@@ -355,9 +332,7 @@ def seqC_gen_and_DM_simulate(
     )
     # print(f'generated seqC shape', seqCs.shape)
 
-    print(
-        f"---\nsimulating pR with prior sample size: {num_prior_sample}, model_name: {model_name}"
-    )
+    print(f"---\nsimulating pR with prior sample size: {num_prior_sample}, model_name: {model_name}")
     seqCs, theta, probR = DM_sim_for_seqCs_parallel(
         seqCs=seqCs,
         prior=prior,
@@ -365,9 +340,7 @@ def seqC_gen_and_DM_simulate(
         model_name=model_name,
         num_workers=16,
     )
-    print(
-        f"---\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}"
-    )
+    print(f"---\nComputed seqCs.shape: {seqCs.shape}, theta.shape: {theta.shape}, probR.shape: {probR.shape}")
 
     if save_data:
         data_group.create_dataset("seqCs", data=seqCs)
@@ -393,9 +366,7 @@ if __name__ == "__main__":
         )
     else:
         config = load_config(
-            config_simulator_path=Path("./src/config")
-            / "simulator"
-            / "simulator_Ca_Pa_Ma.yaml",
+            config_simulator_path=Path("./src/config") / "simulator" / "simulator_Ca_Pa_Ma.yaml",
         )
 
     seqCs, theta, probR = seqC_gen_and_DM_simulate(

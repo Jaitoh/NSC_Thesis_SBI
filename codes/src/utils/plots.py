@@ -14,8 +14,8 @@ from utils.inference import (
     get_posterior,
     load_stored_config,
     sampling_from_posterior,
-    convert_samples_range,
 )
+from utils.range import convert_samples_range
 
 
 def load_img(
@@ -520,7 +520,7 @@ def plot_posterior_mapped_samples(
 
     # copy x_o, true_theta
     x_o = x_o.clone()
-    if true_theta != None:
+    if true_theta.any() != None:
         true_theta = true_theta.clone()
 
     samples = sampling_from_posterior(
@@ -531,11 +531,13 @@ def plot_posterior_mapped_samples(
         show_progress_bars=show_progress_bars,
     )
 
-    if original_limits != None and mapped_limits != None:
+    plot_limits = original_limits
+    if mapped_limits != None:
         samples = convert_samples_range(samples, original_limits, mapped_limits)
         true_theta = convert_samples_range(true_theta, original_limits, mapped_limits)
+        plot_limits = mapped_limits
 
-    pairplot(
+    fig, ax = pairplot(
         samples,
         diag="kde",
         upper="kde",
@@ -543,5 +545,55 @@ def plot_posterior_mapped_samples(
         labels=["bias", "$\sigma^2_s$", "$\sigma^2_a$", "$\lambda$"],
         points=true_theta.cpu().numpy() if true_theta != None else None,
         points_colors="r",
-        limits=mapped_limits,
+        limits=plot_limits,
     )
+
+    return fig, ax
+
+
+def marginal_plot(
+    samples,
+    true_theta,
+    origin_limits,
+    dest_limits,
+    moving_theta_idx=0,
+    axes=None,
+    credible_interval=95,
+):
+    num_params = len(dest_limits)
+    # fig, axes = plt.subplots(1, num_params, figsize=(num_params * 6, 4))
+    # fig.subplots_adjust(wspace=0.4)
+
+    samples_dr = convert_samples_range(samples, origin_limits, dest_limits)
+    true_theta_dr = convert_samples_range(true_theta, origin_limits, dest_limits)
+
+    if credible_interval != 100:
+        edge = (100 - credible_interval) / 2
+        lower, upper = np.percentile(samples_dr, [edge, 100 - edge], axis=0)  # 95% interval
+        # print(lower, upper)
+
+    for i in range(num_params):
+        ax = axes[i]
+        density = gaussian_kde(samples_dr[:, i], bw_method="scott")
+        xs = np.linspace(dest_limits[i][0], dest_limits[i][1], 100)
+        ys = density(xs)
+        ax.hist(samples_dr[:, i], bins=100, density=True, color="gray", alpha=0.8)
+        if i == moving_theta_idx:
+            ax.axvline(true_theta_dr[i], color="r", linewidth=4, linestyle="--")
+        else:
+            ax.axvline(true_theta_dr[i], color="r", linewidth=4)
+        ax.plot(xs, ys, "k", linewidth=4)
+        # ax.set_xlabel(prior_labels[i])
+        ax.set_xlim(dest_limits[i][0], dest_limits[i][1])
+        ax.grid(alpha=0.2)
+        if i == 0:
+            ax.set_ylabel("density")
+
+        if credible_interval != 100:
+            x_fill = np.linspace(lower[i], upper[i], 1000)
+            y_fill = density(x_fill)
+            ax.vlines(lower[i], 0, density(lower[i]), color="g", linewidth=1, linestyle="-")
+            ax.vlines(upper[i], 0, density(upper[i]), color="g", linewidth=1, linestyle="-")
+            ax.fill_between(x_fill, 0, y_fill, color="g", alpha=0.2)
+
+    return axes

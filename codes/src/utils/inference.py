@@ -33,7 +33,9 @@ def get_posterior(model_path, config, device, Solver, low_batch=0, return_datase
     """get the trained posterior"""
 
     solver = Solver(config, training_mode=False)
-    train_loader, valid_loader, network = solver.init_inference(sum_writer=False).prepare_dataset_network(
+    train_loader, valid_loader, network, train_dataset, valid_dataset = solver.init_inference(
+        sum_writer=False
+    ).prepare_dataset_network(
         config,
         model_path,
         device=device,
@@ -43,7 +45,7 @@ def get_posterior(model_path, config, device, Solver, low_batch=0, return_datase
     solver.inference._model_bank = []
     print(f"finished building posterior")
     if return_dataset:
-        return solver, posterior, train_loader, valid_loader
+        return solver, posterior, train_loader, valid_loader, train_dataset, valid_dataset
     else:
         return solver, posterior
 
@@ -91,21 +93,25 @@ def convert_normed_theta(theta_estimated_normed, prior_min, prior_max, prior_lab
     return theta_estimated, original_range_pair
 
 
-def convert_samples_range(samples, mapped_limits, original_limits):
-    # map samples from mapped_limits to original_limits
-    for i in range(len(mapped_limits)):
-        mapped_low = mapped_limits[i][0]
-        mapped_up = mapped_limits[i][1]
-        origin_low = original_limits[i][0]
-        origin_up = original_limits[i][1]
+def ci_perf_on_dset(posterior, credible_intervals, dataset, num_params):
+    ci_matrix = np.zeros((len(credible_intervals), num_params))
 
-        if len(samples.shape) == 1:
-            samples[i] = (samples[i] - mapped_low) / (mapped_up - mapped_low) * (
-                origin_up - origin_low
-            ) + origin_low
-        else:
-            samples[:, i] = (samples[:, i] - mapped_low) / (mapped_up - mapped_low) * (
-                origin_up - origin_low
-            ) + origin_low
+    for i, credible_interval in enumerate(credible_intervals):
+        edge = (100 - credible_interval) / 2
+        print(f"credible interval: {credible_interval}%")
 
-    return samples
+        for xy, theta in tqdm(dataset):
+            samples = sampling_from_posterior(
+                "cuda",
+                posterior,
+                xy,
+                num_samples=2000,
+                show_progress_bars=False,
+            )
+            lower, upper = np.percentile(samples, [edge, 100 - edge], axis=0)
+
+            inside_interval = (lower <= np.array(theta)) & (np.array(theta) <= upper)
+            ci_matrix[i, :] = ci_matrix[i, :] + inside_interval.astype(int)
+
+    ci_matrix /= len(dataset)
+    return ci_matrix

@@ -174,6 +174,8 @@ class MyPosteriorEstimator_P4(PosteriorEstimator):
             train_dataloader,
             valid_dataloader,
             self._neural_net.to(self._device),
+            train_dataset,
+            valid_dataset,
         )
 
     def train_base_p4(
