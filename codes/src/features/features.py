@@ -19,6 +19,12 @@ from joblib import Parallel, delayed
 from torch.utils.data import Dataset, DataLoader
 import cProfile
 
+from pathlib import Path
+import sys
+
+NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
+sys.path.append(f"{NSC_DIR}/codes/src")
+from utils.setup import adapt_path
 
 # class Feature_Generator_Dataset(Dataset):
 #     def __init__(self, C, probR, seqC, D, M, S, chosen_features):
@@ -97,19 +103,13 @@ class Feature_Generator:
             self.dist_NS,
             self.stats_MD,
             self.stats_NS,
-        ) = self._compute_kernel_MD_NS(
-            chR, D, M, S, Dur, MS, MD, nSwitch, Dur_list, MS_list, MD_list
-        )
+        ) = self._compute_kernel_MD_NS(chR, D, M, S, Dur, MS, MD, nSwitch, Dur_list, MS_list, MD_list)
 
         # compute stats_MD2, dist_MD2 - for feature 3
-        self.dist_MD2, self.stats_MD2 = self._compute_kernel_MD2(
-            chR, D, M, S, MS, MD, MS_list, MD_list
-        )
+        self.dist_MD2, self.stats_MD2 = self._compute_kernel_MD2(chR, D, M, S, MS, MD, MS_list, MD_list)
 
         # compute stats_psy - for feature 5
-        self.stats_psy = self._compute_kernel_psy(
-            seqC, chR, D, M, Dur, MS, Dur_list, MS_list
-        )
+        self.stats_psy = self._compute_kernel_psy(seqC, chR, D, M, Dur, MS, Dur_list, MS_list)
 
         return self
 
@@ -135,9 +135,7 @@ class Feature_Generator:
         # feature_3s = []
         # for i in range(3):
         #     feature_3s.append(self._extract_f3(self.stats_MD2[i, :], ranges=[-7, 7]))
-        feature_3s = [
-            self._extract_f3(self.stats_MD2[i, :], ranges=[-7, 7]) for i in range(3)
-        ]
+        feature_3s = [self._extract_f3(self.stats_MD2[i, :], ranges=[-7, 7]) for i in range(3)]
 
         # generate a mask for NS
         ranges = [(-2, 2), (-4, 4)]
@@ -181,9 +179,7 @@ class Feature_Generator:
         # features = []
         # for i in range(self.M):
         #     features.append(torch.cat([obj[i] for obj in objects], dim=0))
-        features = [
-            torch.cat([obj[i] for obj in objects], dim=0) for i in range(self.M)
-        ]
+        features = [torch.cat([obj[i] for obj in objects], dim=0) for i in range(self.M)]
 
         feature = torch.cat([feature for feature in features], dim=0)
         return feature
@@ -204,9 +200,7 @@ class Feature_Generator:
         # for idx_D in range(D):
         #     idx_nan = torch.isnan(stats_NS[idx_D, :])
         #     f4.append(stats_NS[idx_D, :][~idx_nan])
-        f4 = [
-            stats_NS[idx_D, :][~torch.isnan(stats_NS[idx_D, :])] for idx_D in range(D)
-        ]
+        f4 = [stats_NS[idx_D, :][~torch.isnan(stats_NS[idx_D, :])] for idx_D in range(D)]
         f4 = torch.cat(f4, dim=0)
 
         # plt.plot(f4, ".-", label="f4")
@@ -235,10 +229,7 @@ class Feature_Generator:
         #     idx_D = D - idx_D - 1
         #     idx_nan = torch.isnan(stats_MD[idx_D, :])
         #     f1.append(stats_MD[idx_D, :][~idx_nan])
-        f1 = [
-            stats_MD[D - idx_D - 1, :][~torch.isnan(stats_MD[D - idx_D - 1, :])]
-            for idx_D in np.arange(D)
-        ]
+        f1 = [stats_MD[D - idx_D - 1, :][~torch.isnan(stats_MD[D - idx_D - 1, :])] for idx_D in np.arange(D)]
         f1 = torch.cat(f1, dim=0)
 
         # extract f2
@@ -246,10 +237,7 @@ class Feature_Generator:
         # for idx_MD in np.arange(MD):
         #     idx_nan = torch.isnan(stats_MD[:, idx_MD])
         #     f2.append(stats_MD[:, idx_MD][~idx_nan])
-        f2 = [
-            stats_MD[:, idx_MD][~torch.isnan(stats_MD[:, idx_MD])]
-            for idx_MD in np.arange(MD)
-        ]
+        f2 = [stats_MD[:, idx_MD][~torch.isnan(stats_MD[:, idx_MD])] for idx_MD in np.arange(MD)]
         f2 = torch.cat(f2, dim=0)
 
         # plt.plot(f1, '.-', label='f1')
@@ -259,9 +247,7 @@ class Feature_Generator:
 
         return f1, f2
 
-    def _get_mask_NS(
-        self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=False
-    ):
+    def _get_mask_NS(self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=False):
         """generate a mask for the NS kernel
         select only the first two
         """
@@ -285,9 +271,7 @@ class Feature_Generator:
 
         return mask
 
-    def _get_mask_MD(
-        self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=False
-    ):
+    def _get_mask_MD(self, shape=(7, 21), ranges=[(-2, 2), (-4, 4), (-5, 5)], show_mask=False):
         """generate a mask for the 2D"""
         mask = torch.ones(shape, dtype=torch.bool)
         idx_mid_col = mask.shape[1] // 2
@@ -353,15 +337,9 @@ class Feature_Generator:
 
         return dist_MD2, stats_MD2
 
-    def _compute_kernel_MD_NS(
-        self, chR, D, M, S, Dur, MS, MD, nSwitch, Dur_list, MS_list, MD_list
-    ):
-        dist_MD = torch.zeros(
-            (D, M, len(MD_list)), dtype=torch.float32
-        )  # for feature 1&2
-        dist_NS = torch.zeros(
-            (D, M, len(MD_list)), dtype=torch.float32
-        )  # for feature 4
+    def _compute_kernel_MD_NS(self, chR, D, M, S, Dur, MS, MD, nSwitch, Dur_list, MS_list, MD_list):
+        dist_MD = torch.zeros((D, M, len(MD_list)), dtype=torch.float32)  # for feature 1&2
+        dist_NS = torch.zeros((D, M, len(MD_list)), dtype=torch.float32)  # for feature 4
         stats_MD = torch.zeros((D, M, len(MD_list)), dtype=torch.float32)
         stats_NS = torch.zeros((D, M, len(MD_list)), dtype=torch.float32)
 
@@ -385,9 +363,7 @@ class Feature_Generator:
                         dist_MD[idx_D, idx_M, idx_MD] = torch.sum(idx_f12) / S
 
                     # feature 4
-                    idx_f4 = (
-                        idx_current_D & idx_current_M & idx_current_MD & idx_current_NS
-                    )
+                    idx_f4 = idx_current_D & idx_current_M & idx_current_MD & idx_current_NS
                     if torch.sum(idx_f4) != 0:
                         chR_chosen = chR[idx_f4, :]
                         stats_NS[idx_D, idx_M, idx_MD] = torch.mean(chR_chosen)
@@ -616,7 +592,7 @@ class Feature_Generator:
 
 
 def main():
-    DATA_PATH = "/mnt/data/dataset/dataset_L0_exp_0_set100_T500.h5"
+    DATA_PATH = adapt_path("~tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5")
     idx_set = 0
     idx_theta = 10
 
@@ -630,12 +606,8 @@ def main():
     probR: [D, M, S, T, 1]          - [7, 3, 700, 5000, 1]
     """
     seqC = torch.from_numpy(f[f"set_{idx_set}"]["seqC"][:]).type(torch.float32)
-    theta = torch.from_numpy(f[f"set_{idx_set}"]["theta"][idx_theta, :]).type(
-        torch.float32
-    )
-    probR = torch.from_numpy(f[f"set_{idx_set}"]["probR"][:, :, :, idx_theta, :]).type(
-        torch.float32
-    )
+    theta = torch.from_numpy(f[f"set_{idx_set}"]["theta"][idx_theta, :]).type(torch.float32)
+    probR = torch.from_numpy(f[f"set_{idx_set}"]["probR"][:, :, :, idx_theta, :]).type(torch.float32)
     f.close()
 
     D, M, S = seqC.shape[0], seqC.shape[1], seqC.shape[2]
@@ -648,7 +620,7 @@ def main():
 
     # =================================================== load trials.mat
     sID = 2
-    trials = sio.loadmat("/home/ubuntu/tmp/NSC/data/trials.mat")
+    trials = sio.loadmat(adapt_path("~/tmp/NSC/data/trials.mat"))
     trials_data = trials["data"]
     trials_info = trials["info"]
     subjectID = torch.from_numpy(trials_data[0, -1])
@@ -669,6 +641,8 @@ def main():
     plt.plot(feature, ".-")
     plt.grid(alpha=0.2)
     plt.show()
+
+    return
 
 
 def feature_gen_for_whole_dataset(data_path, feature_path):
@@ -760,9 +734,7 @@ def compute_features(args):
     return idx_T, idx_C, features
 
 
-def feature_gen_for_whole_dataset_parallel_for_one_set(
-    data_path, feature_path, set_idx=0, debug=False
-):
+def feature_gen_for_whole_dataset_parallel_for_one_set(data_path, feature_path, set_idx=0, debug=False):
     """generate feature for the whole dataset"""
     # data_path = "/home/wehe/tmp/NSC/data/dataset/dataset_L0_exp_0_set100_T500.h5"
     # feature_path = (
@@ -817,9 +789,7 @@ def feature_gen_for_whole_dataset_parallel_for_one_set(
     pool = multiprocessing.Pool(processes=num_workers)
 
     # Submit all the tasks for execution
-    args_list = [
-        (idx_T, idx_C, chR, seqC, D, M, S) for idx_T in range(T) for idx_C in range(C)
-    ]
+    args_list = [(idx_T, idx_C, chR, seqC, D, M, S) for idx_T in range(T) for idx_C in range(C)]
 
     for idx_T, idx_C, features in tqdm(
         pool.imap_unordered(compute_features, args_list),
@@ -855,9 +825,7 @@ if __name__ == "__main__":
 
     # main()
     data_path = "/home/ubuntu/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500v2.h5"
-    feat_path = (
-        "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500v2-C100.h5"
-    )
+    feat_path = "/home/ubuntu/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500v2-C100.h5"
     parser = argparse.ArgumentParser()
     parser.add_argument("--set_idx", "-s", type=int, default=0)
     parser.add_argument("--data_path", "-data", type=str, default=data_path)
@@ -875,9 +843,7 @@ if __name__ == "__main__":
     # feat_path = os.path.join(data_dir, file_name)
 
     # feature_gen_for_whole_dataset(data_path, feature_path)
-    feature_gen_for_whole_dataset_parallel_for_one_set(
-        data_path, feat_path, set_idx=set_idx, debug=False
-    )
+    feature_gen_for_whole_dataset_parallel_for_one_set(data_path, feat_path, set_idx=set_idx, debug=False)
 
     # feat_path = (
     #     "/home/wehe/tmp/NSC/data/dataset/feature_L0_exp_0_set100_T500_C100_set0.h5"

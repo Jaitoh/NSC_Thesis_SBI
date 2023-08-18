@@ -14,11 +14,16 @@ def adapt_path(input_path):
 
     output_path: replace with correct username
     """
+    home_dir = Path.home()
     if "home" in str(input_path):
         relative_path = str(input_path).split("home")[1].split("/")[2:]
-        output_path = Path("/".join(["~"] + relative_path)).expanduser()
+        # output_path = Path("/".join(["~"] + relative_path)).expanduser()
+        output_path = Path("/".join([str(home_dir)] + relative_path))
     else:
-        output_path = Path(input_path).expanduser()
+        # output_path = Path(input_path).expanduser()
+        relative_path = str(input_path).split("~")[1:]
+        # print(f"relative_path: {relative_path}")
+        output_path = Path("/".join([str(home_dir)] + relative_path))
 
     return output_path
 

@@ -347,8 +347,17 @@ def get_diag_func(samples, limits, opts, **kwargs):
                         ys,
                         color=opts["samples_colors"][n],
                     )
+                    plt.hist(v[:, row], bins=opts["kde_diag"]["bins"], density=True, color="gray", alpha=0.6)
                     # show y axis on the left
                     plt.ylabel("density")
+                    plt.grid(alpha=0.2)
+
+                    lower, upper = np.percentile(v[:, row], [5, 100 - 5])  # 95% interval
+                    x_fill = np.linspace(lower, upper, 1000)
+                    y_fill = density(x_fill)
+                    plt.vlines(lower, 0, density(lower), color="g", linewidth=1, linestyle="-")
+                    plt.vlines(upper, 0, density(upper), color="g", linewidth=1, linestyle="-")
+                    plt.fill_between(x_fill, 0, y_fill, color="g", alpha=0.2)
 
                 elif "upper" in opts.keys() and opts["upper"][n] == "scatter":
                     for single_sample in v:
@@ -542,13 +551,13 @@ def plot_posterior_mapped_samples(
         diag="kde",
         upper="kde",
         figsize=(10, 10),
-        labels=["bias", "$\sigma^2_s$", "$\sigma^2_a$", "$\lambda$"],
+        labels=["$b$", "$\sigma^2_s$", "$\sigma^2_a$", "$\lambda$"],
         points=true_theta.cpu().numpy() if true_theta != None else None,
         points_colors="r",
         limits=plot_limits,
     )
 
-    return fig, ax
+    return fig, ax, samples
 
 
 def marginal_plot(
@@ -556,7 +565,7 @@ def marginal_plot(
     true_theta,
     origin_limits,
     dest_limits,
-    moving_theta_idx=0,
+    moving_theta_idx=-1,
     axes=None,
     credible_interval=95,
 ):
@@ -592,8 +601,8 @@ def marginal_plot(
         if credible_interval != 100:
             x_fill = np.linspace(lower[i], upper[i], 1000)
             y_fill = density(x_fill)
-            ax.vlines(lower[i], 0, density(lower[i]), color="g", linewidth=1, linestyle="-")
-            ax.vlines(upper[i], 0, density(upper[i]), color="g", linewidth=1, linestyle="-")
+            ax.vlines(lower[i], 0, density(lower[i]), color="g", linewidth=2, linestyle="-")
+            ax.vlines(upper[i], 0, density(upper[i]), color="g", linewidth=2, linestyle="-")
             ax.fill_between(x_fill, 0, y_fill, color="g", alpha=0.2)
 
     return axes
