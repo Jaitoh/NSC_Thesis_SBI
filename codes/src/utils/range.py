@@ -56,3 +56,15 @@ def convert_samples_range(samples, original_limits, dest_limits):
             ) + origin_low
 
     return samples
+
+
+def convert_array_range(f5, original_range, dest_range):
+    """
+    convert array from original_range [-1, 1] to dest_range [0, 1]
+    """
+
+    f5_dr = (f5 - original_range[0]) / (original_range[1] - original_range[0]) * (
+        dest_range[1] - dest_range[0]
+    ) + dest_range[0]
+
+    return f5_dr

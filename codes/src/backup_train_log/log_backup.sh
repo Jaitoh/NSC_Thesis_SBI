@@ -7,8 +7,9 @@ TRAIN_ID=train_L0_p5a
 folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 
 # "p5a-conv_net"
+# "p5a-conv_lstm-corr_conv-tmp-2"
 EXP_IDS=(
-    "p5a-conv_lstm-corr_conv-tmp-2"
+    "p5a-conv_lstm-maf3-tmp"
 )
 # "p5a-conv_lstm-Tv2"
 # "p5a-conv_net-Tv2-tmp"
@@ -18,9 +19,11 @@ EXP_IDS=(
 # folder_id=1SiXpFibwBr9OXA6Oi7tdj4PaX_UcgCbg
 
 # # "p4a-F1345-cnn-tmp"
+# # "p4a-F134-cnn"
+# # "p4a-F1345-cnn"
 # EXP_IDS=(
-#     "p4a-F134-cnn"
-#     "p4a-F1345-cnn"
+#     "p4a-F134-cnn-maf3-tmp"
+#     "p4a-F1345-cnn-maf3-tmp"
 # )
 
 # === nle ===
