@@ -25,6 +25,46 @@ import sys
 NSC_DIR = Path(__file__).resolve().parent.parent.parent.parent.as_posix()  # NSC dir
 sys.path.append(f"{NSC_DIR}/codes/src")
 from utils.setup import adapt_path
+from utils.range import convert_array_range
+
+
+def feature_extraction_fn(seqC, chR, FG, config):
+    D, M, S = seqC.shape[:-1]
+    features = FG.compute_kernels(seqC, chR, D, M, S).get_features()
+
+    # concatenate selected features
+    chosen_feature_data = []
+    for i in config.dataset.concatenate_feature_types:
+        feature_data = features[i - 1]
+        if i == 5:
+            # mapping F5
+            feature_data = convert_array_range(feature_data, [-1, 1], [0, 1])
+        chosen_feature_data.append(feature_data)
+    concatenated_features = torch.cat(chosen_feature_data, dim=-1)
+
+    # concatenate along M
+    n_features = concatenated_features.shape[-1]
+    if config.dataset.concatenate_along_M:
+        concatenated_features = concatenated_features.view(M * n_features)
+
+    return concatenated_features
+
+
+def feature_extraction(seqC, chR, config):
+    """
+    seqC: (D, M, S, 15)
+    chR: (D, M, S, 1)
+    config: contains dataset.concatenate_feature_types and dataset.concatenate_along_M
+    """
+
+    if not isinstance(seqC, torch.Tensor):
+        seqC = torch.from_numpy(seqC)
+
+    # compute all features
+    FG = Feature_Generator()
+
+    return feature_extraction_fn(seqC, chR, FG, config)
+
 
 # class Feature_Generator_Dataset(Dataset):
 #     def __init__(self, C, probR, seqC, D, M, S, chosen_features):
@@ -426,7 +466,7 @@ class Feature_Generator:
 
         return NS
 
-    def plot_kernels(self, save_fig=False, kernel=0, no_dist=False):
+    def plot_kernels(self, save_fig="", kernel=0, no_dist=False):
         D, M, S = self.D, self.M, self.S
         stats_MD, dist_MD, stats_MD2, dist_MD2, stats_NS, dist_NS, stats_psy = (
             self.stats_MD,
@@ -441,7 +481,7 @@ class Feature_Generator:
 
         # plot stats_MD  - feature 1&2
         if kernel == 0 or kernel == 1 or kernel == 2:
-            fig, axs = plt.subplots(1, 3, figsize=(15, 7))
+            fig, axs = plt.subplots(1, 3, figsize=(12, 6))
             axs = axs.flatten()
             for i in range(3):
                 ax = axs[i]
@@ -459,13 +499,14 @@ class Feature_Generator:
                 # plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
                 ax.tick_params(axis="both", which="both", length=0)
                 ax.set_title(f"\nMS={MS_list[i]:.2f}")
-                ax.set_ylabel("MD")
+                if i == 0:
+                    ax.set_ylabel("MD")
                 ax.set_xlabel("Dur")
                 fig.tight_layout()
             cbar = fig.colorbar(im, ax=axs.ravel().tolist(), shrink=0.5)
             cbar.ax.set_ylabel("probability", rotation=-90, va="bottom")
-            if save_fig:
-                fig.savefig(f"./src/dataset/figures/stats_MD.png", dpi=300)
+            if save_fig != "":
+                fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
             if not no_dist:
                 # plot distribution MD  - feature 1&2
@@ -492,22 +533,49 @@ class Feature_Generator:
                     fig.tight_layout()
                 cbar = fig.colorbar(im, ax=axs.ravel().tolist(), shrink=0.5)
                 cbar.ax.set_ylabel("percentage", rotation=-90, va="bottom")
-                if save_fig:
-                    fig.savefig(f"./src/dataset/figures/dist_MD.png", dpi=300)
+                if save_fig != "":
+                    fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
         if kernel == 0 or kernel == 3:
+            fig, axs = plt.subplots(1, 4, figsize=(12, 6))
+            axs = axs.flatten()
+            for i in range(3):
+                ax = axs[i]
+                im = ax.imshow(
+                    stats_MD[:, i, :].T.numpy(),
+                    cmap="Blues",
+                    interpolation="nearest",
+                    vmin=stats_MD[:, 0, :].min(),
+                    vmax=stats_MD[:, 0, :].max(),
+                )
+                ax.set_yticks(torch.arange(len(MD_list)))
+                ax.set_yticklabels(MD_list.numpy())
+                ax.set_xticks(torch.arange(D))
+                ax.set_xticklabels(Dur_list.numpy())
+                # plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+                ax.tick_params(axis="both", which="both", length=0)
+                ax.set_title(f"\nMS={MS_list[i]:.2f}")
+                if i == 0:
+                    ax.set_ylabel("MD")
+                ax.set_xlabel("Dur")
+                fig.tight_layout()
+            # cbar = fig.colorbar(im, ax=axs.ravel().tolist(), shrink=0.5)
+            # cbar.ax.set_ylabel("probability", rotation=-90, va="bottom")
+
             # plot feature 3 - Right choice percentage (according to MS)
-            fig = plt.figure(figsize=(15, 7))
+            ax = axs[3]
             im = plt.imshow(stats_MD2.T.numpy(), cmap="Blues", interpolation="nearest")
             plt.yticks(torch.arange(len(MD_list)), MD_list.numpy())
             plt.xticks(torch.arange(M), MS_list.numpy())
-            plt.ylabel("MD")
+            # change font size of xticks
+            plt.xticks(fontsize=8)
+            # plt.ylabel("MD")
             plt.xlabel("MS")
-            plt.title("Right choice percentage")
+            # plt.title("Right choice percentage")
             cbar = fig.colorbar(im, shrink=0.5)
             cbar.ax.set_ylabel("probability", rotation=-90, va="bottom")
-            if save_fig:
-                fig.savefig(f"./src/dataset/figures/stats_MD2.png", dpi=300)
+            if save_fig != "":
+                fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
             if not no_dist:
                 # plot feature 3 - distribution (according to MS)
@@ -520,12 +588,12 @@ class Feature_Generator:
                 plt.title("Distribution")
                 cbar = fig.colorbar(im, shrink=0.5)
                 cbar.ax.set_ylabel("percentage", rotation=-90, va="bottom")
-                if save_fig:
-                    fig.savefig(f"./src/dataset/figures/dist_MD2.png", dpi=300)
+                if save_fig != "":
+                    fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
         if kernel == 0 or kernel == 4:
             # plot Right choice percentage (No switch condition) - feature 4
-            fig, axs = plt.subplots(1, 3, figsize=(15, 7))
+            fig, axs = plt.subplots(1, 3, figsize=(12, 6))
             axs = axs.flatten()
             for i in range(3):
                 ax = axs[i]
@@ -542,18 +610,19 @@ class Feature_Generator:
                 ax.set_xticklabels(Dur_list.numpy())
                 # plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
                 ax.tick_params(axis="both", which="both", length=0)
-                ax.set_title(f"Right choice percentage (No switch)\nMS={MS_list[i]:.2f}")
-                ax.set_ylabel("MD")
+                ax.set_title(f"MS={MS_list[i]:.2f}")
+                if i == 0:
+                    ax.set_ylabel("MD")
                 ax.set_xlabel("Dur")
                 fig.tight_layout()
             cbar = fig.colorbar(im, ax=axs.ravel().tolist(), shrink=0.5)
             cbar.ax.set_ylabel("probability", rotation=-90, va="bottom")
-            if save_fig:
-                fig.savefig(f"./src/dataset/figures/stats_NS.png", dpi=300)
+            if save_fig != "":
+                fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
             if not no_dist:
                 # plot distribution NS - feature 4
-                fig, axs = plt.subplots(1, 3, figsize=(15, 7))
+                fig, axs = plt.subplots(1, 3, figsize=(12, 6))
                 axs = axs.flatten()
                 for i in range(3):
                     ax = axs[i]
@@ -576,12 +645,13 @@ class Feature_Generator:
                     fig.tight_layout()
                 cbar = fig.colorbar(im, ax=axs.ravel().tolist(), shrink=0.5)
                 cbar.ax.set_ylabel("percentage", rotation=-90, va="bottom")
-                if save_fig:
-                    fig.savefig(f"./src/dataset/figures/dist_NS.png", dpi=300)
+                if save_fig != "":
+                    fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
         # plot feature 5 psy kernel
         if kernel == 0 or kernel == 5:
-            fig, axs = plt.subplots(1, 3, figsize=(15, 7))
+            fig, axs = plt.subplots(1, 3, figsize=(16, 6))
+            fig.subplots_adjust(wspace=1)
             axs = axs.flatten()
             for i in range(3):
                 ax = axs[i]
@@ -597,14 +667,15 @@ class Feature_Generator:
                 ax.set_yticklabels(Dur_list.numpy())
                 # plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
                 ax.tick_params(axis="both", which="both", length=0)
-                ax.set_title(f"Right choice percentage (No switch)\nMS={MS_list[i]:.2f}")
-                ax.set_ylabel("Dur")
+                ax.set_title(f"MS={MS_list[i]:.2f}")
+                if i == 0:
+                    ax.set_ylabel("Dur")
                 ax.set_xlabel("pulse position")
                 fig.tight_layout()
             cbar = fig.colorbar(im, ax=axs.ravel().tolist(), shrink=0.3)
             cbar.ax.set_ylabel("probability", rotation=-90, va="bottom")
-            if save_fig:
-                fig.savefig(f"./src/dataset/figures/stats_psy.png", dpi=300)
+            if save_fig != "":
+                fig.savefig(save_fig, dpi=300, bbox_inches="tight", pad_inches=0)
 
 
 def main():

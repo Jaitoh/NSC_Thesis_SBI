@@ -26,7 +26,9 @@ from features.features import Feature_Generator
 from simulator.model_sim_pR import DM_sim_for_seqCs_parallel_with_smaller_output
 from utils.set_seed import setup_seed
 from utils.inference import load_stored_config as load_config
-from utils.inference import get_posterior, estimate_theta_values, sampling_from_posterior
+from utils.inference import get_posterior, estimate_theta_from_post_samples, sampling_from_posterior
+from utils.range import convert_array_range
+from features.features import feature_extraction_fn
 
 setup_seed(0)
 
@@ -39,6 +41,39 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 PID = os.getpid()
 print(f"PID: {PID}")
+
+
+class Feature_Gen_Dataset(Dataset):
+    def __init__(self, seqC, chRs, FG, config):
+        D, M, S = seqC.shape[0], seqC.shape[1], seqC.shape[2]
+        self.seqC = seqC
+        self.chRs = chRs
+        self.D = D
+        self.M = M
+        self.S = S
+        self.config = config
+        self.FG = FG
+
+    def __len__(self):
+        return self.chRs.shape[-1]
+
+    def __getitem__(self, idx):
+        chR = self.chRs[..., idx]
+        return feature_extraction_fn(self.seqC, chR, self.FG, self.config)
+
+
+def extract_trained_features_from_seqC_chRs(seqC, chRs, config):
+    """
+    seqC: (D, M, S, 15)
+    chR: (D, M, S, num_C)
+
+    output features: (num_C, 1, num_features, 1)
+    """
+    FG = Feature_Generator()
+    dataset = Feature_Gen_Dataset(seqC, chRs, FG, config)
+    loader = DataLoader(dataset, num_workers=8, batch_size=1)
+
+    return torch.cat(list(tqdm(loader)), dim=0)
 
 
 # === compute one example distance ===
@@ -75,38 +110,20 @@ def probR_to_chR(probR, num_C, device):
     return chR
 
 
-class Feature_Gen_Dataset(Dataset):
-    def __init__(self, seqC, chR, D, M, S, chosen_features, FG):
-        self.seqC = seqC
-        self.chR = chR
-        self.D = D
-        self.M = M
-        self.S = S
-        self.chosen_features = chosen_features
-        self.FG = FG
-
-    def __len__(self):
-        return self.chR.shape[-1]
-
-    def __getitem__(self, idx):
-        chR_ = self.chR[..., idx]
-        feature = (
-            self.FG.compute_kernels(self.seqC, chR_, self.D, self.M, self.S)
-            .get_provided_feature(self.chosen_features)
-            .view(1, -1, 1)
-        )
-        return feature
-
-
 # comput the feature from seqC and chR
-def compute_feature_from_seqC_chR(seqC, D, M, S, chR, chosen_features):
-    FG = Feature_Generator()
-    dataset = Feature_Gen_Dataset(seqC, chR, D, M, S, chosen_features, FG)
-    loader = DataLoader(dataset, num_workers=8, batch_size=1)
-    return torch.cat(list(tqdm(loader)), dim=0)
+# def compute_feature_from_seqC_chR(seqC, D, M, S, chR, chosen_features):
+#     """
+#     seqC: (D, M, S, 15)
+#     chR: (D, M, S, num_C)
+
+#     """
+#     FG = Feature_Generator()
+#     dataset = Feature_Gen_Dataset(seqC, chR, D, M, S, chosen_features, FG)
+#     loader = DataLoader(dataset, num_workers=8, batch_size=1)
+#     return torch.cat(list(tqdm(loader)), dim=0)
 
 
-# def estimate_theta_values(prior_limits, samples):
+# def estimate_theta_from_post_samples(prior_limits, samples):
 #     theta_estimated = []
 #     for i in tqdm(range(len(prior_limits))):
 #         kde = gaussian_kde(samples[:, i])
@@ -164,7 +181,7 @@ def main(_config):
         feature = features_true[i]
         samples = sampling_from_posterior(device, posterior, feature)
         # find estimated theta using "kde"
-        theta_estimated = estimate_theta_values(prior_limits, samples)
+        theta_estimated = estimate_theta_from_post_samples(prior_limits, samples)
 
         # print theta with 2 decimal places
         theta_estimated = np.array(theta_estimated).reshape(1, -1)

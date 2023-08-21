@@ -38,6 +38,11 @@ def seqC2x(seqC):
 def convert_samples_range(samples, original_limits, dest_limits):
     # map samples from original_limits to dest_limits
     # samples of shape (num_samples, num_params)
+
+    # if samples is a list, convert into numpy array
+    if type(samples) == list:
+        samples = np.array(samples)
+
     samples = deepcopy(samples)
 
     for i in range(len(original_limits)):
