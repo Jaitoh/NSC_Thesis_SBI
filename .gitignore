@@ -25,6 +25,7 @@ figures/*
 *.bmp
 *.mp4
 
+*.npz
 *.npy
 *.hdf5
 *.csv
