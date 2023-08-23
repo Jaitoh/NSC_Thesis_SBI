@@ -200,6 +200,7 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
     num_workers=16,
     save_data_path=None,
     privided_prior=False,
+    verbose=1,
 ):
     """sample params from prior and simulate probR with DM model with multiple seqCs inputs
 
@@ -219,34 +220,40 @@ def DM_sim_for_seqCs_parallel_with_smaller_output(
 
     """
 
-    print(f"\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}")
+    print(
+        f"\n--- simulating pR with... ---\nprior sample size: {num_prior_sample}\nmodel_name: {model_name}"
+    ) if verbose != 0 else None
 
     params = prior if privided_prior else prior.sample((num_prior_sample,)).cpu().numpy()
 
     probR = np.empty((*seqCs.shape[:-1], params.shape[0], 1))
     # [dur_len, MS_len, sample_size, num_prior_sample, 1]
-    print(f"total number of simulations {np.product(probR.shape)} with {num_workers} workers ...\n")
+    print(
+        f"total number of simulations {np.product(probR.shape)} with {num_workers} workers ...\n"
+    ) if verbose != 0 else None
 
     # limit the number of workers to the number of available cores
     tic = time.time()
     num_workers = min(num_workers, os.cpu_count())
 
-    results = Parallel(n_jobs=num_workers, verbose=1)(
+    results = Parallel(n_jobs=num_workers, verbose=verbose)(
         delayed(one_DM_simulation_simple)(seqCs[i, j, k, :], params[l, :], model_name, i, j, k, l)
         for i in range(seqCs.shape[0])
         for j in range(seqCs.shape[1])
         for k in range(seqCs.shape[2])
         for l in range(params.shape[0])
     )
-    print(f"time elapsed for simulation: {(time.time() - tic)/60:.2f} minutes")
+    print(f"time elapsed for simulation: {(time.time() - tic)/60:.2f} minutes") if verbose != 0 else None
 
     # store the results
-    print("stacking the results")
+    print("stacking the results") if verbose != 0 else None
     for probR_, i, j, k, l in results:
         probR[i, j, k, l, 0] = probR_
-    print("done stacking the results")
+    print("done stacking the results") if verbose != 0 else None
 
-    print(f"\nseqC.shape: {seqCs.shape}, params.shape: {params.shape}, probR.shape: {probR.shape}")
+    print(
+        f"\nseqC.shape: {seqCs.shape}, params.shape: {params.shape}, probR.shape: {probR.shape}"
+    ) if verbose != 0 else None
 
     return params, probR
 

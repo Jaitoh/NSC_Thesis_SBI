@@ -230,6 +230,31 @@ def process_theta_2D(
     return theta
 
 
+def process_theta_3D(
+    theta,
+    ignore_ss=False,
+    normalize_theta=False,
+    unnormed_prior_min=None,
+    unnormed_prior_max=None,
+):
+    """
+    theta: (MS, n_T, n_theta)
+    ignore_ss: whether to ignore the second and third parameters of theta
+    normalize_theta: whether to normalize theta
+    """
+
+    if normalize_theta:
+        for i in range(theta.shape[-1]):
+            theta[:, :, i] = (theta[:, :, i] - unnormed_prior_min[i]) / (
+                unnormed_prior_max[i] - unnormed_prior_min[i]
+            )
+
+    if ignore_ss:
+        theta = torch.cat((theta[:, :, :1], theta[:, :, 3:]), dim=-1)
+
+    return theta
+
+
 def apply_advanced_indexing_along_dim1(tensor, indices):
     idx0 = torch.arange(tensor.size(0))[:, None].expand(indices.size(0), indices.size(1))
     return tensor[idx0, indices]

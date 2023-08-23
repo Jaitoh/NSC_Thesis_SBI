@@ -62,3 +62,6 @@
 ./gdrive files move 1n8lskK61ZwDXOOzdZl8nn5vHH4waFXur 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 1AdvCoeOYgUkxifjKJplwsj7yE_h77OGI 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
 ./gdrive files move 1HKKxl5MpvcZdtAgRdntt0XCziVs2VRUv 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+
+./gdrive files upload /home/wehe/tmp/NSC/data/dataset-comb/dataset-partcomb-T500.h5
+./gdrive files move 1CAWjaO5Aj3wgkc3kB9WHTK5dOhKvSM3U 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq

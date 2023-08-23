@@ -95,6 +95,7 @@ for dur in dur_list:
             model_name="B-G-L0S-O-N-",
             num_workers=16,
             privided_prior=True,
+            verbose=0,
         )
         # params shape: (T, l_theta)
 
@@ -134,9 +135,7 @@ if post_check:
         print(f"==>> dur: {dur}")
         print("".center(50, "="))
 
-        new_name = (
-            f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500.h5"
-        )
+        new_name = f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500.h5"
 
         if do_rename:
             old_name = f"/home/ubuntu/tmp/NSC/data/dataset-comb/dataset-comb-dur{dur}-T500-part0.h5"
