@@ -9,18 +9,19 @@
 
 
 # ========== parameter settings for the probR ==========
-num_max_theta       : 500
-num_chosen_theta    : 500
+# num_max_theta       : 500
+# num_chosen_theta    : 500
+num_max_sets        : 20
 
 #                     [9-1, 81-1, 729-1, 6561-1, 59049-1, ...]
-chosen_dur_list     : [  3,    5,     7,      9,      11,     13,      15]
-num_seqC_train      : [  7,   72,   500,   2000,    3000,   4000,    5000]
-num_seqC_valid      : [  1,    8,   228,    300,     300,    300,     300]
+# chosen_dur_list     : [  3,    5,     7,      9,      11,     13,      15]
+# num_seqC_train      : [  7,   72,   500,   2000,    3000,   4000,    5000]
+# num_seqC_valid      : [  1,    8,   228,    300,     300,    300,     300]
 
 # ========== data loader settings ==========
 # batch_size                  : 35840 #lstm
 # batch_size                  : 81920 # conv - snn 10G MEM
-batch_size                  : 25600 # conv - snn 10G MEM
+batch_size                  : 32000 # conv - snn 10G MEM
 
 pin_memory                  : False
 num_workers                 : 8

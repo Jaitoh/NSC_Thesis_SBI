@@ -9,9 +9,10 @@ folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 # "p5a-conv_net"
 # "p5a-conv_lstm-corr_conv-tmp-2"
 # "p5a-conv_lstm-maf3-tmp"
+# "p5a-conv_lstm-corr_conv-tmp-4"
+# "p5a-conv_lstm-maf3-tmp-2"
 EXP_IDS=(
-    "p5a-conv_lstm-corr_conv-tmp-4"
-    "p5a-conv_lstm-maf3-tmp-2"
+    "p5a-conv_lstm-corr_conv"
 )
 # "p5a-conv_lstm-Tv2"
 # "p5a-conv_net-Tv2-tmp"

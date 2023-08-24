@@ -38,6 +38,9 @@ FILE_ID=1YBV99JmdicJJ5afnJnVpIcGpSIRJ42tk
 EXP_ID=p5a-conv_lstm-maf3-tmp-2
 FILE_ID=1TaV09VvVQrWHd8N_566FKT_mgttW3x41
 
+EXP_ID=p5a-conv_lstm-corr_conv
+FILE_ID=1SVjurecC-IyhSk80O2ckqMAzkveGT8-9
+
 # ===== train_npe =====
 # log p4-4Fs-1D-cnn.tar.gz
 # Pipeline=train

@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+  - experiment_settings: exp-set-0
+  - prior: prior-3
+  - x_o: x_o-0
+  - simulator: model-0
+  - dataset: dataset-p3
+  - train: train-nle-cnn
+  - posterior: posterior-p2-t0
+
+pipeline_version: nle-p3
+log_dir: ~/tmp/NSC/codes/src/train_nle/logs/L0-nle-p3-cnn/L0-nle-p3-cnn-test
+data_path: ~/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500-copy.h5
+seed: 42
+debug: True
+gpu: True
+continue_from_checkpoint: ""
+MCMC_theta_batch: 1000
