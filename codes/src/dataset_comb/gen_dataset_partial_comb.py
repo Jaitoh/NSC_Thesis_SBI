@@ -24,8 +24,15 @@ setup_seed(100)
 
 # generate seqCs
 
+debug = False
+
 dur_list = [3, 5, 7, 9, 11, 13, 15]
 num_chosen_seqC = [9 - 1, 81 - 1, 729 - 1, 6561 - 1, 6000, 6000, 6000]
+
+if debug:
+    dur_list = [3, 5, 7]
+    num_chosen_seqC = [9 - 1, 81 - 1, 729 - 1]
+
 do_generate_seqC_partial_combinatorial = True
 if do_generate_seqC_partial_combinatorial:
     if os.path.exists(f"{NSC_DIR}/data/dataset-comb/seqC_partial_combinatorial.h5"):
@@ -96,6 +103,8 @@ for dur in dur_list:
 
             params_collect[0, i, j, :, :] = params
             probR_collect[:, i, j, :, :] = probR[:, 0, 0, :, :]
+            if debug:
+                break
 
     print(f"seqs.shape: {seqs.shape}")
     print(f"theta.shape: {params_collect.shape}")
@@ -103,14 +112,11 @@ for dur in dur_list:
     print(f"--- time elapsed: {time.time() - time_start} seconds ---\n")
 
     output_dir = f"{NSC_DIR}/data/dataset-comb/dataset-partcomb-T500.h5"
-    with h5py.File(output_dir, "w") as f_result:
+    with h5py.File(output_dir, "a") as f_result:
         dur_group = f_result.create_group(f"dur_{dur}")
         dur_group.create_dataset("seqC", data=seqs)
         dur_group.create_dataset("theta", data=params_collect)
         dur_group.create_dataset("probR", data=probR_collect)
-        # f_result.create_dataset(f"dur_{dur}/seqC", data=seqs)
-        # f_result.create_dataset(f"dur_{dur}/theta", data=params_collect)
-        # f_result.create_dataset(f"dur_{dur}/probR", data=probR_collect)
 
     print(f"dur_{dur} simulation data saved to {output_dir}\n")
 
@@ -119,7 +125,10 @@ f.close()
 # check
 # output_dir = f"{NSC_DIR}/data/dataset-comb/dataset-partcomb-T500.h5"
 # f = h5py.File(output_dir, "r")
+# f.keys()
+# f["dur_5"].keys()
 # f["dur_3"]["probR"][:].shape
 # f["dur_3"]["probR"][0, 0, 2, :]
-# f["dur_3"]["theta"][:].shape
+# f["dur_3"]["probR"][0, 0, 0, :]
+# f["dur_5"]["theta"][:].shape
 # f.close()

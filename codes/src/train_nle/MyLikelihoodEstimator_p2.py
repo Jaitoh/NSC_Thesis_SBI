@@ -58,7 +58,9 @@ from utils.train import WarmupScheduler, plot_posterior_with_label, load_net
 from utils.set_seed import setup_seed, seed_worker
 from utils.setup import clean_cache
 from utils.dataset.dataset import update_prior_min_max
-from train_nle.Dataset_p2 import x1pR_theta_Dataset
+
+# from train_nle.Dataset_p2 import x1pR_theta_Dataset
+from train_nle.Dataset_v2 import x1pR_theta_Dataset
 from posterior.My_MCMCPost import MyMCMCPosterior
 from utils.setup import adapt_path
 
@@ -207,7 +209,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             config_theta=config.prior,
         )
 
-        print("".center(50, "="))
+        # print("".center(50, "="))
         print("[validation] sets")
         # print("".center(50, "-"))
         valid_dataset = x1pR_theta_Dataset(
@@ -431,7 +433,11 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                 self.optimizer.step()
 
                 # log one batch
-                print_freq = config_training.print_freq
+                if epoch <= 5:
+                    print_freq = config_training.print_freq
+                else:
+                    print_freq = 2
+
                 batch_info = f"epoch {epoch:4}: batch {train_batch_num:4}  train_loss {-1*train_loss:.2f}, time {(time.time() - batch_timer)/60:.2f}min"
                 if print_freq == 0:  # do nothing
                     pass
@@ -440,7 +446,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
                 elif train_batch_num % (len(train_dataloader) // print_freq) == 0:
                     print(batch_info)
 
-                self._summary_writer.add_scalar("train_loss_batch", train_loss, batch_counter)
+                # self._summary_writer.add_scalar("train_loss_batch", train_loss, batch_counter)
 
                 train_batch_num += 1
                 batch_counter += 1
@@ -664,7 +670,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
 
         all_probs = np.concatenate([train_losss, valid_losss])
         lower = np.min(all_probs)
-        upper = np.percentile(all_probs, 60)
+        upper = np.percentile(all_probs, 80)
         ax3.legend(bbox_to_anchor=(1, 1), loc="upper left", borderaxespad=0.0)
         ax3.set_xlabel("epochs")
         ax3.set_ylabel("loss")

@@ -47,7 +47,7 @@ class BaseDataset(Dataset):
         ---
         original data:
         seqC            of shape:(1, M, _S, L)      - (1, 3, 3^n-1-1, 15)
-        probR           of shape:(1, M, _S, T)      - (1, 3, 3^n-1-1, 500)
+        probR           of shape:(1, M, _S, T, 1)   - (1, 3, 3^n-1-1, 500, 1)
         theta           of shape:(1, M, _S, T, 4)   - (1, 3, 3^n-1-1, 500, 4)
         
         ---
@@ -62,24 +62,23 @@ class BaseDataset(Dataset):
             'first_80' - choose first 80% from 'num_chosen_theta' (normally as training set)
             'last_20'  - choose first 20% from 'num_chosen_theta' (normally as validation set)
         """
-        start_loading_time = time.time()
-        print("start loading data into MEM ... ", end="")
+        # start_loading_time = time.time()
+        print("start loading data into MEM ... ")
         self.num_chosen_theta = num_chosen_theta
 
-        dataset_path = adapt_path(Path(data_dir) / f"dataset-partcomb-T500-tmp.h5")
+        dataset_path = adapt_path(Path(data_dir) / f"dataset-partcomb-T500.h5")  # TODO: change
         # define the final shape of the data
         chosen_theta_idx, num_chosen_theta = choose_theta(num_chosen_theta, num_max_theta, theta_chosen_mode)
         self.T = num_chosen_theta
         self.S = 0
         self.S_each_dur = []
+        f = h5py.File(dataset_path, "r")
+        _, self.M, _, self.L_seqC = f[f"dur_3"]["seqC"].shape  # (1, M, S, L)
+        f.close()
+
         for dur, num_seqC in zip(chosen_dur_list, num_max_seqC_each_dur):
-            f = h5py.File(dataset_path, "r")
-            _, self.M, S, self.L_seqC = f[f"dur_{dur}"]["seqC"].shape  # (1, M, S, L)
-            _S = num_seqC
-            self.S += _S
-            # self.theta_all = f[f"dur_{dur}"]["theta"][:,:,,chosen_theta_idx, :]
-            f.close()
-            self.S_each_dur.append(_S)
+            self.S += num_seqC
+            self.S_each_dur.append(num_seqC)
 
         self.seqC_all = np.zeros((self.M, self.S, self.L_seqC))
         self.probR_all = np.zeros((self.M, self.S, self.T))
@@ -98,16 +97,16 @@ class BaseDataset(Dataset):
 
             _S = seqC_data.shape[1]
             probR_data = (
-                f[f"dur_{dur}"]["probR"][:, :, -_S:, chosen_theta_idx][0]
+                f[f"dur_{dur}"]["probR"][:, :, -_S:, chosen_theta_idx, 0][0]
                 if last_seqC_part
-                else f[f"dur_{dur}"]["probR"][:, :, :_S, chosen_theta_idx][0]
+                else f[f"dur_{dur}"]["probR"][:, :, :_S, chosen_theta_idx, 0][0]
             )
-            # probR_data (M, _S, T)
+            # probR_data (M, _S, T, 1)
 
             theta_data = (
-                f[f"dur_{dur}"]["theta"][:, :, -_S:, chosen_theta_idx, :]
+                f[f"dur_{dur}"]["theta"][:, :, -_S:, chosen_theta_idx, :][0]
                 if last_seqC_part
-                else f[f"dur_{dur}"]["theta"][:, :, :_S, chosen_theta_idx, :]
+                else f[f"dur_{dur}"]["theta"][:, :, :_S, chosen_theta_idx, :][0]
             )
             # theta_data (M, _S, T, 4)
 
@@ -120,9 +119,6 @@ class BaseDataset(Dataset):
             S_cnt += _S
         f.close()
 
-        if print_info:
-            self._print_info(chosen_dur_list, num_max_seqC_each_dur, start_loading_time)
-
     def _get_seqC_data(self, f, dur, num_seqC, last_seqC_part=False):
         seqC_shape = f[f"dur_{dur}"]["seqC"].shape  # seqC: (1, M, S, L)
         S = seqC_shape[2]
@@ -130,7 +126,7 @@ class BaseDataset(Dataset):
         seqC = (
             f[f"dur_{dur}"]["seqC"][:, :, -num_seqC:, :][0]
             if last_seqC_part
-            else f["seqC"][:, :, :num_seqC, :][0]
+            else f[f"dur_{dur}"]["seqC"][:, :, :num_seqC, :][0]
         )
         # seqC: (M, S, L)
 
@@ -169,6 +165,8 @@ class probR_Comb_Dataset(BaseDataset):
         theta           of shape (4) - (4)
 
         """
+        start_loading_time = time.time()
+
         super().__init__(
             data_dir=data_dir,
             chosen_dur_list=chosen_dur_list,
@@ -177,7 +175,6 @@ class probR_Comb_Dataset(BaseDataset):
             num_max_theta=num_max_theta,
             num_chosen_theta=num_chosen_theta,
             theta_chosen_mode=theta_chosen_mode,
-            print_info=print_info,
         )
 
         # convert to tensor and reshape
@@ -212,6 +209,9 @@ class probR_Comb_Dataset(BaseDataset):
             unnormed_prior_max=config_theta.prior_max,
         )
 
+        if print_info:
+            self._print_info(chosen_dur_list, num_max_seqC_each_dur, start_loading_time)
+
     def _print_info(self, chosen_dur_list, num_max_seqC_each_dur, start_loading_time):
         print(f" finished in: {time.time()-start_loading_time:.2f}s")
 
@@ -223,9 +223,9 @@ class probR_Comb_Dataset(BaseDataset):
 
         print("".center(50, "-"))
         print("shapes:")
-        print(f"[seqC] shape: {self.seqC_all.shape}")
-        print(f"[theta] shape: {self.theta_all.shape}")
-        print(f"[probR] shape: {self.probR_all.shape}")
+        print(f"[seqC_all] shape [M*_S, 15]: {self.seqC_all.shape}")
+        print(f"[theta_all] shape [M*_S, T, 4]: {self.theta_all.shape}")
+        print(f"[probR_all] shape [M*_S, T, 1]: {self.probR_all.shape}")
 
         print("".center(50, "-"))
         print("example:")
@@ -358,14 +358,27 @@ class x1pR_theta_Dataset(probR_Comb_Dataset):
 
 if __name__ == "__main__":
     setup_seed(100)
+
+    # turn config_theta into a class
+    class config_theta:
+        def __init__(self):
+            self.ignore_ss = False
+            self.normalize = True
+            self.prior_min = [-2.5, 0, 0, -11]
+            self.prior_max = [2.5, 77, 18, 10]
+
+    config_theta = config_theta()
+
     Dataset = probR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
-        chosen_dur_list=[3, 9],
-        num_max_seqC_each_dur=[1, 1],
+        chosen_dur_list=[3, 5],
+        num_max_seqC_each_dur=[7, 73],
+        last_seqC_part=False,
         num_max_theta=50,
         theta_chosen_mode="random",
         print_info=True,
+        config_theta=config_theta,
     )
     seqC, theta, probR = Dataset[0]
 
@@ -373,11 +386,13 @@ if __name__ == "__main__":
     Dataset = probR_Comb_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=500,
-        chosen_dur_list=[3, 5, 7, 9],
-        num_max_seqC_each_dur=[1, 0.5, 0.8, 0.2],
+        chosen_dur_list=[3, 5, 7],
+        num_max_seqC_each_dur=[1, 8, 229],
+        last_seqC_part=True,
         num_max_theta=500,
         theta_chosen_mode="random",
         print_info=True,
+        config_theta=config_theta,
     )
     seqC, theta, probR = Dataset[0]
 
@@ -385,27 +400,11 @@ if __name__ == "__main__":
     Dataset = x1pR_theta_Dataset(
         data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
         num_chosen_theta=50,
-        chosen_dur_list=[3, 5, 7, 9],
-        num_max_seqC_each_dur=[1, 1, 0.1, 0.1],
+        chosen_dur_list=[3, 5],
+        num_max_seqC_each_dur=[7, 73],
+        last_seqC_part=False,
         num_max_theta=50,
         theta_chosen_mode="random",
         print_info=True,
+        config_theta=config_theta,
     )
-    x, theta = Dataset[0]
-
-    setup_seed(100)
-    Dataset = x1pR_theta_Dataset(
-        data_dir="/home/ubuntu/tmp/NSC/data/dataset-comb",
-        num_chosen_theta=50,
-        chosen_dur_list=[3, 5, 7, 9, 11, 13, 15],
-        num_max_seqC_each_dur=[1, 0.2],
-        num_max_theta=500,
-        theta_chosen_mode="random",
-        print_info=True,
-    )
-    x, theta = Dataset[0]
-
-f = h5py.File(f"{NSC_DIR}/data/dataset-comb/dataset-partcomb-T500.h5", "r")
-f.keys()
-f["dur_3"].keys()
-f.close()

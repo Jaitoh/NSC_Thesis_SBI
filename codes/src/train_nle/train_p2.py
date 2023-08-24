@@ -178,6 +178,7 @@ def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")
 
+    print(f"{config=}")
     log_dir = adapt_path(config.log_dir)
     data_path = adapt_path(config.data_path)
     check_path(log_dir, data_path)

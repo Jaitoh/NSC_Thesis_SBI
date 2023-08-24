@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=1
-cd ~/tmp/NSC/codes
+cd $HOME/tmp/NSC/codes
 source activate sbi
 
 ROOT_DIR=~/tmp/NSC
@@ -22,6 +22,14 @@ RUN_ID=L0-nle-p2-cnn-dur3to11
 CONFIG_DATASET=dataset-p2-dur3to11
 CONFIG_TRAIN=train-nle-cnn
 
+RUN_ID=L0-nle-p2-cnn-datav2
+CONFIG_DATASET=dataset-p2-v2-dur3to15
+CONFIG_TRAIN=train-nle-cnn
+
+RUN_ID=L0-nle-p2-cnn-datav2-small-batch
+CONFIG_DATASET=dataset-p2-v2-dur3to15-small-batch
+CONFIG_TRAIN=train-nle-cnn
+
 # DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
 DATA_PATH=${ROOT_DIR}/data/dataset-comb
 # CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
@@ -29,8 +37,8 @@ CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0
 
-LOG_DIR=./src/train_nle/logs/${EXP_ID}/${RUN_ID}
-PRINT_LOG=./src/train_nle/logs/${EXP_ID}/${RUN_ID}/${RUN_ID}.log
+LOG_DIR=${ROOT_DIR}/codes/src/train_nle/logs/${EXP_ID}/${RUN_ID}
+PRINT_LOG=${ROOT_DIR}/codes/src/train_nle/logs/${EXP_ID}/${RUN_ID}/${RUN_ID}.log
 
 mkdir -p ${LOG_DIR}
 
@@ -41,7 +49,7 @@ echo "data_path: ${DATA_PATH}"
 
 code ${PRINT_LOG}
 
-nice python3 -u ./src/train_nle/${TRAIN_FILE_NAME}.py \
+nice python3 -u ${ROOT_DIR}/codes/src/train_nle/${TRAIN_FILE_NAME}.py \
     hydra.run.dir=${LOG_DIR} \
     experiment_settings=${CONFIG_EXP} \
     prior=${CONFIG_PRIOR} \

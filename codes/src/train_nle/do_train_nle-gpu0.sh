@@ -29,8 +29,8 @@ CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0
 
-LOG_DIR=./src/train_nle/logs/${EXP_ID}/${RUN_ID}
-PRINT_LOG=./src/train_nle/logs/${EXP_ID}/${RUN_ID}/${RUN_ID}.log
+LOG_DIR=${ROOT_DIR}/codes/src/train_nle/logs/${EXP_ID}/${RUN_ID}
+PRINT_LOG=${ROOT_DIR}/codes/src/train_nle/logs/${EXP_ID}/${RUN_ID}/${RUN_ID}.log
 
 mkdir -p ${LOG_DIR}
 
@@ -41,7 +41,7 @@ echo "data_path: ${DATA_PATH}"
 
 code ${PRINT_LOG}
 
-nice python3 -u ./src/train_nle/${TRAIN_FILE_NAME}.py \
+nice python3 -u ${ROOT_DIR}/codes/src/train_nle/${TRAIN_FILE_NAME}.py \
     hydra.run.dir=${LOG_DIR} \
     experiment_settings=${CONFIG_EXP} \
     prior=${CONFIG_PRIOR} \

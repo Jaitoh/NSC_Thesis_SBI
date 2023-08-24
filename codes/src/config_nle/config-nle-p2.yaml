@@ -4,12 +4,12 @@ defaults:
   - prior: prior-3
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p2-dur3
+  - dataset: dataset-p2-v2-dur3to15
   - train: train-nle-cnn
   - posterior: posterior-p2-t0
 
 pipeline_version: nle-p2
-log_dir: ~/tmp/NSC/codes/src/train_nle/logs/L0-nle-p2-cnn/L0-nle-p2-cnn-dur3
+log_dir: ~/tmp/NSC/codes/src/train_nle/logs/L0-nle-p2-cnn/L0-nle-p2-cnn-datav2-test
 data_path: ~/tmp/NSC/data/dataset-comb
 seed: 42
 debug: True
