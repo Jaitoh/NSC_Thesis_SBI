@@ -21,10 +21,10 @@ num_max_sets        : 20
 # ========== data loader settings ==========
 # batch_size                  : 35840 #lstm
 # batch_size                  : 81920 # conv - snn 10G MEM
-batch_size                  : 32000 # conv - snn 10G MEM
+batch_size                  : 640000 # conv - snn 10G MEM
 
 pin_memory                  : False
-num_workers                 : 8
+num_workers                 : 12
 prefetch_factor             : 2
 # pin_memory                  : False
 # num_workers                 : 0
