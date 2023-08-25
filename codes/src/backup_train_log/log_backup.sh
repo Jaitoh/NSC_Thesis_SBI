@@ -43,14 +43,25 @@ EXP_IDS=(
 # )
 
 # === nle p2 ===
-# Pipeline=train_nle
-# TRAIN_ID=L0-nle-p2-cnn
-# folder_id=1wJE5wfoMCi-hUZAGNsiIE4QLFsVCIqsu # logs gdrive folder id
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p2-cnn
+folder_id=1wJE5wfoMCi-hUZAGNsiIE4QLFsVCIqsu # logs gdrive folder id
 
-# # "L0-nle-p2-cnn-dur3"
-# # "L0-nle-p2-cnn-dur3to7"
+# "L0-nle-p2-cnn-dur3"
+# "L0-nle-p2-cnn-dur3to7"
+# "L0-nle-p2-cnn-dur3to11-post"
+EXP_IDS=(
+    "L0-nle-p2-cnn-datav2-small-batch-tmp"
+    "L0-nle-p2-cnn-datav2-tmp"
+)
+
+# === nle p3 ===
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-p3-cnn
+# folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
+
 # EXP_IDS=(
-#     "L0-nle-p2-cnn-dur3to11-post"
+#     "L0-nle-p3-cnn-tmp"
 # )
 
 # zip log files

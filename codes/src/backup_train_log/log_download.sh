@@ -79,7 +79,7 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # FILE_ID=1pd8OnzUk_rSXjxr1PGa4qo5HT3fhPK2m
 
 # ===== train_nle p2 =====
-# Pipeline=train_nle
+Pipeline=train_nle
 # TRAIN_ID=L0-nle-p2-cnn
 # EXP_ID=L0-nle-p2-cnn-dur3
 # FILE_ID=1LOBBDIU17c6BmQmLqiY5aVFx2ZR_JD5J
@@ -99,6 +99,23 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # EXP_ID=L0-nle-p2-cnn-dur3to11
 # FILE_ID=1GAO0HS3tnh3ytZHVZKFUevHEGhsOTcvw
 # MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs"   # !
+
+TRAIN_ID=L0-nle-p2-cnn
+EXP_ID=L0-nle-p2-cnn-datav2-tmp
+FILE_ID=1_Jo8BvmqcaossBkrHgWbdQNN02ewTj7w
+MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
+
+TRAIN_ID=L0-nle-p2-cnn
+EXP_ID=L0-nle-p2-cnn-datav2-small-batch-tmp
+FILE_ID=1QP2O722wIKOXibVO5H6-I1FjFqufrtNH
+MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
+
+# ===== train_nle p3 =====
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-p3-cnn
+# EXP_ID=L0-nle-p3-cnn-tmp
+# FILE_ID=1MtIri_LAstvQaY85pSWvKfVTAPIkzL1v
+# MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
 LOG_DIR="$HOME/tmp/NSC/codes/src/${Pipeline}/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
