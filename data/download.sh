@@ -91,3 +91,6 @@ tar -xzf exp-b0-2-contd0.tar.gz
 tar -zcf exp-b0-2-contd0.tar.gz ./train/logs/train_L0/exp-b0-2-contd0
 
 ./gdrive files download 1E9ZUtWjmVLUI2rWsIM7WmOb2WH1Ke8a5 --destination $HOME/tmp/NSC/data/dataset-comb
+
+mkdir $HOME/tmp/NSC/codes/notebook/figures/compare
+./gdrive files download 11AwCFhatQ5VW7TMYvKT5Hn5gjPqWyfcM --destination $HOME/tmp/NSC/codes/notebook/figures/compare

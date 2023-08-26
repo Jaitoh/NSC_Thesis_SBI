@@ -65,3 +65,6 @@
 
 ./gdrive files upload /home/wehe/tmp/NSC/data/dataset-comb/dataset-partcomb-T500.h5
 ./gdrive files move 1E9ZUtWjmVLUI2rWsIM7WmOb2WH1Ke8a5 1VXyrQjCeoqvEl8dllXRvhHAf27SJpEMq
+
+./gdrive files upload /home/wehe/tmp/NSC/codes/notebook/figures/compare/dataset_varying_params.pt
+# 11AwCFhatQ5VW7TMYvKT5Hn5gjPqWyfcM
