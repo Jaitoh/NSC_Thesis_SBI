@@ -1,11 +1,9 @@
-#!/bin/bash 
-### Comment lines start with ## or #+space 
-### Slurm option lines start with #SBATCH 
-### Here are the SBATCH parameters that you should always consider: 
+#!/bin/bash
+### Comment lines start with ## or #+space
+### Slurm option lines start with #SBATCH
+### Here are the SBATCH parameters that you should always consider:
 
-
-
-#SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds 
+#SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds
 #SBATCH --ntasks=1
 
 #SBATCH --gres=gpu:1
@@ -92,18 +90,17 @@ echo "config_train_path: ${CONFIG_TRAIN_PATH}"
 
 # --run ${SLURM_ARRAY_TASK_ID} \
 python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
---seed 100 \
---config_simulator_path ${CONFIG_SIMULATOR_PATH} \
---config_dataset_path ${CONFIG_DATASET_PATH} \
---config_train_path ${CONFIG_TRAIN_PATH} \
---data_path ${DATA_PATH} \
---log_dir ${LOG_DIR} &> ${PRINT_LOG}
+    --seed 100 \
+    --config_simulator_path ${CONFIG_SIMULATOR_PATH} \
+    --config_dataset_path ${CONFIG_DATASET_PATH} \
+    --config_train_path ${CONFIG_TRAIN_PATH} \
+    --data_path ${DATA_PATH} \
+    --log_dir ${LOG_DIR} &>${PRINT_LOG}
 
 # \
 # --gpu \
 # -y &> ${PRINT_LOG}
 # --continue_from_checkpoint ${CHECK_POINT_PATH} \
-
 
 echo 'finished simulation'
 
@@ -126,7 +123,7 @@ echo 'finished simulation'
 # 829500_* job - array=2 A100
 # SBATCH --array=0-5
 
-# ./src/train/do_train_uzh.sh 
+# ./src/train/do_train_uzh.sh
 # SBATCH --constraint="GPUMEM16GB|GPUMEM32GB"
 
 # SBATCH --array=4,5,2

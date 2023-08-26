@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from time import time
+import time
 from typing import Callable, Optional
 import warnings
 from typing import Optional, Tuple
@@ -248,7 +248,9 @@ class ConditionedDensityEstimator(nn.Module):
             last_theta_batch_time = time.time()
             for j in range(len(theta_chunks)):
                 if len(theta_chunks) > 1:
-                    print(f"{j}/{len(theta_chunks)}, time: {(time() - last_theta_batch_time)/60:.2f} min")
+                    print(
+                        f"{j}/{len(theta_chunks)}, time: {(time.time() - last_theta_batch_time)/60:.2f} min"
+                    )
                     last_theta_batch_time = time.time()
                 theta_ = theta_chunks[j].to(net_device)
                 with torch.no_grad():

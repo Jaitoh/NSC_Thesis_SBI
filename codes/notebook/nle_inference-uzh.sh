@@ -1,4 +1,17 @@
 #!/bin/bash
+### Comment lines start with ## or #+space
+### Slurm option lines start with #SBATCH
+### Here are the SBATCH parameters that you should always consider:
+
+#SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds
+#SBATCH --ntasks=1
+# SBATCH --array=0-27
+#SBATCH --gres=gpu:1
+
+#SBATCH --mem 20G
+#SBATCH --cpus-per-task=5
+
+#SBATCH --job-name=posterior
 
 export CUDA_VISIBLE_DEVICES=0
 cd ~/tmp/NSC/codes
@@ -14,10 +27,10 @@ exp_id="L0-nle-p2-cnn-datav2"
 log_exp_id="nle-p2-cnn-datav2"
 
 # use_chosen_dur=True
-use_chosen_dur=1 # 0/1
-T_idx=$2         # 0->27
+use_chosen_dur=1             # 0/1
+T_idx=${SLURM_ARRAY_TASK_ID} # 0->27
 
-iid_batch_size_theta=100 # 38GB GPU memory
+iid_batch_size_theta=100 # 10GB GPU memory
 
 # ==========
 # LOG_DIR="./src/train_nle/logs/${RUN_ID}/${EXP_ID}"
@@ -35,7 +48,7 @@ echo "print_log: ${PRINT_LOG}"
 
 code ${PRINT_LOG}
 SCRIPT_PATH=${ROOT_DIR}/codes/notebook/nle_inference.py
-nice python3 -u ${SCRIPT_PATH} \
+python3 -u ${SCRIPT_PATH} \
     --pipeline_version ${pipeline_version} \
     --train_id ${train_id} \
     --exp_id ${exp_id} \
@@ -44,3 +57,6 @@ nice python3 -u ${SCRIPT_PATH} \
     --T_idx ${T_idx} \
     --iid_batch_size_theta ${iid_batch_size_theta} \
     >${PRINT_LOG} 2>&1
+
+#SBATCH --constraint="GPUMEM32GB"
+# squeue -u $USER
