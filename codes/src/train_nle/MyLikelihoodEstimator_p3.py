@@ -569,7 +569,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         """
         log_prob = self._neural_net.log_prob(x=x, theta=theta)
         # loss: ms error of ln(pR) and the computed log_prob
-        return nn.MSELoss()(torch.log(pR), log_prob)
+        # return nn.MSELoss()(torch.log(pR), log_prob)
+        return nn.MSELoss()(pR, torch.exp(log_prob))
 
     def _converged(self, epoch, debug):
         converged = False

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=1
-cd $HOME/tmp/NSC/codes
+cd $HOME/data/NSC/codes
 source activate sbi
 
-ROOT_DIR=~/tmp/NSC
+ROOT_DIR=~/data/NSC
 
 TRAIN_FILE_NAME=train_p2
 EXP_ID=L0-nle-p2-cnn
@@ -27,6 +27,10 @@ CONFIG_DATASET=dataset-p2-v2-dur3to15
 CONFIG_TRAIN=train-nle-cnn
 
 RUN_ID=L0-nle-p2-cnn-datav2-small-batch
+CONFIG_DATASET=dataset-p2-v2-dur3to15-small-batch
+CONFIG_TRAIN=train-nle-cnn
+
+RUN_ID=L0-nle-p2-cnn-datav2-small-batch-newLoss
 CONFIG_DATASET=dataset-p2-v2-dur3to15-small-batch
 CONFIG_TRAIN=train-nle-cnn
 

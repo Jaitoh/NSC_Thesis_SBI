@@ -1,10 +1,10 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=0
-cd ~/tmp/NSC/codes
+cd ~/data/NSC/codes
 source activate sbi
 
-ROOT_DIR=~/tmp/NSC
+ROOT_DIR=~/data/NSC
 
 TRAIN_FILE_NAME=train_p2
 EXP_ID=L0-nle-p2-cnn

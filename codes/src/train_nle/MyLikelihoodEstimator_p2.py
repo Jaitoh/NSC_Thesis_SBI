@@ -574,7 +574,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         """
         log_prob = self._neural_net.log_prob(x=x, theta=theta)
         # loss: ms error of ln(pR) and the computed log_prob
-        return nn.MSELoss()(torch.log(pR), log_prob)
+        # return nn.MSELoss()(torch.log(pR), log_prob)
+        return nn.MSELoss()(pR, torch.exp(log_prob))
 
     def _converged(self, epoch, debug):
         converged = False
@@ -916,7 +917,7 @@ def conditioned_likelihood_estimator_based_potential(
     device = str(next(likelihood_estimator.conditioned_net.parameters()).device)
 
     potential_fn = ConditionedLikelihoodBasedPotential(likelihood_estimator, prior, x_o, device=device)
-    theta_transform = mcmc_transform(prior, device=device)
+    theta_transform = mcmc_transform(prior, device=device, enable_transform=False)
 
     return potential_fn, theta_transform
 

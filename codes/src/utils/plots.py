@@ -606,3 +606,58 @@ def marginal_plot(
             ax.fill_between(x_fill, 0, y_fill, color="g", alpha=0.2)
 
     return axes
+
+
+def CoV_plot(
+    all_samples_dr,
+    all_thetas_dr,
+    num_params,
+    designed_limits,
+    prior_labels,
+    colors,
+):
+    fig, axes = plt.subplots(
+        all_thetas_dr.shape[0],
+        all_thetas_dr.shape[-1],
+        figsize=(all_thetas_dr.shape[-1] * 8, 5 * all_thetas_dr.shape[0]),
+    )
+    fig.subplots_adjust(wspace=0.4)
+    num_trials = all_thetas_dr.shape[1]
+
+    dest_limits = designed_limits
+
+    for i in range(all_thetas_dr.shape[0]):
+        ax_row = axes[i, :]
+        samples_row = all_samples_dr[i]
+        moving_theta_idx = i
+
+        for j in range(num_params):
+            for k in range(num_trials):
+                ax = ax_row[j]
+                density = gaussian_kde(samples_row[k, :, j], bw_method="scott")
+                xs = np.linspace(dest_limits[j][0], dest_limits[j][1], 100)
+                ys = density(xs)
+                ax.plot(
+                    xs,
+                    ys,
+                    color=colors[k],
+                    linewidth=4,
+                    label=f"{prior_labels[i]}:{all_thetas_dr[i, k, i]:.2f}",
+                    alpha=1 - 0.6 * k / (num_trials - 1),
+                )
+                ax.set_xlim(dest_limits[j][0], dest_limits[j][1])
+                ax.legend(fontsize=10)
+                ax.axvline(
+                    all_thetas_dr[i, k, j],
+                    color=colors[k],
+                    linestyle="--",
+                    linewidth=4,
+                    alpha=1 - 0.6 * k / (num_trials - 1),
+                )
+                ax.grid(alpha=0.2)
+                if j == 0:
+                    ax.set_ylabel("density")
+
+            if i == num_params - 1:
+                ax.set_xlabel(prior_labels[j])
+    return fig

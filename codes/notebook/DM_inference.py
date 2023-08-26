@@ -156,8 +156,8 @@ def main():
         num_chains=4,  #!
         # num_chains=1,
         # num_workers=config_nle.posterior.num_workers,  #!
-        num_workers=4,  #!
-        # num_workers=1,  #! for test
+        # num_workers=4,  #!
+        num_workers=1,  #! for test
         init_strategy="sir",  #!
     )
     print(f"==>> mcmc_parameters: {mcmc_parameters}")
@@ -210,15 +210,15 @@ def main():
             "cuda",
             posterior_nle,
             xy_o,
-            num_samples=20_000,
+            num_samples=2000,
             show_progress_bars=True,
         )
 
         # save the samples
         if use_chosen_dur:
-            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_chosen_dur_20k.npy"
+            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_chosen_dur.npy"
         else:
-            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_all__20k.npy"
+            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_all.npy"
 
         np.save(save_dir, samples)
         print(f"==>> saved samples: {save_dir}")
