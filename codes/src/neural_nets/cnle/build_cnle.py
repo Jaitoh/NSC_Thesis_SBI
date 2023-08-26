@@ -247,11 +247,14 @@ class ConditionedDensityEstimator(nn.Module):
             counter_theta = 0
             last_theta_batch_time = time.time()
             for j in range(len(theta_chunks)):
-                if len(theta_chunks) > 1:
+                if len(theta_chunks) > 1 and j % (len(theta_chunks) // 5) == 0: 
+                    if j == 0:
+                        print("")
                     print(
                         f"{j}/{len(theta_chunks)}, time: {(time.time() - last_theta_batch_time)/60:.2f} min"
                     )
                     last_theta_batch_time = time.time()
+                    
                 theta_ = theta_chunks[j].to(net_device)
                 with torch.no_grad():
                     # compute the log probs for each oberseved data [seqC, chR] given each theta

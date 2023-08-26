@@ -1,4 +1,3 @@
-# %%
 import argparse
 import torch
 import numpy as np
@@ -60,7 +59,7 @@ mpl.rcParams["grid.alpha"] = 0.2
 colors = ["tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple", "tab:brown"]
 from features.features import *
 
-# %% load the data
+# load the data
 fig_dir = Path(f"{NSC_DIR}/codes/notebook/figures/")
 valid_data_dir = f"{fig_dir}/compare/dataset_varying_params.pt"
 data = torch.load(valid_data_dir)
@@ -221,7 +220,7 @@ def main():
         else:
             save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_all.npy"
 
-        np.save(save_dir, samples.cpu().numpy())
+        np.save(save_dir, samples)
         print(f"==>> saved samples: {save_dir}")
 
     print(f"==>> Done in {(time.time() - start_time)/60/60:.2f} hours")

@@ -60,17 +60,17 @@ EXP_IDS=(
 )
 
 # === nle p3 ===
-# Pipeline=train_nle
-# TRAIN_ID=L0-nle-p3-cnn
-# folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p3-cnn
+folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
 
-# EXP_IDS=(
-#     "L0-nle-p3-cnn-tmp"
-# )
+EXP_IDS=(
+    "L0-nle-p3-cnn"
+)
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"
-LOG_DIR=~/tmp/NSC/codes/src/${Pipeline}/logs
+LOG_DIR=~/data/NSC/codes/src/${Pipeline}/logs
 if [ ${DO_ZIP} -eq 1 ]; then
     for EXP_ID in "${EXP_IDS[@]}"; do
         cd ${LOG_DIR}/${TRAIN_ID}

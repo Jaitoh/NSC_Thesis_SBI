@@ -1,10 +1,10 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=1
-cd ~/tmp/NSC/codes
+cd ~/data/NSC/codes
 source activate sbi
 
-ROOT_DIR="$HOME/tmp/NSC"
+ROOT_DIR="$HOME/data/NSC"
 
 pipeline_version="nle-p2"
 train_id="L0-nle-p2-cnn"
@@ -16,7 +16,7 @@ log_exp_id="nle-p2-cnn-datav2"
 # use_chosen_dur=True
 use_chosen_dur=$1        # 0/1
 T_idx=$2                 # 0->27
-iid_batch_size_theta=500 # 38GB GPU memory
+iid_batch_size_theta=100 # 38GB GPU memory
 
 # ==========
 # LOG_DIR="./src/train_nle/logs/${RUN_ID}/${EXP_ID}"
@@ -43,3 +43,5 @@ nice python3 -u ${SCRIPT_PATH} \
     --T_idx ${T_idx} \
     --iid_batch_size_theta ${iid_batch_size_theta} \
     >${PRINT_LOG} 2>&1
+
+#  /home/wehe/data/NSC/codes/notebook/nle_inference-gpu-0.sh 1 1

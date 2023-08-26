@@ -27,6 +27,10 @@ def adapt_path(input_path):
         output_path = Path("/".join([str(home_dir)] + relative_path))
     else:
         output_path = Path(input_path)
+    
+    # replace tmp with data
+    if "/tmp/" in str(output_path):
+        output_path = Path(str(output_path).replace("/tmp/", "/data/"))
 
     return output_path
 
