@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 NSC_DIR = Path(os.getcwd()).resolve().parent.as_posix()  # NSC dir
 sys.path.append(f"{NSC_DIR}/codes/src")
+print(NSC_DIR)
 from utils.setup import adapt_path
 from utils.event import get_train_valid_lr
 from utils.plots import load_img, pairplot, plot_posterior_mapped_samples, marginal_plot

@@ -134,6 +134,7 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
 LOG_DIR="$HOME/tmp/NSC/codes/src/${Pipeline}/logs"
+# LOG_DIR="$HOME/data/NSC/codes/src/${Pipeline}/logs"
 mkdir ${LOG_DIR}/${TRAIN_ID}
 
 cd ~

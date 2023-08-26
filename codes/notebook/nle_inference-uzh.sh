@@ -5,7 +5,7 @@
 
 #SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds
 #SBATCH --ntasks=1
-# SBATCH --array=0-27
+#SBATCH --array=0-1
 #SBATCH --gres=gpu:1
 
 #SBATCH --mem 20G
@@ -13,11 +13,11 @@
 
 #SBATCH --job-name=posterior
 
-export CUDA_VISIBLE_DEVICES=0
-cd ~/tmp/NSC/codes
+module load anaconda3
 source activate sbi
 
-ROOT_DIR="$HOME/tmp/NSC"
+ROOT_DIR="$HOME/data/NSC"
+cd ${ROOT_DIR}/codes
 
 pipeline_version="nle-p2"
 train_id="L0-nle-p2-cnn"
@@ -60,3 +60,5 @@ python3 -u ${SCRIPT_PATH} \
 
 #SBATCH --constraint="GPUMEM32GB"
 # squeue -u $USER
+# SBATCH --output=/home/wehe/data/NSC/codes/notebook/figures/compare/posterior/posterior-%A_%a.out
+# SBATCH --error=/home/wehe/data/NSC/codes/notebook/figures/compare/posterior/posterior-%A_%a.err
