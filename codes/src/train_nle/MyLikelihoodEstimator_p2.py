@@ -177,6 +177,7 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
         device="cuda",
         print_info=True,
         inference_mode=False,
+        low_batch=0,
     ):
         # prepare train, val dataset and dataloader
         print("".center(50, "="))
@@ -244,6 +245,8 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             "prefetch_factor": prefetch_factor,
             "worker_init_fn": seed_worker,
         }
+        if low_batch != 0:
+            loader_kwargs["batch_size"] = low_batch
         print("")
         print(f"{loader_kwargs=}")
 
