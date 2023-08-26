@@ -55,6 +55,12 @@ FILE_ID=1SVjurecC-IyhSk80O2ckqMAzkveGT8-9
 # EXP_ID=p4a-F134-cnn
 # FILE_ID=1Ln7T3O42GCnKsBI67iPRU-aJ3mPTllA6
 
+# EXP_ID=p4a-F134-cnn-maf3
+# FILE_ID=1aL_LHN1blnpYrgotceBcDOxsVG5REfSd
+
+# EXP_ID=p4a-F1345-cnn-maf3
+# FILE_ID=1m1rui_Oh-z3IS-WREekim4ZYJyXAd6xd
+
 MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # ===== train_nle =====
 # Pipeline=train_nle
@@ -108,6 +114,16 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 TRAIN_ID=L0-nle-p2-cnn
 EXP_ID=L0-nle-p2-cnn-datav2-small-batch-tmp
 FILE_ID=1QP2O722wIKOXibVO5H6-I1FjFqufrtNH
+MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
+
+TRAIN_ID=L0-nle-p2-cnn
+EXP_ID=L0-nle-p2-cnn-datav2
+FILE_ID=1Q73h_ZhzW0_piVHpl1-PsITsBO_RpYKq
+MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
+
+TRAIN_ID=L0-nle-p2-cnn
+EXP_ID=L0-nle-p2-cnn-datav2-small-batch
+FILE_ID=1dWBozyYlZL6iWJarJBiSWmx0-PNLtsS4
 MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
 # ===== train_nle p3 =====
