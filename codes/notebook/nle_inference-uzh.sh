@@ -5,10 +5,10 @@
 
 #SBATCH --time=6-24:00:00 ## days-hours:minutes:seconds
 #SBATCH --ntasks=1
-#SBATCH --array=0-1
+#SBATCH --array=2-26
 #SBATCH --gres=gpu:1
 
-#SBATCH --mem 20G
+#SBATCH --mem 15G
 #SBATCH --cpus-per-task=5
 
 #SBATCH --job-name=posterior
@@ -27,10 +27,9 @@ exp_id="L0-nle-p2-cnn-datav2"
 log_exp_id="nle-p2-cnn-datav2"
 
 # use_chosen_dur=True
-use_chosen_dur=1             # 0/1
+use_chosen_dur=0             # 0/1
 T_idx=${SLURM_ARRAY_TASK_ID} # 0->27
-
-iid_batch_size_theta=100 # 10GB GPU memory
+iid_batch_size_theta=50 # 10GB GPU memory
 
 # ==========
 # LOG_DIR="./src/train_nle/logs/${RUN_ID}/${EXP_ID}"
