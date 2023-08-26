@@ -1,3 +1,4 @@
+import time
 import argparse
 import torch
 import numpy as np
@@ -98,7 +99,7 @@ def main():
     exp_id = "L0-nle-p2-cnn-datav2"
     # exp_id = "L0-nle-p2-cnn-datav2-small-batch-tmp"
     log_exp_id = "nle-p2-cnn-datav2"
-    use_chosen_dur = True
+    use_chosen_dur = 0
     T_idx = 0
     iid_batch_size_theta = 500
 
@@ -107,7 +108,7 @@ def main():
     parser.add_argument("--train_id", type=str, default=train_id)
     parser.add_argument("--exp_id", type=str, default=exp_id)
     parser.add_argument("--log_exp_id", type=str, default=log_exp_id)
-    parser.add_argument("--use_chosen_dur", type=bool, default=use_chosen_dur)
+    parser.add_argument("--use_chosen_dur", type=int, default=use_chosen_dur)
     parser.add_argument("--T_idx", type=int, default=T_idx)
     parser.add_argument("--iid_batch_size_theta", type=int, default=iid_batch_size_theta)
     args = parser.parse_args()
@@ -193,12 +194,14 @@ def main():
         theta_test = convert_samples_range(theta_test, designed_limits, normed_limits)
 
         if use_chosen_dur:
+            print(use_chosen_dur, "use chosen dur")
             xy_o_chosen_dur = torch.cat(
                 [x_o[chosen_dur_idx], chR[chosen_dur_idx, :, :, T, C_idx, None]], dim=-1
             ).reshape(-1, 16)
             xy_o_chosen_dur = xy_o_chosen_dur[:, 1:]
             xy_o = xy_o_chosen_dur
         else:
+            print(use_chosen_dur, "use all dur")
             xy_o_all = torch.cat((x_o, chR[:, :, :, T, C_idx, None]), dim=-1).reshape(-1, 16)
             xy_o_all = xy_o_all[:, 1:]
             xy_o = xy_o_all
