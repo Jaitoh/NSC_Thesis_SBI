@@ -96,12 +96,13 @@ def main():
     start_time = time.time()
     pipeline_version = "nle-p2"
     train_id = "L0-nle-p2-cnn"
-    exp_id = "L0-nle-p2-cnn-datav2"
+    exp_id = "L0-nle-p2-cnn-datav2-small-batch-newLoss-tmp2"
     # exp_id = "L0-nle-p2-cnn-datav2-small-batch-tmp"
-    log_exp_id = "nle-p2-cnn-datav2"
+    log_exp_id = "L0-nle-p2-cnn-datav2-small-batch-newLoss"
     use_chosen_dur = 0
     T_idx = 0
     iid_batch_size_theta = 500
+    num_samples = 2000
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--pipeline_version", type=str, default=pipeline_version)
@@ -111,6 +112,7 @@ def main():
     parser.add_argument("--use_chosen_dur", type=int, default=use_chosen_dur)
     parser.add_argument("--T_idx", type=int, default=T_idx)
     parser.add_argument("--iid_batch_size_theta", type=int, default=iid_batch_size_theta)
+    parser.add_argument("--num_samples", type=int, default=num_samples)
     args = parser.parse_args()
 
     pipeline_version = args.pipeline_version
@@ -120,6 +122,7 @@ def main():
     use_chosen_dur = args.use_chosen_dur
     T_idx = args.T_idx
     iid_batch_size_theta = args.iid_batch_size_theta
+    num_samples = args.num_samples
 
     # == load the latest event file
     log_dir = Path(NSC_DIR) / "codes/src/train_nle/logs" / train_id / exp_id
@@ -213,15 +216,19 @@ def main():
             "cuda",
             posterior_nle,
             xy_o,
-            num_samples=20_000,
+            num_samples=num_samples,
             show_progress_bars=True,
         )
 
         # save the samples
         if use_chosen_dur:
-            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_chosen_dur_20k.npy"
+            save_dir = (
+                f"{fig_dir}/nle/{log_exp_id}_posterior_samples_chosen_dur_{int(num_samples/1000)}k_T{T}.npy"
+            )
         else:
-            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_all__20k.npy"
+            save_dir = (
+                f"{fig_dir}/nle/{log_exp_id}_posterior_samples_all_dur_{int(num_samples/1000)}k_T{T}.npy"
+            )
 
         np.save(save_dir, samples)
         print(f"==>> saved samples: {save_dir}")

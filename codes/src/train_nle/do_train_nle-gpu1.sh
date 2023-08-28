@@ -30,7 +30,7 @@ RUN_ID=L0-nle-p2-cnn-datav2-small-batch
 CONFIG_DATASET=dataset-p2-v2-dur3to15-small-batch
 CONFIG_TRAIN=train-nle-cnn
 
-RUN_ID=L0-nle-p2-cnn-datav2-small-batch-newLoss
+RUN_ID=L0-nle-p2-cnn-datav2-small-batch-newLoss-2
 CONFIG_DATASET=dataset-p2-v2-dur3to15-small-batch
 CONFIG_TRAIN=train-nle-cnn
 

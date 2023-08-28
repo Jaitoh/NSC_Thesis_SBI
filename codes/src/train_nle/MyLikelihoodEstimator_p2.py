@@ -590,10 +590,14 @@ class MyLikelihoodEstimator(NeuralInference, ABC):
             self._best_model_from_epoch = epoch
 
             # save the model
+            save_path_model = adapt_path(
+                os.path.join(adapt_path(self.config.log_dir), f"model/model_check_point.pt")
+            )
             torch.save(
                 self._neural_net,
-                adapt_path(os.path.join(adapt_path(self.config.log_dir), f"model/model_check_point.pt")),
+                save_path_model,
             )
+            print(f"model saved at epoch {epoch} under {save_path_model}")
         else:
             self._epochs_since_last_improvement += 1
 

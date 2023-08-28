@@ -1,3 +1,5 @@
+debug = False
+
 import argparse
 import torch
 import numpy as np
@@ -72,6 +74,7 @@ prior_labels = data["prior_labels"]
 normed_limits = data["normed_limits"]
 designed_limits = data["designed_limits"]
 step = 7
+num_params = 4
 nT = 28
 C_idx = 0
 D, M, S = seqC_o.shape[0], seqC_o.shape[1], seqC_o.shape[2]
@@ -86,144 +89,259 @@ x_o_all = x_o.reshape(-1, 15)
 print(f"==>> x_o_chosen_dur.shape: {x_o_chosen_dur.shape}")
 print(f"==>> x_o_all.shape: {x_o_all.shape}")
 
+prior_min = [-2.5, 0, 0, -11]
+prior_max = [2.5, 77, 18, 10]
+
+
+from sbi.inference.potentials.base_potential import BasePotential
+from sbi import utils as utils
+from sbi.utils import mcmc_transform
+from posterior.My_MCMCPost import MyMCMCPosterior
+
+
+class ModelBasedPotential(BasePotential):
+    allow_iid_x = True  # type: ignore
+
+    def __init__(
+        self,
+        prior,
+        x_o,
+        device: str = "cpu",
+    ):
+        r"""Returns the potential function for likelihood-based methods.
+
+        Args:
+            likelihood_estimator: The neural network modelling the likelihood.
+            prior: The prior distribution.
+            x_o: The observed data at which to evaluate the likelihood.
+            device: The device to which parameters and data are moved before evaluating
+                the `likelihood_nn`.
+
+        Returns:
+            The potential function $p(x_o|\theta)p(\theta)$.
+        """
+
+        super().__init__(prior, x_o, device)
+
+    def __call__(self, theta):
+        if debug:
+            theta = theta[:2, :]
+        verbose = 1 if theta.shape[0] > 1 else 0
+        print(f"==>> theta.shape: {theta.shape}, verbose {verbose}") if theta.shape[0] > 1 else None
+
+        # Calculate likelihood in one batch.
+        seqC_o = self.x_o[:, :, :, :-1]  # [D, M, S, 15]
+        chR_o = self.x_o[:, :, :, -1].unsqueeze(-1)  # [D, M, S, 1]
+        # theta [T, 4]
+        _, pR = DM_sim_for_seqCs_parallel_with_smaller_output(
+            seqCs=seqC_o,
+            prior=theta.to(self.device),
+            num_workers=16,
+            privided_prior=True,
+            verbose=verbose,
+        )
+        # pR [D, M, S, T, 1]
+
+        # initialize log-likelihood sum
+        log_likelihood_thetas = []
+
+        # Loop through all T and calculate log-likelihood
+        for i in range(theta.shape[0]):
+            # Extract pR for current i: [D, M, S, 1]
+            pR_i = pR[:, :, :, i, :]
+            pR_i = torch.tensor(pR_i).to(dtype=torch.float32, device=self.device)
+
+            # Compute likelihood based on choice
+            likelihood = torch.where(chR_o == 1, pR_i, 1 - pR_i)
+
+            # Update log-likelihood sum
+            log_likelihood_thetas.append(torch.log(likelihood).sum())
+
+        return torch.tensor(log_likelihood_thetas) + self.prior.log_prob(theta)
+
+
+prior = utils.torchutils.BoxUniform(  # type: ignore
+    low=np.array(prior_min, dtype=np.float32),
+    high=np.array(prior_max, dtype=np.float32),
+    device="cpu",
+)
+
+T = 0
+C_idx = 0
+x_o = torch.cat([seqC_o, chR[:, :, :, T, C_idx, None]], dim=-1)
+# x_o = x_o.reshape(-1, 16)
+print(f"==>> x_o.shape: {x_o.shape}")
+
+potential_fn = ModelBasedPotential(prior, x_o, device="cpu")
+theta_transform = mcmc_transform(prior, device="cpu", enable_transform=False)
+
+mcmc_parameters = dict(
+    warmup_steps=20,  #!
+    thin=1,  #!
+    # num_chains=min(os.cpu_count() - 1, config_nle.posterior.num_chains),  #!
+    num_chains=4,  #!
+    # num_chains=1,
+    # num_workers=config_nle.posterior.num_workers,  #!
+    # num_workers=4,  #!
+    num_workers=1,  #! for test
+    init_strategy="sir",  #!
+)
+
+posterior = MyMCMCPosterior(
+    potential_fn=potential_fn,
+    theta_transform=theta_transform,
+    proposal=prior,
+    method="slice",
+    device="cpu",
+    x_shape=[D, M, S, 16],
+    **mcmc_parameters,
+)
+
+samples = posterior.sample((20_000,), x=x_o)
+
+save_dir = f"{fig_dir}/compare/analytical_posterior_samples_T{T}_all.npy"
+np.save(save_dir, samples)
+print(f"==>> saved samples: {save_dir}")
+
 
 def main():
-    # get PID
-    pid = os.getpid()
-    print(f"\n==>> pid: {pid}")
+    pass
+    # # get PID
+    # pid = os.getpid()
+    # print(f"\n==>> pid: {pid}")
 
-    start_time = time.time()
-    pipeline_version = "nle-p2"
-    train_id = "L0-nle-p2-cnn"
-    exp_id = "L0-nle-p2-cnn-datav2"
-    # exp_id = "L0-nle-p2-cnn-datav2-small-batch-tmp"
-    log_exp_id = "nle-p2-cnn-datav2"
-    use_chosen_dur = True
-    T_idx = 0
-    iid_batch_size_theta = 500
+    # start_time = time.time()
+    # pipeline_version = "nle-p2"
+    # train_id = "L0-nle-p2-cnn"
+    # exp_id = "L0-nle-p2-cnn-datav2"
+    # # exp_id = "L0-nle-p2-cnn-datav2-small-batch-tmp"
+    # log_exp_id = "nle-p2-cnn-datav2"
+    # use_chosen_dur = True
+    # T_idx = 0
+    # iid_batch_size_theta = 500
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--pipeline_version", type=str, default=pipeline_version)
-    parser.add_argument("--train_id", type=str, default=train_id)
-    parser.add_argument("--exp_id", type=str, default=exp_id)
-    parser.add_argument("--log_exp_id", type=str, default=log_exp_id)
-    parser.add_argument("--use_chosen_dur", type=bool, default=use_chosen_dur)
-    parser.add_argument("--T_idx", type=int, default=T_idx)
-    parser.add_argument("--iid_batch_size_theta", type=int, default=iid_batch_size_theta)
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--pipeline_version", type=str, default=pipeline_version)
+    # parser.add_argument("--train_id", type=str, default=train_id)
+    # parser.add_argument("--exp_id", type=str, default=exp_id)
+    # parser.add_argument("--log_exp_id", type=str, default=log_exp_id)
+    # parser.add_argument("--use_chosen_dur", type=bool, default=use_chosen_dur)
+    # parser.add_argument("--T_idx", type=int, default=T_idx)
+    # parser.add_argument("--iid_batch_size_theta", type=int, default=iid_batch_size_theta)
+    # args = parser.parse_args()
 
-    pipeline_version = args.pipeline_version
-    train_id = args.train_id
-    exp_id = args.exp_id
-    log_exp_id = args.log_exp_id
-    use_chosen_dur = args.use_chosen_dur
-    T_idx = args.T_idx
-    iid_batch_size_theta = args.iid_batch_size_theta
+    # pipeline_version = args.pipeline_version
+    # train_id = args.train_id
+    # exp_id = args.exp_id
+    # log_exp_id = args.log_exp_id
+    # use_chosen_dur = args.use_chosen_dur
+    # T_idx = args.T_idx
+    # iid_batch_size_theta = args.iid_batch_size_theta
 
-    # == load the latest event file
-    log_dir = Path(NSC_DIR) / "codes/src/train_nle/logs" / train_id / exp_id
+    # # == load the latest event file
+    # log_dir = Path(NSC_DIR) / "codes/src/train_nle/logs" / train_id / exp_id
 
-    config_nle, model_path_nle = load_stored_config(exp_dir=log_dir)
+    # config_nle, model_path_nle = load_stored_config(exp_dir=log_dir)
 
-    if "p2" in pipeline_version:
-        from train_nle.train_p2 import Solver
-    if "p3" in pipeline_version:
-        from train_nle.train_p3 import Solver
+    # if "p2" in pipeline_version:
+    #     from train_nle.train_p2 import Solver
+    # if "p3" in pipeline_version:
+    #     from train_nle.train_p3 import Solver
 
-    solver_nle = Solver(config_nle, store_config=False)
-    solver_nle.init_inference(
-        iid_batch_size_x=config_nle.posterior.MCMC_iid_batch_size_x,  #!
-        # iid_batch_size_theta=config_nle.posterior.MCMC_iid_batch_size_theta,  # + info: 10000 MCMC init, other time 1
-        iid_batch_size_theta=iid_batch_size_theta,  # + info: 10000 MCMC init, other time 1
-        sum_writer=False,
-    )
+    # solver_nle = Solver(config_nle, store_config=False)
+    # solver_nle.init_inference(
+    #     iid_batch_size_x=config_nle.posterior.MCMC_iid_batch_size_x,  #!
+    #     # iid_batch_size_theta=config_nle.posterior.MCMC_iid_batch_size_theta,  # + info: 10000 MCMC init, other time 1
+    #     iid_batch_size_theta=iid_batch_size_theta,  # + info: 10000 MCMC init, other time 1
+    #     sum_writer=False,
+    # )
 
-    # get the trained network
-    _, _, density_estimator, _, _ = solver_nle.inference.prepare_dataset_network(
-        config_nle,
-        continue_from_checkpoint=model_path_nle,
-        device="cuda" if torch.cuda.is_available() and config_nle.gpu else "cpu",
-        print_info=True,
-        inference_mode=True,
-        low_batch=5,
-    )
+    # # get the trained network
+    # _, _, density_estimator, _, _ = solver_nle.inference.prepare_dataset_network(
+    #     config_nle,
+    #     continue_from_checkpoint=model_path_nle,
+    #     device="cuda" if torch.cuda.is_available() and config_nle.gpu else "cpu",
+    #     print_info=True,
+    #     inference_mode=True,
+    #     low_batch=5,
+    # )
 
-    # build the posterior
-    mcmc_parameters = dict(
-        warmup_steps=config_nle.posterior.warmup_steps,  #!
-        thin=config_nle.posterior.thin,  #!
-        # num_chains=min(os.cpu_count() - 1, config_nle.posterior.num_chains),  #!
-        num_chains=4,  #!
-        # num_chains=1,
-        # num_workers=config_nle.posterior.num_workers,  #!
-        # num_workers=4,  #!
-        num_workers=1,  #! for test
-        init_strategy="sir",  #!
-    )
-    print(f"==>> mcmc_parameters: {mcmc_parameters}")
+    # # build the posterior
+    # mcmc_parameters = dict(
+    #     warmup_steps=config_nle.posterior.warmup_steps,  #!
+    #     thin=config_nle.posterior.thin,  #!
+    #     # num_chains=min(os.cpu_count() - 1, config_nle.posterior.num_chains),  #!
+    #     num_chains=4,  #!
+    #     # num_chains=1,
+    #     # num_workers=config_nle.posterior.num_workers,  #!
+    #     # num_workers=4,  #!
+    #     num_workers=1,  #! for test
+    #     init_strategy="sir",  #!
+    # )
+    # print(f"==>> mcmc_parameters: {mcmc_parameters}")
 
-    posterior_nle = solver_nle.inference.build_posterior(
-        density_estimator=density_estimator,
-        prior=solver_nle.inference._prior,
-        sample_with="mcmc",  #!
-        mcmc_method="slice",  #!
-        # mcmc_method="slice_np",
-        # mcmc_method="slice_np_vectorized",
-        mcmc_parameters=mcmc_parameters,  #!
-        # sample_with="vi",
-        # vi_method="rKL",
-        # vi_parameters={},
-        # rejection_sampling_parameters={},
-    )
+    # posterior_nle = solver_nle.inference.build_posterior(
+    #     density_estimator=density_estimator,
+    #     prior=solver_nle.inference._prior,
+    #     sample_with="mcmc",  #!
+    #     mcmc_method="slice",  #!
+    #     # mcmc_method="slice_np",
+    #     # mcmc_method="slice_np_vectorized",
+    #     mcmc_parameters=mcmc_parameters,  #!
+    #     # sample_with="vi",
+    #     # vi_method="rKL",
+    #     # vi_parameters={},
+    #     # rejection_sampling_parameters={},
+    # )
 
-    # == posterior inference
-    # for T in range(nT):
-    for T in [T_idx]:
-        # skip the first and last step cases
-        if T % step == 0 or T % step == step - 1:
-            continue
+    # # == posterior inference
+    # # for T in range(nT):
+    # for T in [T_idx]:
+    #     # skip the first and last step cases
+    #     if T % step == 0 or T % step == step - 1:
+    #         continue
 
-        # which theta is moving
-        moving_theta_idx = T // step
-        trial_idx = T % step - 1
+    #     # which theta is moving
+    #     moving_theta_idx = T // step
+    #     trial_idx = T % step - 1
 
-        # == prepare the data for inference
-        # = convert the theta to the normed range
-        theta_test = torch.tensor(params[T, :]).clone().detach()
-        theta_test = convert_samples_range(theta_test, designed_limits, normed_limits)
+    #     # == prepare the data for inference
+    #     # = convert the theta to the normed range
+    #     theta_test = torch.tensor(params[T, :]).clone().detach()
+    #     theta_test = convert_samples_range(theta_test, designed_limits, normed_limits)
 
-        if use_chosen_dur:
-            xy_o_chosen_dur = torch.cat(
-                [x_o[chosen_dur_idx], chR[chosen_dur_idx, :, :, T, C_idx, None]], dim=-1
-            ).reshape(-1, 16)
-            xy_o_chosen_dur = xy_o_chosen_dur[:, 1:]
-            xy_o = xy_o_chosen_dur
-        else:
-            xy_o_all = torch.cat((x_o, chR[:, :, :, T, C_idx, None]), dim=-1).reshape(-1, 16)
-            xy_o_all = xy_o_all[:, 1:]
-            xy_o = xy_o_all
+    #     if use_chosen_dur:
+    #         xy_o_chosen_dur = torch.cat(
+    #             [x_o[chosen_dur_idx], chR[chosen_dur_idx, :, :, T, C_idx, None]], dim=-1
+    #         ).reshape(-1, 16)
+    #         xy_o_chosen_dur = xy_o_chosen_dur[:, 1:]
+    #         xy_o = xy_o_chosen_dur
+    #     else:
+    #         xy_o_all = torch.cat((x_o, chR[:, :, :, T, C_idx, None]), dim=-1).reshape(-1, 16)
+    #         xy_o_all = xy_o_all[:, 1:]
+    #         xy_o = xy_o_all
 
-        print(f"==>> xy_o.shape: {xy_o.shape}")
-        print("start posterior inference")
+    #     print(f"==>> xy_o.shape: {xy_o.shape}")
+    #     print("start posterior inference")
 
-        samples = sampling_from_posterior(
-            "cuda",
-            posterior_nle,
-            xy_o,
-            num_samples=2000,
-            show_progress_bars=True,
-        )
+    #     samples = sampling_from_posterior(
+    #         "cuda",
+    #         posterior_nle,
+    #         xy_o,
+    #         num_samples=2000,
+    #         show_progress_bars=True,
+    #     )
 
-        # save the samples
-        if use_chosen_dur:
-            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_chosen_dur.npy"
-        else:
-            save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_all.npy"
+    #     # save the samples
+    #     if use_chosen_dur:
+    #         save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_chosen_dur.npy"
+    #     else:
+    #         save_dir = f"{fig_dir}/compare/{log_exp_id}_posterior_samples_T{T}_all.npy"
 
-        np.save(save_dir, samples)
-        print(f"==>> saved samples: {save_dir}")
+    #     np.save(save_dir, samples)
+    #     print(f"==>> saved samples: {save_dir}")
 
-    print(f"==>> Done in {(time.time() - start_time)/60/60:.2f} hours")
+    # print(f"==>> Done in {(time.time() - start_time)/60/60:.2f} hours")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 # This file is part of sbi, a toolkit for simulation-based inference. sbi is licensed
 # under the Affero General Public License v3, see <https://www.gnu.org/licenses/>.
+import time
 from functools import partial
 from math import ceil
 from typing import Any, Callable, Dict, Optional, Tuple, Union
@@ -31,6 +32,48 @@ from sbi.simulators.simutils import tqdm_joblib
 from sbi.types import Shape, TorchTransform
 from sbi.utils import pyro_potential_wrapper, tensor2numpy, transformed_potential
 from sbi.utils.torchutils import ensure_theta_batched
+from sbi.utils.sbiutils import warn_on_iid_x, within_support
+from sbi.utils.torchutils import BoxUniform, atleast_2d
+from sbi.utils.user_input_checks import check_for_possibly_batched_x_shape
+
+
+def process_x(x, x_shape, allow_iid_x=False):
+    """Return observed data adapted to match sbi's shape and type requirements.
+
+    If `x_shape` is `None`, the shape is not checked.
+
+    Args:
+        x: Observed data as provided by the user.
+        x_shape: Prescribed shape - either directly provided by the user at init or
+            inferred by sbi by running a simulation and checking the output.
+        allow_iid_x: Whether multiple trials in x are allowed.
+
+    Returns:
+        x: Observed data with shape ready for usage in sbi.
+    """
+
+    x = atleast_2d(torch.as_tensor(x, dtype=torch.float32))
+
+    # If x_shape is provided, we can fix a missing batch dim for >1D data.
+    if x_shape is not None and len(x_shape) > len(x.shape):
+        x = x.unsqueeze(0)
+
+    input_x_shape = x.shape
+    if not allow_iid_x:
+        check_for_possibly_batched_x_shape(input_x_shape)
+        start_idx = 0
+    else:
+        warn_on_iid_x(num_trials=input_x_shape[0])
+        start_idx = 1
+
+    if x_shape is not None:
+        # Number of trials can change for every new x, but single trial x shape must
+        # match.
+        assert list(input_x_shape[start_idx:]) == list(x_shape[start_idx:]), (
+            f"Observed data shape ({input_x_shape[start_idx:]}) must match "
+            f"the shape of simulated data x ({x_shape[start_idx:]})."
+        )
+    return x
 
 
 class MyMCMCPosterior(NeuralPosterior):
@@ -117,9 +160,7 @@ class MyMCMCPosterior(NeuralPosterior):
                 v0.19.0. Instead, use e.g.,
                 `init_strategy_parameters={"num_candidate_samples": 1000}`"""
             )
-            self.init_strategy_parameters[
-                "num_candidate_samples"
-            ] = init_strategy_num_candidates
+            self.init_strategy_parameters["num_candidate_samples"] = init_strategy_num_candidates
 
         self.potential_ = self._prepare_potential(method)
 
@@ -155,9 +196,7 @@ class MyMCMCPosterior(NeuralPosterior):
         self._mcmc_method = method
         return self
 
-    def log_prob(
-        self, theta: Tensor, x: Optional[Tensor] = None, track_gradients: bool = False
-    ) -> Tensor:
+    def log_prob(self, theta: Tensor, x: Optional[Tensor] = None, track_gradients: bool = False) -> Tensor:
         r"""Returns the log-probability of theta under the posterior.
 
         Args:
@@ -178,9 +217,7 @@ class MyMCMCPosterior(NeuralPosterior):
         self.potential_fn.set_x(self._x_else_default_x(x))
 
         theta = ensure_theta_batched(torch.as_tensor(theta))
-        return self.potential_fn(
-            theta.to(self._device), track_gradients=track_gradients
-        )
+        return self.potential_fn(theta.to(self._device), track_gradients=track_gradients)
 
     def sample(
         self,
@@ -229,9 +266,7 @@ class MyMCMCPosterior(NeuralPosterior):
         init_strategy = self.init_strategy if init_strategy is None else init_strategy
         num_workers = self.num_workers if num_workers is None else num_workers
         init_strategy_parameters = (
-            self.init_strategy_parameters
-            if init_strategy_parameters is None
-            else init_strategy_parameters
+            self.init_strategy_parameters if init_strategy_parameters is None else init_strategy_parameters
         )
         if init_strategy_num_candidates is not None:
             warn(
@@ -239,9 +274,7 @@ class MyMCMCPosterior(NeuralPosterior):
                 v0.19.0. Instead, use e.g.,
                 `init_strategy_parameters={"num_candidate_samples": 1000}`"""
             )
-            self.init_strategy_parameters[
-                "num_candidate_samples"
-            ] = init_strategy_num_candidates
+            self.init_strategy_parameters["num_candidate_samples"] = init_strategy_num_candidates
         if sample_with is not None:
             raise ValueError(
                 f"You set `sample_with={sample_with}`. As of sbi v0.18.0, setting "
@@ -272,6 +305,8 @@ class MyMCMCPosterior(NeuralPosterior):
         init_strategy = _maybe_use_dict_entry(init_strategy, "init_strategy", m_p)
         self.potential_ = self._prepare_potential(method)  # type: ignore
 
+        print("start initialization using sir")
+        tic = time.time()
         initial_params = self._get_initial_params(
             init_strategy,  # type: ignore
             num_chains,  # type: ignore
@@ -280,7 +315,7 @@ class MyMCMCPosterior(NeuralPosterior):
             **init_strategy_parameters,
         )
         num_samples = torch.Size(sample_shape).numel()
-
+        print(f"finished initializations in {(time.time()-tic)/60:.2f} min")
         track_gradients = method in ("hmc", "nuts")
         with torch.set_grad_enabled(track_gradients):
             if method in ("slice_np", "slice_np_vectorized"):
@@ -348,13 +383,9 @@ class MyMCMCPosterior(NeuralPosterior):
                 "has changed. If you wish to restore the behavior of sbi v0.18.0, set "
                 "`init_strategy='resample'.`"
             )
-            return lambda: sir_init(
-                proposal, potential_fn, transform=transform, **kwargs
-            )
+            return lambda: sir_init(proposal, potential_fn, transform=transform, **kwargs)
         elif init_strategy == "resample":
-            return lambda: resample_given_potential_fn(
-                proposal, potential_fn, transform=transform, **kwargs
-            )
+            return lambda: resample_given_potential_fn(proposal, potential_fn, transform=transform, **kwargs)
         elif init_strategy == "latest_sample":
             latest_sample = IterateParameters(self._mcmc_init_params, **kwargs)
             return latest_sample
@@ -414,14 +445,10 @@ class MyMCMCPosterior(NeuralPosterior):
                 )
             ):
                 initial_params = torch.cat(
-                    Parallel(n_jobs=num_workers)(
-                        delayed(seeded_init_fn)(seed) for seed in seeds
-                    )
+                    Parallel(n_jobs=num_workers)(delayed(seeded_init_fn)(seed) for seed in seeds)
                 )
         else:
-            initial_params = torch.cat(
-                [init_fn() for _ in range(num_chains)]  # type: ignore
-            )
+            initial_params = torch.cat([init_fn() for _ in range(num_chains)])  # type: ignore
 
         return initial_params
 
@@ -575,9 +602,7 @@ class MyMCMCPosterior(NeuralPosterior):
             track_gradients=track_gradients,
         )
         if pyro:
-            prepared_potential = partial(
-                pyro_potential_wrapper, potential=prepared_potential
-            )
+            prepared_potential = partial(pyro_potential_wrapper, potential=prepared_potential)
 
         return prepared_potential
 
@@ -664,9 +689,7 @@ class MyMCMCPosterior(NeuralPosterior):
             self._posterior_sampler is not None
         ), """No samples have been generated, call .sample() first."""
 
-        sampler: Union[
-            MCMC, SliceSamplerSerial, SliceSamplerVectorized
-        ] = self._posterior_sampler
+        sampler: Union[MCMC, SliceSamplerSerial, SliceSamplerVectorized] = self._posterior_sampler
 
         # If Pyro sampler and samples not transformed, use arviz' from_pyro.
         # Exclude 'slice' kernel as it lacks the 'divergence' diagnostics key.
@@ -684,9 +707,7 @@ class MyMCMCPosterior(NeuralPosterior):
                 transformed_samples = transformed_samples.popitem()[1]
             # Our slice samplers return numpy arrays.
             elif isinstance(transformed_samples, ndarray):
-                transformed_samples = torch.from_numpy(transformed_samples).type(
-                    torch.float32
-                )
+                transformed_samples = torch.from_numpy(transformed_samples).type(torch.float32)
             # For MultipleIndependent priors transforms first dim must be batch dim.
             # thus, reshape back and forth to have batch dim in front.
             samples_shape = transformed_samples.shape
@@ -696,11 +717,22 @@ class MyMCMCPosterior(NeuralPosterior):
                 *samples_shape
             )
 
-            inference_data = az.convert_to_inference_data(
-                {f"{self.param_name}": samples}
-            )
+            inference_data = az.convert_to_inference_data({f"{self.param_name}": samples})
 
         return inference_data
+
+    def _x_else_default_x(self, x):
+        if x is not None:
+            # New x, reset posterior sampler.
+            self._posterior_sampler = None
+            return process_x(x, x_shape=self._x_shape, allow_iid_x=self.potential_fn.allow_iid_x)
+        elif self.default_x is None:
+            raise ValueError(
+                "Context `x` needed when a default has not been set."
+                "If you'd like to have a default, use the `.set_default_x()` method."
+            )
+        else:
+            return self.default_x
 
 
 def _maybe_use_dict_entry(default: Any, key: str, dict_to_check: Dict) -> Any:
