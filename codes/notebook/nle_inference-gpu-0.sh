@@ -22,8 +22,8 @@ log_exp_id="nle-p3-cnn-newLoss"
 
 # use_chosen_dur=True
 num_samples=2000
-iid_batch_size_theta=100 # GB GPU memory
-use_chosen_dur=$1        # 0/1 -> 1: use chosen dur, 0: use all dur
+iid_batch_size_theta=15 # GB GPU memory
+use_chosen_dur=$1       # 0/1 -> 1: use chosen dur, 0: use all dur
 # T_idx=$2                 # 0->27
 START_T_IDX=$2
 END_T_IDX=$3
