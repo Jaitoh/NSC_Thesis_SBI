@@ -79,12 +79,7 @@ D, M, S = seqC_o.shape[0], seqC_o.shape[1], seqC_o.shape[2]
 DMS = D * M * S
 
 # map 3, 5, 7, 9, 11, 13, 15
-chosen_dur_list = np.array([3, 9, 15])
-chosen_dur_idx = ((chosen_dur_list - 3) / 2).astype(int)
-
-x_o_chosen_dur = x_o[chosen_dur_idx].reshape(-1, 15)
 x_o_all = x_o.reshape(-1, 15)
-print(f"==>> x_o_chosen_dur.shape: {x_o_chosen_dur.shape}")
 print(f"==>> x_o_all.shape: {x_o_all.shape}")
 
 
@@ -196,8 +191,25 @@ def main():
         theta_test = torch.tensor(params[T, :]).clone().detach()
         theta_test = convert_samples_range(theta_test, designed_limits, normed_limits)
 
-        if use_chosen_dur:
-            print(use_chosen_dur, "use chosen dur")
+        if use_chosen_dur == 1:
+            chosen_dur_list = np.array([3, 9, 15])
+            print(f"use chosen dur {chosen_dur_list}")
+            chosen_dur_idx = ((chosen_dur_list - 3) / 2).astype(int)
+            x_o_chosen_dur = x_o[chosen_dur_idx].reshape(-1, 15)
+            print(f"==>> x_o_chosen_dur.shape: {x_o_chosen_dur.shape}")
+
+            xy_o_chosen_dur = torch.cat(
+                [x_o[chosen_dur_idx], chR[chosen_dur_idx, :, :, T, C_idx, None]], dim=-1
+            ).reshape(-1, 16)
+            xy_o_chosen_dur = xy_o_chosen_dur[:, 1:]
+            xy_o = xy_o_chosen_dur
+        elif use_chosen_dur == 2:
+            chosen_dur_list = np.array([9, 11, 13, 15])
+            print(f"use chosen dur {chosen_dur_list}")
+            chosen_dur_idx = ((chosen_dur_list - 3) / 2).astype(int)
+            x_o_chosen_dur = x_o[chosen_dur_idx].reshape(-1, 15)
+            print(f"==>> x_o_chosen_dur.shape: {x_o_chosen_dur.shape}")
+
             xy_o_chosen_dur = torch.cat(
                 [x_o[chosen_dur_idx], chR[chosen_dur_idx, :, :, T, C_idx, None]], dim=-1
             ).reshape(-1, 16)

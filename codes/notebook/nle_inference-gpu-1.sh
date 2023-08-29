@@ -6,25 +6,34 @@ source activate sbi
 
 ROOT_DIR="$HOME/data/NSC"
 
-# pipeline_version="nle-p2"
-# train_id="L0-nle-p2-cnn"
+pipeline_version="nle-p2"
+train_id="L0-nle-p2-cnn"
 
-# # exp_id="L0-nle-p2-cnn-datav2"
-# exp_id="L0-nle-p2-cnn-datav2-small-batch-newLoss-tmp2"
-# log_exp_id="nle-p2-cnn-datav2-newLoss"
+# exp_id="L0-nle-p2-cnn-datav2"
+exp_id="L0-nle-p2-cnn-datav2-small-batch-newLoss"
+log_exp_id="nle-p2-cnn-datav2-newLoss"
 
 # p3 version use balanced training/validation data
-pipeline_version="nle-p3"
-train_id="L0-nle-p3-cnn"
+# pipeline_version="nle-p3"
+# train_id="L0-nle-p3-cnn"
 
-exp_id="L0-nle-p3-cnn-newLoss-tmp-2"
-log_exp_id="nle-p3-cnn-newLoss"
+# exp_id="L0-nle-p3-cnn-newLoss-tmp-2"
+# log_exp_id="nle-p3-cnn-newLoss"
 
 # use_chosen_dur=True
 num_samples=2000
-iid_batch_size_theta=20 # GB GPU memory
-use_chosen_dur=$1       # 0/1 -> 1: use chosen dur, 0: use all dur
-# T_idx=$2                 # 0->27
+iid_batch_size_theta=10 # GB GPU memory
+use_chosen_dur=$1       # 0/1/2 ->
+#                         1: use chosen dur[3, 9, 15],
+#                         2: [9, 11, 13, 15]
+#                         0: use all dur
+
+# ~/data/NSC/codes/notebook/nle_inference-gpu-1.sh 2 0 6
+# ~/data/NSC/codes/notebook/nle_inference-gpu-1.sh 2 7 13
+# ~/data/NSC/codes/notebook/nle_inference-gpu-1.sh 2 14 20
+# ~/data/NSC/codes/notebook/nle_inference-gpu-1.sh 2 21 27
+
+# T_idx=$2                 # 0->6, 7->13, 14->20, 21->27
 START_T_IDX=$2
 END_T_IDX=$3
 

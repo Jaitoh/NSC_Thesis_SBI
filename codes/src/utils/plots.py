@@ -560,6 +560,39 @@ def plot_posterior_mapped_samples(
     return fig, ax, samples
 
 
+def mapped_samples_pair_plot(
+    samples,
+    true_theta=None,
+    original_limits=None,
+    mapped_limits=None,
+):
+    font = {
+        "weight": "bold",
+        "size": 12,
+    }
+    mpl.rc("font", **font)
+    mpl.rcParams["axes.linewidth"] = 1
+
+    plot_limits = original_limits
+    if mapped_limits != None:
+        samples = convert_samples_range(samples, original_limits, mapped_limits)
+        true_theta = convert_samples_range(true_theta, original_limits, mapped_limits)
+        plot_limits = mapped_limits
+
+    fig, ax = pairplot(
+        samples,
+        diag="kde",
+        upper="kde",
+        figsize=(10, 10),
+        labels=["$b$", "$\sigma^2_s$", "$\sigma^2_a$", "$\lambda$"],
+        points=true_theta.cpu().numpy() if true_theta != None else None,
+        points_colors="r",
+        limits=plot_limits,
+    )
+
+    return fig, ax, samples
+
+
 def marginal_plot(
     samples,
     true_theta,

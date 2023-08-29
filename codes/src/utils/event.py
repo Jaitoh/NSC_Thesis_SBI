@@ -24,13 +24,16 @@ def get_event_values(scalar_events):
     return wall_time, step_nums, values
 
 
-def get_train_valid_lr(log_dir):
+def get_train_valid_lr(log_dir, use_loss=False):
     log_dir = Path(log_dir)
 
     lr_path = sorted(log_dir.glob("*events.out.tfevents.*"))[-1]
-
-    train_path = sorted(log_dir.glob("*log_probs_training/events.out.tfevents.*"))[-1]
-    valid_path = sorted(log_dir.glob("*log_probs_validation/events.out.tfevents.*"))[-1]
+    if not use_loss:
+        train_path = sorted(log_dir.glob("*log_probs_training/events.out.tfevents.*"))[-1]
+        valid_path = sorted(log_dir.glob("*log_probs_validation/events.out.tfevents.*"))[-1]
+    else:
+        train_path = sorted(log_dir.glob("*loss_training/events.out.tfevents.*"))[-1]
+        valid_path = sorted(log_dir.glob("*loss_validation/events.out.tfevents.*"))[-1]
 
     # load learning rate
     lr_event = EventAccumulator(str(lr_path))
@@ -43,14 +46,20 @@ def get_train_valid_lr(log_dir):
     train_event = EventAccumulator(str(train_path))
     train_event.Reload()
     print(train_event.Tags())
-    scalar_events = train_event.Scalars("log_probs")
+    if not use_loss:
+        scalar_events = train_event.Scalars("log_probs")
+    else:
+        scalar_events = train_event.Scalars("loss")
     _, _, log_probs_train = get_event_values(scalar_events)
 
     # load validation log probs
     valid_event = EventAccumulator(str(valid_path))
     valid_event.Reload()
     print(valid_event.Tags())
-    scalar_events = valid_event.Scalars("log_probs")
+    if not use_loss:
+        scalar_events = valid_event.Scalars("log_probs")
+    else:
+        scalar_events = valid_event.Scalars("loss")
     _, _, log_probs_valid = get_event_values(scalar_events)
 
     return wall_time, step_nums, learning_rates, log_probs_train, log_probs_valid
