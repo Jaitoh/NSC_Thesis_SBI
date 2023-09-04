@@ -1,5 +1,7 @@
 source activate sbi
 
+cd ~/data/NSC/codes/
+
 exp_id=L0-nle-p2-cnn/L0-nle-p2-cnn-dur3to11-post
 
 exp_dir=~/tmp/NSC/codes/src/train_nle/logs/$exp_id

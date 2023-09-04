@@ -104,20 +104,20 @@ def sampling_from_posterior(device, posterior, x_o, num_samples=20000, show_prog
     )
 
 
-# def convert_normed_theta(theta_estimated_normed, prior_min, prior_max, prior_labels):
-#     # ! use utils.range functions instead
-#     # convert theta from 0-1 to original range
+def convert_normed_theta(theta_estimated_normed, prior_min, prior_max, prior_labels):
+    # ! use utils.range functions instead
+    # convert theta from 0-1 to original range
 
-#     original_range_pair = [[x, y] for x, y in zip(prior_min, prior_max)]
+    original_range_pair = [[x, y] for x, y in zip(prior_min, prior_max)]
 
-#     theta_estimated = []
-#     for i in range(len(theta_estimated_normed)):
-#         theta_estimated.append(
-#             theta_estimated_normed[i] * (original_range_pair[i][1] - original_range_pair[i][0])
-#             + original_range_pair[i][0]
-#         )
+    theta_estimated = []
+    for i in range(len(theta_estimated_normed)):
+        theta_estimated.append(
+            theta_estimated_normed[i] * (original_range_pair[i][1] - original_range_pair[i][0])
+            + original_range_pair[i][0]
+        )
 
-#     return theta_estimated, original_range_pair
+    return theta_estimated, original_range_pair
 
 
 def ci_perf_on_dset(posterior, credible_intervals, dataset, num_params):

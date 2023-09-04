@@ -551,7 +551,7 @@ def plot_posterior_mapped_samples(
         diag="kde",
         upper="kde",
         figsize=(10, 10),
-        labels=["$b$", "$\sigma^2_s$", "$\sigma^2_a$", "$\lambda$"],
+        labels=["$b$", "$\sigma^2_a$", "$\sigma^2_s$", "$\lambda$"],
         points=true_theta.cpu().numpy() if true_theta != None else None,
         points_colors="r",
         limits=plot_limits,

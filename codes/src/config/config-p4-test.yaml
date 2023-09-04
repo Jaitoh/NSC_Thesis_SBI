@@ -4,11 +4,11 @@ defaults:
   - prior: prior-3
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p4-F1345-size0
-  - train: train-p4-cnn-mdn
+  - dataset: dataset-p4-F134-size1
+  - train: train-p4-cnn-maf3
 
 pipeline_version: p4
-log_dir: ./src/train/logs/train_L0_p4a/p4a-F1345-cnn
+log_dir: ./src/train/logs/train_L0_p4a/p4a-F134-cnn-maf3-test
 
 data_path: ~/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
 # data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5

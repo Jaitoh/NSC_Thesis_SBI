@@ -106,7 +106,7 @@ class Feature_Generator:
 
     def compute_kernels(self, seqC, chR, D, M, S):
         """
-        seqC of shape [D, M, S, 15] or [DMS, 15]
+        seqC of shape [D, M, S, 15] or [DMS, 15], [-1, 1]
         chR of shape [D, M, S, 1] or [DMS, 1]
         """
         # convert into torch if not

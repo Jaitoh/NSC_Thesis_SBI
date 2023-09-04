@@ -24,7 +24,7 @@ from utils.train import plot_posterior_unseen
 from utils.setup import adapt_path
 
 
-def estimate_theta_for_usr_npe(subj_ID, exp_dir):
+def estimate_theta_for_usr_nle(subj_ID, exp_dir):
     # load config
     config, model_path = load_stored_config(exp_dir=exp_dir)
     subj_post_samples_path = f"{exp_dir}/posterior/samples_obs_Subject{subj_ID}.pt"
@@ -56,7 +56,7 @@ def estimate_theta_for_usr_npe(subj_ID, exp_dir):
 
 
 if __name__ == "__main__":
-    exp_dir = "~/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_net"
+    exp_dir = "~/tmp/NSC/codes/src/train_nle/logs/L0-nle-p3-cnn/L0-nle-p3-cnn-newLoss"
     exp_dir = adapt_path(exp_dir)
 
     parser = argparse.ArgumentParser()
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     subj_thetas = {}
     subj_thetas["exp"] = str(exp_dir).split("/")[-2:]
     for subj_ID in range(2, 13):
-        theta_estimated, range_, labels = estimate_theta_for_usr_npe(subj_ID, exp_dir)
+        theta_estimated, range_, labels = estimate_theta_for_usr_nle(subj_ID, exp_dir)
         subj_thetas["range_"] = range_
         subj_thetas["labels"] = labels
         subj_thetas[subj_ID] = theta_estimated

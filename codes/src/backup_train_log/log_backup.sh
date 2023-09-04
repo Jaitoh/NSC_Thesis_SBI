@@ -62,14 +62,15 @@ EXP_IDS=(
 )
 
 # === nle p3 ===
-# Pipeline=train_nle
-# TRAIN_ID=L0-nle-p3-cnn
-# folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p3-cnn
+folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
 
-# # "L0-nle-p3-cnn"
-# EXP_IDS=(
-#     "L0-nle-p3-cnn-newLoss-tmp-2"
-# )
+# "L0-nle-p3-cnn"
+# "L0-nle-p3-cnn-newLoss-tmp-2"
+EXP_IDS=(
+    "L0-nle-p3-cnn-newLoss"
+)
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"

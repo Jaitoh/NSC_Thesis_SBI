@@ -21,6 +21,8 @@ pip install hydra-core --upgrade
 pip install spyder-kernels
 pip install tables
 pip install seaborn
+# pip install SALib
+python -m pip install salib
 conda activate sbi
 ####
 conda clean --all
