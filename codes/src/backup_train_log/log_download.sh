@@ -160,9 +160,11 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # FILE_ID=1TVOkLMsLXekWNN4-WNBty4xDnO7p0pGn
 # MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
 
-# EXP_ID=L0-nle-p3-cnn-newLoss
-# FILE_ID=1popqsC0u2SFd4ojBWu65IgdAVyQpkHBE
-# MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p3-cnn
+EXP_ID=L0-nle-p3-cnn-newLoss
+FILE_ID=1popqsC0u2SFd4ojBWu65IgdAVyQpkHBE
+MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
 
 LOG_DIR="$HOME/data/NSC/codes/src/${Pipeline}/logs"
 # LOG_DIR="$HOME/data/NSC/codes/src/${Pipeline}/logs"

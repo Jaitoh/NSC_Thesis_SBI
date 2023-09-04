@@ -1,6 +1,6 @@
 source activate sbi
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 cd ~/data/NSC/codes/
 
 subj_ID=$1
