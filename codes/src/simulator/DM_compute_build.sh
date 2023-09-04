@@ -1,4 +1,5 @@
-cd ~/tmp/NSC/codes/src/simulator
+source activate sbi
+cd ~/data/NSC/codes/src/simulator
 rm -rf build
 rm DM_compute.c
 rm DM_compute.cpython*.so
