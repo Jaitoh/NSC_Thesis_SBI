@@ -105,8 +105,8 @@ def estimate_theta_for_usr_npe(subj_ID, exp_dir, pipeline_version="p4a"):
             dur_list=chosen_dur_list,
             MS_list=[0.2, 0.4, 0.8],
         )
-        # x_o [14700, 15], [0~1]
-        # chR [14700, 1]
+        # x_o [6300, 15], [0~1]
+        # chR [6300, 1]
 
         xy_o = torch.cat([x_o, chR], dim=-1)
 
@@ -125,24 +125,24 @@ def estimate_theta_for_usr_npe(subj_ID, exp_dir, pipeline_version="p4a"):
     for label, estimate, range_ in zip(config.prior.prior_labels, theta_estimated, designed_limits):
         print(f"{label:10}: {estimate:8.3f} from range [{range_[0]:.3f}, {range_[1]:.3f}]")
 
-    return theta_estimated, designed_limits, config.prior.prior_labels
+    return theta_estimated, designed_limits, config.prior.prior_labels, samples
 
 
 if __name__ == "__main__":
-    # subj_ID = 2
-    # pipeline_version = "p4a"
-    # exp_dir = "~/data/NSC/codes/src/train/logs/train_L0_p4a/p4a-F1345-cnn-maf3"
+    pipeline_version = "p4a"
+    exp_dir = "~/data/NSC/codes/src/train/logs/train_L0_p4a/p4a-F1345-cnn-maf3"
 
-    # subj_ID = 2
     # pipeline_version = "p5a"
-    exp_dir = "~/data/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_lstm-corr_conv"
+    # exp_dir = "~/data/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_lstm-corr_conv"
 
     # exp_dir = "~/tmp/NSC/codes/src/train/logs/train_L0_p5a/p5a-conv_net"
     exp_dir = adapt_path(exp_dir)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_dir", type=str, default=exp_dir, help="log directory")
-    parser.add_argument("-p", "--pipeline_version", type=str, default="p5a", help="pipeline version")
+    parser.add_argument(
+        "-p", "--pipeline_version", type=str, default=pipeline_version, help="pipeline version"
+    )
     args = parser.parse_args()
 
     exp_dir = adapt_path(args.exp_dir)
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     subj_thetas = {}
     subj_thetas["exp"] = str(exp_dir).split("/")[-2:]
     for subj_ID in range(2, 13):
-        theta_estimated, range_, labels = estimate_theta_for_usr_npe(
+        theta_estimated, range_, labels, samples = estimate_theta_for_usr_npe(
             subj_ID,
             exp_dir,
             pipeline_version,
@@ -159,6 +159,10 @@ if __name__ == "__main__":
         subj_thetas["range_"] = range_
         subj_thetas["labels"] = labels
         subj_thetas[subj_ID] = theta_estimated
+
+        # save samples
+        with open(f"{exp_dir}/inference/samples_{subj_ID}.pkl", "wb") as f:
+            pickle.dump(samples, f)
 
     Path(f"{exp_dir}/inference").mkdir(parents=True, exist_ok=True)
     # save pkl
