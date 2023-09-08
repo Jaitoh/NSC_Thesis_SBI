@@ -41,6 +41,9 @@ FILE_ID=1YBV99JmdicJJ5afnJnVpIcGpSIRJ42tk
 # EXP_ID=p5a-conv_lstm-corr_conv
 # FILE_ID=1SVjurecC-IyhSk80O2ckqMAzkveGT8-9
 
+EXP_ID=p5a-conv_lstm-corr_conv-B-7h
+FILE_ID=1kjQyLJN7-p3TBpdVntyqGbWhFmUpcKS3
+
 # ===== train_npe =====
 # log p4-4Fs-1D-cnn.tar.gz
 Pipeline=train
@@ -70,7 +73,14 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # FILE_ID=1KLPK8dlMXhmqjMoXrnurIZFop1xSQS9z
 # MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 
+Pipeline=train
+TRAIN_ID=train_L0_p4a
+EXP_ID=p4a-F1345-cnn-maf3-B
+FILE_ID=1ORar4CtdI28X5zMuvrujZMNuxGG6PnnD
+MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
+
 # MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
+
 # ===== train_nle =====
 # Pipeline=train_nle
 # TRAIN_ID=L0-nle-cnn
@@ -160,10 +170,16 @@ MACHINE_LOG_DIR="/home/wehe/tmp/NSC/codes/src/${Pipeline}/logs" # !
 # FILE_ID=1TVOkLMsLXekWNN4-WNBty4xDnO7p0pGn
 # MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
 
+# Pipeline=train_nle
+# TRAIN_ID=L0-nle-p3-cnn
+# EXP_ID=L0-nle-p3-cnn-newLoss
+# FILE_ID=1popqsC0u2SFd4ojBWu65IgdAVyQpkHBE
+# MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
+
 Pipeline=train_nle
 TRAIN_ID=L0-nle-p3-cnn
-EXP_ID=L0-nle-p3-cnn-newLoss
-FILE_ID=1popqsC0u2SFd4ojBWu65IgdAVyQpkHBE
+EXP_ID=L0-nle-p3-cnn-newLoss-B-7h
+FILE_ID=1L12ikMwDWOMYYnFZnGwk30Wm_W9gQvuD
 MACHINE_LOG_DIR="/home/wehe/data/NSC/codes/src/${Pipeline}/logs" # !
 
 LOG_DIR="$HOME/data/NSC/codes/src/${Pipeline}/logs"
