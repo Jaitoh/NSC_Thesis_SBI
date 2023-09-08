@@ -1,0 +1,17 @@
+defaults:
+  - _self_
+  - experiment_settings: exp-set-0
+  - prior: prior-3
+  - x_o: x_o-0
+  - simulator: model-0
+  - dataset: dataset-p4-F1345-size0
+  - train: train-p4-cnn-maf3
+
+pipeline_version: p4
+log_dir: ./src/train/logs/train_L0_p4a/p4a-F1345-cnn-maf3-B-test
+
+data_path: ~/data/NSC/data/dataset/feature-L0-Eset0-100sets-T60-C100-B20.h5
+seed: 42
+debug: True
+gpu: True
+continue_from_checkpoint: ""

@@ -78,7 +78,7 @@ class Feature_Dataset(Dataset):
             self.x = torch.empty((n_sets, n_T, C, M, n_features))
             self.theta = torch.empty((n_sets, n_T, n_theta))
 
-            print(f"loading {n_sets}sets T{(set_T_part[1]-set_T_part[0])*100:.2f}% C{C}...")
+            print(f"loading {n_sets}sets T{(set_T_part[1]-set_T_part[0])*100:.2f}%={n_T} C{C}...")
             for idx_set, set_name in tqdm(enumerate(set_names), total=n_sets, miniters=n_sets // 5):
                 # for each selected set
                 # extract feature of partial T from range_T[0] to range_T[1]

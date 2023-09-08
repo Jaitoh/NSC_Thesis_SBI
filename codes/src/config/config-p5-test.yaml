@@ -1,17 +1,16 @@
 defaults:
   - _self_
   - experiment_settings: exp-set-0
-  - prior: prior-2
+  - prior: prior-3
   - x_o: x_o-0
   - simulator: model-0
-  - dataset: dataset-p5-size1
+  - dataset: dataset-p5-B
   - train: train-p5-conv_lstm-mdn
 
 pipeline_version: p5a
-log_dir: ./src/train/logs/train_L0_p5/p5a-conv_lstm-ignore_ss-test
-data_path: /home/ubuntu/tmp/NSC/data/dataset/dataset-L0-Eset0-100sets-T500.h5
-# data_path: /home/wehe/tmp/NSC/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5
-seed: 100
+log_dir: ./src/train/logs/train_L0_p5/p5a-conv_lstm-corr_conv-B
+data_path: /home/wehe/data/NSC/data/dataset/dataset-L0-Eset0-100sets-T60-B20.h5
+seed: 42
 debug: True
 gpu: True
 continue_from_checkpoint: ""

@@ -203,7 +203,7 @@ class MyPosteriorEstimator_P5(PosteriorEstimator):
         self.training_kwargs = self.config.train.training
         setup_seed(config.seed)
 
-        train_dataloader, valid_dataloader, _ = self.prepare_dataset_network(
+        train_dataloader, valid_dataloader, _, _, _ = self.prepare_dataset_network(
             self.config,
             continue_from_checkpoint=continue_from_checkpoint,
             device=self._device,

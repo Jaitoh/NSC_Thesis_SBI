@@ -1,10 +1,9 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=0
-cd ~/tmp/NSC/codes
-source activate sbi
-
 ROOT_DIR=~/tmp/NSC
+cd ${ROOT_DIR}/codes
+source activate sbi
 
 # RUN_ID=p5a-conv_net-Tv2
 # CONFIG_PRIOR=prior-v2-3
@@ -18,22 +17,23 @@ ROOT_DIR=~/tmp/NSC
 # CONFIG_TRAIN=train-p5-conv_lstm-mdn
 
 # aug-14
-RUN_ID=p5a-conv_lstm-corr_conv
+# RUN_ID=p5a-conv_lstm-corr_conv
+# CONFIG_PRIOR=prior-3
+# CONFIG_DATASET=dataset-p5
+# CONFIG_TRAIN=train-p5-conv_lstm-mdn
+
+RUN_ID=p5a-conv_lstm-corr_conv-B
 CONFIG_PRIOR=prior-3
-CONFIG_DATASET=dataset-p5
+CONFIG_DATASET=dataset-p5-B
 CONFIG_TRAIN=train-p5-conv_lstm-mdn
 
 TRAIN_FILE_NAME=train_L0_p5a
-# DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-# DATA_PATH="${ROOT_DIR}/data/dataset/feature-L0-Eset0-100sets-T500-C100.h5"
-DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T500.h5"
-# DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-98sets-T500v2.h5"
-# CHECK_POINT_PATH='/home/wehe/tmp/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
+DATA_PATH="${ROOT_DIR}/data/NSC/data/dataset/dataset-L0-Eset0-100sets-T60-B20.h5"
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0
 
-LOG_DIR="./src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
+LOG_DIR="${ROOT_DIR}/codes/src/train/logs/${TRAIN_FILE_NAME}/${RUN_ID}"
 PRINT_LOG="${LOG_DIR}/${RUN_ID}.log"
 # rm -r ${LOG_DIR}/events.out.tfevents*
 mkdir -p ${LOG_DIR}
@@ -45,7 +45,7 @@ echo "data_path: ${DATA_PATH}"
 
 code ${PRINT_LOG}
 
-nice python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
+nice python3 -u ${ROOT_DIR}/codes/src/train/${TRAIN_FILE_NAME}.py \
     hydra.run.dir=${LOG_DIR} \
     experiment_settings=${CONFIG_EXP} \
     prior=${CONFIG_PRIOR} \
@@ -65,7 +65,7 @@ nice python3 -u ./src/train/${TRAIN_FILE_NAME}.py \
 echo "finished training"
 
 # check behavior output
-python3 -u ./src/train/check_log/check_log_p4.py \
+python3 -u ${ROOT_DIR}/codes/src/train/check_log/check_log_p4.py \
     --log_dir ${LOG_DIR} \
     --exp_name ${RUN_ID} \
     --num_frames 10 \

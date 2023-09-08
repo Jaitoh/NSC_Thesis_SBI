@@ -1,26 +1,27 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=0
-cd ~/data/NSC/codes
-source activate sbi
-
 ROOT_DIR=~/data/NSC
+cd ${ROOT_DIR}/codes
+source activate sbi
 
 TRAIN_FILE_NAME=train_p3
 EXP_ID=L0-nle-p3-cnn
 CONFIG_PRIOR=prior-3
 
-RUN_ID=L0-nle-p3-cnn
+# RUN_ID=L0-nle-p3-cnn
+# CONFIG_DATASET=dataset-p3
+# CONFIG_TRAIN=train-nle-cnn
+
+# RUN_ID=L0-nle-p3-cnn-newLoss
+# CONFIG_DATASET=dataset-p3
+# CONFIG_TRAIN=train-nle-cnn
+
+RUN_ID=L0-nle-p3-cnn-newLoss-B
 CONFIG_DATASET=dataset-p3
 CONFIG_TRAIN=train-nle-cnn
 
-RUN_ID=L0-nle-p3-cnn-newLoss
-CONFIG_DATASET=dataset-p3
-CONFIG_TRAIN=train-nle-cnn
-
-# DATA_PATH="../data/dataset/dataset_L0_exp_set_0.h5"
-DATA_PATH=${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T500-copy.h5
-# CHECK_POINT_PATH='/home/wehe/data/NSC/codes/src/train/logs/train_L0/exp-3dur-a1-1/model/best_model_state_dict_run0.pt'
+DATA_PATH=${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T60-B20.h5
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0

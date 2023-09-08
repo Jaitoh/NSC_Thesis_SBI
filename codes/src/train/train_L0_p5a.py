@@ -167,7 +167,7 @@ class Solver:
         # )
 
 
-@hydra.main(config_path="../config", config_name="config-p5-conv", version_base=None)
+@hydra.main(config_path="../config", config_name="config-p5-test", version_base=None)
 def main(config: DictConfig):
     PID = os.getpid()
     print(f"PID: {PID}")
