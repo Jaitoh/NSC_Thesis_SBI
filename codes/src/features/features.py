@@ -481,7 +481,10 @@ class Feature_Generator:
 
         # plot stats_MD  - feature 1&2
         if kernel == 0 or kernel == 1 or kernel == 2:
-            fig, axs = plt.subplots(1, 3, figsize=(12, 6))
+            fig, axs = plt.subplots(1, 3, figsize=(22, 8))
+            # fig, axs = plt.subplots(1, 3, figsize=(12, 6))
+            # set horizontal space between subplots
+            fig.subplots_adjust(wspace=0.2)
             axs = axs.flatten()
             for i in range(3):
                 ax = axs[i]

@@ -17,11 +17,11 @@ CONFIG_PRIOR=prior-3
 # CONFIG_DATASET=dataset-p3
 # CONFIG_TRAIN=train-nle-cnn
 
-RUN_ID=L0-nle-p3-cnn-newLoss-B
+RUN_ID=L0-nle-p3-cnn-newLoss-B2
 CONFIG_DATASET=dataset-p3
 CONFIG_TRAIN=train-nle-cnn
 
-DATA_PATH=${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T60-B20.h5
+DATA_PATH=${ROOT_DIR}/data/dataset/dataset-L0-Eset0-20sets-T60-B20-v2.h5
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0

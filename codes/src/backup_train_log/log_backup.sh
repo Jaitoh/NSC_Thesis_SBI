@@ -6,32 +6,28 @@ Pipeline=train # npe
 TRAIN_ID=train_L0_p5a
 folder_id=1wWIw8E3k_EgJ3F1gfHNqOG7CEu04MYkj
 
-# "p5a-conv_net"
-# "p5a-conv_lstm-corr_conv-tmp-2"
-# "p5a-conv_lstm-maf3-tmp"
-# "p5a-conv_lstm-corr_conv-tmp-4"
-# "p5a-conv_lstm-maf3-tmp-2"
-# "p5a-conv_lstm-corr_conv"
-# "p5a-conv_lstm-Tv2"
-# "p5a-conv_net-Tv2-tmp"
 EXP_IDS=(
-    "p5a-conv_lstm-corr_conv-B-7h"
+    "p5a-conv_lstm-corr_conv-B2"
 )
 
-# Pipeline=train # npe-f
-# TRAIN_ID=train_L0_p4a
-# folder_id=1SiXpFibwBr9OXA6Oi7tdj4PaX_UcgCbg
+# === npe p4a ===
+Pipeline=train # npe-f
+TRAIN_ID=train_L0_p4a
+folder_id=1SiXpFibwBr9OXA6Oi7tdj4PaX_UcgCbg
 
-# "p4a-F1345-cnn-tmp"
-# "p4a-F134-cnn"
-# "p4a-F1345-cnn"
-# "p4a-F134-cnn-maf3-tmp"
-# "p4a-F1345-cnn-maf3-tmp"
-# "p4a-F1345-cnn-maf3"
-# "p4a-F134-cnn-maf3"
-# EXP_IDS=(
-#     "p4a-F1345-cnn-maf3-B-7h"
-# )
+# "p4a-F1345-cnn-maf3-B2-42h"
+EXP_IDS=(
+    "p4a-F1345-cnn-maf3-B2"
+)
+
+# === nle p3 ===
+Pipeline=train_nle
+TRAIN_ID=L0-nle-p3-cnn
+folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
+
+EXP_IDS=(
+    "L0-nle-p3-cnn-newLoss"
+)
 
 # === nle ===
 # Pipeline=train_nle
@@ -62,18 +58,6 @@ EXP_IDS=(
 # EXP_IDS=(
 #     "L0-nle-p2-cnn-datav2-small-batch-newLoss"
 # )
-
-# === nle p3 ===
-Pipeline=train_nle
-TRAIN_ID=L0-nle-p3-cnn
-folder_id=1ySMYmMdK7D0Jyx8TF5Bq4Iy4qGt32j93 # logs gdrive folder id
-
-# "L0-nle-p3-cnn"
-# "L0-nle-p3-cnn-newLoss-tmp-2"
-# "L0-nle-p3-cnn-newLoss"
-EXP_IDS=(
-    "L0-nle-p3-cnn-newLoss-B-7h"
-)
 
 # zip log files
 # LOG_DIR="/home/ubuntu/tmp/NSC/codes/src/train/logs"

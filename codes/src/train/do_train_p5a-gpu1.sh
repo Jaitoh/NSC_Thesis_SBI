@@ -22,13 +22,13 @@ source activate sbi
 # CONFIG_DATASET=dataset-p5
 # CONFIG_TRAIN=train-p5-conv_lstm-mdn
 
-RUN_ID=p5a-conv_lstm-corr_conv-B
+RUN_ID=p5a-conv_lstm-corr_conv-B2
+DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-20sets-T60-B20-v2.h5"
+
+TRAIN_FILE_NAME=train_L0_p5a
 CONFIG_PRIOR=prior-3
 CONFIG_DATASET=dataset-p5-B
 CONFIG_TRAIN=train-p5-conv_lstm-mdn
-
-TRAIN_FILE_NAME=train_L0_p5a
-DATA_PATH="${ROOT_DIR}/data/dataset/dataset-L0-Eset0-100sets-T60-B20.h5"
 CONFIG_SIMULATOR=model-0
 CONFIG_EXP=exp-set-0
 CONFIG_X_O=x_o-0

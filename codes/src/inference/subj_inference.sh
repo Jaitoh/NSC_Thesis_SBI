@@ -6,10 +6,12 @@ pipeline=p5a
 # exp_id=train_L0_p5a/p5a-conv_net
 # exp_id=train_L0_p5a/p5a-conv_net-Tv2
 exp_id=train_L0_p5a/p5a-conv_lstm-corr_conv-tmp-4
+exp_id=train_L0_p5a/p5a-conv_lstm-corr_conv
 
-pipeline=p4a
+# pipeline=p4a
 # # exp_id=train_L0_p4/p4-5Fs-1D-cnn
-exp_id=train_L0_p4a/p4a-F1345-cnn-maf3
+# exp_id=train_L0_p4a/p4a-F1345-cnn-maf3
+# exp_id=train_L0_p4a/p4a-F1345-cnn-maf3-B2-42h
 
 exp_dir=~/data/NSC/codes/src/train/logs/$exp_id
 mkdir -p $exp_dir/inference
